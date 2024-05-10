@@ -59,23 +59,23 @@ func ResourceReplicationInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -93,7 +93,7 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -139,7 +139,7 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -157,7 +157,7 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 
 	replicationInstanceID := d.Get("replication_instance_id").(string)
 	input := &dms.CreateReplicationInstanceInput{
-		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade:       aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
@@ -172,25 +172,25 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.GetOk("allocated_storage"); ok {
 		input.AllocatedStorage = aws.Int64(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("network_type"); ok {
 		input.NetworkType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("replication_subnet_group_id"); ok {
 		input.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -218,7 +218,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -226,13 +226,13 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("engine_version", instance.EngineVersion)
-	d.Set("kms_key_arn", instance.KmsKeyId)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
 	d.Set("network_type", instance.NetworkType)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", instance.PubliclyAccessible)
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
@@ -243,7 +243,7 @@ func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData
 	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(sg *dms.VpcSecurityGroupMembership) string {
 		return aws.StringValue(sg.VpcSecurityGroupId)
 	})
-	d.Set("vpc_security_group_ids", vpcSecurityGroupIDs)
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	return diags
 }
@@ -252,7 +252,7 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "allow_major_version_upgrade") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "allow_major_version_upgrade") {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
 		input := &dms.ModifyReplicationInstanceInput{
@@ -265,12 +265,12 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.AllocatedStorage = aws.Int64(int64(d.Get("allocated_storage").(int)))
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("multi_az") {
@@ -281,16 +281,16 @@ func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceDa
 			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("replication_instance_class") {
 			input.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
 		}
 
-		if d.HasChange("vpc_security_group_ids") {
-			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get("vpc_security_group_ids").(*schema.Set))
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			input.VpcSecurityGroupIds = flex.ExpandStringSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
 		}
 
 		_, err := conn.ModifyReplicationInstanceWithContext(ctx, input)

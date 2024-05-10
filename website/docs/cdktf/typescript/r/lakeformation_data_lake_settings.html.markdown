@@ -12,7 +12,7 @@ description: |-
 
 Manages Lake Formation principals designated as data lake administrators and lists of principal permission entries for default create database and default create table permissions.
 
-~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. Part of the changes include the `iamAllowedPrincipals` principal in order to make Lake Formation backwards compatible with existing IAM and Glue permissions. For more information, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
+~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. Part of the changes include the `IAMAllowedPrincipals` principal in order to make Lake Formation backwards compatible with existing IAM and Glue permissions. For more information, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
 
 ## Example Usage
 
@@ -146,4 +146,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->
+<!-- cache-key: cdktf-0.20.1 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->

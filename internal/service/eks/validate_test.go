@@ -21,6 +21,10 @@ func TestValidClusterName(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
+			Value:    "a",
+			ErrCount: 0,
+		},
+		{
 			Value:    `_invalid`,
 			ErrCount: 1,
 		},

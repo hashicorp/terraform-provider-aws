@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(glue.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.GlueServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -35,7 +35,7 @@ func TestAccGlueCatalogTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,9 +44,9 @@ func TestAccGlueCatalogTable_basic(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
@@ -70,7 +70,7 @@ func TestAccGlueCatalogTable_columnParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,9 +111,9 @@ func TestAccGlueCatalogTable_full(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "owner", "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
@@ -167,7 +167,7 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,8 +176,8 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 				),
 			},
 			{
@@ -190,9 +190,9 @@ func TestAccGlueCatalogTable_Update_addValues(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "owner", "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
@@ -241,7 +241,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,9 +250,9 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "owner", "my_owner"),
 					resource.TestCheckResourceAttr(resourceName, "retention", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_1"),
@@ -299,9 +299,9 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "A test table from terraform2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test table from terraform2"),
 					resource.TestCheckResourceAttr(resourceName, "owner", "my_owner2"),
 					resource.TestCheckResourceAttr(resourceName, "retention", "2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.0.name", "my_column_12"),
@@ -356,7 +356,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_emptyBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -378,7 +378,7 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_emptyBlock(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -401,7 +401,7 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -410,8 +410,8 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name"),
 				),
 			},
@@ -425,8 +425,8 @@ func TestAccGlueCatalogTable_StorageDescriptorSerDeInfo_updateValues(t *testing.
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1", "param_val_1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.serialization_library", "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe"),
 				),
@@ -443,7 +443,7 @@ func TestAccGlueCatalogTable_StorageDescriptorSkewedInfo_emptyBlock(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -466,7 +466,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -494,7 +494,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReference(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
 				),
 			},
@@ -509,7 +509,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReferenceARN(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -520,7 +520,7 @@ func TestAccGlueCatalogTable_StorageDescriptor_schemaReferenceARN(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_version_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "storage_descriptor.0.schema_reference.0.schema_id.0.schema_arn", "aws_glue_schema.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.columns.#", "2"),
 				),
 			},
@@ -540,7 +540,7 @@ func TestAccGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -549,7 +549,7 @@ func TestAccGlueCatalogTable_partitionIndexesSingle(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_status", "ACTIVE"),
@@ -572,7 +572,7 @@ func TestAccGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -581,7 +581,7 @@ func TestAccGlueCatalogTable_partitionIndexesMultiple(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.0.index_status", "ACTIVE"),
@@ -607,7 +607,7 @@ func TestAccGlueCatalogTable_Disappears_database(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -632,7 +632,7 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -643,8 +643,8 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", names.AttrName),
 				),
 			},
 			{
@@ -663,7 +663,7 @@ func TestAccGlueCatalogTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -688,7 +688,7 @@ func TestAccGlueCatalogTable_openTableFormat(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1415,6 +1415,8 @@ resource "aws_glue_catalog_table" "test" {
 
 func testAccCatalogTableConfig_target(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1427,6 +1429,7 @@ resource "aws_glue_catalog_table" "test" {
     catalog_id    = aws_glue_catalog_table.test2.catalog_id
     database_name = aws_glue_catalog_table.test2.database_name
     name          = aws_glue_catalog_table.test2.name
+    region        = data.aws_region.current.name
   }
 }
 

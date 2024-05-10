@@ -16,8 +16,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_networkfirewall_resource_policy")
@@ -33,7 +35,7 @@ func ResourceResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateFunc:     validation.StringIsJSON,
@@ -43,7 +45,7 @@ func ResourceResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -54,13 +56,15 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
-	resourceArn := d.Get("resource_arn").(string)
+	var diags diag.Diagnostics
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
+	resourceArn := d.Get(names.AttrResourceARN).(string)
+
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := &networkfirewall.PutResourcePolicyInput{
@@ -72,15 +76,17 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err = conn.PutResourcePolicyWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return sdkdiag.AppendErrorf(diags, "putting NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	d.SetId(resourceArn)
 
-	return resourceResourcePolicyRead(ctx, d, meta)
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	resourceArn := d.Id()
 
@@ -90,30 +96,32 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Resource Policy (for resource: %s) not found, removing from state", resourceArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (for resource: %s): %s", resourceArn, err)
 	}
 
 	if policy == nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (for resource: %s): empty output", resourceArn)
 	}
 
-	d.Set("resource_arn", resourceArn)
+	d.Set(names.AttrResourceARN, resourceArn)
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), aws.StringValue(policy))
 
 	if err != nil {
-		return diag.Errorf("setting policy %s: %s", aws.StringValue(policy), err)
+		return sdkdiag.AppendErrorf(diags, "setting policy %s: %s", aws.StringValue(policy), err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	const (
 		timeout = 2 * time.Minute
 	)
@@ -127,12 +135,12 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions")
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

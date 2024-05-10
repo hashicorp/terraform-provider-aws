@@ -19,10 +19,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_cors_configuration")
-func ResourceBucketCorsConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
+func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketCorsConfigurationRead,
@@ -34,7 +35,7 @@ func ResourceBucketCorsConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -72,7 +73,7 @@ func ResourceBucketCorsConfiguration() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"id": {
+						names.AttrID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -91,7 +92,7 @@ func ResourceBucketCorsConfiguration() *schema.Resource {
 func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketCorsInput{
 		Bucket: aws.String(bucket),
@@ -103,9 +104,13 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketCors(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "CORSConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) CORS Configuration: %s", bucket, err)
@@ -113,7 +118,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -144,7 +149,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("reading S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("cors_rule", flattenCORSRules(corsRules)); err != nil {
 		return diag.Errorf("setting cors_rule: %s", err)
 	}
@@ -205,7 +210,7 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 		return diag.Errorf("deleting S3 Bucket CORS Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findCORSRules(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -214,6 +219,34 @@ func resourceBucketCorsConfigurationDelete(ctx context.Context, d *schema.Resour
 	}
 
 	return nil
+}
+
+func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
+	input := &s3.GetBucketCorsInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketCors(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CORSRules) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CORSRules, nil
 }
 
 func expandCORSRules(l []interface{}) []types.CORSRule {
@@ -247,12 +280,12 @@ func expandCORSRules(l []interface{}) []types.CORSRule {
 			rule.ExposeHeaders = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["id"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 			rule.ID = aws.String(v)
 		}
 
 		if v, ok := tfMap["max_age_seconds"].(int); ok {
-			rule.MaxAgeSeconds = int32(v)
+			rule.MaxAgeSeconds = aws.Int32(int32(v))
 		}
 
 		rules = append(rules, rule)
@@ -286,39 +319,11 @@ func flattenCORSRules(rules []types.CORSRule) []interface{} {
 		}
 
 		if rule.ID != nil {
-			m["id"] = aws.ToString(rule.ID)
+			m[names.AttrID] = aws.ToString(rule.ID)
 		}
 
 		results = append(results, m)
 	}
 
 	return results
-}
-
-func findCORSRules(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) ([]types.CORSRule, error) {
-	input := &s3.GetBucketCorsInput{
-		Bucket: aws.String(bucket),
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketCors(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchCORSConfiguration) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CORSRules) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.CORSRules, nil
 }

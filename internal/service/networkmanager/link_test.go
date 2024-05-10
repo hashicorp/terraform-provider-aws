@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerLink_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,14 +33,14 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func TestAccNetworkManagerLink_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +129,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,9 +140,9 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", "provider1"),
-					resource.TestCheckResourceAttr(resourceName, "type", "type1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type1"),
 				),
 			},
 			{
@@ -158,9 +158,9 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "75"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "20"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", "provider2"),
-					resource.TestCheckResourceAttr(resourceName, "type", "type2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type2"),
 				),
 			},
 		},
@@ -384,6 +384,6 @@ func testAccLinkImportStateIdFunc(resourceName string) resource.ImportStateIdFun
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["arn"], nil
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }

@@ -67,4 +67,4 @@ This data source exports the following attributes in addition to the arguments a
     * `metric_statistic_recommendation` - The metric statistic that AWS recommend you use when determining quota usage.
 * `value` - Current value of the service quota.
 
-<!-- cache-key: cdktf-0.19.0 input-bc36008b8483826c556e6fd6e192b7a6b4c3b1b4a2f09174ab402172ccc82dd9 -->
+<!-- cache-key: cdktf-0.20.1 input-bc36008b8483826c556e6fd6e192b7a6b4c3b1b4a2f09174ab402172ccc82dd9 -->

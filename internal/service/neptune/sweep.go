@@ -6,6 +6,7 @@ package neptune
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -13,14 +14,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_neptune_event_subscription", &resource.Sweeper{
-		Name: "aws_neptune_event_subscription",
-		F:    sweepEventSubscriptions,
-	})
-
 	resource.AddTestSweepers("aws_neptune_cluster", &resource.Sweeper{
 		Name: "aws_neptune_cluster",
 		F:    sweepClusters,
@@ -34,9 +31,46 @@ func RegisterSweepers() {
 		F:    sweepClusterInstances,
 	})
 
+	resource.AddTestSweepers("aws_neptune_cluster_parameter_group", &resource.Sweeper{
+		Name: "aws_neptune_cluster_parameter_group",
+		F:    sweepClusterParameterGroups,
+		Dependencies: []string{
+			"aws_neptune_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_neptune_cluster_snapshot", &resource.Sweeper{
+		Name: "aws_neptune_cluster_snapshot",
+		F:    sweepClusterSnapshots,
+		Dependencies: []string{
+			"aws_neptune_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_neptune_event_subscription", &resource.Sweeper{
+		Name: "aws_neptune_event_subscription",
+		F:    sweepEventSubscriptions,
+	})
+
 	resource.AddTestSweepers("aws_neptune_global_cluster", &resource.Sweeper{
 		Name: "aws_neptune_global_cluster",
 		F:    sweepGlobalClusters,
+		Dependencies: []string{
+			"aws_neptune_cluster",
+		},
+	})
+
+	resource.AddTestSweepers("aws_neptune_parameter_group", &resource.Sweeper{
+		Name: "aws_neptune_parameter_group",
+		F:    sweepParameterGroups,
+		Dependencies: []string{
+			"aws_neptune_cluster_instance",
+		},
+	})
+
+	resource.AddTestSweepers("aws_neptune_subnet_group", &resource.Sweeper{
+		Name: "aws_neptune_subnet_group",
+		F:    sweepSubnetGroups,
 		Dependencies: []string{
 			"aws_neptune_cluster",
 		},
@@ -110,7 +144,7 @@ func sweepClusters(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("apply_immediately", true)
-			d.Set("arn", arn)
+			d.Set(names.AttrARN, arn)
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 
@@ -149,6 +183,101 @@ func sweepClusters(region string) error {
 	return nil
 }
 
+func sweepClusterSnapshots(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeDBClusterSnapshotsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterSnapshots {
+			r := ResourceClusterSnapshot()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DBClusterSnapshotIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Cluster Snapshot sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing Neptune Cluster Snapshots (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Neptune Cluster Snapshots (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepClusterParameterGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeDBClusterParameterGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterParameterGroups {
+			name := aws.StringValue(v.DBClusterParameterGroupName)
+
+			if strings.HasPrefix(name, "default.") {
+				log.Printf("[INFO] Skipping Neptune Cluster Parameter Group: %s", name)
+				continue
+			}
+
+			r := ResourceClusterParameterGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Cluster Parameter Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Neptune Cluster Parameter Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Neptune Cluster Parameter Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
 func sweepClusterInstances(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -176,6 +305,7 @@ func sweepClusterInstances(region string) error {
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("apply_immediately", true)
+			d.Set("skip_final_snapshot", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -240,6 +370,101 @@ func sweepGlobalClusters(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("sweeping Neptune Global Clusters (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepParameterGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeDBParameterGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeDBParameterGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBParameterGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBParameterGroups {
+			name := aws.StringValue(v.DBParameterGroupName)
+
+			if strings.HasPrefix(name, "default.") {
+				log.Printf("[INFO] Skipping Neptune Parameter Group: %s", name)
+				continue
+			}
+
+			r := ResourceParameterGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Parameter Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Neptune Parameter Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Neptune Parameter Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepSubnetGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.NeptuneConn(ctx)
+	input := &neptune.DescribeDBSubnetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			r := ResourceSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.DBSubnetGroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Subnet Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Neptune Subnet Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Neptune Subnet Groups (%s): %w", region, err)
 	}
 
 	return nil

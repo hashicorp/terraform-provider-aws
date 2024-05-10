@@ -12,15 +12,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafregional_web_acl")
-func DataSourceWebACL() *schema.Resource {
+// @SDKDataSource("aws_wafregional_web_acl", name="Web ACL")
+func dataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWebACLRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -31,7 +32,7 @@ func DataSourceWebACL() *schema.Resource {
 func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	acls := make([]*waf.WebACLSummary, 0)
 	// ListWebACLsInput does not have a name parameter for filtering

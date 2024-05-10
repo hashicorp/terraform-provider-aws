@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
@@ -21,19 +21,45 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_name", resourceName, "compute_environment_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_role", resourceName, "service_role"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	resourceName := "aws_batch_compute_environment.test"
+	datasourceName := "data.aws_batch_compute_environment.by_name"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName, 30, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.%", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.terminate_jobs_on_update", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
 				),
 			},
 		},
@@ -73,30 +99,6 @@ resource "aws_iam_instance_profile" "ecs_instance_role" {
   role = aws_iam_role.ecs_instance_role.name
 }
 
-resource "aws_iam_role" "aws_batch_service_role" {
-  name = "batch_%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "batch.${data.aws_partition.current.dns_suffix}"
-      }
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "aws_batch_service_role" {
-  role       = aws_iam_role.aws_batch_service_role.name
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSBatchServiceRole"
-}
-
 resource "aws_security_group" "sample" {
   name = "%[1]s"
 }
@@ -134,42 +136,44 @@ resource "aws_batch_compute_environment" "test" {
     type = "EC2"
   }
 
-  service_role = aws_iam_role.aws_batch_service_role.arn
-  type         = "MANAGED"
-  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
-}
-
-resource "aws_batch_compute_environment" "wrong" {
-  compute_environment_name = "%[1]s_wrong"
-
-  compute_resources {
-    instance_role = aws_iam_instance_profile.ecs_instance_role.arn
-
-    instance_type = [
-      "c4.large",
-    ]
-
-    max_vcpus = 16
-    min_vcpus = 0
-
-    security_group_ids = [
-      aws_security_group.sample.id,
-    ]
-
-    subnets = [
-      aws_subnet.sample.id,
-    ]
-
-    type = "EC2"
-  }
-
-  service_role = aws_iam_role.aws_batch_service_role.arn
-  type         = "MANAGED"
-  depends_on   = [aws_iam_role_policy_attachment.aws_batch_service_role]
+  type = "MANAGED"
 }
 
 data "aws_batch_compute_environment" "by_name" {
   compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
 }
 `, rName)
+}
+
+func testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName string, timeout int, terminate bool) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_baseDefaultSLR(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  compute_environment_name = %[1]q
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.test.id
+    ]
+    subnets = [
+      aws_subnet.test.id
+    ]
+    type = "EC2"
+  }
+  update_policy {
+    job_execution_timeout_minutes = %[2]d
+    terminate_jobs_on_update      = %[3]t
+  }
+
+  type = "MANAGED"
+}
+
+data "aws_batch_compute_environment" "by_name" {
+  compute_environment_name = aws_batch_compute_environment.test.compute_environment_name
+}
+`, rName, timeout, terminate))
 }

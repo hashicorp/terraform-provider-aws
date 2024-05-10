@@ -28,19 +28,19 @@ func TestAccOpenSearchServerlessVPCEndpointDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
 			},
 		},

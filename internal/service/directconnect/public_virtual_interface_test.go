@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
@@ -41,7 +42,7 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -52,13 +53,13 @@ func TestAccDirectConnectPublicVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),
@@ -94,7 +95,7 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPublicVirtualInterfaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,13 +106,13 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),
@@ -129,13 +130,13 @@ func TestAccDirectConnectPublicVirtualInterface_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_address", amazonAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
 					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
 					resource.TestCheckResourceAttr(resourceName, "customer_address", customerAddress),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "route_filter_prefixes.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "210.52.109.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "route_filter_prefixes.*", "175.45.176.0/22"),

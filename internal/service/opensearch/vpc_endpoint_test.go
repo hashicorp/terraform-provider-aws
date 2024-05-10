@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestVPCEndpointErrorsNotFound(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -147,7 +148,7 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +177,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +185,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -196,7 +197,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_updated(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),

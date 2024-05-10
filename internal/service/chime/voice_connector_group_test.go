@@ -31,7 +31,7 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,7 +39,7 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "1"),
 				),
@@ -65,7 +65,7 @@ func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,14 +101,14 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_basic(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorGroupExists(ctx, resourceName, voiceConnectorGroup),
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.#", "1"),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("vcg-updated-%s", vcgName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
 					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
 				),
 			},

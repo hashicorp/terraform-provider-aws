@@ -52,8 +52,13 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_db_instances",
 		},
 		{
-			Factory:  DataSourceProxy,
+			Factory:  DataSourceParameterGroup,
+			TypeName: "aws_db_parameter_group",
+		},
+		{
+			Factory:  dataSourceProxy,
 			TypeName: "aws_db_proxy",
+			Name:     "DB Proxy",
 		},
 		{
 			Factory:  DataSourceSnapshot,
@@ -62,8 +67,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
+			Name:     "DB Subnet Group",
 		},
 		{
 			Factory:  DataSourceCertificate,
@@ -103,11 +109,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEventSubscription,
+			Factory:  resourceEventSubscription,
 			TypeName: "aws_db_event_subscription",
 			Name:     "Event Subscription",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -115,7 +121,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_db_instance",
 			Name:     "DB Instance",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -131,7 +137,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_db_option_group",
 			Name:     "DB Option Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -139,32 +145,34 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_db_parameter_group",
 			Name:     "DB Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceProxy,
+			Factory:  resourceProxy,
 			TypeName: "aws_db_proxy",
 			Name:     "DB Proxy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceProxyDefaultTargetGroup,
+			Factory:  resourceProxyDefaultTargetGroup,
 			TypeName: "aws_db_proxy_default_target_group",
+			Name:     "DB Proxy Default Target Group",
 		},
 		{
-			Factory:  ResourceProxyEndpoint,
+			Factory:  resourceProxyEndpoint,
 			TypeName: "aws_db_proxy_endpoint",
 			Name:     "DB Proxy Endpoint",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceProxyTarget,
+			Factory:  resourceProxyTarget,
 			TypeName: "aws_db_proxy_target",
+			Name:     "DB Proxy Target",
 		},
 		{
 			Factory:  ResourceSnapshot,
@@ -183,11 +191,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
 			Name:     "DB Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -195,7 +203,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -207,7 +215,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_endpoint",
 			Name:     "Cluster Endpoint",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -215,7 +223,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_instance",
 			Name:     "Cluster Instance",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -223,7 +231,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_parameter_group",
 			Name:     "Cluster Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -235,7 +243,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_custom_db_engine_version",
 			Name:     "Custom DB Engine Version",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -247,7 +255,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_reserved_instance",
 			Name:     "Reserved Instance",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -259,9 +267,9 @@ func (p *servicePackage) ServicePackageName() string {
 
 // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
 func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*rds_sdkv1.RDS, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
 
-	return rds_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return rds_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
@@ -269,7 +277,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

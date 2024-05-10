@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+  Terraform resource for managing an AWS Network Manager ConnectAttachment.
 ---
 
 # Resource: aws_networkmanager_connect_attachment
 
-Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+Terraform resource for managing an AWS Network Manager ConnectAttachment.
 
 ## Example Usage
 

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSchemasDiscoverer_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,8 +35,8 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -56,7 +57,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 				Config: testAccDiscovererConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -100,14 +101,14 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 				Config: testAccDiscovererConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -122,7 +123,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{

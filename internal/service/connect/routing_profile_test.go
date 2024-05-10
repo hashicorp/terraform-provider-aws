@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccRoutingProfile_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,14 +40,14 @@ func testAccRoutingProfile_basic(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -60,14 +61,14 @@ func testAccRoutingProfile_basic(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -87,7 +88,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +115,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,14 +123,14 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -143,12 +144,12 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 				Config: testAccRoutingProfileConfig_mediaConcurrencies(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -168,7 +169,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,14 +177,14 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 				Config: testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -197,14 +198,14 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 				Config: testAccRoutingProfileConfig_defaultOutboundQueue(rName, rName2, rName3, rName4, "second"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue_update", "queue_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -225,7 +226,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -234,14 +235,14 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -257,21 +258,21 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 				Config: testAccRoutingProfileConfig_queue1(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.delay", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.priority", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_name", "aws_connect_queue.default_outbound_queue", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -286,14 +287,14 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 				Config: testAccRoutingProfileConfig_queue2(rName, rName2, rName3, rName4, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
 					// The delay attribute of both elements of the set are set to 1
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.delay", "1"),
@@ -312,21 +313,21 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 				Config: testAccRoutingProfileConfig_queue1(rName, rName2, rName3, description),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_outbound_queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", connect.ChannelVoice),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.delay", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.priority", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_name", "aws_connect_queue.default_outbound_queue", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
@@ -341,18 +342,17 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
-	description := "tags"
 
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, names.AttrTags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -365,7 +365,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoutingProfileConfig_tags(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_tags(rName, rName2, rName3, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -374,7 +374,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, description),
+				Config: testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
@@ -397,7 +397,7 @@ func testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate(t *tes
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -523,7 +523,7 @@ func testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate(t *tes
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
 		Steps: []resource.TestStep{

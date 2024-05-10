@@ -9,15 +9,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
@@ -31,7 +33,7 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,8 +41,8 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -64,7 +66,7 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,8 +74,8 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -99,7 +101,7 @@ func TestAccELBV2ListenerCertificate_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +169,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +195,7 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,21 +213,21 @@ func TestAccELBV2ListenerCertificate_disappears_Listener(t *testing.T) {
 
 func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_certificate" {
 				continue
 			}
 
-			input := &elbv2.DescribeListenerCertificatesInput{
+			input := &elasticloadbalancingv2.DescribeListenerCertificatesInput{
 				ListenerArn: aws.String(rs.Primary.Attributes["listener_arn"]),
-				PageSize:    aws.Int64(400),
+				PageSize:    aws.Int32(400),
 			}
 
-			resp, err := conn.DescribeListenerCertificatesWithContext(ctx, input)
+			resp, err := conn.DescribeListenerCertificates(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+				if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 					return nil
 				}
 				return err
@@ -233,11 +235,11 @@ func testAccCheckListenerCertificateDestroy(ctx context.Context) resource.TestCh
 
 			for _, cert := range resp.Certificates {
 				// We only care about additional certificates.
-				if aws.BoolValue(cert.IsDefault) {
+				if aws.ToBool(cert.IsDefault) {
 					continue
 				}
 
-				if aws.StringValue(cert.CertificateArn) == rs.Primary.Attributes["certificate_arn"] {
+				if aws.ToString(cert.CertificateArn) == rs.Primary.Attributes["certificate_arn"] {
 					return errors.New("LB listener certificate not destroyed")
 				}
 			}

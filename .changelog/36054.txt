@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_instance: Fix `panic: Invalid address to set` related to `root_block_device.0.tags_all`
+```

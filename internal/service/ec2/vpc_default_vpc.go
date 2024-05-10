@@ -50,7 +50,7 @@ func ResourceDefaultVPC() *schema.Resource {
 		//   - existing_default_vpc Computed-only, set in resourceDefaultVPCCreate
 		//   - force_destroy Optional
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func ResourceDefaultVPC() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -158,7 +158,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildAttributeFilterListV2(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"isDefault": "true",
 			},

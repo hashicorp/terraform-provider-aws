@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,10 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(iot.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.IoTServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -35,7 +35,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,15 +43,15 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 				Config: testAccTopicRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
@@ -60,7 +60,7 @@ func TestAccIoTTopicRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
@@ -88,7 +88,7 @@ func TestAccIoTTopicRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,7 +111,7 @@ func TestAccIoTTopicRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,7 +156,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Example rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Example rule"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
@@ -209,7 +209,7 @@ func TestAccIoTTopicRule_cloudWatchAlarm(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Example rule"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Example rule"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
@@ -240,7 +240,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,7 +260,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
@@ -298,7 +298,7 @@ func TestAccIoTTopicRule_cloudWatchLogs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http.#", "0"),
@@ -326,7 +326,7 @@ func TestAccIoTTopicRule_cloudWatchMetric(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -410,7 +410,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -421,7 +421,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description1"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodb.*", map[string]string{
 						"hash_key_field": "hkf",
@@ -459,7 +459,7 @@ func TestAccIoTTopicRule_dynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_metric.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description2"),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "dynamodb.*", map[string]string{
 						"hash_key_field":  "hkf",
@@ -500,7 +500,7 @@ func TestAccIoTTopicRule_dynamoDBv2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -575,7 +575,7 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -590,9 +590,9 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "elasticsearch.*", map[string]string{
-						"id":    "myIdentifier",
-						"index": "myindex",
-						"type":  "mydocument",
+						names.AttrID:   "myIdentifier",
+						"index":        "myindex",
+						names.AttrType: "mydocument",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
@@ -626,9 +626,9 @@ func TestAccIoTTopicRule_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dynamodbv2.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "elasticsearch.*", map[string]string{
-						"id":    "myIdentifier",
-						"index": "updatedindex",
-						"type":  "mydocument",
+						names.AttrID:   "myIdentifier",
+						"index":        "updatedindex",
+						names.AttrType: "mydocument",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "error_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "firehose.#", "0"),
@@ -657,7 +657,7 @@ func TestAccIoTTopicRule_firehose(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -747,7 +747,7 @@ func TestAccIoTTopicRule_Firehose_separator(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -827,7 +827,7 @@ func TestAccIoTTopicRule_Firehose_batch_mode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -907,7 +907,7 @@ func TestAccIoTTopicRule_http(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1075,7 +1075,7 @@ func TestAccIoTTopicRule_IoT_analytics(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1148,7 +1148,7 @@ func TestAccIoTTopicRule_IoT_analytics_batch_mode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1223,7 +1223,7 @@ func TestAccIoTTopicRule_IoT_events(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1268,7 +1268,7 @@ func TestAccIoTTopicRule_IoT_events_batch_mode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1346,7 +1346,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1497,7 +1497,7 @@ func TestAccIoTTopicRule_kinesis(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1575,7 +1575,7 @@ func TestAccIoTTopicRule_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1621,7 +1621,7 @@ func TestAccIoTTopicRule_republish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1701,7 +1701,7 @@ func TestAccIoTTopicRule_republishWithQos(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1751,7 +1751,7 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1776,9 +1776,9 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
-						"bucket_name": "mybucket",
-						"canned_acl":  "private",
-						"key":         "mykey",
+						names.AttrBucketName: "mybucket",
+						"canned_acl":         "private",
+						names.AttrKey:        "mykey",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
@@ -1807,9 +1807,9 @@ func TestAccIoTTopicRule_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "republish.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "s3.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3.*", map[string]string{
-						"bucket_name": "yourbucket",
-						"canned_acl":  "private",
-						"key":         "mykey",
+						names.AttrBucketName: "yourbucket",
+						"canned_acl":         "private",
+						names.AttrKey:        "mykey",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "sns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs.#", "0"),
@@ -1833,7 +1833,7 @@ func TestAccIoTTopicRule_sns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1911,7 +1911,7 @@ func TestAccIoTTopicRule_sqs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1991,7 +1991,7 @@ func TestAccIoTTopicRule_Step_functions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2071,7 +2071,7 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2100,20 +2100,20 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*", map[string]string{
-						"database_name":     "TestDB",
-						"dimension.#":       "2",
-						"table_name":        "test_table",
-						"timestamp.#":       "1",
-						"timestamp.0.unit":  "MILLISECONDS",
-						"timestamp.0.value": "${time}",
+						names.AttrDatabaseName: "TestDB",
+						"dimension.#":          "2",
+						"table_name":           "test_table",
+						"timestamp.#":          "1",
+						"timestamp.0.unit":     "MILLISECONDS",
+						"timestamp.0.value":    "${time}",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
-						"name":  "dim1",
-						"value": "${dim1}",
+						names.AttrName:  "dim1",
+						names.AttrValue: "${dim1}",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
-						"name":  "dim2",
-						"value": "${dim2}",
+						names.AttrName:  "dim2",
+						names.AttrValue: "${dim2}",
 					}),
 				),
 			},
@@ -2142,20 +2142,20 @@ func TestAccIoTTopicRule_Timestream(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step_functions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "timestream.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*", map[string]string{
-						"database_name":     "TestDB",
-						"dimension.#":       "2",
-						"table_name":        "test_table",
-						"timestamp.#":       "1",
-						"timestamp.0.unit":  "MILLISECONDS",
-						"timestamp.0.value": "${time}",
+						names.AttrDatabaseName: "TestDB",
+						"dimension.#":          "2",
+						"table_name":           "test_table",
+						"timestamp.#":          "1",
+						"timestamp.0.unit":     "MILLISECONDS",
+						"timestamp.0.value":    "${time}",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
-						"name":  "dim3",
-						"value": "${dim3}",
+						names.AttrName:  "dim3",
+						names.AttrValue: "${dim3}",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "timestream.*.dimension.*", map[string]string{
-						"name":  "dim2",
-						"value": "${dim2}",
+						names.AttrName:  "dim2",
+						names.AttrValue: "${dim2}",
 					}),
 				),
 			},
@@ -2175,7 +2175,7 @@ func TestAccIoTTopicRule_errorAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2245,7 +2245,7 @@ func TestAccIoTTopicRule_updateKinesisErrorAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicRuleDestroy(ctx),
 		Steps: []resource.TestStep{

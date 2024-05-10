@@ -40,7 +40,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -55,7 +55,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func DataSourceDevEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -128,7 +128,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := findDevEnvironmentByID(ctx, conn, env_id, spaceName, projectName)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, DSNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, DSNameDevEnvironment, d.Id(), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -137,19 +137,19 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("creator_id", out.CreatorId)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
-	d.Set("instance_type", out.InstanceType)
+	d.Set(names.AttrInstanceType, out.InstanceType)
 	d.Set("last_updated_time", out.LastUpdatedTime.String())
 	d.Set("inactivity_timeout_minutes", out.InactivityTimeoutMinutes)
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
-	d.Set("status", out.Status)
+	d.Set(names.AttrStatus, out.Status)
 	d.Set("status_reason", out.StatusReason)
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	if err := d.Set("repositories", flattenRepositories(out.Repositories)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return diags

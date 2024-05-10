@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func AssociationMigrateState(
@@ -30,7 +31,7 @@ func migrateAssociationStateV0toV1(is *terraform.InstanceState) (*terraform.Inst
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
 
-	is.Attributes["id"] = is.Attributes["association_id"]
+	is.Attributes[names.AttrID] = is.Attributes["association_id"]
 	is.ID = is.Attributes["association_id"]
 
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, is.Attributes["association_id"])

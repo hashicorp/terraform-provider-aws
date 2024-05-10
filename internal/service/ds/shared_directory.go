@@ -70,12 +70,12 @@ func ResourceSharedDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      directoryservice.TargetTypeAccount,
@@ -89,6 +89,8 @@ func ResourceSharedDirectory() *schema.Resource {
 }
 
 func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dirId := d.Get("directory_id").(string)
@@ -106,23 +108,25 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.ShareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectory, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionCreating, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Shared Directory created: %s", out)
 	d.SetId(sharedDirectoryID(dirId, aws.StringValue(out.SharedDirectoryId)))
 	d.Set("shared_directory_id", out.SharedDirectoryId)
 
-	return nil
+	return diags
 }
 
 func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	output, err := FindSharedDirectory(ctx, conn, ownerDirID, sharedDirID)
@@ -130,11 +134,11 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionReading, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received DS shared directory: %s", output)
@@ -146,16 +150,18 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 
 	if output.SharedAccountId != nil {
 		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
-			return create.DiagError(names.DS, create.ErrActionSetting, ResNameSharedDirectory, d.Id(), err)
+			return create.AppendDiagError(diags, names.DS, create.ErrActionSetting, ResNameSharedDirectory, d.Id(), err)
 		}
 	} else {
 		d.Set("target", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	dirId := d.Get("directory_id").(string)
@@ -170,18 +176,18 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.UnshareDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectory, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionDeleting, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	_, err = waitSharedDirectoryDeleted(ctx, conn, dirId, sharedId, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectory, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectory, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Unshared Directory Service Directory: %s", output)
 
-	return nil
+	return diags
 }
 
 func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarget { // nosemgrep:ci.ds-in-func-name
@@ -191,11 +197,11 @@ func expandShareTarget(tfMap map[string]interface{}) *directoryservice.ShareTarg
 
 	apiObject := &directoryservice.ShareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -209,11 +215,11 @@ func expandUnshareTarget(tfMap map[string]interface{}) *directoryservice.Unshare
 
 	apiObject := &directoryservice.UnshareTarget{}
 
-	if v, ok := tfMap["id"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrID].(string); ok && len(v) > 0 {
 		apiObject.Id = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrType].(string); ok && len(v) > 0 {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -230,10 +236,10 @@ func flattenShareTarget(apiObject *directoryservice.SharedDirectory) map[string]
 	tfMap := map[string]interface{}{}
 
 	if apiObject.SharedAccountId != nil {
-		tfMap["id"] = aws.StringValue(apiObject.SharedAccountId)
+		tfMap[names.AttrID] = aws.StringValue(apiObject.SharedAccountId)
 	}
 
-	tfMap["type"] = directoryservice.TargetTypeAccount // only type available
+	tfMap[names.AttrType] = directoryservice.TargetTypeAccount // only type available
 
 	return tfMap
 }

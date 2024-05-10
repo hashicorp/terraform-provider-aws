@@ -46,7 +46,7 @@ func ResourceInstance() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(flattenAddOnTypeValues(types.AddOnType("").Values()), false),
@@ -56,7 +56,7 @@ func ResourceInstance() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$`), "must be in HH:00 format, and in Coordinated Universal Time (UTC)."),
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice([]string{"Enabled", "Disabled"}, false),
@@ -64,7 +64,7 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func ResourceInstance() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,11 +113,11 @@ func ResourceInstance() *schema.Resource {
 			},
 
 			// additional info returned from the API
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +159,7 @@ func ResourceInstance() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: customdiff.All(
-			customdiff.ValidateChange("availability_zone", func(ctx context.Context, old, new, meta any) error {
+			customdiff.ValidateChange(names.AttrAvailabilityZone, func(ctx context.Context, old, new, meta any) error {
 				// The availability_zone must be in the same region as the provider region
 				if !strings.HasPrefix(new.(string), meta.(*conns.AWSClient).Region) {
 					return fmt.Errorf("availability_zone must be within the same region as provider region: %s", meta.(*conns.AWSClient).Region)
@@ -172,12 +172,14 @@ func ResourceInstance() *schema.Resource {
 }
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	iName := d.Get("name").(string)
+	iName := d.Get(names.AttrName).(string)
 
 	in := lightsail.CreateInstancesInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		BlueprintId:      aws.String(d.Get("blueprint_id").(string)),
 		BundleId:         aws.String(d.Get("bundle_id").(string)),
 		InstanceNames:    []string{iName},
@@ -198,7 +200,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := conn.CreateInstances(ctx, &in)
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateInstance), ResInstance, iName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateInstance), ResInstance, iName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateInstance, ResInstance, iName)
@@ -219,7 +221,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		out, err := conn.EnableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, iName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, iName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeEnableAddOn, ResInstance, iName)
@@ -229,10 +231,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindInstanceById(ctx, conn, d.Id())
@@ -240,24 +244,24 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResInstance, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResInstance, d.Id(), err)
 	}
 
 	d.Set("add_on", flattenAddOns(out.AddOns))
-	d.Set("availability_zone", out.Location.AvailabilityZone)
+	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
 	d.Set("blueprint_id", out.BlueprintId)
 	d.Set("bundle_id", out.BundleId)
 	d.Set("key_pair_name", out.SshKeyName)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 
 	// additional attributes
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("username", out.Username)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
 
@@ -269,10 +273,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	out, err := conn.DeleteInstance(ctx, &lightsail.DeleteInstanceInput{
 		InstanceName:      aws.String(d.Id()),
@@ -280,11 +286,11 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResInstance, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResInstance, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteInstance, ResInstance, d.Id())
@@ -293,10 +299,12 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChange("ip_address_type") {
@@ -307,7 +315,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeSetIpAddressType), ResInstance, d.Id(), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetIpAddressType), ResInstance, d.Id(), err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetIpAddressType, ResInstance, d.Id())
@@ -325,7 +333,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	return resourceInstanceRead(ctx, d, meta)
+	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
 func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
@@ -337,7 +345,7 @@ func expandAddOnRequest(addOnListRaw []interface{}) *types.AddOnRequest {
 
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		addOnRequest.AddOnType = types.AddOnType(addOnMap["type"].(string))
+		addOnRequest.AddOnType = types.AddOnType(addOnMap[names.AttrType].(string))
 		addOnRequest.AutoSnapshotAddOnRequest = &types.AutoSnapshotAddOnRequest{
 			SnapshotTimeOfDay: aws.String(addOnMap["snapshot_time"].(string)),
 		}
@@ -354,7 +362,7 @@ func expandAddOnEnabled(addOnListRaw []interface{}) bool {
 	var enabled bool
 	for _, addOnRaw := range addOnListRaw {
 		addOnMap := addOnRaw.(map[string]interface{})
-		enabled = addOnMap["status"].(string) == "Enabled"
+		enabled = addOnMap[names.AttrStatus].(string) == "Enabled"
 	}
 
 	return enabled
@@ -365,9 +373,9 @@ func flattenAddOns(addOns []types.AddOn) []interface{} {
 
 	for _, addOn := range addOns {
 		rawAddOn := map[string]interface{}{
-			"type":          aws.ToString(addOn.Name),
-			"snapshot_time": aws.ToString(addOn.SnapshotTimeOfDay),
-			"status":        aws.ToString(addOn.Status),
+			names.AttrType:   aws.ToString(addOn.Name),
+			"snapshot_time":  aws.ToString(addOn.SnapshotTimeOfDay),
+			names.AttrStatus: aws.ToString(addOn.Status),
 		}
 		rawAddOns = append(rawAddOns, rawAddOn)
 	}
@@ -376,6 +384,8 @@ func flattenAddOns(addOns []types.AddOn) []interface{} {
 }
 
 func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAddOnsRaw interface{}, newAddOnsRaw interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	oldAddOns := expandAddOnRequest(oldAddOnsRaw.([]interface{}))
 	newAddOns := expandAddOnRequest(newAddOnsRaw.([]interface{}))
 	oldAddOnStatus := expandAddOnEnabled(oldAddOnsRaw.([]interface{}))
@@ -390,7 +400,7 @@ func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAd
 		out, err := conn.DisableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeDisableAddOn), ResInstance, name, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDisableAddOn), ResInstance, name, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDisableAddOn, ResInstance, name)
@@ -409,7 +419,7 @@ func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAd
 		out, err := conn.EnableAddOn(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, name, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeEnableAddOn), ResInstance, name, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeEnableAddOn, ResInstance, name)
@@ -419,7 +429,7 @@ func updateAddOn(ctx context.Context, conn *lightsail.Client, name string, oldAd
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func flattenAddOnTypeValues(t []types.AddOnType) []string {

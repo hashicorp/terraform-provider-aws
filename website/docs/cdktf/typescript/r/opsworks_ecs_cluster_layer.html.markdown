@@ -53,7 +53,7 @@ This resource supports the following arguments:
 * `drainElbOnShutdown` - (Optional) Whether to enable Elastic Load Balancing connection draining.
 * `systemPackages` - (Optional) Names of a set of system packages to install on the layer's instances.
 * `useEbsOptimizedInstances` - (Optional) Whether to use EBS-optimized instances.
-* `ebsVolume` - (Optional) `ebs_volume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
+* `ebsVolume` - (Optional) `ebsVolume` blocks, as described below, will each create an EBS volume and connect it to the layer's instances.
 * `customJson` - (Optional) Custom JSON attributes to apply to the layer.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
@@ -83,4 +83,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The id of the layer.
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 
-<!-- cache-key: cdktf-0.19.0 input-c41ce615eb693afa2fd19a1947549ef7ba89f9ef8c5826b9d872e80f1d738e7f -->
+<!-- cache-key: cdktf-0.20.1 input-c41ce615eb693afa2fd19a1947549ef7ba89f9ef8c5826b9d872e80f1d738e7f -->

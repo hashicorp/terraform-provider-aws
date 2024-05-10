@@ -24,9 +24,14 @@ func TestAccLogsGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	expectedLogGroupClass := "STANDARD"
+	if acctest.Partition() != names.StandardPartitionID {
+		expectedLogGroupClass = ""
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -34,20 +39,20 @@ func TestAccLogsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "logs", fmt.Sprintf("log-group:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "logs", fmt.Sprintf("log-group:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", expectedLogGroupClass),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -58,9 +63,9 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -68,15 +73,14 @@ func TestAccLogsGroup_nameGenerate(t *testing.T) {
 				Config: testAccGroupConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -87,9 +91,9 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 	var v types.LogGroup
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -97,15 +101,14 @@ func TestAccLogsGroup_namePrefix(t *testing.T) {
 				Config: testAccGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -117,9 +120,9 @@ func TestAccLogsGroup_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -141,9 +144,9 @@ func TestAccLogsGroup_tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -156,10 +159,9 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -190,9 +192,9 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 	kmsKey1ResourceName := "aws_kms_key.test.0"
 	kmsKey2ResourceName := "aws_kms_key.test.1"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -200,27 +202,53 @@ func TestAccLogsGroup_kmsKey(t *testing.T) {
 				Config: testAccGroupConfig_kmsKey(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKey1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKey1ResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGroupConfig_kmsKey(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKey2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKey2ResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLogsGroup_logGroupClass(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// CloudWatch Logs IA is available in all AWS Commercial regions.
+			acctest.PreCheckPartition(t, names.StandardPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_logGroupClass(rName, "INFREQUENT_ACCESS"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "log_group_class", "INFREQUENT_ACCESS"),
 				),
 			},
 		},
@@ -233,9 +261,9 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -254,10 +282,9 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_in_days", "skip_destroy"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGroupConfig_retentionPolicy(rName, 0),
@@ -278,9 +305,9 @@ func TestAccLogsGroup_multiple(t *testing.T) {
 	resource2Name := "aws_cloudwatch_log_group.test.1"
 	resource3Name := "aws_cloudwatch_log_group.test.2"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -302,9 +329,9 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_log_group.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupNoDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -319,6 +346,36 @@ func TestAccLogsGroup_skipDestroy(t *testing.T) {
 	})
 }
 
+func TestAccLogsGroup_skipDestroyInconsistentPlan(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.LogGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+				),
+			},
+			{
+				Config: testAccGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *types.LogGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -326,7 +383,7 @@ func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *typ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.ProviderMeta(t).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		output, err := tflogs.FindLogGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -342,7 +399,7 @@ func testAccCheckGroupExists(ctx context.Context, t *testing.T, n string, v *typ
 
 func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_group" {
@@ -368,7 +425,7 @@ func testAccCheckGroupDestroy(ctx context.Context, t *testing.T) resource.TestCh
 
 func testAccCheckGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_group" {
@@ -458,6 +515,15 @@ resource "aws_cloudwatch_log_group" "test" {
   kms_key_id = aws_kms_key.test[%[2]d].arn
 }
 `, rName, idx)
+}
+
+func testAccGroupConfig_logGroupClass(rName string, val string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name            = %[1]q
+  log_group_class = %[2]q
+}
+`, rName, val)
 }
 
 func testAccGroupConfig_retentionPolicy(rName string, val int) string {

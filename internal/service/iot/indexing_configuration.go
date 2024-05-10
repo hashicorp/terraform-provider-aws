@@ -13,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_indexing_configuration")
@@ -41,11 +43,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -59,11 +61,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -92,11 +94,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -125,7 +127,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 64),
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
 											),
 										},
 									},
@@ -138,11 +140,11 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
@@ -176,6 +178,8 @@ func ResourceIndexingConfiguration() *schema.Resource {
 }
 
 func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateIndexingConfigurationInput{}
@@ -191,39 +195,41 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Indexing Configuration: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceIndexingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceIndexingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
-		return diag.Errorf("reading IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Indexing Configuration: %s", err)
 	}
 
 	if output.ThingGroupIndexingConfiguration != nil {
 		if err := d.Set("thing_group_indexing_configuration", []interface{}{flattenThingGroupIndexingConfiguration(output.ThingGroupIndexingConfiguration)}); err != nil {
-			return diag.Errorf("setting thing_group_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_group_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_group_indexing_configuration", nil)
 	}
 	if output.ThingIndexingConfiguration != nil {
 		if err := d.Set("thing_indexing_configuration", []interface{}{flattenThingIndexingConfiguration(output.ThingIndexingConfiguration)}); err != nil {
-			return diag.Errorf("setting thing_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_indexing_configuration", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenThingGroupIndexingConfiguration(apiObject *iot.ThingGroupIndexingConfiguration) map[string]interface{} {
@@ -308,11 +314,11 @@ func flattenField(apiObject *iot.Field) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -417,11 +423,11 @@ func expandField(tfMap map[string]interface{}) *iot.Field {
 
 	apiObject := &iot.Field{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 

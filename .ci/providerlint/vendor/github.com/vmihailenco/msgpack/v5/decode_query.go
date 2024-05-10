@@ -11,9 +11,8 @@ import (
 type queryResult struct {
 	query       string
 	key         string
+	values      []interface{}
 	hasAsterisk bool
-
-	values []interface{}
 }
 
 func (q *queryResult) nextKey() {

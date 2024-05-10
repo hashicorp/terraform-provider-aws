@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,7 +57,7 @@ func DataSourceReplicationTask() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,20 +65,18 @@ func DataSourceReplicationTask() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"target_endpoint_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-const (
-	DSNameReplicationTask = "Replication Task Data Source"
-)
-
 func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -86,8 +84,9 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	taskID := d.Get("replication_task_id").(string)
 
 	task, err := FindReplicationTaskByID(ctx, conn, taskID)
+
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Task (%s): %s", taskID, err)
 	}
 
 	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
@@ -96,29 +95,24 @@ func dataSourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
+	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
-	d.Set("status", task.Status)
+	d.Set(names.AttrStatus, task.Status)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
 
-	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
-	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
-	}
-
-	d.Set("replication_task_settings", settings)
-
 	tags, err := listTags(ctx, conn, aws.StringValue(task.ReplicationTaskArn))
+
 	if err != nil {
-		return create.DiagError(names.DMS, create.ErrActionReading, DSNameReplicationTask, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing DMS Replication Task (%s) tags: %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.DMS, create.ErrActionSetting, DSNameReplicationTask, d.Id(), err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

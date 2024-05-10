@@ -35,7 +35,7 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,9 +44,9 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "folder_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "folder_type", quicksight.FolderTypeShared),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("folder/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("folder/%s", rId)),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccQuickSightFolder_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +95,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,7 +161,7 @@ func TestAccQuickSightFolder_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,7 +215,7 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +258,7 @@ func TestAccQuickSightFolder_parentFolderNested(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFolderDestroy(ctx),
 		Steps: []resource.TestStep{

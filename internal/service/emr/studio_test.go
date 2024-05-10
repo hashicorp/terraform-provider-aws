@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRStudio_sso(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,15 +37,15 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -58,15 +59,15 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "user_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -83,7 +84,7 @@ func TestAccEMRStudio_iam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,13 +92,13 @@ func TestAccEMRStudio_iam(t *testing.T) {
 				Config: testAccStudioConfig_iam(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_security_group_id", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -119,7 +120,7 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +145,7 @@ func TestAccEMRStudio_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioDestroy(ctx),
 		Steps: []resource.TestStep{

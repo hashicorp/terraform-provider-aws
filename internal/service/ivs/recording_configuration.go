@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,7 +43,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +60,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
@@ -70,7 +71,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -84,7 +85,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 300),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -124,6 +125,8 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateRecordingConfigurationInput{
@@ -131,7 +134,7 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
@@ -143,29 +146,31 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 		in.ThumbnailConfiguration = expandThumbnailConfiguration(v.([]interface{}))
 
 		if aws.StringValue(in.ThumbnailConfiguration.RecordingMode) == ivs.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
-			return diag.Errorf("thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
+			return sdkdiag.AppendErrorf(diags, "thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
 		}
 	}
 
 	out, err := conn.CreateRecordingConfigurationWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.RecordingConfiguration == nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.RecordingConfiguration.Arn))
 
 	if _, err := waitRecordingConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return resourceRecordingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceRecordingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
@@ -173,31 +178,33 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVS RecordingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("recording_reconnect_window_seconds", out.RecordingReconnectWindowSeconds)
-	d.Set("state", out.State)
+	d.Set(names.AttrState, out.State)
 
 	if err := d.Set("thumbnail_configuration", flattenThumbnailConfiguration(out.ThumbnailConfiguration)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
@@ -207,18 +214,18 @@ func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
 	if _, err := waitRecordingConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDestinationConfiguration(apiObject *ivs.DestinationConfiguration) []interface{} {
@@ -243,7 +250,7 @@ func flattenS3DestinationConfiguration(apiObject *ivs.S3DestinationConfiguration
 	m := map[string]interface{}{}
 
 	if v := apiObject.BucketName; v != nil {
-		m["bucket_name"] = aws.StringValue(v)
+		m[names.AttrBucketName] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}
@@ -289,7 +296,7 @@ func expandS3DestinationConfiguration(vSettings []interface{}) *ivs.S3Destinatio
 	tfMap := vSettings[0].(map[string]interface{})
 	a := &ivs.S3DestinationConfiguration{}
 
-	if v, ok := tfMap["bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketName].(string); ok && v != "" {
 		a.BucketName = aws.String(v)
 	}
 

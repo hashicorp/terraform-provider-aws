@@ -69,6 +69,8 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId := d.Get("identity_store_id").(string)
@@ -86,25 +88,27 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 	out, err := conn.CreateGroupMembership(ctx, input)
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), err)
 	}
 	if out == nil || out.MembershipId == nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroupMembership, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
 	d.Set("membership_id", out.MembershipId)
 	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.MembershipId)))
 
-	return resourceGroupMembershipRead(ctx, d, meta)
+	return append(diags, resourceGroupMembershipRead(ctx, d, meta)...)
 }
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId, groupMembershipId, err := resourceGroupMembershipParseID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
 	}
 
 	out, err := findGroupMembershipByID(ctx, conn, identityStoreId, groupMembershipId)
@@ -112,11 +116,11 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore GroupMembership (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
 	}
 
 	d.Set("group_id", out.GroupId)
@@ -125,16 +129,18 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	memberId, err := getMemberIdMemberUserId(out.MemberId)
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroupMembership, d.Id(), err)
 	}
 
 	d.Set("member_id", memberId)
 	d.Set("membership_id", out.MembershipId)
 
-	return nil
+	return diags
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	log.Printf("[INFO] Deleting IdentityStore GroupMembership %s", d.Id())
@@ -148,13 +154,13 @@ func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionDeleting, ResNameGroupMembership, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionDeleting, ResNameGroupMembership, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func getMemberIdMemberUserId(memberId types.MemberId) (*string, error) {

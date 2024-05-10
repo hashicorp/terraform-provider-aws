@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -287,7 +288,7 @@ func layoutSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+																			names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 																		},
 																	},
 																},
@@ -894,10 +895,10 @@ func expandSheetDefinition(tfMap map[string]interface{}) *quicksight.SheetDefini
 	if v, ok := tfMap["content_type"].(string); ok && v != "" {
 		sheet.ContentType = aws.String(v)
 	}
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		sheet.Description = aws.String(v)
 	}
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		sheet.Name = aws.String(v)
 	}
 	if v, ok := tfMap["title"].(string); ok && v != "" {
@@ -1284,11 +1285,15 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, null, _ := nullable.Int(tfMap["column_index"].(string)).Value(); !null {
-		layout.ColumnIndex = aws.Int64(v)
+	if v, ok := tfMap["column_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
+			layout.ColumnIndex = aws.Int64(i)
+		}
 	}
-	if v, null, _ := nullable.Int(tfMap["row_index"].(string)).Value(); !null {
-		layout.RowIndex = aws.Int64(v)
+	if v, ok := tfMap["row_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).ValueInt64(); !null {
+			layout.RowIndex = aws.Int64(i)
+		}
 	}
 
 	return layout
@@ -1457,7 +1462,7 @@ func expandSectionAfterPageBreak(tfList []interface{}) *quicksight.SectionAfterP
 
 	config := &quicksight.SectionAfterPageBreak{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		config.Status = aws.String(v)
 	}
 
@@ -1739,7 +1744,7 @@ func flattenFreeFormLayoutCanvasSizeOptions(apiObject *quicksight.FreeFormLayout
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ScreenCanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+		tfMap["screen_canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
 	return []interface{}{tfMap}
@@ -2217,7 +2222,7 @@ func flattenSectionAfterPageBreak(apiObject *quicksight.SectionAfterPageBreak) [
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}

@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -102,18 +103,18 @@ func DataSourceDataLakeSettings() *schema.Resource {
 
 func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
 
-	output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
+	output, err := conn.GetDataLakeSettings(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.EntityNotFoundException](err) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -132,7 +133,7 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
-	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringValueList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))

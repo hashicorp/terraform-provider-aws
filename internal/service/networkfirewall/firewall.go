@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,6 +40,12 @@ func ResourceFirewall() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("subnet_mapping")
@@ -47,7 +54,7 @@ func ResourceFirewall() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,7 +63,7 @@ func ResourceFirewall() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -80,7 +87,7 @@ func ResourceFirewall() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -93,7 +100,7 @@ func ResourceFirewall() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"subnet_id": {
+												names.AttrSubnetID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -106,7 +113,7 @@ func ResourceFirewall() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,7 +133,7 @@ func ResourceFirewall() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(networkfirewall.IPAddressType_Values(), false),
 						},
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -139,7 +146,7 @@ func ResourceFirewall() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -149,22 +156,24 @@ func ResourceFirewall() *schema.Resource {
 }
 
 func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &networkfirewall.CreateFirewallInput{
 		FirewallName:      aws.String(name),
 		FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 		SubnetMappings:    expandSubnetMappings(d.Get("subnet_mapping").(*schema.Set).List()),
 		Tags:              getTagsIn(ctx),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	if v, ok := d.GetOk("delete_protection"); ok {
 		input.DeleteProtection = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -183,19 +192,21 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateFirewallWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating NetworkFirewall Firewall (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Firewall.FirewallArn))
 
-	if _, err := waitFirewallCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
+	if _, err := waitFirewallCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFirewallRead(ctx, d, meta)
+	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
 func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindFirewallByARN(ctx, conn, d.Id())
@@ -203,39 +214,41 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
 	firewall := output.Firewall
-	d.Set("arn", firewall.FirewallArn)
+	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("delete_protection", firewall.DeleteProtection)
-	d.Set("description", firewall.Description)
+	d.Set(names.AttrDescription, firewall.Description)
 	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(firewall.EncryptionConfiguration)); err != nil {
-		return diag.Errorf("setting encryption_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	d.Set("firewall_policy_arn", firewall.FirewallPolicyArn)
 	d.Set("firewall_policy_change_protection", firewall.FirewallPolicyChangeProtection)
 	if err := d.Set("firewall_status", flattenFirewallStatus(output.FirewallStatus)); err != nil {
-		return diag.Errorf("setting firewall_status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
-	d.Set("name", firewall.FirewallName)
+	d.Set(names.AttrName, firewall.FirewallName)
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
-		return diag.Errorf("setting subnet_mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
 	d.Set("update_token", output.UpdateToken)
-	d.Set("vpc_id", firewall.VpcId)
+	d.Set(names.AttrVPCID, firewall.VpcId)
 
 	setTagsOut(ctx, firewall.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	updateToken := d.Get("update_token").(string)
 
@@ -249,15 +262,15 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallDeleteProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) delete protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) delete protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &networkfirewall.UpdateFirewallDescriptionInput{
-			Description: aws.String(d.Get("description").(string)),
+			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			FirewallArn: aws.String(d.Id()),
 			UpdateToken: aws.String(updateToken),
 		}
@@ -265,7 +278,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallDescriptionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) description: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -281,7 +294,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallEncryptionConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) encryption configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) encryption configuration: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -300,7 +313,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateFirewallPolicyChangeProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) firewall policy change protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) firewall policy change protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -316,7 +329,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.AssociateFirewallPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) firewall policy ARN: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) firewall policy ARN: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -332,7 +345,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateSubnetChangeProtectionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall (%s) subnet change protection: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) subnet change protection: %s", d.Id(), err)
 		}
 
 		updateToken = aws.StringValue(output.UpdateToken)
@@ -352,13 +365,13 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.AssociateSubnetsWithContext(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "associating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
 
-			updateToken, err = waitFirewallUpdated(ctx, conn, d.Id())
+			updateToken, err = waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 			if err != nil {
-				return diag.Errorf("waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 			}
 		}
 
@@ -372,21 +385,23 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.DisassociateSubnetsWithContext(ctx, input)
 
 			if err == nil {
-				/*updateToken*/ _, err = waitFirewallUpdated(ctx, conn, d.Id())
+				/*updateToken*/ _, err = waitFirewallUpdated(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id())
 
 				if err != nil {
-					return diag.Errorf("waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
 				}
 			} else if !tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidRequestException, "inaccessible") {
-				return diag.Errorf("disassociating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disassociating NetworkFirewall Firewall (%s) subnets: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceFirewallRead(ctx, d, meta)
+	return append(diags, resourceFirewallRead(ctx, d, meta)...)
 }
 
 func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
@@ -395,18 +410,18 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting NetworkFirewall Firewall (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFirewallDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Firewall (%s) delete: %s", d.Id(), err)
+	if _, err := waitFirewallDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
@@ -450,16 +465,12 @@ func statusFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, 
 	}
 }
 
-const (
-	firewallTimeout = 20 * time.Minute
-)
-
-func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -471,12 +482,12 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirew
 	return nil, err
 }
 
-func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (string, error) {
+func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (string, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueProvisioning},
 		Target:  []string{networkfirewall.FirewallStatusValueReady},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 		// Delay added to account for Associate/DisassociateSubnet calls that return
 		// a READY status immediately after the method is called instead of immediately
 		// returning PROVISIONING
@@ -492,12 +503,12 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirew
 	return "", err
 }
 
-func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.Firewall, error) {
+func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, timeout time.Duration, arn string) (*networkfirewall.Firewall, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.FirewallStatusValueDeleting},
 		Target:  []string{},
 		Refresh: statusFirewall(ctx, conn, arn),
-		Timeout: firewallTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -517,7 +528,7 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 			continue
 		}
 		mapping := &networkfirewall.SubnetMapping{
-			SubnetId: aws.String(tfMap["subnet_id"].(string)),
+			SubnetId: aws.String(tfMap[names.AttrSubnetID].(string)),
 		}
 		if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 			mapping.IPAddressType = aws.String(v)
@@ -535,7 +546,7 @@ func expandSubnetMappingIDs(l []interface{}) []string {
 		if !ok {
 			continue
 		}
-		if id, ok := tfMap["subnet_id"].(string); ok && id != "" {
+		if id, ok := tfMap[names.AttrSubnetID].(string); ok && id != "" {
 			ids = append(ids, id)
 		}
 	}
@@ -563,8 +574,8 @@ func flattenSyncStates(s map[string]*networkfirewall.SyncState) []interface{} {
 	syncStates := make([]interface{}, 0, len(s))
 	for k, v := range s {
 		m := map[string]interface{}{
-			"availability_zone": k,
-			"attachment":        flattenSyncStateAttachment(v.Attachment),
+			names.AttrAvailabilityZone: k,
+			"attachment":               flattenSyncStateAttachment(v.Attachment),
 		}
 		syncStates = append(syncStates, m)
 	}
@@ -578,8 +589,8 @@ func flattenSyncStateAttachment(a *networkfirewall.Attachment) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"endpoint_id": aws.StringValue(a.EndpointId),
-		"subnet_id":   aws.StringValue(a.SubnetId),
+		"endpoint_id":      aws.StringValue(a.EndpointId),
+		names.AttrSubnetID: aws.StringValue(a.SubnetId),
 	}
 
 	return []interface{}{m}
@@ -589,8 +600,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			"subnet_id":       aws.StringValue(s.SubnetId),
-			"ip_address_type": aws.StringValue(s.IPAddressType),
+			names.AttrSubnetID: aws.StringValue(s.SubnetId),
+			"ip_address_type":  aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -605,7 +616,7 @@ func subnetMappingsHash(v interface{}) int {
 	if !ok {
 		return 0
 	}
-	if id, ok := tfMap["subnet_id"].(string); ok {
+	if id, ok := tfMap[names.AttrSubnetID].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 	if id, ok := tfMap["ip_address_type"].(string); ok {

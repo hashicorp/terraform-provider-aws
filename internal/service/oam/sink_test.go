@@ -39,7 +39,7 @@ func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,8 +47,8 @@ func TestAccObservabilityAccessManagerSink_basic(t *testing.T) {
 				Config: testAccSinkConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkExists(ctx, resourceName, &sink),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -78,7 +78,7 @@ func TestAccObservabilityAccessManagerSink_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func TestAccObservabilityAccessManagerSink_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -5,6 +5,7 @@ package appstream
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -12,11 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKResource("aws_appstream_user_stack_association")
@@ -56,6 +57,8 @@ func ResourceUserStackAssociation() *schema.Resource {
 }
 
 func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	input := &appstream.UserStackAssociation{
@@ -75,28 +78,31 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 	})
 
 	if err != nil {
-		return diag.Errorf("creating AppStream User Stack Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, err)
 	}
 	if len(output.Errors) > 0 {
-		var errs *multierror.Error
+		var errs []error
 
 		for _, err := range output.Errors {
-			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 		}
-		return diag.Errorf("creating AppStream User Stack Association (%s): %s", id, errs)
+
+		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, errors.Join(errs...))
 	}
 
 	d.SetId(id)
 
-	return resourceUserStackAssociationRead(ctx, d, meta)
+	return append(diags, resourceUserStackAssociationRead(ctx, d, meta)...)
 }
 
 func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {
-		return diag.Errorf("decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
 	}
 
 	resp, err := conn.DescribeUserStackAssociationsWithContext(ctx,
@@ -109,20 +115,20 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppStream User Stack Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppStream User Stack Association (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || len(resp.UserStackAssociations) == 0 || resp.UserStackAssociations[0] == nil {
 		if d.IsNewResource() {
-			return diag.Errorf("reading AppStream User Stack Association (%s): empty output after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading AppStream User Stack Association (%s): empty output after creation", d.Id())
 		}
 		log.Printf("[WARN] AppStream User Stack Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	association := resp.UserStackAssociations[0]
@@ -131,15 +137,17 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("stack_name", association.StackName)
 	d.Set("user_name", association.UserName)
 
-	return nil
+	return diags
 }
 
 func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	userName, authType, stackName, err := DecodeUserStackAssociationID(d.Id())
 	if err != nil {
-		return diag.Errorf("decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "decoding AppStream User Stack Association ID (%s): %s", d.Id(), err)
 	}
 
 	input := &appstream.UserStackAssociation{
@@ -154,11 +162,11 @@ func resourceUserStackAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return diag.Errorf("deleting AppStream User Stack Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting AppStream User Stack Association (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func EncodeUserStackAssociationID(userName, authType, stackName string) string {

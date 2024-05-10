@@ -15,10 +15,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_fsx_ontap_storage_virtual_machine", name="ONTAP Storage Virtual Machine")
-func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
+// @Tags
+func dataSourceONTAPStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceONTAPStorageVirtualMachineRead,
 
@@ -42,7 +44,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"domain_name": {
+									names.AttrDomainName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -64,7 +66,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +74,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -152,8 +154,8 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceStorageVirtualMachineFiltersSchema(),
-			"id": {
+			"filter": storageVirtualMachineFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -174,7 +176,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,7 +184,7 @@ func DataSourceONTAPStorageVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -199,11 +201,11 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 
 	input := &fsx.DescribeStorageVirtualMachinesInput{}
 
-	if id, ok := d.GetOk("id"); ok {
-		input.StorageVirtualMachineIds = []*string{aws.String(id.(string))}
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.StorageVirtualMachineIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = BuildStorageVirtualMachineFiltersDataSource(
+	input.Filters = newStorageVirtualMachineFilterList(
 		d.Get("filter").(*schema.Set),
 	)
 
@@ -219,11 +221,11 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 
 	d.SetId(aws.StringValue(svm.StorageVirtualMachineId))
 	if err := d.Set("active_directory_configuration", flattenSvmActiveDirectoryConfiguration(d, svm.ActiveDirectoryConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting active_directory_configuration: %s", err)
 	}
-	d.Set("arn", svm.ResourceARN)
+	d.Set(names.AttrARN, svm.ResourceARN)
 	d.Set("creation_time", svm.CreationTime.Format(time.RFC3339))
-	if err := d.Set("endpoints", flattenSvmEndpoints(svm.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenSvmEndpoints(svm.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("file_system_id", svm.FileSystemId)
@@ -231,14 +233,17 @@ func dataSourceONTAPStorageVirtualMachineRead(ctx context.Context, d *schema.Res
 	if err := d.Set("lifecycle_transition_reason", flattenLifecycleTransitionReason(svm.LifecycleTransitionReason)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lifecycle_transition_reason: %s", err)
 	}
-	d.Set("name", svm.Name)
+	d.Set(names.AttrName, svm.Name)
 	d.Set("subtype", svm.Subtype)
 	d.Set("uuid", svm.UUID)
+
+	// SVM tags aren't set in the Describe response.
+	// setTagsOut(ctx, svm.Tags)
 
 	tags := KeyValueTags(ctx, svm.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

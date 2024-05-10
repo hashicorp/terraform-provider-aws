@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `hosted_zone` - ID for the hosted zone that Amazon Route 53 creates when you create a namespace.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-536486dabc04dbcda77c827f5666503eea5945a2c5257dff3f3c8c8d37db1b34 -->
+<!-- cache-key: cdktf-0.20.1 input-536486dabc04dbcda77c827f5666503eea5945a2c5257dff3f3c8c8d37db1b34 -->

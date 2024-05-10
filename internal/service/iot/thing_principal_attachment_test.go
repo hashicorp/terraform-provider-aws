@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingPrincipalAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func testAccCheckThingPrincipalAttachmentDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes["id"])
+			return fmt.Errorf("IOT Thing Principal Attachment (%s) still exists", rs.Primary.Attributes[names.AttrID])
 		}
 
 		return nil
@@ -143,7 +144,7 @@ func testAccCheckThingPrincipalAttachmentStatus(ctx context.Context, thingName s
 			if !ok {
 				return fmt.Errorf("Not found: %s", p)
 			}
-			principalARNs[pr.Primary.Attributes["arn"]] = p
+			principalARNs[pr.Primary.Attributes[names.AttrARN]] = p
 		}
 
 		thing, err := conn.DescribeThingWithContext(ctx, &iot.DescribeThingInput{

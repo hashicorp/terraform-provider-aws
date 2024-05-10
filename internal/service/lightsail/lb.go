@@ -37,11 +37,11 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +69,7 @@ func ResourceLoadBalancer() *schema.Resource {
 					"ipv4",
 				}, false),
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +78,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeInt},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -100,9 +100,11 @@ func ResourceLoadBalancer() *schema.Resource {
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 	in := lightsail.CreateLoadBalancerInput{
 		InstancePort:     int32(d.Get("instance_port").(int)),
 		LoadBalancerName: aws.String(lbName),
@@ -116,7 +118,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	out, err := conn.CreateLoadBalancer(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateLoadBalancer), ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateLoadBalancer, ResLoadBalancer, lbName)
@@ -127,10 +129,12 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(lbName)
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	lb, err := FindLoadBalancerById(ctx, conn, d.Id())
@@ -138,32 +142,34 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancer, d.Id(), err)
 	}
 
-	d.Set("arn", lb.Arn)
-	d.Set("created_at", lb.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, lb.Arn)
+	d.Set(names.AttrCreatedAt, lb.CreatedAt.Format(time.RFC3339))
 	d.Set("dns_name", lb.DnsName)
 	d.Set("health_check_path", lb.HealthCheckPath)
 	d.Set("instance_port", lb.InstancePort)
 	d.Set("ip_address_type", lb.IpAddressType)
-	d.Set("protocol", lb.Protocol)
+	d.Set(names.AttrProtocol, lb.Protocol)
 	d.Set("public_ports", lb.PublicPorts)
-	d.Set("name", lb.Name)
+	d.Set(names.AttrName, lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
 	setTagsOut(ctx, lb.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 
 	in := &lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
@@ -177,7 +183,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, healthCheckIn)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancer, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancer, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancer, lbName)
@@ -187,19 +193,21 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	return resourceLoadBalancerRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	lbName := d.Get("name").(string)
+	lbName := d.Get(names.AttrName).(string)
 
 	out, err := conn.DeleteLoadBalancer(ctx, &lightsail.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancer), ResLoadBalancer, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteLoadBalancer, ResLoadBalancer, lbName)
@@ -208,7 +216,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindLoadBalancerById(ctx context.Context, conn *lightsail.Client, name string) (*types.LoadBalancer, error) {

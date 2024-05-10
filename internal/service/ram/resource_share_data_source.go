@@ -16,16 +16,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ram_resource_share")
+// @SDKDataSource("aws_ram_resource_share", name="Resource Shared")
 // @Tags
 func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,11 +36,11 @@ func dataSourceResourceShare() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -46,9 +48,10 @@ func dataSourceResourceShare() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"owning_account_id": {
 				Type:     schema.TypeString,
@@ -71,11 +74,11 @@ func dataSourceResourceShare() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -84,11 +87,13 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	name := d.Get("name").(string)
 	resourceOwner := d.Get("resource_owner").(string)
 	inputG := &ram.GetResourceSharesInput{
-		Name:          aws.String(name),
 		ResourceOwner: aws.String(resourceOwner),
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		inputG.Name = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -102,15 +107,15 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	share, err := findResourceShare(ctx, conn, inputG)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RAM Resource Share", err))
 	}
 
 	arn := aws.StringValue(share.ResourceShareArn)
 	d.SetId(arn)
-	d.Set("arn", arn)
-	d.Set("name", share.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, share.Name)
 	d.Set("owning_account_id", share.OwningAccountId)
-	d.Set("status", share.Status)
+	d.Set(names.AttrStatus, share.Status)
 
 	setTagsOut(ctx, share.Tags)
 
@@ -139,11 +144,11 @@ func expandTagFilter(tfMap map[string]interface{}) *ram.TagFilter {
 
 	apiObject := &ram.TagFilter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.TagValues = flex.ExpandStringList(v)
 	}
 

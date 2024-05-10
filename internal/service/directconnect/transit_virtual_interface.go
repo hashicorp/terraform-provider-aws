@@ -55,7 +55,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,7 +100,7 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{1500, 8500}),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -142,7 +142,7 @@ func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 			EnableSiteLink:         aws.Bool(d.Get("sitelink_enabled").(bool)),
 			Mtu:                    aws.Int64(int64(d.Get("mtu").(int))),
 			Tags:                   getTagsIn(ctx),
-			VirtualInterfaceName:   aws.String(d.Get("name").(string)),
+			VirtualInterfaceName:   aws.String(d.Get(names.AttrName).(string)),
 			Vlan:                   aws.Int64(int64(d.Get("vlan").(int))),
 		},
 	}
@@ -195,7 +195,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
@@ -204,7 +204,7 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
-	d.Set("name", vif.VirtualInterfaceName)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 

@@ -16,7 +16,7 @@ Provides an ElastiCache Cluster resource, which manages either a
 [read replica in a Redis (Cluster Mode Enabled) replication group].
 
 For working with Redis (Cluster Mode Enabled) replication groups, see the
-[`awsElasticacheReplicationGroup` resource](/docs/providers/aws/r/elasticache_replication_group.html).
+[`aws_elasticache_replication_group` resource](/docs/providers/aws/r/elasticache_replication_group.html).
 
 ~> **Note:** When you change an attribute, such as `numCacheNodes`, by default
 it is applied in the next maintenance window. Because of this, Terraform may report
@@ -241,10 +241,10 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `clusterId` – (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
-* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
-* `nodeType` – (Required unless `replication_group_id` is provided) The instance class used. See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html). For Memcached, changing this value will re-create the resource.
-* `numCacheNodes` – (Required unless `replication_group_id` is provided) The initial number of cache nodes that the cache cluster will have. For Redis, this value must be 1. For Memcached, this value must be between 1 and 40. If this number is reduced on subsequent runs, the highest numbered nodes will be removed.
-* `parameterGroupName` – (Required unless `replication_group_id` is provided) The name of the parameter group to associate with this cache cluster.
+* `engine` – (Optional, Required if `replicationGroupId` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
+* `nodeType` – (Required unless `replicationGroupId` is provided) The instance class used. See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html). See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html). For Memcached, changing this value will re-create the resource.
+* `numCacheNodes` – (Required unless `replicationGroupId` is provided) The initial number of cache nodes that the cache cluster will have. For Redis, this value must be 1. For Memcached, this value must be between 1 and 40. If this number is reduced on subsequent runs, the highest numbered nodes will be removed.
+* `parameterGroupName` – (Required unless `replicationGroupId` is provided) The name of the parameter group to associate with this cache cluster.
 
 The following arguments are optional:
 
@@ -252,8 +252,8 @@ The following arguments are optional:
 * `autoMinorVersionUpgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
-* `availabilityZone` - (Optional) Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone. Changing this value will re-create the resource.
-* `azMode` - (Optional, Memcached only) Whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`.
+* `availabilityZone` - (Optional) Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferredAvailabilityZones` instead. Default: System chosen Availability Zone. Changing this value will re-create the resource.
+* `azMode` - (Optional, Memcached only) Whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `numCacheNodes` must be greater than `1`.
 * `engineVersion` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
@@ -261,7 +261,7 @@ The following arguments are optional:
   When the version is 6, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.
-  The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. Cannot be provided with `replication_group_id.`
+  The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. Cannot be provided with `replication_group_id.`
 * `finalSnapshotIdentifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `ipDiscovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
 * `logDeliveryConfiguration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
@@ -271,17 +271,17 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 * `networkType` - (Optional) The IP versions for cache cluster connections. IPv6 is supported with Redis engine `6.2` onword or Memcached version `1.6.6` for all [Nitro system](https://aws.amazon.com/ec2/nitro/) instances. Valid values are `ipv4`, `ipv6` or `dual_stack`.
 * `notificationTopicArn` – (Optional) ARN of an SNS topic to send ElastiCache notifications to. Example: `arn:aws:sns:us-east-1:012345678999:my_sns_topic`.
 * `outpostMode` - (Optional) Specify the outpost mode that will apply to the cache cluster creation. Valid values are `"single-outpost"` and `"cross-outpost"`, however AWS currently only supports `"single-outpost"` mode.
-* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcached the default is 11211, and for Redis the default port is 6379. Cannot be provided with `replication_group_id`. Changing this value will re-create the resource.
-* `preferredAvailabilityZones` - (Optional, Memcached only) List of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `num_cache_nodes`. If you want all the nodes in the same Availability Zone, use `availability_zone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
-* `preferredOutpostArn` - (Optional, Required if `outpost_mode` is specified) The outpost ARN in which the cache cluster will be created.
+* `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcached the default is 11211, and for Redis the default port is 6379. Cannot be provided with `replicationGroupId`. Changing this value will re-create the resource.
+* `preferredAvailabilityZones` - (Optional, Memcached only) List of the Availability Zones in which cache nodes are created. If you are creating your cluster in an Amazon VPC you can only locate nodes in Availability Zones that are associated with the subnets in the selected subnet group. The number of Availability Zones listed must equal the value of `numCacheNodes`. If you want all the nodes in the same Availability Zone, use `availabilityZone` instead, or repeat the Availability Zone multiple times in the list. Default: System chosen Availability Zones. Detecting drift of existing node availability zone is not currently supported. Updating this argument by itself to migrate existing node availability zones is not currently supported and will show a perpetual difference.
+* `preferredOutpostArn` - (Optional, Required if `outpostMode` is specified) The outpost ARN in which the cache cluster will be created.
 * `replicationGroupId` - (Optional, Required if `engine` is not specified) ID of the replication group to which this cluster should belong. If this parameter is specified, the cluster is added to the specified replication group as a read replica; otherwise, the cluster is a standalone primary that is not part of any replication group.
 * `securityGroupIds` – (Optional, VPC only) One or more VPC security groups associated with the cache cluster. Cannot be provided with `replication_group_id.`
-* `snapshotArns` – (Optional, Redis only) Single-element string list containing an Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3. The object name cannot contain any commas. Changing `snapshot_arns` forces a new resource.
-* `snapshotName` - (Optional, Redis only) Name of a snapshot from which to restore data into the new node group. Changing `snapshot_name` forces a new resource.
-* `snapshotRetentionLimit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro cache nodes
+* `snapshotArns` – (Optional, Redis only) Single-element string list containing an Amazon Resource Name (ARN) of a Redis RDB snapshot file stored in Amazon S3. The object name cannot contain any commas. Changing `snapshotArns` forces a new resource.
+* `snapshotName` - (Optional, Redis only) Name of a snapshot from which to restore data into the new node group. Changing `snapshotName` forces a new resource.
+* `snapshotRetentionLimit` - (Optional, Redis only) Number of days for which ElastiCache will retain automatic cache cluster snapshots before deleting them. For example, if you set SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retained for 5 days before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off. Please note that setting a `snapshotRetentionLimit` is not supported on cache.t1.micro cache nodes
 * `snapshotWindow` - (Optional, Redis only) Daily time range (in UTC) during which ElastiCache will begin taking a daily snapshot of your cache cluster. Example: 05:00-09:00
 * `subnetGroupName` – (Optional, VPC only) Name of the subnet group to be used for the cache cluster. Changing this value will re-create the resource. Cannot be provided with `replication_group_id.`
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transitEncryptionEnabled` - (Optional) Enable encryption in-transit. Supported only with Memcached versions `1.6.12` and later, running in a VPC. See the [ElastiCache in-transit encryption](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/in-transit-encryption-mc.html) documentation for more details.
 
 ### Log Delivery Configuration
@@ -299,10 +299,10 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The ARN of the created ElastiCache Cluster.
 * `engineVersionActual` - Because ElastiCache pulls the latest minor or patch for a version, this attribute returns the running version of the cache engine.
-* `cacheNodes` - List of node objects including `id`, `address`, `port` and `availability_zone`.
+* `cacheNodes` - List of node objects including `id`, `address`, `port` and `availabilityZone`.
 * `clusterAddress` - (Memcached only) DNS name of the cache cluster without the port appended.
 * `configurationEndpoint` - (Memcached only) Configuration endpoint to allow host discovery.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -320,9 +320,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ElasticacheCluster } from "./.gen/providers/aws/elasticache-cluster";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ElasticacheCluster.generateConfigForImport(this, "myCluster", "my_cluster");
   }
 }
 
@@ -334,4 +340,4 @@ Using `terraform import`, import ElastiCache Clusters using the `clusterId`. For
 % terraform import aws_elasticache_cluster.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-407a7f00eaf445bba1164068f7df66d3af3f6600a762abdab44b9baeff7de833 -->
+<!-- cache-key: cdktf-0.20.1 input-407a7f00eaf445bba1164068f7df66d3af3f6600a762abdab44b9baeff7de833 -->

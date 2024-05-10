@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationalUnit_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +39,8 @@ func testAccOrganizationalUnit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -63,7 +64,7 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 				Config: testAccOrganizationalUnitConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -111,7 +112,7 @@ func testAccOrganizationalUnit_update(t *testing.T) {
 				Config: testAccOrganizationalUnitConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -129,7 +130,7 @@ func testAccOrganizationalUnit_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationalUnitDestroy(ctx),
 		Steps: []resource.TestStep{

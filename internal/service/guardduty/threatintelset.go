@@ -39,7 +39,7 @@ func ResourceThreatIntelSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceThreatIntelSet() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -79,7 +79,7 @@ func resourceThreatIntelSetCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	detectorID := d.Get("detector_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &guardduty.CreateThreatIntelSetInput{
 		DetectorId: aws.String(detectorID),
 		Name:       aws.String(name),
@@ -141,12 +141,12 @@ func resourceThreatIntelSetRead(ctx context.Context, d *schema.ResourceData, met
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("detector/%s/threatintelset/%s", detectorId, threatIntelSetId),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	d.Set("detector_id", detectorId)
 	d.Set("format", resp.Format)
 	d.Set("location", resp.Location)
-	d.Set("name", resp.Name)
+	d.Set(names.AttrName, resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.ThreatIntelSetStatusActive)
 
 	setTagsOut(ctx, resp.Tags)
@@ -163,14 +163,14 @@ func resourceThreatIntelSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Threat Intel Set (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChanges("activate", "location", "name") {
+	if d.HasChanges("activate", "location", names.AttrName) {
 		input := &guardduty.UpdateThreatIntelSetInput{
 			DetectorId:       aws.String(detectorId),
 			ThreatIntelSetId: aws.String(threatIntelSetID),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 		if d.HasChange("location") {
 			input.Location = aws.String(d.Get("location").(string))

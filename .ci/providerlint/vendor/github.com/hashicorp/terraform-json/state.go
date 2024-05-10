@@ -38,7 +38,7 @@ type State struct {
 
 	// Checks contains the results of any conditional checks when Values was
 	// last updated.
-	Checks *CheckResultStatic `json:"checks,omitempty"`
+	Checks []CheckResultStatic `json:"checks,omitempty"`
 }
 
 // UseJSONNumber controls whether the State will be decoded using the

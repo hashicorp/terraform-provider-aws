@@ -19,11 +19,24 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newPodIdentityAssociationResource,
+			Name:    "Pod Identity Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "association_arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceAccessEntry,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+		},
 		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
@@ -58,11 +71,24 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  resourceAccessEntry,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "access_entry_arn",
+			},
+		},
+		{
+			Factory:  resourceAccessPolicyAssociation,
+			TypeName: "aws_eks_access_policy_association",
+			Name:     "Access Policy Association",
+		},
+		{
 			Factory:  resourceAddon,
 			TypeName: "aws_eks_addon",
 			Name:     "Add-On",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -70,7 +96,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_eks_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -78,7 +104,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_eks_fargate_profile",
 			Name:     "Fargate Profile",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -86,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_eks_identity_provider_config",
 			Name:     "Identity Provider Config",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -94,7 +120,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_eks_node_group",
 			Name:     "Node Group",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -109,7 +135,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return eks_sdkv2.NewFromConfig(cfg, func(o *eks_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

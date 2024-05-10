@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_device")
@@ -18,7 +20,7 @@ func DataSourceDevice() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDeviceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +40,7 @@ func DataSourceDevice() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,8 +84,8 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,6 +98,8 @@ func DataSourceDevice() *schema.Resource {
 }
 
 func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -104,23 +108,23 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Device (%s): %s", deviceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", deviceID, err)
 	}
 
 	d.SetId(deviceID)
-	d.Set("arn", device.DeviceArn)
+	d.Set(names.AttrARN, device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
-			return diag.Errorf("setting aws_location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
 		}
 	} else {
 		d.Set("aws_location", nil)
 	}
-	d.Set("description", device.Description)
+	d.Set(names.AttrDescription, device.Description)
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
-			return diag.Errorf("setting location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
@@ -128,12 +132,12 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
-	d.Set("type", device.Type)
+	d.Set(names.AttrType, device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("tags", KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

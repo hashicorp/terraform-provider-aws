@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func findVPCAttributeV2(ctx context.Context, conn *ec2.Client, vpcID string, attribute awstypes.VpcAttributeName) (bool, error) {
@@ -101,7 +102,7 @@ func findVPCByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.
 
 func findVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcIpv6CidrBlockAssociation, *awstypes.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"ipv6-cidr-block-association.association-id": id,
 		}),
 	}
@@ -127,13 +128,34 @@ func findVPCIPv6CIDRBlockAssociationByIDV2(ctx context.Context, conn *ec2.Client
 
 func findVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: buildAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"default": "true",
 			"vpc-id":  id,
 		}),
 	}
 
 	return findNetworkACLV2(ctx, conn, input)
+}
+
+func findNetworkACLByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		NetworkAclIds: []string{id},
+	}
+
+	output, err := findNetworkACLV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkAclId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func findNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
@@ -150,7 +172,6 @@ func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	var output []awstypes.NetworkAcl
 
 	pages := ec2.NewDescribeNetworkAclsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -171,9 +192,9 @@ func findNetworkACLsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	return output, nil
 }
 
-func FindVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
+func findVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: buildAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"group-name": DefaultSecurityGroupName,
 			"vpc-id":     id,
 		}),
@@ -184,7 +205,7 @@ func FindVPCDefaultSecurityGroupV2(ctx context.Context, conn *ec2.Client, id str
 
 func findVPCMainRouteTableV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: buildAttributeFilterListV2(map[string]string{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"association.main": "true",
 			"vpc-id":           id,
 		}),
@@ -207,7 +228,6 @@ func findRouteTablesV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 	var output []awstypes.RouteTable
 
 	pages := ec2.NewDescribeRouteTablesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -242,7 +262,6 @@ func findSecurityGroupsV2(ctx context.Context, conn *ec2.Client, input *ec2.Desc
 	var output []awstypes.SecurityGroup
 
 	pages := ec2.NewDescribeSecurityGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -286,4 +305,145 @@ func findIPAMPoolAllocationsV2(ctx context.Context, conn *ec2.Client, input *ec2
 	}
 
 	return output, nil
+}
+
+func findNetworkInterfacesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) ([]awstypes.NetworkInterface, error) {
+	var output []awstypes.NetworkInterface
+
+	pages := ec2.NewDescribeNetworkInterfacesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.NetworkInterfaces...)
+	}
+
+	return output, nil
+}
+
+func findNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInterfacesInput) (*awstypes.NetworkInterface, error) {
+	output, err := findNetworkInterfacesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findNetworkInterfaceByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		NetworkInterfaceIds: []string{id},
+	}
+
+	output, err := findNetworkInterfaceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkInterfaceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
+func findNetworkInterfaceAttachmentByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterfaceAttachment, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.attachment-id": id,
+		}),
+	}
+
+	networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if networkInterface.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return networkInterface.Attachment, nil
+}
+
+/*
+	func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+		input := &ec2.DescribeNetworkInterfacesInput{
+			Filters: newAttributeFilterListV2(map[string]string{
+				"attachment.attachment-id": id,
+			}),
+		}
+
+		networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if networkInterface == nil {
+			return nil, tfresource.NewEmptyResultError(input)
+		}
+
+		return networkInterface, nil
+	}
+*/
+
+func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.instance-owner-id": attachmentInstanceOwnerID,
+			names.AttrDescription:          description,
+		}),
+	}
+
+	return findNetworkInterfacesV2(ctx, conn, input)
+}
+
+func findEBSVolumesV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) ([]awstypes.Volume, error) {
+	var output []awstypes.Volume
+
+	pages := ec2.NewDescribeVolumesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.Volumes...)
+	}
+
+	return output, nil
+}
+
+func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVolumesInput) (*awstypes.Volume, error) {
+	output, err := findEBSVolumesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }

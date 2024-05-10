@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,8 +43,8 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 				Config: testAccLocationFSxWindowsFileSystemConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^fsxw://.+/`)),
@@ -74,7 +75,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +139,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +181,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 
 func testAccCheckLocationFSxWindowsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_fsx_windows_file_system" {
@@ -211,7 +212,7 @@ func testAccCheckLocationFSxWindowsExists(ctx context.Context, n string, v *data
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationFSxWindowsByARN(ctx, conn, rs.Primary.ID)
 

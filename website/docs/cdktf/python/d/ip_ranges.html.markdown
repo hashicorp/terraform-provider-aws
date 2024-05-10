@@ -78,4 +78,4 @@ This data source exports the following attributes in addition to the arguments a
 [1]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html#aws-ip-syntax
 
-<!-- cache-key: cdktf-0.19.0 input-73d6997abbb59dd921b8bcd692995e1403416e2fa26a744feb3a7bbef5d83b63 -->
+<!-- cache-key: cdktf-0.20.1 input-73d6997abbb59dd921b8bcd692995e1403416e2fa26a744feb3a7bbef5d83b63 -->

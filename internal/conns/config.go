@@ -6,6 +6,8 @@ package conns
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -21,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 type Config struct {
@@ -45,7 +48,7 @@ type Config struct {
 	Region                         string
 	RetryMode                      aws_sdkv2.RetryMode
 	S3UsePathStyle                 bool
-	S3UsEast1RegionalEndpoint      endpoints_sdkv1.S3UsEast1RegionalEndpoint
+	S3USEast1RegionalEndpoint      string
 	SecretKey                      string
 	SharedConfigFiles              []string
 	SharedCredentialsFiles         []string
@@ -56,6 +59,7 @@ type Config struct {
 	SuppressDebugLog               bool
 	TerraformVersion               string
 	Token                          string
+	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
 }
@@ -66,36 +70,48 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	ctx, logger := logging.NewTfLogger(ctx)
 
+	const (
+		maxBackoff = 300 * time.Second // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
+	)
 	awsbaseConfig := awsbase.Config{
-		AccessKey:                     c.AccessKey,
-		AllowedAccountIds:             c.AllowedAccountIds,
-		APNInfo:                       StdUserAgentProducts(c.TerraformVersion),
-		AssumeRoleWithWebIdentity:     c.AssumeRoleWithWebIdentity,
-		CallerDocumentationURL:        "https://registry.terraform.io/providers/hashicorp/aws",
-		CallerName:                    "Terraform AWS Provider",
-		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
-		ForbiddenAccountIds:           c.ForbiddenAccountIds,
-		IamEndpoint:                   c.Endpoints[names.IAM],
-		Insecure:                      c.Insecure,
-		HTTPClient:                    client.HTTPClient(),
-		HTTPProxy:                     c.HTTPProxy,
-		HTTPSProxy:                    c.HTTPSProxy,
-		HTTPProxyMode:                 awsbase.HTTPProxyModeLegacy,
-		Logger:                        logger,
-		MaxRetries:                    c.MaxRetries,
-		NoProxy:                       c.NoProxy,
-		Profile:                       c.Profile,
-		Region:                        c.Region,
-		RetryMode:                     c.RetryMode,
-		SecretKey:                     c.SecretKey,
-		SkipCredsValidation:           c.SkipCredsValidation,
-		SkipRequestingAccountId:       c.SkipRequestingAccountId,
-		SsoEndpoint:                   c.Endpoints[names.SSO],
-		StsEndpoint:                   c.Endpoints[names.STS],
-		SuppressDebugLog:              c.SuppressDebugLog,
-		Token:                         c.Token,
-		UseDualStackEndpoint:          c.UseDualStackEndpoint,
-		UseFIPSEndpoint:               c.UseFIPSEndpoint,
+		AccessKey:         c.AccessKey,
+		AllowedAccountIds: c.AllowedAccountIds,
+		APNInfo: &awsbase.APNInfo{
+			PartnerName: "HashiCorp",
+			Products: []awsbase.UserAgentProduct{
+				{Name: "Terraform", Version: c.TerraformVersion, Comment: "+https://www.terraform.io"},
+				{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+			},
+		},
+		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
+		Backoff:                        &v1CompatibleBackoff{maxRetryDelay: maxBackoff},
+		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
+		CallerName:                     "Terraform AWS Provider",
+		EC2MetadataServiceEnableState:  c.EC2MetadataServiceEnableState,
+		ForbiddenAccountIds:            c.ForbiddenAccountIds,
+		IamEndpoint:                    c.Endpoints[names.IAM],
+		Insecure:                       c.Insecure,
+		HTTPClient:                     client.HTTPClient(ctx),
+		HTTPProxy:                      c.HTTPProxy,
+		HTTPSProxy:                     c.HTTPSProxy,
+		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
+		Logger:                         logger,
+		MaxBackoff:                     maxBackoff,
+		MaxRetries:                     c.MaxRetries,
+		NoProxy:                        c.NoProxy,
+		Profile:                        c.Profile,
+		Region:                         c.Region,
+		RetryMode:                      c.RetryMode,
+		SecretKey:                      c.SecretKey,
+		SkipCredsValidation:            c.SkipCredsValidation,
+		SkipRequestingAccountId:        c.SkipRequestingAccountId,
+		SsoEndpoint:                    c.Endpoints[names.SSO],
+		StsEndpoint:                    c.Endpoints[names.STS],
+		SuppressDebugLog:               c.SuppressDebugLog,
+		Token:                          c.Token,
+		TokenBucketRateLimiterCapacity: c.TokenBucketRateLimiterCapacity,
+		UseDualStackEndpoint:           c.UseDualStackEndpoint,
+		UseFIPSEndpoint:                c.UseFIPSEndpoint,
 	}
 
 	if c.AssumeRole != nil && c.AssumeRole.RoleARN != "" {
@@ -153,7 +169,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
@@ -188,21 +204,19 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, err.Error())
 	}
 
-	DNSSuffix := "amazonaws.com"
+	dnsSuffix := "amazonaws.com"
 	if p, ok := endpoints_sdkv1.PartitionForRegion(endpoints_sdkv1.DefaultPartitions(), c.Region); ok {
-		DNSSuffix = p.DNSSuffix()
+		dnsSuffix = p.DNSSuffix()
 	}
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
-	client.DNSSuffix = DNSSuffix
+	client.dnsSuffix = dnsSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
-	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
-	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.Session = sess
-	client.TerraformVersion = c.TerraformVersion
+	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
+	client.session = session
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
@@ -211,7 +225,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.endpoints = c.Endpoints
 	client.logger = logger
 	client.s3UsePathStyle = c.S3UsePathStyle
-	client.s3UsEast1RegionalEndpoint = c.S3UsEast1RegionalEndpoint
+	client.s3USEast1RegionalEndpoint = c.S3USEast1RegionalEndpoint
 	client.stsRegion = c.STSRegion
 
 	return client, diags
@@ -225,5 +239,14 @@ func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
 		return diag.Error
 	default:
 		return -1
+	}
+}
+
+func NormalizeS3USEast1RegionalEndpoint(v string) string {
+	switch v := strings.ToLower(v); v {
+	case "legacy", "regional":
+		return v
+	default:
+		return ""
 	}
 }

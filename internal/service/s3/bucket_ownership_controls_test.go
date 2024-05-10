@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,7 +27,7 @@ func TestAccS3BucketOwnershipControls_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketOwnershipControlsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccS3BucketOwnershipControls_basic(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, string(types.ObjectOwnershipBucketOwnerPreferred)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.object_ownership", string(types.ObjectOwnershipBucketOwnerPreferred)),
 				),
@@ -55,7 +56,7 @@ func TestAccS3BucketOwnershipControls_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketOwnershipControlsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +80,7 @@ func TestAccS3BucketOwnershipControls_Disappears_bucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketOwnershipControlsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +103,7 @@ func TestAccS3BucketOwnershipControls_Rule_objectOwnership(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketOwnershipControlsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +111,7 @@ func TestAccS3BucketOwnershipControls_Rule_objectOwnership(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, string(types.ObjectOwnershipObjectWriter)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.object_ownership", string(types.ObjectOwnershipObjectWriter)),
 				),
@@ -124,10 +125,28 @@ func TestAccS3BucketOwnershipControls_Rule_objectOwnership(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, string(types.ObjectOwnershipBucketOwnerPreferred)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.object_ownership", string(types.ObjectOwnershipBucketOwnerPreferred)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketOwnershipControls_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketOwnershipControlsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketOwnershipControlsConfig_directoryBucket(rName, string(types.ObjectOwnershipBucketOwnerPreferred)),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -188,4 +207,24 @@ resource "aws_s3_bucket_ownership_controls" "test" {
   }
 }
 `, rName, objectOwnership)
+}
+
+func testAccBucketOwnershipControlsConfig_directoryBucket(rName, objectOwnership string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+
+  rule {
+    object_ownership = %[1]q
+  }
+}
+`, objectOwnership))
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,7 +27,7 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
@@ -57,7 +58,7 @@ func TestAccS3BucketWebsiteConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccS3BucketWebsiteConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccS3BucketWebsiteConfiguration_update(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttr(resourceName, "error_document.#", "1"),
@@ -117,7 +118,7 @@ func TestAccS3BucketWebsiteConfiguration_Redirect(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccS3BucketWebsiteConfiguration_Redirect(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_redirect(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.0.host_name", "example.com"),
 				),
@@ -146,7 +147,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -218,7 +219,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_MultipleRules(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,7 +265,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_RedirectOnly(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -297,7 +298,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -325,7 +326,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirectWithEm
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -353,7 +354,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_updateConditionAndRedirect
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -384,7 +385,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRuleToRoutingRules(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -416,7 +417,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentNoChang
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -448,7 +449,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentWithCha
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -480,7 +481,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleNoChange(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -511,7 +512,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChang
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -532,6 +533,24 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChang
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.protocol", string(types.ProtocolHttps)),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.replace_key_with", "errorpage.html"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketWebsiteConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketWebsiteConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketWebsiteConfigurationConfig_directoryBucket(rName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -669,7 +688,7 @@ resource "aws_s3_bucket_website_configuration" "test" {
 
 func testAccBucketWebsiteConfigurationConfig_routingRuleRedirectErrors(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -911,4 +930,23 @@ resource "aws_s3_bucket_website_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketWebsiteConfigurationConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), `
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_website_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  index_document {
+    suffix = "index.html"
+  }
+}
+`)
 }

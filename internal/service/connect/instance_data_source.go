@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_instance")
@@ -20,7 +22,7 @@ func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,13 +58,13 @@ func DataSourceInstance() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_alias", "instance_id"},
+				ExactlyOneOf: []string{"instance_alias", names.AttrInstanceID},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"instance_id", "instance_alias"},
+				ExactlyOneOf: []string{names.AttrInstanceID, "instance_alias"},
 			},
 			"multi_party_conference_enabled": {
 				Type:     schema.TypeBool,
@@ -72,7 +74,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,16 +91,18 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	var matchedInstance *connect.Instance
 
-	if v, ok := d.GetOk("instance_id"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceID); ok {
 		instanceID := v.(string)
 		instance, err := FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
-			return diag.Errorf("reading Connect Instance (%s): %s", instanceID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s): %s", instanceID, err)
 		}
 
 		matchedInstance = instance
@@ -108,11 +112,11 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		instanceSummary, err := dataSourceGetInstanceSummaryByInstanceAlias(ctx, conn, instanceAlias)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Instance Summary by instance_alias (%s): %s", instanceAlias, err)
 		}
 
 		if instanceSummary == nil {
-			return diag.Errorf("finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Instance Summary by instance_alias (%s): not found", instanceAlias)
 		}
 
 		matchedInstance = &connect.Instance{
@@ -129,11 +133,11 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if matchedInstance == nil {
-		return diag.Errorf("no Connect Instance found for query, try adjusting your search criteria")
+		return sdkdiag.AppendErrorf(diags, "no Connect Instance found for query, try adjusting your search criteria")
 	}
 
 	d.SetId(aws.StringValue(matchedInstance.Id))
-	d.Set("arn", matchedInstance.Arn)
+	d.Set(names.AttrARN, matchedInstance.Arn)
 	if matchedInstance.CreatedTime != nil {
 		d.Set("created_time", matchedInstance.CreatedTime.Format(time.RFC3339))
 	}
@@ -142,17 +146,17 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("instance_alias", matchedInstance.InstanceAlias)
 	d.Set("outbound_calls_enabled", matchedInstance.OutboundCallsEnabled)
 	d.Set("service_role", matchedInstance.ServiceRole)
-	d.Set("status", matchedInstance.InstanceStatus)
+	d.Set(names.AttrStatus, matchedInstance.InstanceStatus)
 
 	for att := range InstanceAttributeMapping() {
 		value, err := dataSourceInstanceReadAttribute(ctx, conn, d.Id(), att)
 		if err != nil {
-			return diag.Errorf("reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
+			return sdkdiag.AppendErrorf(diags, "reading Connect Instance (%s) attribute (%s): %s", d.Id(), att, err)
 		}
 		d.Set(InstanceAttributeMapping()[att], value)
 	}
 
-	return nil
+	return diags
 }
 
 func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *connect.Connect, instanceAlias string) (*connect.InstanceSummary, error) {

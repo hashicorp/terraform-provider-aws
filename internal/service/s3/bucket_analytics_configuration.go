@@ -22,10 +22,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_analytics_configuration")
-func ResourceBucketAnalyticsConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_analytics_configuration", name="Bucket Analytics Configuration")
+func resourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAnalyticsConfigurationPut,
 		ReadWithoutTimeout:   resourceBucketAnalyticsConfigurationRead,
@@ -37,7 +38,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,7 +54,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
 						},
-						"tags": {
+						names.AttrTags: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							Elem:         &schema.Schema{Type: schema.TypeString},
@@ -62,7 +63,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -137,7 +138,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	analyticsConfiguration := &types.AnalyticsConfiguration{
 		Id:                   aws.String(name),
 		StorageClassAnalysis: expandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
@@ -147,16 +148,20 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		analyticsConfiguration.Filter = expandAnalyticsFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketAnalyticsConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AnalyticsConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
@@ -165,7 +170,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findAnalyticsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -198,11 +203,11 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("reading S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	if err = d.Set("storage_class_analysis", flattenStorageClassAnalysis(ac.StorageClassAnalysis)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_class_analysis: %s", err)
 	}
@@ -233,7 +238,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findAnalyticsConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -261,8 +266,8 @@ func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.
 	}
 
 	var tags []types.Tag
-	if v, ok := m["tags"]; ok {
-		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
+	if v, ok := m[names.AttrTags]; ok {
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -327,12 +332,12 @@ func expandAnalyticsExportDestination(edl []interface{}) *types.AnalyticsExportD
 
 	if len(edl) != 0 && edl[0] != nil {
 		edm := edl[0].(map[string]interface{})
-		result.S3BucketDestination = expandAnalyticsBucketDestination(edm["s3_bucket_destination"].([]interface{}))
+		result.S3BucketDestination = expandAnalyticsS3BucketDestination(edm["s3_bucket_destination"].([]interface{}))
 	}
 	return result
 }
 
-func expandAnalyticsBucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
+func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination { // nosemgrep:ci.s3-in-func-name
 	result := &types.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
@@ -361,7 +366,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 			result["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			result["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+			result[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.AnalyticsFilterMemberPrefix:
 		result["prefix"] = v.Value
@@ -369,7 +374,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 		tags := []types.Tag{
 			v.Value,
 		}
-		result["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+		result[names.AttrTags] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}
@@ -403,12 +408,12 @@ func flattenAnalyticsExportDestination(destination *types.AnalyticsExportDestina
 
 	return []interface{}{
 		map[string]interface{}{
-			"s3_bucket_destination": flattenAnalyticsBucketDestination(destination.S3BucketDestination),
+			"s3_bucket_destination": flattenAnalyticsS3BucketDestination(destination.S3BucketDestination),
 		},
 	}
 }
 
-func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} { // nosemgrep:ci.s3-in-func-name
 	if bucketDestination == nil {
 		return nil
 	}

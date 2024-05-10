@@ -23,9 +23,10 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_efs_mount_target")
+// @SDKResource("aws_efs_mount_target", name="Mount Target")
 func ResourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMountTargetCreate,
@@ -75,21 +76,21 @@ func ResourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"network_interface_id": {
+			names.AttrNetworkInterfaceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,7 +107,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	// to parallel requests if they both include the same AZ
 	// and we would end up managing the same MT as 2 resources.
 	// So we make it fail by calling 1 request per AZ at a time.
-	subnetID := d.Get("subnet_id").(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	az, err := getAZFromSubnetID(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), subnetID)
 
 	if err != nil {
@@ -127,7 +128,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -162,23 +163,24 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
+	fsID := aws.StringValue(mt.FileSystemId)
+	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
-	d.Set("file_system_arn", arn)
-	d.Set("file_system_id", mt.FileSystemId)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_id", fsID)
 	d.Set("ip_address", mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
-	d.Set("network_interface_id", mt.NetworkInterfaceId)
-	d.Set("owner_id", mt.OwnerId)
-	d.Set("subnet_id", mt.SubnetId)
+	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
+	d.Set(names.AttrOwnerID, mt.OwnerId)
+	d.Set(names.AttrSubnetID, mt.SubnetId)
 
 	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
@@ -188,7 +190,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(output.SecurityGroups))
 
 	return diags
 }
@@ -197,10 +199,10 @@ func resourceMountTargetUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &efs.ModifyMountTargetSecurityGroupsInput{
 			MountTargetId:  aws.String(d.Id()),
-			SecurityGroups: flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups: flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyMountTargetSecurityGroupsWithContext(ctx, input)
@@ -221,6 +223,10 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.DeleteMountTargetWithContext(ctx, &efs.DeleteMountTargetInput{
 		MountTargetId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EFS Mount Target (%s): %s", d.Id(), err)
@@ -243,12 +249,32 @@ func getAZFromSubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (str
 	return aws.StringValue(subnet.AvailabilityZone), nil
 }
 
-func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.MountTargetDescription, error) {
-	input := &efs.DescribeMountTargetsInput{
-		MountTargetId: aws.String(id),
+func findMountTarget(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) (*efs.MountTargetDescription, error) {
+	output, err := findMountTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	output, err := conn.DescribeMountTargetsWithContext(ctx, input)
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findMountTargets(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) ([]*efs.MountTargetDescription, error) {
+	var output []*efs.MountTargetDescription
+
+	err := conn.DescribeMountTargetsPagesWithContext(ctx, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.MountTargets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 		return nil, &retry.NotFoundError{
@@ -261,15 +287,15 @@ func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Mo
 		return nil, err
 	}
 
-	if output == nil || len(output.MountTargets) == 0 || output.MountTargets[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return output, nil
+}
+
+func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.MountTargetDescription, error) {
+	input := &efs.DescribeMountTargetsInput{
+		MountTargetId: aws.String(id),
 	}
 
-	if count := len(output.MountTargets); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.MountTargets[0], nil
+	return findMountTarget(ctx, conn, input)
 }
 
 func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {

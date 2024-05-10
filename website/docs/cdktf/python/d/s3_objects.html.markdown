@@ -71,4 +71,4 @@ This data source exports the following attributes in addition to the arguments a
 * `owners` - List of strings representing object owner IDs (see `fetch_owner` above)
 * `request_charged` - If present, indicates that the requester was successfully charged for the request.
 
-<!-- cache-key: cdktf-0.19.0 input-75319062f102d49785cbd4721ffbb267fc16f39f945cacf91b31e00a17bc10b2 -->
+<!-- cache-key: cdktf-0.20.1 input-75319062f102d49785cbd4721ffbb267fc16f39f945cacf91b31e00a17bc10b2 -->

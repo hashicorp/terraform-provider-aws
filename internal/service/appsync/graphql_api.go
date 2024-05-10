@@ -127,7 +127,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,6 +135,12 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(appsync.AuthenticationType_Values(), false),
+			},
+			"introspection_config": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      appsync.GraphQLApiIntrospectionConfigEnabled,
+				ValidateFunc: validation.StringInSlice(appsync.GraphQLApiIntrospectionConfig_Values(), false),
 			},
 			"lambda_authorizer_config": {
 				Type:     schema.TypeList,
@@ -183,7 +189,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -218,6 +224,18 @@ func ResourceGraphQLAPI() *schema.Resource {
 						},
 					},
 				},
+			},
+			"query_depth_limit": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntBetween(0, 75),
+			},
+			"resolver_count_limit": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      0,
+				ValidateFunc: validation.IntBetween(0, 10000),
 			},
 			"schema": {
 				Type:     schema.TypeString,
@@ -278,7 +296,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(name),
@@ -303,6 +321,18 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("user_pool_config"); ok {
 		input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+	}
+
+	if v, ok := d.GetOk("introspection_config"); ok {
+		input.IntrospectionConfig = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("query_depth_limit"); ok {
+		input.QueryDepthLimit = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("resolver_count_limit"); ok {
+		input.ResolverCountLimit = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("xray_enabled"); ok {
@@ -339,17 +369,17 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppSync GraphQL API (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppSync GraphQL API (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppSync GraphQL API (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("additional_authentication_provider", flattenGraphQLAPIAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
 	}
-	d.Set("arn", api.Arn)
+	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
 	if err := d.Set("lambda_authorizer_config", flattenGraphQLAPILambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
@@ -360,7 +390,10 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("openid_connect_config", flattenGraphQLAPIOpenIDConnectConfig(api.OpenIDConnectConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
 	}
-	d.Set("name", api.Name)
+	d.Set("introspection_config", api.IntrospectionConfig)
+	d.Set(names.AttrName, api.Name)
+	d.Set("query_depth_limit", api.QueryDepthLimit)
+	d.Set("resolver_count_limit", api.ResolverCountLimit)
 	d.Set("uris", aws.StringValueMap(api.Uris))
 	if err := d.Set("user_pool_config", flattenGraphQLAPIUserPoolConfig(api.UserPoolConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_config: %s", err)
@@ -379,11 +412,11 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appsync.UpdateGraphqlApiInput{
 			ApiId:              aws.String(d.Id()),
 			AuthenticationType: aws.String(d.Get("authentication_type").(string)),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -404,6 +437,18 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if v, ok := d.GetOk("user_pool_config"); ok {
 			input.UserPoolConfig = expandGraphQLAPIUserPoolConfig(v.([]interface{}), meta.(*conns.AWSClient).Region)
+		}
+
+		if v, ok := d.GetOk("introspection_config"); ok {
+			input.IntrospectionConfig = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("query_depth_limit"); ok {
+			input.QueryDepthLimit = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("resolver_count_limit"); ok {
+			input.ResolverCountLimit = aws.Int64(int64(v.(int)))
 		}
 
 		if v, ok := d.GetOk("xray_enabled"); ok {

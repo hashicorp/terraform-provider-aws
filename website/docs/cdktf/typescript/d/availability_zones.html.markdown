@@ -14,7 +14,7 @@ The Availability Zones data source allows access to the list of AWS
 Availability Zones which can be accessed by an AWS account within the region
 configured in the provider.
 
-This is different from the `awsAvailabilityZone` (singular) data source,
+This is different from the `aws_availability_zone` (singular) data source,
 which provides some details about a specific availability zone.
 
 -> When [Local Zones](https://aws.amazon.com/about-aws/global-infrastructure/localzones/) are enabled in a region, by default the API and this data source include both Local Zones and Availability Zones. To return only Availability Zones, see the example section below.
@@ -150,4 +150,4 @@ Note that the indexes of Availability Zone names and IDs correspond.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->
+<!-- cache-key: cdktf-0.20.1 input-4fb56543535b24bb1a7db337e55d8060de419403eb0a490892cf3a3900602758 -->

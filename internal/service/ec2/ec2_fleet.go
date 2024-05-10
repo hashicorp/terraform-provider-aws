@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,7 +53,7 @@ func ResourceFleet() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +67,7 @@ func ResourceFleet() *schema.Resource {
 				Default:      ec2.FleetExcessCapacityTerminationPolicyTermination,
 				ValidateFunc: validation.StringInSlice(ec2.FleetExcessCapacityTerminationPolicy_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("type") != ec2.FleetTypeMaintain
+					return d.Get(names.AttrType) != ec2.FleetTypeMaintain
 				},
 				DiffSuppressOnRefresh: true,
 			},
@@ -84,7 +85,7 @@ func ResourceFleet() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -140,7 +141,7 @@ func ResourceFleet() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidLaunchTemplateName,
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -153,7 +154,7 @@ func ResourceFleet() *schema.Resource {
 							MaxItems: 300,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -169,12 +170,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -204,12 +205,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -242,12 +243,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -301,12 +302,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -320,12 +321,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -339,12 +340,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -358,12 +359,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -391,12 +392,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeFloat,
 																Optional:     true,
 																ValidateFunc: verify.FloatGreaterThan(0.0),
@@ -410,12 +411,12 @@ func ResourceFleet() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"max": {
+															names.AttrMax: {
 																Type:         schema.TypeInt,
 																Optional:     true,
 																ValidateFunc: validation.IntAtLeast(1),
 															},
-															"min": {
+															names.AttrMin: {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
@@ -426,7 +427,7 @@ func ResourceFleet() *schema.Resource {
 											},
 										},
 									},
-									"instance_type": {
+									names.AttrInstanceType: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -452,7 +453,7 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeFloat,
 										Optional: true,
 									},
-									"subnet_id": {
+									names.AttrSubnetID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -677,7 +678,7 @@ func ResourceFleet() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -704,8 +705,9 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	fleetType := d.Get("type").(string)
+	fleetType := d.Get(names.AttrType).(string)
 	input := &ec2.CreateFleetInput{
+		ClientToken:                 aws.String(id.UniqueId()),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
 		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeFleet),
@@ -800,7 +802,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("fleet/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 	if fleet.Instances != nil {
@@ -837,7 +839,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("target_capacity_specification", nil)
 	}
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
-	d.Set("type", fleet.Type)
+	d.Set(names.AttrType, fleet.Type)
 	if fleet.ValidFrom != nil && aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339) != "1970-01-01T00:00:00Z" {
 		d.Set("valid_from", aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339))
 	}
@@ -854,7 +856,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyFleetInput{
 			FleetId: aws.String(d.Id()),
 		}
@@ -864,7 +866,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		// This argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check.
-		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get("type") == ec2.FleetTypeMaintain {
+		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get(names.AttrType) == ec2.FleetTypeMaintain {
 			input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
 		}
 
@@ -901,7 +903,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err == nil && output != nil {
-		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
+		err = deleteFleetsError(output.UnsuccessfulFleetDeletions)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {
@@ -914,7 +916,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Limiting waiter to non-instant fleet types.
 	// `instant` fleet state is eventually consistent and can take 48 hours to update.
-	if d.Get("type") != "instant" {
+	if d.Get(names.AttrType) != "instant" {
 		delay := 0 * time.Second
 		pendingStates := []string{ec2.FleetStateCodeActive}
 		targetStates := []string{ec2.FleetStateCodeDeleted}
@@ -935,7 +937,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() == "" { // New resource.
-		if diff.Get("type").(string) != ec2.FleetTypeMaintain {
+		if diff.Get(names.AttrType).(string) != ec2.FleetTypeMaintain {
 			if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
@@ -1021,7 +1023,7 @@ func expandFleetLaunchTemplateSpecificationRequest(tfMap map[string]interface{})
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -1061,7 +1063,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.FleetLaunchTemplateOverridesRequest{}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -1069,7 +1071,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.InstanceRequirements = expandInstanceRequirementsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrInstanceType].(string); ok && v != "" {
 		apiObject.InstanceType = aws.String(v)
 	}
 
@@ -1088,7 +1090,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.Priority = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["subnet_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSubnetID].(string); ok && v != "" {
 		apiObject.SubnetId = aws.String(v)
 	}
 
@@ -1173,7 +1175,7 @@ func expandPlacement(tfMap map[string]interface{}) *ec2.Placement {
 		apiObject.Affinity = aws.String(v)
 	}
 
-	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAvailabilityZone].(string); ok && v != "" {
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
@@ -1296,7 +1298,7 @@ func flattenFleetInstances(apiObject *ec2.DescribeFleetsInstances) map[string]in
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Lifecycle; v != nil {
@@ -1380,7 +1382,7 @@ func flattenFleetLaunchTemplateSpecificationForFleet(apiObject *ec2.FleetLaunchT
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.StringValue(v)
+		tfMap[names.AttrVersion] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -1431,7 +1433,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.InstanceRequirements; v != nil {
@@ -1443,7 +1445,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MaxPrice; v != nil {
@@ -1459,7 +1461,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	}
 
 	if v := apiObject.SubnetId; v != nil {
-		tfMap["subnet_id"] = aws.StringValue(v)
+		tfMap[names.AttrSubnetID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.WeightedCapacity; v != nil {

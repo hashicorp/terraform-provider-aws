@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -40,7 +40,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -58,7 +58,7 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -98,7 +98,7 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessInstance),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -134,7 +134,7 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("creation_time", output.CreationTime)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set("last_updated_time", output.LastUpdatedTime)
 
@@ -155,14 +155,14 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVerifiedAccessInstanceInput{
 			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		_, err := conn.ModifyVerifiedAccessInstance(ctx, input)
@@ -222,7 +222,7 @@ func flattenVerifiedAccessTrustProvider(apiObject types.VerifiedAccessTrustProvi
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := apiObject.VerifiedAccessTrustProviderId; v != nil {

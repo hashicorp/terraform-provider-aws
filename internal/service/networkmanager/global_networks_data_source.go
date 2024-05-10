@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_global_networks")
@@ -25,20 +27,22 @@ func DataSourceGlobalNetworks() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	output, err := FindGlobalNetworks(ctx, conn, &networkmanager.DescribeGlobalNetworksInput{})
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Global Networks: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Global Networks: %s", err)
 	}
 
 	var globalNetworkIDs []string
@@ -56,5 +60,5 @@ func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", globalNetworkIDs)
 
-	return nil
+	return diags
 }

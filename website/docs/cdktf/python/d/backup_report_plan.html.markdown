@@ -69,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.
 
-<!-- cache-key: cdktf-0.19.0 input-bb9ee564d7e610ad5a515bf5d6d41add676ed63ed91647947ed5d6fcd34dde46 -->
+<!-- cache-key: cdktf-0.20.1 input-bb9ee564d7e610ad5a515bf5d6d41add676ed63ed91647947ed5d6fcd34dde46 -->

@@ -27,7 +27,7 @@ const (
 	ColNotImplemented          = 20 // If set, the service will be included in, e.g. labels, but not have a service client
 	ColEndpointOnly            = 21 // If set, the service is included in list of endpoints
 	ColAllowedSubcategory      = 22
-	ColDeprecatedEnvVar        = 23
-	ColEnvVar                  = 24
+	ColDeprecatedEnvVar        = 23 // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
+	ColTfAwsEnvVar             = 24 // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
 	ColNote                    = 25
 )

@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Name of the person or organization who owns the portfolio.
 * `tags` - Tags applied to the portfolio.
 
-<!-- cache-key: cdktf-0.19.0 input-84da50c0619f8efedfa9915aaeed7934ec932b8663c9afe0bb857f54d0d60299 -->
+<!-- cache-key: cdktf-0.20.1 input-84da50c0619f8efedfa9915aaeed7934ec932b8663c9afe0bb857f54d0d60299 -->

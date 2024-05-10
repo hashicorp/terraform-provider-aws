@@ -58,7 +58,7 @@ func ResourcePlaceIndex() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -100,7 +100,7 @@ func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -156,7 +156,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("data_source_configuration", nil)
 	}
 
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
@@ -171,7 +171,7 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
-	if d.HasChanges("data_source_configuration", "description") {
+	if d.HasChanges("data_source_configuration", names.AttrDescription) {
 		input := &locationservice.UpdatePlaceIndexInput{
 			IndexName: aws.String(d.Id()),
 			// Deprecated but still required by the API
@@ -182,7 +182,7 @@ func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUser_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func testAccUser_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,10 +36,10 @@ func testAccUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`user/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`user/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -59,7 +60,7 @@ func testAccUser_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func testAccUser_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +130,7 @@ func testAccUser_posix(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +171,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -186,7 +187,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/test"),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -194,7 +195,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/home/tftestuser2"),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "tftestuser2"),
 				),
 			},
@@ -208,7 +209,7 @@ func testAccUser_UserName_Validation(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -254,7 +255,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{

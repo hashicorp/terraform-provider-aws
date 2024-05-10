@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_managed_prefix_lists")
@@ -20,27 +22,29 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 		ReadWithoutTimeout: dataSourceManagedPrefixListsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -52,7 +56,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	prefixLists, err := FindManagedPrefixLists(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Managed Prefix Lists: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix Lists: %s", err)
 	}
 
 	var prefixListIDs []string
@@ -64,5 +68,5 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", prefixListIDs)
 
-	return nil
+	return diags
 }

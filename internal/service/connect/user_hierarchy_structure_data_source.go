@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_user_hierarchy_structure")
@@ -47,7 +49,7 @@ func DataSourceUserHierarchyStructure() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -63,15 +65,15 @@ func userHierarchyLevelDataSourceSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"id": {
+				names.AttrID: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -81,27 +83,29 @@ func userHierarchyLevelDataSourceSchema() *schema.Schema {
 }
 
 func dataSourceUserHierarchyStructureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, &connect.DescribeUserHierarchyStructureInput{
 		InstanceId: aws.String(instanceID),
 	})
 
 	if err != nil {
-		return diag.Errorf("getting Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure for Connect Instance (%s): %s", instanceID, err)
 	}
 
 	if resp == nil || resp.HierarchyStructure == nil {
-		return diag.Errorf("getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID)
+		return sdkdiag.AppendErrorf(diags, "getting Connect User Hierarchy Structure for Connect Instance (%s): empty response", instanceID)
 	}
 
 	if err := d.Set("hierarchy_structure", flattenUserHierarchyStructure(resp.HierarchyStructure)); err != nil {
-		return diag.Errorf("setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID)
+		return sdkdiag.AppendErrorf(diags, "setting Connect User Hierarchy Structure for Connect Instance: (%s)", instanceID)
 	}
 
 	d.SetId(instanceID)
 
-	return nil
+	return diags
 }

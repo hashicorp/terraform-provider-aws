@@ -104,6 +104,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>apigatewayv2</code></li>
   <li><code>appautoscaling</code> (or <code>applicationautoscaling</code>)</li>
   <li><code>appconfig</code></li>
+  <li><code>appfabric</code></li>
   <li><code>appflow</code></li>
   <li><code>appintegrations</code> (or <code>appintegrationsservice</code>)</li>
   <li><code>applicationinsights</code></li>
@@ -117,9 +118,12 @@ class MyConvertedCode(TerraformStack):
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bcmdataexports</code></li>
   <li><code>bedrock</code></li>
+  <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
+  <li><code>chatbot</code></li>
   <li><code>chime</code></li>
   <li><code>chimesdkmediapipelines</code></li>
   <li><code>chimesdkvoice</code></li>
@@ -128,6 +132,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
+  <li><code>cloudfrontkeyvaluestore</code></li>
   <li><code>cloudhsmv2</code> (or <code>cloudhsm</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudtrail</code></li>
@@ -136,6 +141,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>codebuild</code></li>
   <li><code>codecatalyst</code></li>
   <li><code>codecommit</code></li>
+  <li><code>codeguruprofiler</code></li>
   <li><code>codegurureviewer</code></li>
   <li><code>codepipeline</code></li>
   <li><code>codestarconnections</code></li>
@@ -146,15 +152,20 @@ class MyConvertedCode(TerraformStack):
   <li><code>computeoptimizer</code></li>
   <li><code>configservice</code> (or <code>config</code>)</li>
   <li><code>connect</code></li>
+  <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
+  <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
+  <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
@@ -190,6 +201,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>glue</code></li>
   <li><code>grafana</code> (or <code>managedgrafana</code> or <code>amg</code>)</li>
   <li><code>greengrass</code></li>
+  <li><code>groundstation</code></li>
   <li><code>guardduty</code></li>
   <li><code>healthlake</code></li>
   <li><code>iam</code></li>
@@ -214,22 +226,27 @@ class MyConvertedCode(TerraformStack):
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
+  <li><code>launchwizard</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexv2models</code> (or <code>lexmodelsv2</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
+  <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
   <li><code>medialive</code></li>
   <li><code>mediapackage</code></li>
+  <li><code>mediapackagev2</code></li>
   <li><code>mediastore</code></li>
   <li><code>memorydb</code></li>
   <li><code>mq</code></li>
   <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
@@ -239,9 +256,13 @@ class MyConvertedCode(TerraformStack):
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>paymentcryptography</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
+  <li><code>polly</code></li>
   <li><code>pricing</code></li>
+  <li><code>qbusiness</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
@@ -250,12 +271,14 @@ class MyConvertedCode(TerraformStack):
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
+  <li><code>rekognition</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
   <li><code>rolesanywhere</code></li>
   <li><code>route53</code></li>
   <li><code>route53domains</code></li>
+  <li><code>route53profiles</code></li>
   <li><code>route53recoverycontrolconfig</code></li>
   <li><code>route53recoveryreadiness</code></li>
   <li><code>route53resolver</code></li>
@@ -271,6 +294,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
+  <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
@@ -284,6 +308,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>ssmsap</code></li>
   <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
@@ -298,8 +323,10 @@ class MyConvertedCode(TerraformStack):
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>
+  <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
+  <li><code>workspacesweb</code></li>
   <li><code>xray</code></li>
 </ul>
 </div>
@@ -400,4 +427,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-8ab543c6a00b60a4cbcaa97e979a4ee014302a0c9b26c452c8b946f74fda3b0e -->
+<!-- cache-key: cdktf-0.20.1 input-33219424028f45c9e2ed28967515af232f39e03a40b4aed53df508d425304ab8 -->

@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags for the resource.
 * `vlanId` - The VLAN ID.
 
-<!-- cache-key: cdktf-0.19.0 input-192e94cc169312d4fa902eb3bcc5d1de027e5be4fe92fdaf9fdbeefc124a32a8 -->
+<!-- cache-key: cdktf-0.20.1 input-192e94cc169312d4fa902eb3bcc5d1de027e5be4fe92fdaf9fdbeefc124a32a8 -->

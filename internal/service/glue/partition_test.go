@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGluePartition_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccGluePartition_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ func TestAccGluePartition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
@@ -60,7 +61,7 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +91,7 @@ func TestAccGluePartition_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +137,7 @@ func TestAccGluePartition_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +161,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{

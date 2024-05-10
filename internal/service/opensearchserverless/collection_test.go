@@ -34,7 +34,7 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckCollection(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,10 +42,47 @@ func TestAccOpenSearchServerlessCollection_basic(t *testing.T) {
 				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
 					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpenSearchServerlessCollection_standbyReplicas(t *testing.T) {
+	ctx := acctest.Context(t)
+	var collection types.CollectionDetail
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	standbyReplicas := "DISABLED"
+	resourceName := "aws_opensearchserverless_collection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
+			testAccPreCheckCollection(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCollectionConfig_standbyReplicas(rName, standbyReplicas),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCollectionExists(ctx, resourceName, &collection),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttrSet(resourceName, "collection_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, "dashboard_endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
+					resource.TestCheckResourceAttr(resourceName, "standby_replicas", standbyReplicas),
 				),
 			},
 			{
@@ -69,7 +106,7 @@ func TestAccOpenSearchServerlessCollection_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckCollection(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,24 +151,24 @@ func TestAccOpenSearchServerlessCollection_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckCollection(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_update(rName, "description"),
+				Config: testAccCollectionConfig_update(rName, names.AttrDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
 				Config: testAccCollectionConfig_update(rName, "description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollectionExists(ctx, resourceName, &collection),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
 		},
@@ -151,7 +188,7 @@ func TestAccOpenSearchServerlessCollection_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckCollection(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,6 +299,20 @@ resource "aws_opensearchserverless_collection" "test" {
   depends_on = [aws_opensearchserverless_security_policy.test]
 }
 `, rName),
+	)
+}
+
+func testAccCollectionConfig_standbyReplicas(rName string, standbyReplicas string) string {
+	return acctest.ConfigCompose(
+		testAccCollectionBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearchserverless_collection" "test" {
+  name             = %[1]q
+  standby_replicas = %[2]q
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+`, rName, standbyReplicas),
 	)
 }
 

@@ -31,11 +31,11 @@ jobs:
     name: go mod download
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         id: cache-go-pkg-mod
         timeout-minutes: 2
@@ -50,8 +50,8 @@ jobs:
     needs: [go_mod_download]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         id: cache-terraform-plugin-dir
         timeout-minutes: 2
@@ -59,7 +59,7 @@ jobs:
           path: terraform-plugin-dir
           key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
@@ -68,12 +68,12 @@ jobs:
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
       - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-plugin-dir.outputs.cache-hit != 'true' || steps.cache-terraform-plugin-dir.outcome == 'failure'
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
@@ -86,21 +86,21 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -118,23 +118,23 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, xl]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -147,21 +147,21 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -178,23 +178,23 @@ jobs:
     needs: [go_build]
     runs-on: [custom, linux, medium]
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
       # See also: https://github.com/actions/setup-go/issues/54
       - name: go env
         run: |
           echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ${{ env.GOCACHE }}
           key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -210,7 +210,7 @@ jobs:
             (echo; echo "Expected `strings` to detect sweeper function names in sweeper binary."; exit 1)
 
       # Use cached provider or rebuild
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9
         continue-on-error: true
         id: cache-terraform-plugin-dir
         timeout-minutes: 2
@@ -236,8 +236,8 @@ jobs:
     needs: [go_build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         id: cache-terraform-providers-schema
         timeout-minutes: 2
@@ -245,13 +245,13 @@ jobs:
           path: terraform-providers-schema
           key: ${{ runner.os }}-terraform-providers-schema-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         timeout-minutes: 2
         with:
           path: terraform-plugin-dir
           key: ${{ runner.os }}-terraform-plugin-dir-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
       - if: steps.cache-terraform-providers-schema.outputs.cache-hit != 'true' || steps.cache-terraform-providers-schema.outcome == 'failure'
-        uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
+        uses: hashicorp/setup-terraform@651471c36a6092792c552e8b1bef71e592b462d8
         with:
           terraform_version: ${{ env.TERRAFORM_VERSION }}
           terraform_wrapper: false
@@ -271,18 +271,18 @@ jobs:
     needs: [terraform_providers_schema]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
+      - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
         with:
           go-version-file: go.mod
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/YakDriver/tfproviderdocs
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         timeout-minutes: 2
         with:
           path: terraform-providers-schema
@@ -292,8 +292,8 @@ jobs:
           tfproviderdocs check \
             -allowed-resource-subcategories-file website/allowed-subcategories.txt \
             -enable-contents-check \
-            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
-            -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
+            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_alb_trust_store,aws_alb_trust_store_revocation,aws_albs \
+            -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_alb_trust_store,aws_alb_trust_store_revocation \
             -provider-source registry.terraform.io/hashicorp/aws \
             -providers-schema-json terraform-providers-schema/schema.json \
             -require-resource-subcategory \
@@ -302,8 +302,8 @@ jobs:
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
       - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "."
-          ignore: "./docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/testdata/examplecompany-exampleservice-exampleresource/docs"
+          ignore: "./docs ./website/docs ./CHANGELOG.md ./internal/service/cloudformation/test-fixtures/examplecompany-exampleservice-exampleresource/docs"

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func sourceParametersSchema() *schema.Schema {
@@ -106,7 +107,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -205,7 +206,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"arn": {
+										names.AttrARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -497,7 +498,7 @@ func sourceParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"security_groups": {
+										names.AttrSecurityGroups: {
 											Type:     schema.TypeSet,
 											Optional: true,
 											MaxItems: 5,
@@ -735,7 +736,7 @@ func expandUpdatePipeSourceActiveMQBrokerParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceActiveMQBrokerParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -815,7 +816,7 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceDynamoDBStreamParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -841,7 +842,7 @@ func expandUpdatePipeSourceDynamoDBStreamParameters(tfMap map[string]interface{}
 		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
 	}
 
-	if v, ok := tfMap["parallelization_factor"].(int); ok {
+	if v, ok := tfMap["parallelization_factor"].(int); ok && v != 0 {
 		apiObject.ParallelizationFactor = aws.Int32(int32(v))
 	}
 
@@ -855,7 +856,7 @@ func expandDeadLetterConfig(tfMap map[string]interface{}) *types.DeadLetterConfi
 
 	apiObject := &types.DeadLetterConfig{}
 
-	if v, ok := tfMap["arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
 
@@ -917,7 +918,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 
 	apiObject := &types.UpdatePipeSourceKinesisStreamParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -931,7 +932,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 		apiObject.MaximumBatchingWindowInSeconds = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok {
+	if v, ok := tfMap["maximum_record_age_in_seconds"].(int); ok && v != 0 {
 		apiObject.MaximumRecordAgeInSeconds = aws.Int32(int32(v))
 	}
 
@@ -943,7 +944,7 @@ func expandUpdatePipeSourceKinesisStreamParameters(tfMap map[string]interface{})
 		apiObject.OnPartialBatchItemFailure = types.OnPartialBatchItemFailureStreams(v)
 	}
 
-	if v, ok := tfMap["parallelization_factor"].(int); ok {
+	if v, ok := tfMap["parallelization_factor"].(int); ok && v != 0 {
 		apiObject.ParallelizationFactor = aws.Int32(int32(v))
 	}
 
@@ -991,7 +992,7 @@ func expandUpdatePipeSourceManagedStreamingKafkaParameters(tfMap map[string]inte
 
 	apiObject := &types.UpdatePipeSourceManagedStreamingKafkaParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -1067,7 +1068,7 @@ func expandUpdatePipeSourceRabbitMQBrokerParameters(tfMap map[string]interface{}
 
 	apiObject := &types.UpdatePipeSourceRabbitMQBrokerParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -1207,7 +1208,7 @@ func expandSelfManagedKafkaAccessConfigurationVPC(tfMap map[string]interface{}) 
 
 	apiObject := &types.SelfManagedKafkaAccessConfigurationVpc{}
 
-	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroups].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroup = flex.ExpandStringValueSet(v)
 	}
 
@@ -1243,7 +1244,7 @@ func expandUpdatePipeSourceSQSQueueParameters(tfMap map[string]interface{}) *typ
 
 	apiObject := &types.UpdatePipeSourceSqsQueueParameters{}
 
-	if v, ok := tfMap["batch_size"].(int); ok {
+	if v, ok := tfMap["batch_size"].(int); ok && v != 0 {
 		apiObject.BatchSize = aws.Int32(int32(v))
 	}
 
@@ -1638,7 +1639,7 @@ func flattenSelfManagedKafkaAccessConfigurationVPC(apiObject *types.SelfManagedK
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroup; v != nil {
-		tfMap["security_groups"] = v
+		tfMap[names.AttrSecurityGroups] = v
 	}
 
 	if v := apiObject.Subnets; v != nil {
@@ -1674,7 +1675,7 @@ func flattenDeadLetterConfig(apiObject *types.DeadLetterConfig) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.ToString(v)
+		tfMap[names.AttrARN] = aws.ToString(v)
 	}
 
 	return tfMap

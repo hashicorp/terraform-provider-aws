@@ -20,8 +20,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_container_service_deployment_version")
@@ -82,7 +84,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,11 +161,11 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -172,6 +174,8 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 }
 
 func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	serviceName := d.Get("service_name").(string)
 
@@ -189,11 +193,11 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 
 	output, err := conn.CreateContainerServiceDeployment(ctx, &input)
 	if err != nil {
-		return diag.Errorf("creating Lightsail Container Service (%s) Deployment Version: %s", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lightsail Container Service (%s) Deployment Version: %s", serviceName, err)
 	}
 
 	if output == nil || output.ContainerService == nil || output.ContainerService.NextDeployment == nil {
-		return diag.Errorf("creating Lightsail Container Service (%s) Deployment Version: empty output", serviceName)
+		return sdkdiag.AppendErrorf(diags, "creating Lightsail Container Service (%s) Deployment Version: empty output", serviceName)
 	}
 
 	version := int(aws.ToInt32(output.ContainerService.NextDeployment.Version))
@@ -201,18 +205,20 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	d.SetId(fmt.Sprintf("%s/%d", serviceName, version))
 
 	if err := waitContainerServiceDeploymentVersionActive(ctx, conn, serviceName, version, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	return resourceContainerServiceDeploymentVersionRead(ctx, d, meta)
+	return append(diags, resourceContainerServiceDeploymentVersionRead(ctx, d, meta)...)
 }
 
 func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	serviceName, version, err := ContainerServiceDeploymentVersionParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	deployment, err := FindContainerServiceDeploymentByVersion(ctx, conn, serviceName, version)
@@ -220,32 +226,32 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lightsail Container Service (%s) Deployment Version (%d) not found, removing from state", serviceName, version)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	d.Set("created_at", aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
 	d.Set("service_name", serviceName)
-	d.Set("state", deployment.State)
-	d.Set("version", deployment.Version)
+	d.Set(names.AttrState, deployment.State)
+	d.Set(names.AttrVersion, deployment.Version)
 
 	if err := d.Set("container", flattenContainerServiceDeploymentContainers(deployment.Containers)); err != nil {
-		return diag.Errorf("setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return sdkdiag.AppendErrorf(diags, "setting container for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
 	if err := d.Set("public_endpoint", flattenContainerServiceDeploymentPublicEndpoint(deployment.PublicEndpoint)); err != nil {
-		return diag.Errorf("setting public_endpoint for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
+		return sdkdiag.AppendErrorf(diags, "setting public_endpoint for Lightsail Container Service (%s) Deployment Version (%d): %s", serviceName, version, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceContainerServiceDeploymentVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[WARN] Cannot destroy Lightsail Container Service Deployment Version. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
 }
 
 func ContainerServiceDeploymentVersionParseResourceID(id string) (string, int, error) {

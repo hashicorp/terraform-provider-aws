@@ -67,7 +67,7 @@ func resourceAddon() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`), "must follow semantic version format"),
 				),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,7 @@ func resourceAddon() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -212,7 +212,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Add-On (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -221,10 +221,10 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("addon_name", addon.AddonName)
 	d.Set("addon_version", addon.AddonVersion)
-	d.Set("arn", addon.AddonArn)
+	d.Set(names.AttrARN, addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
 	d.Set("configuration_values", addon.ConfigurationValues)
-	d.Set("created_at", aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 

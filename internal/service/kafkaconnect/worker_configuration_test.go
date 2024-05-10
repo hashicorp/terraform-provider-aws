@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
@@ -24,7 +25,7 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -32,9 +33,9 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "properties_file_content", "key.converter=org.apache.kafka.connect.storage.StringConverter\nvalue.converter=org.apache.kafka.connect.storage.StringConverter\n"),
 				),
 			},
@@ -54,7 +55,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 				Config: testAccWorkerConfigurationConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkerConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
 				),
 			},
 			{

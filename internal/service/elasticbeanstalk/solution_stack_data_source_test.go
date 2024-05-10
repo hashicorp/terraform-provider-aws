@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
@@ -18,13 +18,13 @@ func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticBeanstalkServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSolutionStackDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexache.MustCompile("^64bit Amazon Linux (.*) running Python (.*)$")),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile("^64bit Amazon Linux (.*) running Python (.*)$")),
 				),
 			},
 		},

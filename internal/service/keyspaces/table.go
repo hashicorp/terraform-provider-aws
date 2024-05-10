@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,7 +69,7 @@ func resourceTable() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +105,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ClientSideTimestampsStatus](),
@@ -146,7 +147,7 @@ func resourceTable() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -171,7 +172,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -192,7 +193,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -215,7 +216,7 @@ func resourceTable() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
@@ -223,7 +224,7 @@ func resourceTable() *schema.Resource {
 											"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
 										),
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringMatch(
@@ -240,7 +241,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -258,7 +259,7 @@ func resourceTable() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -290,7 +291,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"status": {
+						names.AttrStatus: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.TimeToLiveStatus](),
@@ -303,6 +304,8 @@ func resourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
@@ -349,25 +352,27 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.CreateTable(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Keyspaces Table (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Keyspaces Table (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTableCreated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Keyspaces Table (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	table, err := findTableByTwoPartKey(ctx, conn, keyspaceName, tableName)
@@ -375,31 +380,31 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Keyspaces Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Keyspaces Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", table.ResourceArn)
+	d.Set(names.AttrARN, table.ResourceArn)
 	if table.CapacitySpecification != nil {
 		if err := d.Set("capacity_specification", []interface{}{flattenCapacitySpecificationSummary(table.CapacitySpecification)}); err != nil {
-			return diag.Errorf("setting capacity_specification: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting capacity_specification: %s", err)
 		}
 	} else {
 		d.Set("capacity_specification", nil)
 	}
 	if table.ClientSideTimestamps != nil {
 		if err := d.Set("client_side_timestamps", []interface{}{flattenClientSideTimestamps(table.ClientSideTimestamps)}); err != nil {
-			return diag.Errorf("setting client_side_timestamps: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_side_timestamps: %s", err)
 		}
 	} else {
 		d.Set("client_side_timestamps", nil)
 	}
 	if table.Comment != nil {
 		if err := d.Set("comment", []interface{}{flattenComment(table.Comment)}); err != nil {
-			return diag.Errorf("setting comment: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting comment: %s", err)
 		}
 	} else {
 		d.Set("comment", nil)
@@ -407,7 +412,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_time_to_live", table.DefaultTimeToLive)
 	if table.EncryptionSpecification != nil {
 		if err := d.Set("encryption_specification", []interface{}{flattenEncryptionSpecification(table.EncryptionSpecification)}); err != nil {
-			return diag.Errorf("setting encryption_specification: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting encryption_specification: %s", err)
 		}
 	} else {
 		d.Set("encryption_specification", nil)
@@ -415,14 +420,14 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("keyspace_name", table.KeyspaceName)
 	if table.PointInTimeRecovery != nil {
 		if err := d.Set("point_in_time_recovery", []interface{}{flattenPointInTimeRecoverySummary(table.PointInTimeRecovery)}); err != nil {
-			return diag.Errorf("setting point_in_time_recovery: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting point_in_time_recovery: %s", err)
 		}
 	} else {
 		d.Set("point_in_time_recovery", nil)
 	}
 	if table.SchemaDefinition != nil {
 		if err := d.Set("schema_definition", []interface{}{flattenSchemaDefinition(table.SchemaDefinition)}); err != nil {
-			return diag.Errorf("setting schema_definition: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting schema_definition: %s", err)
 		}
 	} else {
 		d.Set("schema_definition", nil)
@@ -430,25 +435,27 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("table_name", table.TableName)
 	if table.Ttl != nil {
 		if err := d.Set("ttl", []interface{}{flattenTimeToLive(table.Ttl)}); err != nil {
-			return diag.Errorf("setting ttl: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 		}
 	} else {
 		d.Set("ttl", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		// https://docs.aws.amazon.com/keyspaces/latest/APIReference/API_UpdateTable.html
 		// Note that you can only update one specific table setting per update operation.
 		if d.HasChange("capacity_specification") {
@@ -462,11 +469,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) CapacitySpecification: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) CapacitySpecification update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -482,11 +489,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) ClientSideTimestamps: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) ClientSideTimestamps: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) ClientSideTimestamps update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) ClientSideTimestamps update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -501,11 +508,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			_, err := conn.UpdateTable(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("updating Keyspaces Table (%s) DefaultTimeToLive: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) DefaultTimeToLive: %s", d.Id(), err)
 			}
 
 			if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.Errorf("waiting for Keyspaces Table (%s) DefaultTimeToLive update: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) DefaultTimeToLive update: %s", d.Id(), err)
 			}
 		}
 
@@ -520,11 +527,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) EncryptionSpecification: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) EncryptionSpecification: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) EncryptionSpecification update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) EncryptionSpecification update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -540,11 +547,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) PointInTimeRecovery: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) PointInTimeRecovery: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) PointInTimeRecovery update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) PointInTimeRecovery update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -560,11 +567,11 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				_, err := conn.UpdateTable(ctx, input)
 
 				if err != nil {
-					return diag.Errorf("updating Keyspaces Table (%s) Ttl: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) Ttl: %s", d.Id(), err)
 				}
 
 				if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) Ttl update: %s", d.Id(), err)
 				}
 			}
 		}
@@ -595,27 +602,29 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					_, err := conn.UpdateTable(ctx, input)
 
 					if err != nil {
-						return diag.Errorf("updating Keyspaces Table (%s) AddColumns: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "updating Keyspaces Table (%s) AddColumns: %s", d.Id(), err)
 					}
 
 					if _, err := waitTableUpdated(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for Keyspaces Table (%s) AddColumns update: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) AddColumns update: %s", d.Id(), err)
 					}
 				}
 			}
 		}
 	}
 
-	return resourceTableRead(ctx, d, meta)
+	return append(diags, resourceTableRead(ctx, d, meta)...)
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName, tableName, err := tableParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Keyspaces Table: (%s)", d.Id())
@@ -625,18 +634,18 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Keyspaces Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Keyspaces Table (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTableDeleted(ctx, conn, keyspaceName, tableName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Keyspaces Table (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Keyspaces Table (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const tableIDSeparator = "/"
@@ -788,7 +797,7 @@ func expandClientSideTimestamps(tfMap map[string]interface{}) *types.ClientSideT
 
 	apiObject := &types.ClientSideTimestamps{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.ClientSideTimestampsStatus(v)
 	}
 
@@ -820,7 +829,7 @@ func expandEncryptionSpecification(tfMap map[string]interface{}) *types.Encrypti
 		apiObject.KmsKeyIdentifier = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.EncryptionType(v)
 	}
 
@@ -834,7 +843,7 @@ func expandPointInTimeRecovery(tfMap map[string]interface{}) *types.PointInTimeR
 
 	apiObject := &types.PointInTimeRecovery{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.PointInTimeRecoveryStatus(v)
 	}
 
@@ -874,7 +883,7 @@ func expandTimeToLive(tfMap map[string]interface{}) *types.TimeToLive {
 
 	apiObject := &types.TimeToLive{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = types.TimeToLiveStatus(v)
 	}
 
@@ -888,11 +897,11 @@ func expandColumnDefinition(tfMap map[string]interface{}) *types.ColumnDefinitio
 
 	apiObject := &types.ColumnDefinition{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
 	}
 
@@ -932,7 +941,7 @@ func expandClusteringKey(tfMap map[string]interface{}) *types.ClusteringKey {
 
 	apiObject := &types.ClusteringKey{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -976,7 +985,7 @@ func expandPartitionKey(tfMap map[string]interface{}) *types.PartitionKey {
 
 	apiObject := &types.PartitionKey{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1016,7 +1025,7 @@ func expandStaticColumn(tfMap map[string]interface{}) *types.StaticColumn {
 
 	apiObject := &types.StaticColumn{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1075,7 +1084,7 @@ func flattenClientSideTimestamps(apiObject *types.ClientSideTimestamps) map[stri
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1101,7 +1110,7 @@ func flattenEncryptionSpecification(apiObject *types.EncryptionSpecification) ma
 	}
 
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.KmsKeyIdentifier; v != nil {
@@ -1117,7 +1126,7 @@ func flattenPointInTimeRecoverySummary(apiObject *types.PointInTimeRecoverySumma
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1155,7 +1164,7 @@ func flattenTimeToLive(apiObject *types.TimeToLive) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"status": apiObject.Status,
+		names.AttrStatus: apiObject.Status,
 	}
 
 	return tfMap
@@ -1169,11 +1178,11 @@ func flattenColumnDefinition(apiObject *types.ColumnDefinition) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.ToString(v)
+		tfMap[names.AttrType] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1203,7 +1212,7 @@ func flattenClusteringKey(apiObject *types.ClusteringKey) map[string]interface{}
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1231,7 +1240,7 @@ func flattenPartitionKey(apiObject *types.PartitionKey) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -1259,7 +1268,7 @@ func flattenStaticColumn(apiObject *types.StaticColumn) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_batch_compute_environment", name="Compute Environment")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch;batch.ComputeEnvironmentDetail")
 func ResourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceComputeEnvironmentCreate,
@@ -48,7 +49,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +129,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -150,7 +151,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 										Optional:      true,
 										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
 									},
-									"version": {
+									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -171,7 +172,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -187,8 +188,8 @@ func ResourceComputeEnvironment() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"tags": tftags.TagsSchema(),
-						"type": {
+						names.AttrTags: tftags.TagsSchema(),
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(val interface{}) string {
@@ -231,7 +232,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 				StateFunc: func(val interface{}) string {
@@ -240,7 +241,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(batch.CEState_Values(), true),
 				Default:      batch.CEStateEnabled,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -250,7 +251,7 @@ func ResourceComputeEnvironment() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -258,6 +259,23 @@ func ResourceComputeEnvironment() *schema.Resource {
 					return strings.ToUpper(val.(string))
 				},
 				ValidateFunc: validation.StringInSlice(batch.CEType_Values(), true),
+			},
+			"update_policy": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"job_execution_timeout_minutes": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"terminate_jobs_on_update": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -268,7 +286,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
-	computeEnvironmentType := d.Get("type").(string)
+	computeEnvironmentType := d.Get(names.AttrType).(string)
 	input := &batch.CreateComputeEnvironmentInput{
 		ComputeEnvironmentName: aws.String(computeEnvironmentName),
 		ServiceRole:            aws.String(d.Get("service_role").(string)),
@@ -284,7 +302,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.EksConfiguration = expandEKSConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("state"); ok {
+	if v, ok := d.GetOk(names.AttrState); ok {
 		input.State = aws.String(v.(string))
 	}
 
@@ -298,6 +316,23 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 	if _, err := waitComputeEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) create: %s", d.Id(), err)
+	}
+
+	// UpdatePolicy is not possible to set with CreateComputeEnvironment
+	if v, ok := d.GetOk("update_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		inputUpdateOnCreate := &batch.UpdateComputeEnvironmentInput{
+			ComputeEnvironment: aws.String(d.Id()),
+			UpdatePolicy:       expandComputeEnvironmentUpdatePolicy(v.([]interface{})),
+		}
+		log.Printf("[DEBUG] Creating Batch Compute Environment extra arguments: %s", inputUpdateOnCreate)
+
+		if _, err := conn.UpdateComputeEnvironmentWithContext(ctx, inputUpdateOnCreate); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Create Batch Compute Environment extra arguments through UpdateComputeEnvironment (%s): %s", d.Id(), err)
+		}
+
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Create waiting for Batch Compute Environment (%s) extra arguments through UpdateComputeEnvironment: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceComputeEnvironmentRead(ctx, d, meta)...)
@@ -321,7 +356,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 
 	computeEnvironmentType := aws.StringValue(computeEnvironment.Type)
 
-	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	d.Set(names.AttrARN, computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("compute_environment_name_prefix", create.NamePrefixFromName(aws.StringValue(computeEnvironment.ComputeEnvironmentName)))
 	if computeEnvironment.ComputeResources != nil {
@@ -340,10 +375,14 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 	d.Set("service_role", computeEnvironment.ServiceRole)
-	d.Set("state", computeEnvironment.State)
-	d.Set("status", computeEnvironment.Status)
+	d.Set(names.AttrState, computeEnvironment.State)
+	d.Set(names.AttrStatus, computeEnvironment.Status)
 	d.Set("status_reason", computeEnvironment.StatusReason)
-	d.Set("type", computeEnvironmentType)
+	d.Set(names.AttrType, computeEnvironmentType)
+
+	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
+	}
 
 	setTagsOut(ctx, computeEnvironment.Tags)
 
@@ -354,7 +393,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
 		}
@@ -363,11 +402,15 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			input.ServiceRole = aws.String(d.Get("service_role").(string))
 		}
 
-		if d.HasChange("state") {
-			input.State = aws.String(d.Get("state").(string))
+		if d.HasChange(names.AttrState) {
+			input.State = aws.String(d.Get(names.AttrState).(string))
 		}
 
-		if computeEnvironmentType := strings.ToUpper(d.Get("type").(string)); computeEnvironmentType == batch.CETypeManaged {
+		if d.HasChange("update_policy") {
+			input.UpdatePolicy = expandComputeEnvironmentUpdatePolicy(d.Get("update_policy").([]interface{}))
+		}
+
+		if computeEnvironmentType := strings.ToUpper(d.Get(names.AttrType).(string)); computeEnvironmentType == batch.CETypeManaged {
 			// "At least one compute-resources attribute must be specified"
 			computeResourceUpdate := &batch.ComputeResourceUpdate{
 				MaxvCpus: aws.Int64(int64(d.Get("compute_resources.0.max_vcpus").(int))),
@@ -479,7 +522,7 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 			return sdkdiag.AppendErrorf(diags, "updating Batch Compute Environment (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitComputeEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Batch Compute Environment (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -526,7 +569,7 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	if computeEnvironmentType := strings.ToUpper(diff.Get("type").(string)); computeEnvironmentType == batch.CETypeUnmanaged {
+	if computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string)); computeEnvironmentType == batch.CETypeUnmanaged {
 		// UNMANAGED compute environments can have no compute_resources configured.
 		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
@@ -754,7 +797,7 @@ func waitComputeEnvironmentDisabled(ctx context.Context, conn *batch.Batch, name
 	return nil, err
 }
 
-func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) (*batch.ComputeEnvironmentDetail, error) {
+func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{batch.CEStatusUpdating},
 		Target:  []string{batch.CEStatusValid},
@@ -764,11 +807,11 @@ func waitComputeEnvironmentUpdated(ctx context.Context, conn *batch.Batch, name 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
-		return v, err
+	if _, ok := outputRaw.(*batch.ComputeEnvironmentDetail); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func isFargateType(computeResourceType string) bool {
@@ -839,7 +882,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 
 	var computeResourceType string
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		computeResourceType = v
 	}
 
@@ -873,7 +916,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.InstanceRole = aws.String(v)
 	}
 
-	if v, ok := tfMap["instance_type"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrInstanceType].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.InstanceTypes = flex.ExpandStringSet(v)
 	}
 
@@ -895,7 +938,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.PlacementGroup = aws.String(v)
 	}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
@@ -907,7 +950,7 @@ func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *b
 		apiObject.Subnets = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
@@ -995,7 +1038,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.Laun
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVersion].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
 
@@ -1051,7 +1094,7 @@ func expandLaunchTemplateSpecificationUpdate(tfList []interface{}) *batch.Launch
 		apiObject.LaunchTemplateName = aws.String(v)
 	}
 
-	if v, ok := tfMap["version"].(string); ok {
+	if v, ok := tfMap[names.AttrVersion].(string); ok {
 		apiObject.Version = aws.String(v)
 	} else {
 		apiObject.Version = aws.String("")
@@ -1096,7 +1139,7 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 	}
 
 	if v := apiObject.InstanceTypes; v != nil {
-		tfMap["instance_type"] = aws.StringValueSlice(v)
+		tfMap[names.AttrInstanceType] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
@@ -1116,7 +1159,7 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 	}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.SpotIamFleetRole; v != nil {
@@ -1128,11 +1171,11 @@ func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResourc
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+		tfMap[names.AttrTags] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -1208,8 +1251,36 @@ func flattenLaunchTemplateSpecification(apiObject *batch.LaunchTemplateSpecifica
 	}
 
 	if v := apiObject.Version; v != nil {
-		tfMap["version"] = aws.StringValue(v)
+		tfMap[names.AttrVersion] = aws.StringValue(v)
 	}
 
 	return tfMap
+}
+
+func expandComputeEnvironmentUpdatePolicy(l []interface{}) *batch.UpdatePolicy {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	up := &batch.UpdatePolicy{
+		JobExecutionTimeoutMinutes: aws.Int64(int64(m["job_execution_timeout_minutes"].(int))),
+		TerminateJobsOnUpdate:      aws.Bool(m["terminate_jobs_on_update"].(bool)),
+	}
+
+	return up
+}
+
+func flattenComputeEnvironmentUpdatePolicy(up *batch.UpdatePolicy) []interface{} {
+	if up == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"job_execution_timeout_minutes": aws.Int64Value(up.JobExecutionTimeoutMinutes),
+		"terminate_jobs_on_update":      aws.BoolValue(up.TerminateJobsOnUpdate),
+	}
+
+	return []interface{}{m}
 }

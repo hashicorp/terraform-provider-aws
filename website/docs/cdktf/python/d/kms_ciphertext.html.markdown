@@ -58,4 +58,4 @@ All of the argument attributes are also exported as result attributes.
 * `id` - Globally unique key ID for the customer master key.
 * `ciphertext_blob` - Base64 encoded ciphertext
 
-<!-- cache-key: cdktf-0.19.0 input-b95133cf0e6d636d0e7e0bba6f81265bceaccd42767260a7c1b7aa55fb5a81e8 -->
+<!-- cache-key: cdktf-0.20.1 input-b95133cf0e6d636d0e7e0bba6f81265bceaccd42767260a7c1b7aa55fb5a81e8 -->

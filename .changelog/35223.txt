@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_s3_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility
+```
+
+```release-note:bug
+data-source/aws_s3_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility
+```
+
+```release-note:bug
+data-source/aws_s3_bucket_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility
+```
+
+```release-note:bug
+resource/aws_s3_object_copy: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility
+```
+
+```release-note:bug
+resource/aws_s3_bucket_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility
+```

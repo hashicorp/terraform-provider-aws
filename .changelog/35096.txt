@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_efs_file_system: Add `lifecycle_policy.transition_to_archive` argument
+```
+
+```release-note:enhancement
+data-source/aws_efs_file_system: Add `lifecycle_policy.transition_to_archive` attribute
+```

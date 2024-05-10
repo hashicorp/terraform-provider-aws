@@ -54,6 +54,27 @@ type ResourceServer interface {
 	ImportResourceState(context.Context, *ImportResourceStateRequest) (*ImportResourceStateResponse, error)
 }
 
+// ResourceServerWithMoveResourceState is a temporary interface for servers
+// to implement MoveResourceState RPC handling.
+//
+// Deprecated: The MoveResourceState method will be moved into the
+// ResourceServer interface and this interface will be removed in a future
+// version.
+type ResourceServerWithMoveResourceState interface {
+	ResourceServer
+
+	// MoveResourceState is called when Terraform is asked to change a resource
+	// type for an existing resource. The provider must accept the change as
+	// valid by ensuring the source resource type, schema version, and provider
+	// address are compatible to convert the source state into the target
+	// resource type and latest state version.
+	//
+	// This functionality is only supported in Terraform 1.8 and later. The
+	// provider must have enabled the MoveResourceState server capability to
+	// enable these requests.
+	MoveResourceState(context.Context, *MoveResourceStateRequest) (*MoveResourceStateResponse, error)
+}
+
 // ValidateResourceTypeConfigRequest is the request Terraform sends when it
 // wants to validate a resource's configuration.
 type ValidateResourceTypeConfigRequest struct {
@@ -478,4 +499,48 @@ type ImportedResource struct {
 	// with requests for this resource. This state will be associated with
 	// the resource, but will not be considered when calculating diffs.
 	Private []byte
+}
+
+// MoveResourceStateRequest is the request Terraform sends when it requests a
+// provider to move the state of a source resource into the target resource.
+// Target resource types generally must opt into accepting each source resource
+// type since any transformation logic requires knowledge of the source state.
+//
+// This functionality is only supported in Terraform 1.8 and later. The provider
+// must have enabled the MoveResourceState server capability to enable these
+// requests.
+type MoveResourceStateRequest struct {
+	// SourcePrivate is the private state of the source resource.
+	SourcePrivate []byte
+
+	// SourceProviderAddress is the address of the provider for the source
+	// resource type.
+	SourceProviderAddress string
+
+	// SourceSchemaVersion is the version of the source resource state.
+	SourceSchemaVersion int64
+
+	// SourceState is the raw state of the source resource.
+	//
+	// Only the underlying JSON field is populated.
+	SourceState *RawState
+
+	// SourceTypeName is the source resource type for the move request.
+	SourceTypeName string
+
+	// TargetTypeName is the target resource type for the move request.
+	TargetTypeName string
+}
+
+// MoveResourceStateResponse is the response from the provider containing
+// the moved state for the given resource.
+type MoveResourceStateResponse struct {
+	// TargetPrivate is the target resource private state after the move.
+	TargetPrivate []byte
+
+	// TargetState is the target resource state after the move.
+	TargetState *DynamicValue
+
+	// Diagnostics report any warnings or errors related to moving the state.
+	Diagnostics []*Diagnostic
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccVPCEndpointSubnetAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccVPCEndpointSubnetAssociation_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointSubnetAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func testAccCheckVPCEndpointSubnetAssociationDestroy(ctx context.Context) resour
 				continue
 			}
 
-			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+			err := tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -141,7 +142,7 @@ func testAccCheckVPCEndpointSubnetAssociationExists(ctx context.Context, n strin
 			return err
 		}
 
-		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		err = tfec2.FindVPCEndpointSubnetAssociationExists(ctx, conn, rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 
 		if err != nil {
 			return err
@@ -229,7 +230,7 @@ func testAccVPCEndpointSubnetAssociationImportStateIdFunc(n string) resource.Imp
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes["subnet_id"])
+		id := fmt.Sprintf("%s/%s", rs.Primary.Attributes["vpc_endpoint_id"], rs.Primary.Attributes[names.AttrSubnetID])
 		return id, nil
 	}
 }

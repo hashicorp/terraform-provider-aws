@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_elasticache_subnet_group: Add `vpc_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_elasticache_subnet_group: Add `vpc_id` attribute
+```

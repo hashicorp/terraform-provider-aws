@@ -32,7 +32,7 @@ func TestAccAuditManagerAssessmentReport_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentReportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,15 +40,15 @@ func TestAccAuditManagerAssessmentReport_basic(t *testing.T) {
 				Config: testAccAssessmentReportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -65,7 +65,7 @@ func TestAccAuditManagerAssessmentReport_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentReportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccAuditManagerAssessmentReport_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentReportDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,32 +100,32 @@ func TestAccAuditManagerAssessmentReport_optional(t *testing.T) {
 				Config: testAccAssessmentReportConfig_optional(rName, "text"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccAssessmentReportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
 				),
 			},
 			{
 				Config: testAccAssessmentReportConfig_optional(rName, "text-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentReportExists(ctx, resourceName, &assessmentReport),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", "text-updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "text-updated"),
 				),
 			},
 		},

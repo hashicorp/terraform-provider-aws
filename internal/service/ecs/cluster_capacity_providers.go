@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -76,6 +77,8 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 }
 
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
@@ -88,7 +91,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("updating ECS Cluster Capacity Providers (%s): %s", clusterName, err)
+		return sdkdiag.AppendErrorf(diags, "updating ECS Cluster Capacity Providers (%s): %s", clusterName, err)
 	}
 
 	if d.IsNewResource() {
@@ -96,39 +99,43 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err := waitClusterAvailable(ctx, conn, clusterName); err != nil {
-		return diag.Errorf("waiting for ECS Cluster Capacity Providers (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster Capacity Providers (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceClusterCapacityProvidersRead(ctx, d, meta)
+	return append(diags, resourceClusterCapacityProvidersRead(ctx, d, meta)...)
 }
 
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		diag.Errorf("[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
+		sdkdiag.AppendErrorf(diags, "[WARN] ECS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading ECS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
-		return diag.Errorf("setting capacity_providers: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
 	}
 	d.Set("cluster_name", cluster.ClusterName)
 	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
-		return diag.Errorf("setting default_capacity_provider_strategy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	input := &ecs.PutClusterCapacityProvidersInput{
@@ -141,18 +148,18 @@ func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.Resou
 	err := retryClusterCapacityProvidersPut(ctx, conn, input)
 
 	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting ECS Cluster Capacity Providers (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECS Cluster Capacity Providers (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for ECS Cluster Capacity Providers (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster Capacity Providers (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func retryClusterCapacityProvidersPut(ctx context.Context, conn *ecs.ECS, input *ecs.PutClusterCapacityProvidersInput) error {

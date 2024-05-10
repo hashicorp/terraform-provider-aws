@@ -48,7 +48,7 @@ func ResourceInput() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func ResourceInput() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -114,11 +114,11 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -145,7 +145,7 @@ func ResourceInput() *schema.Resource {
 					},
 				},
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -157,13 +157,13 @@ func ResourceInput() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 2,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -186,13 +186,15 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(id.UniqueId()),
-		Name:      aws.String(d.Get("name").(string)),
+		Name:      aws.String(d.Get(names.AttrName).(string)),
 		Tags:      getTagsIn(ctx),
-		Type:      types.InputType(d.Get("type").(string)),
+		Type:      types.InputType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("destinations"); ok && v.(*schema.Set).Len() > 0 {
@@ -211,7 +213,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.MediaConnectFlows = expandMediaConnectFlows(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
 
@@ -238,23 +240,25 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), err)
 	}
 
 	if outputRaw == nil || outputRaw.(*medialive.CreateInputOutput).Input == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*medialive.CreateInputOutput).Input.Id))
 
 	if _, err := waitInputCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
 	}
 
-	return resourceInputRead(ctx, d, meta)
+	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindInputByID(ctx, conn, d.Id())
@@ -262,33 +266,35 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Input (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("attached_channels", out.AttachedChannels)
 	d.Set("media_connect_flows", flattenMediaConnectFlows(out.MediaConnectFlows))
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("input_class", out.InputClass)
 	d.Set("input_devices", flattenInputDevices(out.InputDevices))
 	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
 	d.Set("input_source_type", out.InputSourceType)
-	d.Set("role_arn", out.RoleArn)
+	d.Set(names.AttrRoleARN, out.RoleArn)
 	d.Set("sources", flattenSources(out.Sources))
-	d.Set("type", out.Type)
+	d.Set(names.AttrType, out.Type)
 
-	return nil
+	return diags
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &medialive.UpdateInputInput{
 			InputId: aws.String(d.Id()),
 		}
@@ -305,12 +311,12 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.MediaConnectFlows = expandMediaConnectFlows(d.Get("media_connect_flows").(*schema.Set).List())
 		}
 
-		if d.HasChange("name") {
-			in.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			in.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("role_arn") {
-			in.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			in.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
 		if d.HasChange("sources") {
@@ -331,20 +337,22 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
 		}
 
 		out := rawOutput.(*medialive.UpdateInputOutput)
 
 		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
 		}
 	}
 
-	return resourceInputRead(ctx, d, meta)
+	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
@@ -356,17 +364,17 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameInput, d.Id(), err)
 	}
 
 	if _, err := waitInputDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInput, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {
@@ -501,7 +509,7 @@ func flattenInputDevice(apiObject types.InputDeviceSettings) map[string]interfac
 	m := map[string]interface{}{}
 
 	if v := apiObject.Id; v != nil {
-		m["id"] = aws.ToString(v)
+		m[names.AttrID] = aws.ToString(v)
 	}
 
 	return m
@@ -602,7 +610,7 @@ func (i inputDevices) expandToDeviceSettings() []types.InputDeviceSettings {
 		}
 
 		var id types.InputDeviceSettings
-		if val, ok := m["id"]; ok {
+		if val, ok := m[names.AttrID]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -625,7 +633,7 @@ func (i inputDevices) expandToDeviceRequest() []types.InputDeviceRequest {
 		}
 
 		var id types.InputDeviceRequest
-		if val, ok := m["id"]; ok {
+		if val, ok := m[names.AttrID]; ok {
 			id.Id = aws.String(val.(string))
 			s = append(s, id)
 		}
@@ -693,10 +701,10 @@ func expandVPC(tfList []interface{}) *types.InputVpcRequest {
 	var s types.InputVpcRequest
 	vpc := tfList[0].(map[string]interface{})
 
-	if val, ok := vpc["subnet_ids"]; ok {
+	if val, ok := vpc[names.AttrSubnetIDs]; ok {
 		s.SubnetIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
-	if val, ok := vpc["security_group_ids"]; ok {
+	if val, ok := vpc[names.AttrSecurityGroupIDs]; ok {
 		s.SecurityGroupIds = flex.ExpandStringValueList(val.([]interface{}))
 	}
 

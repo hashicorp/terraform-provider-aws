@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudwatch_log_data_protection_policy_document")
@@ -21,7 +23,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDataProtectionPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -29,12 +31,12 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2021-06-01",
@@ -106,7 +108,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"bucket": {
+																		names.AttrBucket: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: validation.StringIsNotEmpty,
@@ -156,10 +158,12 @@ const (
 )
 
 func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.ResourceData, _ interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	document := DataProtectionPolicyDocument{
-		Description: d.Get("description").(string),
-		Name:        d.Get("name").(string),
-		Version:     d.Get("version").(string),
+		Description: d.Get(names.AttrDescription).(string),
+		Name:        d.Get(names.AttrName).(string),
+		Version:     d.Get(names.AttrVersion).(string),
 	}
 
 	// unwrap expects m to be a configuration block -- a TypeList schema
@@ -228,7 +232,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 					if m, ok := unwrap(m["s3"]); ok {
 						findingsDestination.S3 = &DataProtectionPolicyStatementOperationAuditFindingsDestinationS3{
-							Bucket: m["bucket"].(string),
+							Bucket: m[names.AttrBucket].(string),
 						}
 					}
 				}
@@ -251,17 +255,17 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	// The schema requires exactly 2 elements, which is assumed here.
 
 	if op := document.Statements[0].Operation; op.Audit == nil || op.Deidentify != nil {
-		return diag.Errorf("the first policy statement must contain only the audit operation")
+		return sdkdiag.AppendErrorf(diags, "the first policy statement must contain only the audit operation")
 	}
 
 	if op := document.Statements[1].Operation; op.Audit != nil || op.Deidentify == nil {
-		return diag.Errorf("the second policy statement must contain only the deidentify operation")
+		return sdkdiag.AppendErrorf(diags, "the second policy statement must contain only the deidentify operation")
 	}
 
 	jsonBytes, err := json.MarshalIndent(document, "", "  ")
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	jsonString := string(jsonBytes)
@@ -269,7 +273,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 	d.Set("json", jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
-	return nil
+	return diags
 }
 
 type DataProtectionPolicyDocument struct {

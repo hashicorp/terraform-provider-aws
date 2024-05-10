@@ -40,7 +40,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -95,7 +95,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).InspectorConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
 		AssessmentTemplateName: aws.String(name),
@@ -119,7 +119,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input := expandEventSubscriptions(v.(*schema.Set).List(), output.AssessmentTemplateArn)
 
 		if err := subscribeToEvents(ctx, conn, input); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
@@ -146,20 +146,20 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	template := resp.AssessmentTemplates[0]
 
 	arn := aws.StringValue(template.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("duration", template.DurationInSeconds)
-	d.Set("name", template.Name)
+	d.Set(names.AttrName, template.Name)
 	d.Set("rules_package_arns", aws.StringValueSlice(template.RulesPackageArns))
 	d.Set("target_arn", template.AssessmentTargetArn)
 
 	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
 	if err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	if err := d.Set("event_subscription", flattenSubscriptions(output)); err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	return diags
@@ -183,11 +183,11 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 		removeEventSubscriptionsInput := expandEventSubscriptions(eventSubscriptionsToRemove.List(), templateId)
 
 		if err := subscribeToEvents(ctx, conn, addEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 
 		if err := unsubscribeFromEvents(ctx, conn, removeEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 

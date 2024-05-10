@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `url` - URL of the queue.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-bc2387998bbb916bdcaa1a3f2f812935f5cc67ab5bb81f0bdfe43f5e898107d4 -->
+<!-- cache-key: cdktf-0.20.1 input-bc2387998bbb916bdcaa1a3f2f812935f5cc67ab5bb81f0bdfe43f5e898107d4 -->

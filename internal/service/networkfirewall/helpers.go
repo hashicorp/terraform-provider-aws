@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func encryptionConfigurationSchema() *schema.Schema {
@@ -22,7 +23,7 @@ func encryptionConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"type": {
+				names.AttrType: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringInSlice(networkfirewall.EncryptionType_Values(), false),
@@ -39,7 +40,7 @@ func expandEncryptionConfiguration(tfList []interface{}) *networkfirewall.Encryp
 		if v, ok := tfMap["key_id"].(string); ok {
 			ec.KeyId = aws.String(v)
 		}
-		if v, ok := tfMap["type"].(string); ok {
+		if v, ok := tfMap[names.AttrType].(string); ok {
 			ec.Type = aws.String(v)
 		}
 	}
@@ -56,8 +57,8 @@ func flattenEncryptionConfiguration(apiObject *networkfirewall.EncryptionConfigu
 	}
 
 	m := map[string]interface{}{
-		"key_id": aws.StringValue(apiObject.KeyId),
-		"type":   aws.StringValue(apiObject.Type),
+		"key_id":       aws.StringValue(apiObject.KeyId),
+		names.AttrType: aws.StringValue(apiObject.Type),
 	}
 
 	return []interface{}{m}
@@ -86,7 +87,7 @@ func customActionSchema() *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -170,7 +171,7 @@ func expandCustomActionPublishMetricAction(l []interface{}) *networkfirewall.Pub
 				continue
 			}
 			dimension := &networkfirewall.Dimension{
-				Value: aws.String(tfMap["value"].(string)),
+				Value: aws.String(tfMap[names.AttrValue].(string)),
 			}
 			dimensions = append(dimensions, dimension)
 		}
@@ -222,7 +223,7 @@ func flattenDimensions(d []*networkfirewall.Dimension) []interface{} {
 	dimensions := make([]interface{}, 0, len(d))
 	for _, v := range d {
 		dimension := map[string]interface{}{
-			"value": aws.StringValue(v.Value),
+			names.AttrValue: aws.StringValue(v.Value),
 		}
 		dimensions = append(dimensions, dimension)
 	}
@@ -264,7 +265,7 @@ func customActionSchemaDataSource() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeString,
 														Computed: true,
 													},

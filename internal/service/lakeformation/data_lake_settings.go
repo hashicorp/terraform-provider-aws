@@ -7,16 +7,18 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -85,8 +87,8 @@ func ResourceDataLakeSettings() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
 						"principal": {
@@ -110,8 +112,8 @@ func ResourceDataLakeSettings() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(lakeformation.Permission_Values(), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
 						"principal": {
@@ -147,7 +149,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 
 func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -155,7 +157,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	settings := &lakeformation.DataLakeSettings{}
+	settings := &awstypes.DataLakeSettings{}
 
 	if v, ok := d.GetOk("admins"); ok {
 		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
@@ -170,7 +172,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
-		settings.AuthorizedSessionTagValueList = flex.ExpandStringList(v.([]interface{}))
+		settings.AuthorizedSessionTagValueList = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("create_database_default_permissions"); ok {
@@ -186,7 +188,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
-		settings.TrustedResourceOwners = flex.ExpandStringList(v.([]interface{}))
+		settings.TrustedResourceOwners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("allow_full_table_external_data_access"); ok {
@@ -198,12 +200,13 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	var output *lakeformation.PutDataLakeSettingsOutput
 	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.PutDataLakeSettingsWithContext(ctx, input)
+		output, err = conn.PutDataLakeSettings(ctx, input)
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
 				return retry.RetryableError(err)
 			}
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
+
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
 				return retry.RetryableError(err)
 			}
 
@@ -213,7 +216,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.PutDataLakeSettingsWithContext(ctx, input)
+		output, err = conn.PutDataLakeSettings(ctx, input)
 	}
 
 	if err != nil {
@@ -224,14 +227,14 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation data lake settings: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
 
 	return append(diags, resourceDataLakeSettingsRead(ctx, d, meta)...)
 }
 
 func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -239,9 +242,9 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
+	output, err := conn.GetDataLakeSettings(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.EntityNotFoundException](err) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -260,7 +263,7 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
-	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringValueList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
@@ -272,15 +275,15 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{
-		DataLakeSettings: &lakeformation.DataLakeSettings{
-			CreateDatabaseDefaultPermissions: make([]*lakeformation.PrincipalPermissions, 0),
-			CreateTableDefaultPermissions:    make([]*lakeformation.PrincipalPermissions, 0),
-			DataLakeAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
-			ReadOnlyAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
-			TrustedResourceOwners:            make([]*string, 0),
+		DataLakeSettings: &awstypes.DataLakeSettings{
+			CreateDatabaseDefaultPermissions: make([]awstypes.PrincipalPermissions, 0),
+			CreateTableDefaultPermissions:    make([]awstypes.PrincipalPermissions, 0),
+			DataLakeAdmins:                   make([]awstypes.DataLakePrincipal, 0),
+			ReadOnlyAdmins:                   make([]awstypes.DataLakePrincipal, 0),
+			TrustedResourceOwners:            make([]string, 0),
 		},
 	}
 
@@ -288,9 +291,9 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutDataLakeSettingsWithContext(ctx, input)
+	_, err := conn.PutDataLakeSettings(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
 		return diags
 	}
@@ -302,8 +305,8 @@ func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []*lakeformation.PrincipalPermissions {
-	apiObjects := make([]*lakeformation.PrincipalPermissions, 0, len(tfMaps))
+func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []awstypes.PrincipalPermissions {
+	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfMaps))
 
 	for _, tfMap := range tfMaps {
 		apiObjects = append(apiObjects, expandDataLakeSettingsCreateDefaultPermission(tfMap.(map[string]interface{})))
@@ -312,10 +315,10 @@ func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []*lak
 	return apiObjects
 }
 
-func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) *lakeformation.PrincipalPermissions {
-	apiObject := &lakeformation.PrincipalPermissions{
-		Permissions: flex.ExpandStringSet(tfMap["permissions"].(*schema.Set)),
-		Principal: &lakeformation.DataLakePrincipal{
+func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
+	apiObject := awstypes.PrincipalPermissions{
+		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap["permissions"].(*schema.Set).List()),
+		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
 		},
 	}
@@ -323,7 +326,7 @@ func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{})
 	return apiObject
 }
 
-func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []*lakeformation.PrincipalPermissions) []map[string]interface{} {
+func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []awstypes.PrincipalPermissions) []map[string]interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -336,32 +339,33 @@ func flattenDataLakeSettingsCreateDefaultPermissions(apiObjects []*lakeformation
 	return tfMaps
 }
 
-func flattenDataLakeSettingsCreateDefaultPermission(apiObject *lakeformation.PrincipalPermissions) map[string]interface{} {
+func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.PrincipalPermissions) map[string]interface{} {
 	tfMap := make(map[string]interface{})
 
-	if apiObject == nil {
+	if reflect.ValueOf(apiObject).IsZero() {
 		return tfMap
 	}
 
 	if apiObject.Permissions != nil {
-		tfMap["permissions"] = flex.FlattenStringSet(apiObject.Permissions)
+		// tfMap["permissions"] = flex.FlattenStringValueSet(flattenPermissions(apiObject.Permissions))
+		tfMap["permissions"] = flex.FlattenStringyValueSet(apiObject.Permissions)
 	}
 
-	if v := aws.StringValue(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
+	if v := aws.ToString(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
 		tfMap["principal"] = v
 	}
 
 	return tfMap
 }
 
-func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+func expandDataLakeSettingsAdmins(tfSet *schema.Set) []awstypes.DataLakePrincipal {
 	tfSlice := tfSet.List()
-	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
+	apiObjects := make([]awstypes.DataLakePrincipal, 0, len(tfSlice))
 
 	for _, tfItem := range tfSlice {
 		val, ok := tfItem.(string)
 		if ok && val != "" {
-			apiObjects = append(apiObjects, &lakeformation.DataLakePrincipal{
+			apiObjects = append(apiObjects, awstypes.DataLakePrincipal{
 				DataLakePrincipalIdentifier: aws.String(tfItem.(string)),
 			})
 		}
@@ -370,7 +374,7 @@ func expandDataLakeSettingsAdmins(tfSet *schema.Set) []*lakeformation.DataLakePr
 	return apiObjects
 }
 
-func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
+func flattenDataLakeSettingsAdmins(apiObjects []awstypes.DataLakePrincipal) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -378,20 +382,20 @@ func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal
 	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
+		tfSlice = append(tfSlice, aws.ToString(apiObject.DataLakePrincipalIdentifier))
 	}
 
 	return tfSlice
 }
 
-func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []awstypes.DataLakePrincipal {
 	tfSlice := tfSet.List()
-	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
+	apiObjects := make([]awstypes.DataLakePrincipal, 0, len(tfSlice))
 
 	for _, tfItem := range tfSlice {
 		val, ok := tfItem.(string)
 		if ok && val != "" {
-			apiObjects = append(apiObjects, &lakeformation.DataLakePrincipal{
+			apiObjects = append(apiObjects, awstypes.DataLakePrincipal{
 				DataLakePrincipalIdentifier: aws.String(tfItem.(string)),
 			})
 		}
@@ -400,7 +404,7 @@ func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []*lakeform
 	return apiObjects
 }
 
-func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
+func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []awstypes.DataLakePrincipal) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -408,7 +412,7 @@ func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []*lakeformation.D
 	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
+		tfSlice = append(tfSlice, aws.ToString(apiObject.DataLakePrincipalIdentifier))
 	}
 
 	return tfSlice

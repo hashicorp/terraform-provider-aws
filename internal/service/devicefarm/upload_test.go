@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDeviceFarmUpload_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,9 +44,9 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`upload:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
@@ -60,9 +61,9 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Config: testAccUploadConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`upload:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 				),
@@ -85,7 +86,7 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{

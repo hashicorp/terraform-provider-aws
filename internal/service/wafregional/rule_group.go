@@ -25,18 +25,19 @@ import (
 
 // @SDKResource("aws_wafregional_rule_group", name="Rule Group")
 // @Tags(identifierAttribute="arn")
-func ResourceRuleGroup() *schema.Resource {
+func resourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
 		ReadWithoutTimeout:   resourceRuleGroupRead,
 		UpdateWithoutTimeout: resourceRuleGroupUpdate,
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,7 +59,7 @@ func ResourceRuleGroup() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -73,7 +74,7 @@ func ResourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  wafregional.WafRuleTypeRegular,
@@ -83,7 +84,7 @@ func ResourceRuleGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,30 +99,30 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	wr := NewRetryer(conn, region)
-	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	name := d.Get(names.AttrName).(string)
+	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(name),
 			Tags:        getTagsIn(ctx),
 		}
 
 		return conn.CreateRuleGroupWithContext(ctx, input)
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Rule Group (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Rule Group (%s): %s", name, err)
 	}
-	resp := out.(*waf.CreateRuleGroupOutput)
-	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
+
+	d.SetId(aws.StringValue(outputRaw.(*waf.CreateRuleGroupOutput).RuleGroup.RuleGroupId))
 
 	activatedRule := d.Get("activated_rule").(*schema.Set).List()
 	if len(activatedRule) > 0 {
 		noActivatedRules := []interface{}{}
 
-		err := updateRuleGroupResourceWR(ctx, d.Id(), noActivatedRules, activatedRule, conn, region)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule Group: %s", err)
+		if err := updateRuleGroupResourceWR(ctx, conn, region, d.Id(), noActivatedRules, activatedRule); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule Group (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -161,9 +162,9 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
 		Service:   "waf-regional",
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("activated_rule", tfwaf.FlattenActivatedRules(rResp.ActivatedRules))
-	d.Set("name", resp.RuleGroup.Name)
+	d.Set(names.AttrName, resp.RuleGroup.Name)
 	d.Set("metric_name", resp.RuleGroup.MetricName)
 
 	return diags
@@ -178,8 +179,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange("activated_rule")
 		oldRules, newRules := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRuleGroupResourceWR(ctx, d.Id(), oldRules, newRules, conn, region)
-		if err != nil {
+		if err := updateRuleGroupResourceWR(ctx, conn, region, d.Id(), oldRules, newRules); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Rule Group (%s): %s", d.Id(), err)
 		}
 	}
@@ -202,44 +202,52 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func DeleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
+func DeleteRuleGroup(ctx context.Context, ruleGroupID string, oldRules []interface{}, conn *wafregional.WAFRegional, region string) error {
 	if len(oldRules) > 0 {
 		noRules := []interface{}{}
-		err := updateRuleGroupResourceWR(ctx, id, oldRules, noRules, conn, region)
+
+		err := updateRuleGroupResourceWR(ctx, conn, region, ruleGroupID, oldRules, noRules)
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return nil
+		}
+
 		if err != nil {
-			return fmt.Errorf("updating WAF Regional Rule Group Predicates: %s", err)
+			return fmt.Errorf("updating WAF Regional Rule Group (%s): %s", ruleGroupID, err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.DeleteRuleGroupInput{
+	log.Printf("[INFO] Deleting WAF Regional Rule Group: %s", ruleGroupID)
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteRuleGroupInput{
 			ChangeToken: token,
-			RuleGroupId: aws.String(id),
+			RuleGroupId: aws.String(ruleGroupID),
 		}
-		log.Printf("[INFO] Deleting WAF Regional Rule Group")
-		return conn.DeleteRuleGroupWithContext(ctx, req)
+
+		return conn.DeleteRuleGroupWithContext(ctx, input)
 	})
-	if err != nil {
-		return fmt.Errorf("deleting WAF Regional Rule Group: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("deleting WAF Regional Rule Group (%s): %s", ruleGroupID, err)
+	}
+
 	return nil
 }
 
-func updateRuleGroupResourceWR(ctx context.Context, id string, oldRules, newRules []interface{}, conn *wafregional.WAFRegional, region string) error {
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.UpdateRuleGroupInput{
+func updateRuleGroupResourceWR(ctx context.Context, conn *wafregional.WAFRegional, region, ruleGroupID string, oldRules, newRules []interface{}) error {
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,
-			RuleGroupId: aws.String(id),
+			RuleGroupId: aws.String(ruleGroupID),
 			Updates:     tfwaf.DiffRuleGroupActivatedRules(oldRules, newRules),
 		}
 
-		return conn.UpdateRuleGroupWithContext(ctx, req)
+		return conn.UpdateRuleGroupWithContext(ctx, input)
 	})
-	if err != nil {
-		return fmt.Errorf("updating WAF Regional Rule Group: %s", err)
-	}
 
-	return nil
+	return err
 }

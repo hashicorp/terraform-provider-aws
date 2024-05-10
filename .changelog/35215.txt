@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_appflow_flow: Add `destination_connector_properties.s3.s3_output_format_config.target_file_size` argument
+```

@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_link")
@@ -18,7 +20,7 @@ func DataSourceLink() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLinkRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +40,7 @@ func DataSourceLink() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,8 +60,8 @@ func DataSourceLink() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,6 +70,8 @@ func DataSourceLink() *schema.Resource {
 }
 
 func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -76,28 +80,28 @@ func dataSourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 	link, err := FindLinkByTwoPartKey(ctx, conn, globalNetworkID, linkID)
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Link (%s): %s", linkID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Link (%s): %s", linkID, err)
 	}
 
 	d.SetId(linkID)
-	d.Set("arn", link.LinkArn)
+	d.Set(names.AttrARN, link.LinkArn)
 	if link.Bandwidth != nil {
 		if err := d.Set("bandwidth", []interface{}{flattenBandwidth(link.Bandwidth)}); err != nil {
-			return diag.Errorf("setting bandwidth: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting bandwidth: %s", err)
 		}
 	} else {
 		d.Set("bandwidth", nil)
 	}
-	d.Set("description", link.Description)
+	d.Set(names.AttrDescription, link.Description)
 	d.Set("global_network_id", link.GlobalNetworkId)
 	d.Set("link_id", link.LinkId)
 	d.Set("provider_name", link.Provider)
 	d.Set("site_id", link.SiteId)
-	d.Set("type", link.Type)
+	d.Set(names.AttrType, link.Type)
 
-	if err := d.Set("tags", KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

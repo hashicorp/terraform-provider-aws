@@ -6,8 +6,8 @@ package appstream
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -73,7 +74,7 @@ func ResourceStack() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -85,7 +86,7 @@ func ResourceStack() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +94,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -121,7 +122,7 @@ func ResourceStack() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -220,13 +221,13 @@ func ResourceStack() *schema.Resource {
 				if stateApplicationSettings.IsKnown() && !stateApplicationSettings.IsNull() && stateApplicationSettings.LengthInt() > 0 {
 					setting := stateApplicationSettings.Index(cty.NumberIntVal(0))
 					if setting.IsKnown() && !setting.IsNull() {
-						enabled := setting.GetAttr("enabled")
+						enabled := setting.GetAttr(names.AttrEnabled)
 						if enabled.IsKnown() && !enabled.IsNull() && enabled.True() {
 							// Trigger a diff
 							return d.SetNew("application_settings", []map[string]any{
 								{
-									"enabled":        false,
-									"settings_group": "",
+									names.AttrEnabled: false,
+									"settings_group":  "",
 								},
 							})
 						}
@@ -252,9 +253,11 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateStackInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -268,7 +271,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ApplicationSettings = expandApplicationSettings(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -305,15 +308,17 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, appstream.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return diag.Errorf("creating Appstream Stack (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Appstream Stack (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*appstream.CreateStackOutput).Stack.Name))
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	stack, err := FindStackByName(ctx, conn, d.Id())
@@ -321,46 +326,48 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Stack (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("access_endpoints", flattenAccessEndpoints(stack.AccessEndpoints)); err != nil {
-		return diag.Errorf("setting access_endpoints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting access_endpoints: %s", err)
 	}
 	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
-		return diag.Errorf("setting application_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
 	}
-	d.Set("arn", stack.Arn)
+	d.Set(names.AttrARN, stack.Arn)
 	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
-	d.Set("description", stack.Description)
+	d.Set(names.AttrDescription, stack.Description)
 	d.Set("display_name", stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
-		return diag.Errorf("setting embed_host_domains: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
 	}
 	d.Set("feedback_url", stack.FeedbackURL)
-	d.Set("name", stack.Name)
+	d.Set(names.AttrName, stack.Name)
 	d.Set("redirect_url", stack.RedirectURL)
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
-		return diag.Errorf("setting storage_connectors: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
 	}
 	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
-		return diag.Errorf("setting streaming_experience_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting streaming_experience_settings: %s", err)
 	}
 	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
-		return diag.Errorf("setting user_settings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting user_settings: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appstream.UpdateStackInput{
 			Name: aws.String(d.Id()),
 		}
@@ -373,8 +380,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("display_name") {
@@ -400,14 +407,16 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err := conn.UpdateStackWithContext(ctx, input)
 
 		if err != nil {
-			diag.Errorf("updating Appstream Stack (%s): %s", d.Id(), err)
+			sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
@@ -416,11 +425,11 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Appstream Stack (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appstream Stack (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (interface{}, error) {
@@ -428,10 +437,10 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
@@ -540,7 +549,7 @@ func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSetti
 	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &appstream.ApplicationSettings{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
@@ -555,8 +564,8 @@ func flattenApplicationSetting(apiObject *appstream.ApplicationSettingsResponse)
 	}
 
 	return map[string]interface{}{
-		"enabled":        aws.BoolValue(apiObject.Enabled),
-		"settings_group": aws.StringValue(apiObject.SettingsGroup),
+		names.AttrEnabled: aws.BoolValue(apiObject.Enabled),
+		"settings_group":  aws.StringValue(apiObject.SettingsGroup),
 	}
 }
 
@@ -760,7 +769,7 @@ func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceD
 		flagDiffUserSettings = false
 	}
 
-	if count != defaultCount && (fmt.Sprintf("%d", count) == new && fmt.Sprintf("%d", defaultCount) == old) {
+	if count != defaultCount && (strconv.Itoa(count) == new && strconv.Itoa(defaultCount) == old) {
 		flagDiffUserSettings = true
 	}
 

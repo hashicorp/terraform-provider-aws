@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
@@ -28,6 +29,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
 	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
+	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
 	endpoints.EuCentral1RegionID:   "Z215JYRZR1TBD5",
@@ -56,7 +58,7 @@ func DataSourceHostedZoneID() *schema.Resource {
 		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -67,7 +69,7 @@ func DataSourceHostedZoneID() *schema.Resource {
 func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 

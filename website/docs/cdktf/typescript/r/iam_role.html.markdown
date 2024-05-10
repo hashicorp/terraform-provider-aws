@@ -12,9 +12,11 @@ description: |-
 
 Provides an IAM role.
 
-~> **NOTE:** If policies are attached to the role via the [`awsIamPolicyAttachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the role `name` or `path`, the `forceDetachPolicies` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `deleteConflict` error. The [`awsIamRolePolicyAttachment` resource (recommended)](/docs/providers/aws/r/iam_role_policy_attachment.html) does not have this requirement.
+~> **NOTE:** If policies are attached to the role via the [`aws_iam_policy_attachment` resource](/docs/providers/aws/r/iam_policy_attachment.html) and you are modifying the role `name` or `path`, the `forceDetachPolicies` argument must be set to `true` and applied before attempting the operation otherwise you will encounter a `DeleteConflict` error. The [`aws_iam_role_policy_attachment` resource (recommended)](/docs/providers/aws/r/iam_role_policy_attachment.html) does not have this requirement.
 
-~> **NOTE:** If you use this resource's `managedPolicyArns` argument or `inlinePolicy` configuration blocks, this resource will take over exclusive management of the role's respective policy types (e.g., both policy types if both arguments are used). These arguments are incompatible with other ways of managing a role's policies, such as [`awsIamPolicyAttachment`](/docs/providers/aws/r/iam_policy_attachment.html), [`awsIamRolePolicyAttachment`](/docs/providers/aws/r/iam_role_policy_attachment.html), and [`awsIamRolePolicy`](/docs/providers/aws/r/iam_role_policy.html). If you attempt to manage a role's policies by multiple means, you will get resource cycling and/or errors.
+~> **NOTE:** If you use this resource's `managedPolicyArns` argument or `inlinePolicy` configuration blocks, this resource will take over exclusive management of the role's respective policy types (e.g., both policy types if both arguments are used). These arguments are incompatible with other ways of managing a role's policies, such as [`aws_iam_policy_attachment`](/docs/providers/aws/r/iam_policy_attachment.html), [`aws_iam_role_policy_attachment`](/docs/providers/aws/r/iam_role_policy_attachment.html), and [`aws_iam_role_policy`](/docs/providers/aws/r/iam_role_policy.html). If you attempt to manage a role's policies by multiple means, you will get resource cycling and/or errors.
+
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `assumeRolePolicy` or `inline_policy.*.policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
 
 ## Example Usage
 
@@ -270,7 +272,7 @@ The following argument is required:
 
 * `assumeRolePolicy` - (Required) Policy that grants an entity permission to assume the role.
 
-~> **NOTE:** The `assumeRolePolicy` is very similar to but slightly different than a standard IAM policy and cannot use an `awsIamPolicy` resource.  However, it _can_ use an `awsIamPolicyDocument` [data source](/docs/providers/aws/d/iam_policy_document.html). See the example above of how this works.
+~> **NOTE:** The `assumeRolePolicy` is very similar to but slightly different than a standard IAM policy and cannot use an `aws_iam_policy` resource.  However, it _can_ use an `aws_iam_policy_document` [data source](/docs/providers/aws/d/iam_policy_document.html). See the example above of how this works.
 
 The following arguments are optional:
 
@@ -283,7 +285,7 @@ The following arguments are optional:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique friendly name beginning with the specified prefix. Conflicts with `name`.
 * `path` - (Optional) Path to the role. See [IAM Identifiers](https://docs.aws.amazon.com/IAM/latest/UserGuide/Using_Identifiers.html) for more information.
 * `permissionsBoundary` - (Optional) ARN of the policy that is used to set the permissions boundary for the role.
-* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - Key-value mapping of tags for the IAM role. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### inline_policy
 
@@ -302,7 +304,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `createDate` - Creation date of the IAM role.
 * `id` - Name of the role.
 * `name` - Name of the role.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `uniqueId` - Stable and unique string identifying the role.
 
 ## Import
@@ -313,9 +315,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { IamRole } from "./.gen/providers/aws/iam-role";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    IamRole.generateConfigForImport(this, "developer", "developer_name");
   }
 }
 
@@ -327,4 +335,4 @@ Using `terraform import`, import IAM Roles using the `name`. For example:
 % terraform import aws_iam_role.developer developer_name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-bd6124ae737c542517c52e9bbb2eb3419c7ff3714d8593c811602ba81fff4809 -->
+<!-- cache-key: cdktf-0.20.1 input-07377f00a43e6da86e9707a78b261768181c72a7505ba5e8ef6c4aadb509e450 -->

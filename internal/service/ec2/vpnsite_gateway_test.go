@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // add sweeper to delete known test VPN Gateways
@@ -45,7 +46,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,7 +54,7 @@ func TestAccSiteVPNGateway_basic(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-gateway/vgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -82,7 +83,7 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,14 +91,14 @@ func TestAccSiteVPNGateway_withAvailabilityZoneSetToState(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", azDataSourceName, "names.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, azDataSourceName, "names.0"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"availability_zone"},
+				ImportStateVerifyIgnore: []string{names.AttrAvailabilityZone},
 			},
 		},
 	})
@@ -111,7 +112,7 @@ func TestAccSiteVPNGateway_amazonSideASN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,7 +141,7 @@ func TestAccSiteVPNGateway_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -200,7 +201,7 @@ func TestAccSiteVPNGateway_reattach(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -255,7 +256,7 @@ func TestAccSiteVPNGateway_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPNGatewayDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,10 +325,6 @@ func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *ec2.VpnGatew
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPN Gateway ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)

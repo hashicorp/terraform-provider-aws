@@ -7,8 +7,9 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -41,12 +42,14 @@ const (
 )
 
 func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 	appID := d.Get("application_id").(string)
 
 	out, err := findEnvironmentsByApplication(ctx, conn, appID)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
 	}
 
 	d.SetId(appID)
@@ -55,23 +58,25 @@ func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, met
 	for _, v := range out {
 		environmentIds = append(environmentIds, v.Id)
 	}
-	d.Set("environment_ids", aws.StringValueSlice(environmentIds))
+	d.Set("environment_ids", aws.ToStringSlice(environmentIds))
 
-	return nil
+	return diags
 }
 
-func findEnvironmentsByApplication(ctx context.Context, conn *appconfig.AppConfig, appId string) ([]*appconfig.Environment, error) {
-	var outputs []*appconfig.Environment
-	err := conn.ListEnvironmentsPagesWithContext(ctx, &appconfig.ListEnvironmentsInput{
-		ApplicationId: aws.String(appId),
-	}, func(output *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
-		outputs = append(outputs, output.Items...)
+func findEnvironmentsByApplication(ctx context.Context, conn *appconfig.Client, appId string) ([]awstypes.Environment, error) {
+	var outputs []awstypes.Environment
 
-		return !lastPage
+	pages := appconfig.NewListEnvironmentsPaginator(conn, &appconfig.ListEnvironmentsInput{
+		ApplicationId: aws.String(appId),
 	})
 
-	if err != nil {
-		return nil, err
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		outputs = append(outputs, page.Items...)
 	}
 
 	return outputs, nil

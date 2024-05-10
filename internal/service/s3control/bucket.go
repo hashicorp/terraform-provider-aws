@@ -46,11 +46,11 @@ func resourceBucket() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -86,7 +86,7 @@ func resourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3control.CreateBucketInput{
 		Bucket:    aws.String(bucket),
 		OutpostId: aws.String(d.Get("outpost_id").(string)),
@@ -100,7 +100,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.BucketArn))
 
-	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
+	if tags := keyValueTagsS3(ctx, getTagsInS3(ctx)); len(tags) > 0 {
 		if err := bucketUpdateTags(ctx, conn, d.Id(), nil, tags); err != nil {
 			return diag.Errorf("adding S3 Control Bucket (%s) tags: %s", d.Id(), err)
 		}
@@ -137,8 +137,8 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
-	d.Set("bucket", output.Bucket)
+	d.Set(names.AttrARN, d.Id())
+	d.Set(names.AttrBucket, output.Bucket)
 	if output.CreationDate != nil {
 		d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	}
@@ -151,7 +151,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("listing tags for S3 Control Bucket (%s): %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOutS3(ctx, tagsS3(tags))
 
 	return nil
 }
@@ -159,8 +159,8 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 
 		if err := bucketUpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating S3 Control Bucket (%s) tags: %s", d.Id(), err)
@@ -255,7 +255,7 @@ func bucketListTags(ctx context.Context, conn *s3control.Client, identifier stri
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagSet), nil
+	return keyValueTagsS3(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
@@ -284,7 +284,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.Client, identifier st
 			AccountId: aws.String(parsedArn.AccountID),
 			Bucket:    aws.String(identifier),
 			Tagging: &types.Tagging{
-				TagSet: Tags(newTags.Merge(ignoredTags)),
+				TagSet: tagsS3(newTags.Merge(ignoredTags)),
 			},
 		}
 

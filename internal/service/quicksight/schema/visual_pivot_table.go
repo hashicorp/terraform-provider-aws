@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func pivotTableVisualSchema() *schema.Schema {
@@ -93,9 +94,9 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"columns": dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"rows":    dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":  measureFieldSchema(measureFieldsMaxItems40),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"columns":        dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													"rows":           dimensionFieldSchema(dimensionsFieldMaxItems40), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems40),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -381,7 +382,7 @@ func rowAlternateColorOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
 				},
-				"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+				names.AttrStatus: stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
 			},
 		},
 	}
@@ -508,7 +509,7 @@ func expandPivotTableAggregatedFieldWells(tfList []interface{}) *quicksight.Pivo
 	if v, ok := tfMap["rows"].([]interface{}); ok && len(v) > 0 {
 		config.Rows = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -1065,7 +1066,7 @@ func expandRowAlternateColorOptions(tfList []interface{}) *quicksight.RowAlterna
 
 	options := &quicksight.RowAlternateColorOptions{}
 
-	if v, ok := tfMap["status"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		options.Status = aws.String(v)
 	}
 	if v, ok := tfMap["row_alternate_colors"].([]interface{}); ok && len(v) > 0 {
@@ -1297,7 +1298,7 @@ func flattenPivotTableAggregatedFieldWells(apiObject *quicksight.PivotTableAggre
 		tfMap["rows"] = flattenDimensionFields(apiObject.Rows)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1539,7 +1540,7 @@ func flattenRowAlternateColorOptions(apiObject *quicksight.RowAlternateColorOpti
 		tfMap["row_alternate_colors"] = flex.FlattenStringList(apiObject.RowAlternateColors)
 	}
 	if apiObject.Status != nil {
-		tfMap["status"] = aws.StringValue(apiObject.Status)
+		tfMap[names.AttrStatus] = aws.StringValue(apiObject.Status)
 	}
 
 	return []interface{}{tfMap}

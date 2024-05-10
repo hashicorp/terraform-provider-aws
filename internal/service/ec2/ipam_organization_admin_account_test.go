@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckIPAMOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,9 +38,9 @@ func TestAccIPAMOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccIPAMOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMOrganizationAdminAccountExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceIdentity, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceIdentity, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", tfec2.IPAMServicePrincipal),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile("account/.+")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("account/.+")),
 				),
 			},
 			{

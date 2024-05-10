@@ -5,35 +5,31 @@ package appautoscaling
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	ResNamePolicy = "Policy"
-)
-
-// @SDKResource("aws_appautoscaling_policy")
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourcePolicyCreate,
+		CreateWithoutTimeout: resourcePolicyPut,
 		ReadWithoutTimeout:   resourcePolicyRead,
-		UpdateWithoutTimeout: resourcePolicyUpdate,
+		UpdateWithoutTimeout: resourcePolicyPut,
 		DeleteWithoutTimeout: resourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -48,11 +44,11 @@ func ResourcePolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -144,11 +140,11 @@ func ResourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -171,7 +167,7 @@ func ResourcePolicy() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(1, 2047),
 												},
-												"id": {
+												names.AttrID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 255),
@@ -198,11 +194,11 @@ func ResourcePolicy() *schema.Resource {
 																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"name": {
+																					names.AttrName: {
 																						Type:     schema.TypeString,
 																						Required: true,
 																					},
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Required: true,
 																					},
@@ -302,229 +298,198 @@ func ResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	params := getPutScalingPolicyInput(d)
+	id := d.Get(names.AttrName).(string)
+	input := expandPutScalingPolicyInput(d)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.PutScalingPolicyWithContext(ctx, input)
+	}, applicationautoscaling.ErrCodeFailedResourceAccessException, applicationautoscaling.ErrCodeObjectNotFoundException)
 
-	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
-	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "is not authorized to perform") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "token included in the request is invalid") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
-	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "putting Application Auto Scaling Scaling Policy (%s): %s", id, err)
 	}
 
-	d.Set("arn", resp.PolicyARN)
-	d.SetId(d.Get("name").(string))
-	log.Printf("[INFO] ApplicationAutoScaling scaling PolicyARN: %s", d.Get("arn").(string))
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var p *applicationautoscaling.ScalingPolicy
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
-		var err error
-		p, err = getPolicy(ctx, d, meta)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		if d.IsNewResource() && p == nil {
-			return retry.RetryableError(&retry.NotFoundError{})
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		p, err = getPolicy(ctx, d, meta)
-	}
-	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+	}, applicationautoscaling.ErrCodeFailedResourceAccessException)
 
-	if p == nil && !d.IsNewResource() {
-		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
+	if tfresource.NotFound(err) && !d.IsNewResource() {
+		log.Printf("[WARN] Application Auto Scaling Scaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	log.Printf("[DEBUG] Read ApplicationAutoScaling policy: %s, SP: %s, Obj: %s", d.Get("name"), d.Get("name"), p)
-
-	var alarmARNs = make([]string, 0, len(p.Alarms))
-	for _, alarm := range p.Alarms {
-		alarmARNs = append(alarmARNs, aws.StringValue(alarm.AlarmARN))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
-	d.Set("alarm_arns", alarmARNs)
-	d.Set("arn", p.PolicyARN)
-	d.Set("name", p.PolicyName)
-	d.Set("policy_type", p.PolicyType)
-	d.Set("resource_id", p.ResourceId)
-	d.Set("scalable_dimension", p.ScalableDimension)
-	d.Set("service_namespace", p.ServiceNamespace)
 
-	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
+	output := outputRaw.(*applicationautoscaling.ScalingPolicy)
+	d.Set("alarm_arns", tfslices.ApplyToAll(output.Alarms, func(v *applicationautoscaling.Alarm) string {
+		return aws.StringValue(v.AlarmARN)
+	}))
+	d.Set(names.AttrARN, output.PolicyARN)
+	d.Set(names.AttrName, output.PolicyName)
+	d.Set("policy_type", output.PolicyType)
+	d.Set("resource_id", output.ResourceId)
+	d.Set("scalable_dimension", output.ScalableDimension)
+	d.Set("service_namespace", output.ServiceNamespace)
+	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(output.StepScalingPolicyConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting step_scaling_policy_configuration: %s", err)
 	}
-	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
+	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(output.TargetTrackingScalingPolicyConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting target_tracking_scaling_policy_configuration: %s", err)
 	}
 
 	return diags
 }
 
-func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
-
-	params := getPutScalingPolicyInput(d)
-
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err := conn.PutScalingPolicyWithContext(ctx, &params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.PutScalingPolicyWithContext(ctx, &params)
-	}
-	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
-	}
-
-	return append(diags, resourcePolicyRead(ctx, d, meta)...)
-}
-
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
-	p, err := getPolicy(ctx, d, meta)
-	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
-	}
-	if p == nil {
-		return diags
-	}
 
-	params := applicationautoscaling.DeleteScalingPolicyInput{
-		PolicyName:        aws.String(d.Get("name").(string)),
+	input := &applicationautoscaling.DeleteScalingPolicyInput{
+		PolicyName:        aws.String(d.Get(names.AttrName).(string)),
 		ResourceId:        aws.String(d.Get("resource_id").(string)),
 		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
-	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		_, err = conn.DeleteScalingPolicyWithContext(ctx, &params)
 
-		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
-			return retry.RetryableError(err)
-		}
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.DeleteScalingPolicyWithContext(ctx, input)
+	}, applicationautoscaling.ErrCodeFailedResourceAccessException)
 
-		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-			return nil
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteScalingPolicyWithContext(ctx, &params)
+	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Application Auto Scaling Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts, err := ValidPolicyImportInput(d.Id())
+	parts, err := validPolicyImportInput(d.Id())
 	if err != nil {
-		return nil, create.Error(names.AppAutoScaling, create.ErrActionImporting, ResNamePolicy, d.Id(), err)
+		return nil, err
 	}
 
-	serviceNamespace := idParts[0]
-	resourceId := idParts[1]
-	scalableDimension := idParts[2]
-	policyName := idParts[3]
+	serviceNamespace := parts[0]
+	resourceID := parts[1]
+	scalableDimension := parts[2]
+	name := parts[3]
 
-	d.Set("service_namespace", serviceNamespace)
-	d.Set("resource_id", resourceId)
+	d.SetId(name)
+	d.Set(names.AttrName, name)
+	d.Set("resource_id", resourceID)
 	d.Set("scalable_dimension", scalableDimension)
-	d.Set("name", policyName)
-	d.SetId(policyName)
+	d.Set("service_namespace", serviceNamespace)
+
 	return []*schema.ResourceData{d}, nil
 }
 
-func ValidPolicyImportInput(id string) ([]string, error) {
+func findScalingPolicyByFourPartKey(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceID, scalableDimension string) (*applicationautoscaling.ScalingPolicy, error) {
+	input := &applicationautoscaling.DescribeScalingPoliciesInput{
+		PolicyNames:       aws.StringSlice([]string{name}),
+		ResourceId:        aws.String(resourceID),
+		ScalableDimension: aws.String(scalableDimension),
+		ServiceNamespace:  aws.String(serviceNamespace),
+	}
+
+	return findScalingPolicy(ctx, conn, input, func(v *applicationautoscaling.ScalingPolicy) bool {
+		return aws.StringValue(v.PolicyName) == name && aws.StringValue(v.ScalableDimension) == scalableDimension
+	})
+}
+
+func findScalingPolicy(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, input *applicationautoscaling.DescribeScalingPoliciesInput, filter tfslices.Predicate[*applicationautoscaling.ScalingPolicy]) (*applicationautoscaling.ScalingPolicy, error) {
+	output, err := findScalingPolicies(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findScalingPolicies(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, input *applicationautoscaling.DescribeScalingPoliciesInput, filter tfslices.Predicate[*applicationautoscaling.ScalingPolicy]) ([]*applicationautoscaling.ScalingPolicy, error) {
+	var output []*applicationautoscaling.ScalingPolicy
+
+	err := conn.DescribeScalingPoliciesPagesWithContext(ctx, input, func(page *applicationautoscaling.DescribeScalingPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ScalingPolicies {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func validPolicyImportInput(id string) ([]string, error) {
 	idParts := strings.Split(id, "/")
 	if len(idParts) < 4 {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
 	}
 
-	var serviceNamespace, resourceId, scalableDimension, policyName string
+	var serviceNamespace, resourceID, scalableDimension, name string
 	switch idParts[0] {
 	case "dynamodb":
 		serviceNamespace = idParts[0]
 
-		dimensionIx := 3
+		dimensionIdx := 3
 		// DynamoDB resource ID can be "/table/tableName" or "/table/tableName/index/indexName"
-		if idParts[dimensionIx] == "index" {
-			dimensionIx = 5
+		if idParts[dimensionIdx] == "index" {
+			dimensionIdx = 5
 		}
 
-		resourceId = strings.Join(idParts[1:dimensionIx], "/")
-		scalableDimension = idParts[dimensionIx]
-		policyName = strings.Join(idParts[dimensionIx+1:], "/")
+		resourceID = strings.Join(idParts[1:dimensionIdx], "/")
+		scalableDimension = idParts[dimensionIdx]
+		name = strings.Join(idParts[dimensionIdx+1:], "/")
+	case "kafka":
+		serviceNamespace = idParts[0]
+		// MSK resource ID contains three sections, separated by '/', so scalableDimension is at index 4
+		dimensionIdx := 4
+
+		resourceID = strings.Join(idParts[1:dimensionIdx], "/")
+		scalableDimension = idParts[dimensionIdx]
+		name = strings.Join(idParts[dimensionIdx+1:], "/")
 	default:
 		serviceNamespace = idParts[0]
-		resourceId = strings.Join(idParts[1:len(idParts)-2], "/")
+		resourceID = strings.Join(idParts[1:len(idParts)-2], "/")
 		scalableDimension = idParts[len(idParts)-2]
-		policyName = idParts[len(idParts)-1]
+		name = idParts[len(idParts)-1]
 	}
 
-	if serviceNamespace == "" || resourceId == "" || scalableDimension == "" || policyName == "" {
+	if serviceNamespace == "" || resourceID == "" || scalableDimension == "" || name == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <service-namespace>/<resource-id>/<scalable-dimension>/<policy-name>", id)
 	}
 
-	return []string{serviceNamespace, resourceId, scalableDimension, policyName}, nil
+	return []string{serviceNamespace, resourceID, scalableDimension, name}, nil
 }
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
@@ -549,11 +514,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_lower_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_lower_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalLowerBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_lower_bound isn't a string")
+				return nil, errors.New("metric_interval_lower_bound isn't a string")
 			}
 		}
 		if data["metric_interval_upper_bound"] != "" {
@@ -562,11 +527,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_upper_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_upper_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalUpperBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_upper_bound isn't a string")
+				return nil, errors.New("metric_interval_upper_bound isn't a string")
 			}
 		}
 		adjustments = append(adjustments, a)
@@ -604,8 +569,8 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 				for i, d := range s.List() {
 					dimension := d.(map[string]interface{})
 					dimensions[i] = &applicationautoscaling.MetricDimension{
-						Name:  aws.String(dimension["name"].(string)),
-						Value: aws.String(dimension["value"].(string)),
+						Name:  aws.String(dimension[names.AttrName].(string)),
+						Value: aws.String(dimension[names.AttrValue].(string)),
 					}
 				}
 				spec.Dimensions = dimensions
@@ -624,7 +589,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 	for i := range metricDataQueries {
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := &applicationautoscaling.TargetTrackingMetricDataQuery{
-			Id: aws.String(metricDataQueryFlat["id"].(string)),
+			Id: aws.String(metricDataQueryFlat[names.AttrID].(string)),
 		}
 		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
 			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
@@ -639,8 +604,8 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 				for i := range dimList {
 					dim := dims[i].(map[string]interface{})
 					md := &applicationautoscaling.TargetTrackingMetricDimension{
-						Name:  aws.String(dim["name"].(string)),
-						Value: aws.String(dim["value"].(string)),
+						Name:  aws.String(dim[names.AttrName].(string)),
+						Value: aws.String(dim[names.AttrValue].(string)),
 					}
 					dimList[i] = md
 				}
@@ -686,26 +651,26 @@ func expandPredefinedMetricSpecification(configured []interface{}) *applicationa
 	return spec
 }
 
-func getPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.PutScalingPolicyInput {
-	var params = applicationautoscaling.PutScalingPolicyInput{
-		PolicyName: aws.String(d.Get("name").(string)),
+func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling.PutScalingPolicyInput {
+	apiObject := &applicationautoscaling.PutScalingPolicyInput{
+		PolicyName: aws.String(d.Get(names.AttrName).(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
 	if v, ok := d.GetOk("policy_type"); ok {
-		params.PolicyType = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("service_namespace"); ok {
-		params.ServiceNamespace = aws.String(v.(string))
+		apiObject.PolicyType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("scalable_dimension"); ok {
-		params.ScalableDimension = aws.String(v.(string))
+		apiObject.ScalableDimension = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("service_namespace"); ok {
+		apiObject.ServiceNamespace = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("step_scaling_policy_configuration"); ok {
-		params.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]interface{}))
+		apiObject.StepScalingPolicyConfiguration = expandStepScalingPolicyConfiguration(v.([]interface{}))
 	}
 
 	if l, ok := d.GetOk("target_tracking_scaling_policy_configuration"); ok {
@@ -736,33 +701,11 @@ func getPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.Put
 				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
 			}
 
-			params.TargetTrackingScalingPolicyConfiguration = cfg
+			apiObject.TargetTrackingScalingPolicyConfiguration = cfg
 		}
 	}
 
-	return params
-}
-
-func getPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
-
-	params := applicationautoscaling.DescribeScalingPoliciesInput{
-		PolicyNames:       []*string{aws.String(d.Get("name").(string))},
-		ResourceId:        aws.String(d.Get("resource_id").(string)),
-		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
-		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
-	}
-
-	log.Printf("[DEBUG] Application AutoScaling Policy Describe Params: %#v", params)
-	resp, err := conn.DescribeScalingPoliciesWithContext(ctx, &params)
-	if err != nil {
-		return nil, fmt.Errorf("describing scaling policies: %s", err)
-	}
-	if len(resp.ScalingPolicies) == 0 {
-		return nil, nil
-	}
-
-	return resp.ScalingPolicies[0], nil
+	return apiObject
 }
 
 func expandStepScalingPolicyConfiguration(cfg []interface{}) *applicationautoscaling.StepScalingPolicyConfiguration {
@@ -928,7 +871,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 	for i := range metricDataQueriesSpec {
 		metricDataQuery := map[string]interface{}{}
 		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery["id"] = aws.StringValue(rawMetricDataQuery.Id)
+		metricDataQuery[names.AttrID] = aws.StringValue(rawMetricDataQuery.Id)
 		if rawMetricDataQuery.Expression != nil {
 			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
 		}
@@ -945,8 +888,8 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 				for i := range dimSpec {
 					dim := map[string]interface{}{}
 					rawDim := rawMetric.Dimensions[i]
-					dim["name"] = aws.StringValue(rawDim.Name)
-					dim["value"] = aws.StringValue(rawDim.Value)
+					dim[names.AttrName] = aws.StringValue(rawDim.Name)
+					dim[names.AttrValue] = aws.StringValue(rawDim.Value)
 					dimSpec[i] = dim
 				}
 				metricSpec["dimensions"] = dimSpec
@@ -978,11 +921,11 @@ func flattenMetricDimensions(ds []*applicationautoscaling.MetricDimension) []int
 		m := map[string]interface{}{}
 
 		if v := d.Name; v != nil {
-			m["name"] = aws.StringValue(v)
+			m[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := d.Value; v != nil {
-			m["value"] = aws.StringValue(v)
+			m[names.AttrValue] = aws.StringValue(v)
 		}
 
 		l[i] = m

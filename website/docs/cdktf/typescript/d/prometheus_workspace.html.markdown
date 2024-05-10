@@ -50,7 +50,8 @@ This data source exports the following attributes in addition to the arguments a
 * `createdDate` - Creation date of the Prometheus workspace.
 * `prometheusEndpoint` - Endpoint of the Prometheus workspace.
 * `alias` - Prometheus workspace alias.
+* `kmsKeyArn` - ARN of the KMS key used to encrypt data in the Prometheus workspace.
 * `status` - Status of the Prometheus workspace.
 * `tags` - Tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-2dd7010a4197a27a819b72ee32cf460519cbeffe970609f02714d302a749d6c2 -->
+<!-- cache-key: cdktf-0.20.1 input-0c78b2184575da6a4ef65a1385b9ae96d6e113933b9d4a6da9019f9ab1d32c5e -->

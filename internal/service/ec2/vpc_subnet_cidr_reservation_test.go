@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +36,9 @@ func TestAccVPCSubnetCIDRReservation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "10.1.1.16/28"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "prefix"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
 			{
@@ -58,7 +59,7 @@ func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccVPCSubnetCIDRReservation_ipv6(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetCIDRReservationExists(ctx, resourceName, &res),
 					resource.TestCheckResourceAttr(resourceName, "reservation_type", "explicit"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 				),
 			},
 			{
@@ -88,7 +89,7 @@ func TestAccVPCSubnetCIDRReservation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetCIDRReservationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func testAccCheckSubnetCIDRReservationExists(ctx context.Context, n string, v *e
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+		output, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -138,7 +139,7 @@ func testAccCheckSubnetCIDRReservationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes["subnet_id"], rs.Primary.ID)
+			_, err := tfec2.FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx, conn, rs.Primary.Attributes[names.AttrSubnetID], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -161,7 +162,7 @@ func testAccSubnetCIDRReservationImportStateIdFunc(resourceName string) resource
 		if !ok {
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
-		subnetId := rs.Primary.Attributes["subnet_id"]
+		subnetId := rs.Primary.Attributes[names.AttrSubnetID]
 		return fmt.Sprintf("%s:%s", subnetId, rs.Primary.ID), nil
 	}
 }

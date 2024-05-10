@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +87,7 @@ func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueConnectionDataSource_basic(t *testing.T) {
@@ -24,7 +24,7 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -33,13 +33,13 @@ func TestAccGlueConnectionDataSource_basic(t *testing.T) {
 					testAccConnectionCheckDataSource(datasourceName),
 					resource.TestCheckResourceAttrPair(datasourceName, "catalog_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_type", resourceName, "connection_type"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "connection_properties", resourceName, "connection_properties"),
 					resource.TestCheckResourceAttrPair(datasourceName, "physical_connection_requirements", resourceName, "physical_connection_requirements"),
 					resource.TestCheckResourceAttrPair(datasourceName, "match_criteria", resourceName, "match_criteria"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},
 		},

@@ -16,30 +16,30 @@ import (
 )
 
 // expandOperations provides a uniform approach for handling lightsail operations and errors.
-func expandOperations(ctx context.Context, conn *lightsail.Client, operations []types.Operation, action types.OperationType, resource string, id string) diag.Diagnostics {
+func expandOperations(ctx context.Context, conn *lightsail.Client, operations []types.Operation, action types.OperationType, resource string, id string) (diags diag.Diagnostics) {
 	if len(operations) == 0 {
-		return create.DiagError(names.Lightsail, string(action), resource, id, errors.New("no operations found for request"))
+		return create.AppendDiagError(diags, names.Lightsail, string(action), resource, id, errors.New("no operations found for request"))
 	}
 
 	op := operations[0]
 
 	err := waitOperation(ctx, conn, op.Id)
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(action), resource, id, errors.New("error waiting for request operation"))
+		return create.AppendDiagError(diags, names.Lightsail, string(action), resource, id, errors.New("error waiting for request operation"))
 	}
 
-	return nil
+	return diags
 }
 
 // expandOperation provides a uniform approach for handling a single lightsail operation and errors.
 func expandOperation(ctx context.Context, conn *lightsail.Client, operation types.Operation, action types.OperationType, resource string, id string) diag.Diagnostics {
-	diag := expandOperations(ctx, conn, []types.Operation{operation}, action, resource, id)
+	diags := expandOperations(ctx, conn, []types.Operation{operation}, action, resource, id)
 
-	if diag != nil {
-		return diag
+	if diags != nil {
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
 func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]interface{} {
@@ -50,7 +50,7 @@ func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]inter
 	m := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		m["availability_zone"] = aws.ToString(v)
+		m[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.RegionName; string(v) != "" {

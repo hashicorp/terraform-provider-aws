@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloud9"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
@@ -48,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/docdbelastic"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -88,6 +90,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalytics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
@@ -131,11 +134,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/signer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/simpledb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
@@ -143,11 +149,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
 )
 
 func registerSweepers() {
@@ -169,6 +177,7 @@ func registerSweepers() {
 	autoscalingplans.RegisterSweepers()
 	backup.RegisterSweepers()
 	batch.RegisterSweepers()
+	bcmdataexports.RegisterSweepers()
 	budgets.RegisterSweepers()
 	cloud9.RegisterSweepers()
 	cloudformation.RegisterSweepers()
@@ -196,6 +205,7 @@ func registerSweepers() {
 	dlm.RegisterSweepers()
 	dms.RegisterSweepers()
 	docdb.RegisterSweepers()
+	docdbelastic.RegisterSweepers()
 	ds.RegisterSweepers()
 	dynamodb.RegisterSweepers()
 	ec2.RegisterSweepers()
@@ -236,6 +246,7 @@ func registerSweepers() {
 	kinesisanalytics.RegisterSweepers()
 	kinesisanalyticsv2.RegisterSweepers()
 	kms.RegisterSweepers()
+	lakeformation.RegisterSweepers()
 	lambda.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
@@ -279,11 +290,14 @@ func registerSweepers() {
 	ses.RegisterSweepers()
 	sesv2.RegisterSweepers()
 	sfn.RegisterSweepers()
+	shield.RegisterSweepers()
 	signer.RegisterSweepers()
 	simpledb.RegisterSweepers()
 	sns.RegisterSweepers()
 	sqs.RegisterSweepers()
 	ssm.RegisterSweepers()
+	ssmcontacts.RegisterSweepers()
+	ssmincidents.RegisterSweepers()
 	ssoadmin.RegisterSweepers()
 	storagegateway.RegisterSweepers()
 	swf.RegisterSweepers()
@@ -291,9 +305,11 @@ func registerSweepers() {
 	timestreamwrite.RegisterSweepers()
 	transcribe.RegisterSweepers()
 	transfer.RegisterSweepers()
+	verifiedpermissions.RegisterSweepers()
 	vpclattice.RegisterSweepers()
 	waf.RegisterSweepers()
 	wafregional.RegisterSweepers()
 	wafv2.RegisterSweepers()
 	workspaces.RegisterSweepers()
+	xray.RegisterSweepers()
 }

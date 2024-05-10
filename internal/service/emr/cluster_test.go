@@ -21,6 +21,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRCluster_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccEMRCluster_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,8 +40,8 @@ func TestAccEMRCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile("cluster/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-4.6.0"),
 					resource.TestCheckResourceAttr(resourceName, "applications.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "applications.*", "Spark"),
@@ -50,14 +51,14 @@ func TestAccEMRCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.0.instance_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", "aws_subnet.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_master_security_group", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_slave_security_group", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.instance_profile", "aws_iam_instance_profile.emr_instance_profile", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", "aws_subnet.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_master_security_group", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.emr_managed_slave_security_group", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.instance_profile", "aws_iam_instance_profile.emr_instance_profile", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scale_down_behavior", "TERMINATE_AT_TASK_COMPLETION"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_root_volume_size", "21"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.emr_service", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_autoscaling_role", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role", "aws_iam_role.emr_service", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "autoscaling_role", "aws_iam_role.emr_autoscaling_role", names.AttrARN),
 					resource.TestCheckNoResourceAttr(resourceName, "additional_info"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_attributes.#", "0"),
@@ -87,7 +88,7 @@ func TestAccEMRCluster_autoTerminationPolicy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +152,7 @@ func TestAccEMRCluster_additionalInfo(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -187,7 +188,7 @@ func TestAccEMRCluster_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +213,7 @@ func TestAccEMRCluster_sJSON(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -312,7 +313,7 @@ func TestAccEMRCluster_CoreInstanceGroup_autoScalingPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -364,7 +365,7 @@ func TestAccEMRCluster_CoreInstanceGroup_bidPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -407,7 +408,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -459,7 +460,7 @@ func TestAccEMRCluster_CoreInstanceGroup_instanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -502,7 +503,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -548,7 +549,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -590,7 +591,7 @@ func TestAccEMRCluster_Kerberos_clusterDedicatedKdc(t *testing.T) {
 	password := fmt.Sprintf("NeverKeepPasswordsInPlainText%s!", rName)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -626,7 +627,7 @@ func TestAccEMRCluster_MasterInstanceGroup_bidPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -669,7 +670,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -712,7 +713,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -755,7 +756,7 @@ func TestAccEMRCluster_MasterInstanceGroup_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -798,7 +799,7 @@ func TestAccEMRCluster_security(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -806,7 +807,7 @@ func TestAccEMRCluster_security(t *testing.T) {
 				Config: testAccClusterConfig_securityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttrPair(resourceName, "security_configuration", "aws_emr_security_configuration.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "security_configuration", "aws_emr_security_configuration.test", names.AttrName),
 				),
 			},
 			{
@@ -831,7 +832,7 @@ func TestAccEMRCluster_Step_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -870,7 +871,7 @@ func TestAccEMRCluster_Step_mode(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -937,7 +938,7 @@ func TestAccEMRCluster_Step_multiple(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -980,7 +981,7 @@ func TestAccEMRCluster_Step_multiple_listStates(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1024,7 +1025,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1158,7 +1159,7 @@ func TestAccEMRCluster_PlacementGroupConfigs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1202,7 +1203,7 @@ func TestAccEMRCluster_terminationProtected(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1260,7 +1261,7 @@ func TestAccEMRCluster_keepJob(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1293,7 +1294,7 @@ func TestAccEMRCluster_visibleToAllUsers(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1344,7 +1345,7 @@ func TestAccEMRCluster_s3Logging(t *testing.T) {
 	bucketName := fmt.Sprintf("s3n://%s/", rName)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1378,7 +1379,7 @@ func TestAccEMRCluster_s3LogEncryption(t *testing.T) {
 	bucketName := fmt.Sprintf("s3n://%s/", rName)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1412,7 +1413,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1458,7 +1459,7 @@ func TestAccEMRCluster_RootVolume_size(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1497,7 +1498,7 @@ func TestAccEMRCluster_StepConcurrency_level(t *testing.T) {
 	resourceName := "aws_emr_cluster.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1536,7 +1537,7 @@ func TestAccEMRCluster_ebs(t *testing.T) {
 	resourceName := "aws_emr_cluster.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1570,7 +1571,7 @@ func TestAccEMRCluster_CustomAMI_id(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1606,7 +1607,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1617,11 +1618,12 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ec2_attributes.0.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "capacity-optimized"),
 				),
 			},
 			{
@@ -1631,6 +1633,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"cluster_state", // Ignore RUNNING versus WAITING changes
 					"configurations",
+					"core_instance_fleet",
 					"keep_job_flow_alive_when_no_steps",
 				},
 			},
@@ -1643,10 +1646,46 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_attributes.0.subnet_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnet2ResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnetResourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ec2_attributes.0.subnet_ids.*", subnet2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "core_instance_group.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.0.launch_specifications.0.spot_specification.0.allocation_strategy", "price-capacity-optimized"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"core_instance_fleet",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
+func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_instanceFleetsMasterOnly(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
 				),
 			},
 			{
@@ -1663,7 +1702,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 	})
 }
 
-func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
+func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster emr.Cluster
 
@@ -1671,16 +1710,32 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_instanceFleetsMasterOnly(rName),
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_fleet.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "core_instance_fleet.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "false"),
 				),
 			},
 			{
@@ -3980,7 +4035,7 @@ resource "aws_emr_cluster" "test" {
     }
     launch_specifications {
       spot_specification {
-        allocation_strategy      = "capacity-optimized"
+        allocation_strategy      = "price-capacity-optimized"
         block_duration_minutes   = 0
         timeout_action           = "SWITCH_TO_ON_DEMAND"
         timeout_duration_minutes = 10
@@ -4286,4 +4341,35 @@ resource "aws_emr_cluster" "test" {
   ebs_root_volume_size = 21
 }
 `, rName))
+}
+
+func testAccClusterConfig_unhealthyNodeReplacement(rName, unhealthyNodeReplacement string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.33.1"
+  service_role                      = "EMR_DefaultRole"
+  termination_protection            = false
+  unhealthy_node_replacement        = %[2]s
+
+  ec2_attributes {
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, unhealthyNodeReplacement))
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_availability_zones")
@@ -42,7 +43,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"group_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -53,7 +54,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ec2.AvailabilityZoneState_Values(), false),
@@ -79,17 +80,17 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		request.AllAvailabilityZones = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("state"); ok {
+	if v, ok := d.GetOk(names.AttrState); ok {
 		request.Filters = []*ec2.Filter{
 			{
-				Name:   aws.String("state"),
+				Name:   aws.String(names.AttrState),
 				Values: []*string{aws.String(v.(string))},
 			},
 		}
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
-		request.Filters = append(request.Filters, BuildCustomFilterList(
+		request.Filters = append(request.Filters, newCustomFilterList(
 			filters.(*schema.Set),
 		)...)
 	}

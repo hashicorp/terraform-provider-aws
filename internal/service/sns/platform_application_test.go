@@ -181,7 +181,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,13 +191,13 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
 					resource.TestCheckNoResourceAttr(resourceName, "event_delivery_failure_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_created_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_deleted_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "event_endpoint_updated_topic_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "failure_feedback_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
 					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_role_arn"),
 					resource.TestCheckNoResourceAttr(resourceName, "success_feedback_sample_rate"),
@@ -221,7 +221,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -249,7 +249,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -259,15 +259,15 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
-					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "25"),
 				),
 			},
@@ -283,15 +283,15 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					testAccCheckPlatformApplicationExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_bundle_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "apple_platform_team_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sns", fmt.Sprintf("app/GCM/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", fmt.Sprintf("app/GCM/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "event_delivery_failure_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_created_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_deleted_topic_arn", topic1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "event_endpoint_updated_topic_arn", topic0ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "failure_feedback_role_arn", role1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
-					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "50"),
 				),
 			},
@@ -314,7 +314,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -322,8 +322,8 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
-							resource.TestCheckResourceAttr(resourceName, "name", name),
+							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sns", regexache.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
 							platformPrincipalCheck,
@@ -368,7 +368,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 
 					resource.Test(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -419,7 +419,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -427,7 +427,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 						Config: testAccPlatformApplicationConfig_basicApnsWithTokenCredentials(name, platform, applePlatformTeamId, applePlatformBundleId),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckPlatformApplicationExists(ctx, resourceName),
-							resource.TestCheckResourceAttr(resourceName, "name", name),
+							resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_principal"),

@@ -4,6 +4,7 @@ package elasticache
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
@@ -12,7 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +26,17 @@ func listTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, identif
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResourceWithContext(ctx, input)
+	output, err := tfresource.RetryGWhenMessageContains(ctx, 15*time.Minute,
+		func() (*elasticache.TagListMessage, error) {
+			return conn.ListTagsForResourceWithContext(ctx, input)
+		},
+		[]string{
+			elasticache.ErrCodeInvalidReplicationGroupStateFault,
+		},
+		[]string{
+			"not in available state",
+		},
+	)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -43,7 +55,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -93,7 +105,7 @@ func getTagsIn(ctx context.Context) []*elasticache.Tag {
 // setTagsOut sets elasticache service tags in Context.
 func setTagsOut(ctx context.Context, tags []*elasticache.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
@@ -123,7 +135,17 @@ func updateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
-		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
+		_, err := tfresource.RetryWhenMessageContains(ctx, 15*time.Minute,
+			func() (any, error) {
+				return conn.RemoveTagsFromResourceWithContext(ctx, input)
+			},
+			[]string{
+				elasticache.ErrCodeInvalidReplicationGroupStateFault,
+			},
+			[]string{
+				"not in available state",
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -138,7 +160,17 @@ func updateTags(ctx context.Context, conn elasticacheiface.ElastiCacheAPI, ident
 			Tags:         Tags(updatedTags),
 		}
 
-		_, err := conn.AddTagsToResourceWithContext(ctx, input)
+		_, err := tfresource.RetryWhenMessageContains(ctx, 15*time.Minute,
+			func() (any, error) {
+				return conn.AddTagsToResourceWithContext(ctx, input)
+			},
+			[]string{
+				elasticache.ErrCodeInvalidReplicationGroupStateFault,
+			},
+			[]string{
+				"not in available state",
+			},
+		)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

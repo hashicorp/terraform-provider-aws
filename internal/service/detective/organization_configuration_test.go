@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/detective"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganizationConfiguration_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Detective Organization Configuration cannot be deleted separately.
 		// Ensure parent resource is destroyed instead.
@@ -32,7 +32,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
 			},
 			{
@@ -44,7 +44,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
 			},
 		},

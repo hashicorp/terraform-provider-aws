@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,9 +38,9 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
@@ -64,7 +65,7 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,8 +73,8 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_description(rName, "foo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "foo"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "foo"),
 				),
 			},
 			{
@@ -85,8 +86,8 @@ func TestAccSSMMaintenanceWindow_description(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_description(rName, "bar"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "bar"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "bar"),
 				),
 			},
 		},
@@ -101,7 +102,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func TestAccSSMMaintenanceWindow_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +173,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -182,8 +183,8 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
 					resource.TestCheckResourceAttr(resourceName, "duration", "3"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
 				),
 			},
@@ -193,8 +194,8 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
 					resource.TestCheckResourceAttr(resourceName, "cutoff", "8"),
 					resource.TestCheckResourceAttr(resourceName, "duration", "10"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * WED *)"),
 				),
 			},
@@ -210,7 +211,7 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -245,7 +246,7 @@ func TestAccSSMMaintenanceWindow_duration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -280,7 +281,7 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -288,7 +289,7 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_enabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -300,7 +301,7 @@ func TestAccSSMMaintenanceWindow_enabled(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},
@@ -317,7 +318,7 @@ func TestAccSSMMaintenanceWindow_endDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -359,7 +360,7 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -394,7 +395,7 @@ func TestAccSSMMaintenanceWindow_scheduleTimezone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -436,7 +437,7 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -473,7 +474,7 @@ func TestAccSSMMaintenanceWindow_startDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowDestroy(ctx),
 		Steps: []resource.TestStep{

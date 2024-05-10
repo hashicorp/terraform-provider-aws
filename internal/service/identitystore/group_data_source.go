@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +39,7 @@ func DataSourceGroup() *schema.Resource {
 							ExactlyOneOf: []string{"alternate_identifier.0.external_id", "alternate_identifier.0.unique_attribute"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -71,7 +72,7 @@ func DataSourceGroup() *schema.Resource {
 				},
 				ConflictsWith: []string{"filter", "group_id"},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +85,7 @@ func DataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -143,6 +144,8 @@ const (
 )
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreID := d.Get("identity_store_id").(string)
@@ -160,7 +163,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 			page, err := paginator.NextPage(ctx)
 
 			if err != nil {
-				return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
+				return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
 			}
 
 			for _, group := range page.Groups {
@@ -173,25 +176,25 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if len(results) == 0 {
-			return diag.Errorf("no Identity Store Group found matching criteria\n%v; try different search", input.Filters)
+			return sdkdiag.AppendErrorf(diags, "no Identity Store Group found matching criteria\n%v; try different search", input.Filters)
 		}
 
 		if len(results) > 1 {
-			return diag.Errorf("multiple Identity Store Groups found matching criteria\n%v; try different search", input.Filters)
+			return sdkdiag.AppendErrorf(diags, "multiple Identity Store Groups found matching criteria\n%v; try different search", input.Filters)
 		}
 
 		group := results[0]
 
 		d.SetId(aws.ToString(group.GroupId))
-		d.Set("description", group.Description)
+		d.Set(names.AttrDescription, group.Description)
 		d.Set("display_name", group.DisplayName)
 		d.Set("group_id", group.GroupId)
 
 		if err := d.Set("external_ids", flattenExternalIds(group.ExternalIds)); err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameGroup, d.Id(), err)
 		}
 
-		return nil
+		return diags
 	}
 
 	var groupID string
@@ -205,7 +208,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err := conn.GetGroupId(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
 		}
 
 		groupID = aws.ToString(output.GroupId)
@@ -214,7 +217,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("group_id"); ok && v.(string) != "" {
 		if groupID != "" && groupID != v.(string) {
 			// We were given a filter, and it found a group different to this one.
-			return diag.Errorf("no Identity Store Group found matching criteria; try different search")
+			return sdkdiag.AppendErrorf(diags, "no Identity Store Group found matching criteria; try different search")
 		}
 
 		groupID = v.(string)
@@ -224,23 +227,23 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err != nil {
 		if tfresource.NotFound(err) {
-			return diag.Errorf("no Identity Store Group found matching criteria; try different search")
+			return sdkdiag.AppendErrorf(diags, "no Identity Store Group found matching criteria; try different search")
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, DSNameGroup, identityStoreID, err)
 	}
 
 	d.SetId(aws.ToString(group.GroupId))
 
-	d.Set("description", group.Description)
+	d.Set(names.AttrDescription, group.Description)
 	d.Set("display_name", group.DisplayName)
 	d.Set("group_id", group.GroupId)
 
 	if err := d.Set("external_ids", flattenExternalIds(group.ExternalIds)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, DSNameGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandFilters(l []interface{}) []types.Filter {

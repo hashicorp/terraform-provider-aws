@@ -81,6 +81,8 @@ const (
 )
 
 func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
@@ -88,7 +90,7 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	out, err := findRouterConfigurationByTypeAndVif(ctx, conn, routerTypeIdentifier, virtualInterfaceId)
 	if err != nil {
-		return create.DiagError(names.DirectConnect, create.ErrActionReading, DSNameRouterConfiguration, virtualInterfaceId, err)
+		return create.AppendDiagError(diags, names.DirectConnect, create.ErrActionReading, DSNameRouterConfiguration, virtualInterfaceId, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", virtualInterfaceId, routerTypeIdentifier))
@@ -99,10 +101,10 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("virtual_interface_name", out.VirtualInterfaceName)
 
 	if err := d.Set("router", flattenRouter(out.Router)); err != nil {
-		return create.DiagError(names.DirectConnect, create.ErrActionSetting, DSNameRouterConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.DirectConnect, create.ErrActionSetting, DSNameRouterConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnect.DirectConnect, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {

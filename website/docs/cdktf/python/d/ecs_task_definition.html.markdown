@@ -72,4 +72,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this task definition.
 * `task_role_arn` - ARN of the IAM role that containers in this task can assume.
 
-<!-- cache-key: cdktf-0.19.0 input-4a4502052fe5e4b3b606605c68760b5b4032e8f1ed7a3c177b5d6a07c7731b9c -->
+<!-- cache-key: cdktf-0.20.1 input-4a4502052fe5e4b3b606605c68760b5b4032e8f1ed7a3c177b5d6a07c7731b9c -->

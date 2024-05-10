@@ -9,15 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2Route_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -68,7 +69,7 @@ func TestAccAPIGatewayV2Route_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,8 +105,8 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeCustom),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeCustom)),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
@@ -127,7 +128,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeAwsIam),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeAwsIam)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -147,12 +148,11 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetRouteOutput
 	resourceName := "aws_apigatewayv2_route.test"
-	authorizerResourceName := "aws_apigatewayv2_authorizer.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,8 +162,8 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeJwt),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeJwt)),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
@@ -185,8 +185,8 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeJwt),
-					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", authorizerResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeJwt)),
+					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.another", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
@@ -211,7 +211,7 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,12 +220,12 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
@@ -251,7 +251,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,7 +260,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -280,7 +280,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -310,7 +310,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -334,7 +334,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -343,7 +343,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "GET"),
@@ -359,7 +359,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -375,7 +375,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", "GET"),
@@ -406,7 +406,7 @@ func TestAccAPIGatewayV2Route_target(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -415,7 +415,7 @@ func TestAccAPIGatewayV2Route_target(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -445,7 +445,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -454,7 +454,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -470,7 +470,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_type", apigatewayv2.AuthorizationTypeNone),
+					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
@@ -493,55 +493,47 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 
 func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_route" {
 				continue
 			}
 
-			_, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
-				ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
-				RouteId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 route %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Route %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRouteExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetRouteOutput) resource.TestCheckFunc {
+func testAccCheckRouteExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetRouteOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 route ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		output, err := tfapigatewayv2.FindRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
-			ApiId:   apiId,
-			RouteId: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}
@@ -646,12 +638,24 @@ func testAccRouteConfig_jwtAuthorizationUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAuthorizerConfig_jwt(rName),
 		`
+resource "aws_apigatewayv2_authorizer" "another" {
+  api_id           = aws_apigatewayv2_api.test.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "another-authorizer"
+
+  jwt_configuration {
+    audience = ["test"]
+    issuer   = "https://${aws_cognito_user_pool.test.endpoint}"
+  }
+}
+
 resource "aws_apigatewayv2_route" "test" {
   api_id    = aws_apigatewayv2_api.test.id
   route_key = "GET /test"
 
   authorization_type = "JWT"
-  authorizer_id      = aws_apigatewayv2_authorizer.test.id
+  authorizer_id      = aws_apigatewayv2_authorizer.another.id
 
   authorization_scopes = ["user.email"]
 }

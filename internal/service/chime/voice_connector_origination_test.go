@@ -29,7 +29,7 @@ func testAccVoiceConnectorOrigination_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,8 +39,8 @@ func testAccVoiceConnectorOrigination_basic(t *testing.T) {
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"protocol": "TCP",
-						"priority": "1",
+						names.AttrProtocol: "TCP",
+						"priority":         "1",
 					}),
 				),
 			},
@@ -63,7 +63,7 @@ func testAccVoiceConnectorOrigination_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func testAccVoiceConnectorOrigination_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorOriginationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,13 +106,13 @@ func testAccVoiceConnectorOrigination_update(t *testing.T) {
 					testAccCheckVoiceConnectorOriginationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"protocol": "TCP",
-						"port":     "5060",
-						"priority": "1",
+						names.AttrProtocol: "TCP",
+						names.AttrPort:     "5060",
+						"priority":         "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"protocol": "UDP",
-						"priority": "2",
+						names.AttrProtocol: "UDP",
+						"priority":         "2",
 					}),
 				),
 			},

@@ -23,10 +23,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_inventory")
-func ResourceBucketInventory() *schema.Resource {
+// @SDKResource("aws_s3_bucket_inventory", name="Bucket Inventory")
+func resourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketInventoryPut,
 		ReadWithoutTimeout:   resourceBucketInventoryRead,
@@ -38,7 +39,7 @@ func ResourceBucketInventory() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,14 +51,14 @@ func ResourceBucketInventory() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"account_id": {
+									names.AttrAccountID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: verify.ValidAccountID,
@@ -116,7 +117,7 @@ func ResourceBucketInventory() *schema.Resource {
 					},
 				},
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Default:  true,
 				Optional: true,
@@ -139,7 +140,7 @@ func ResourceBucketInventory() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.InventoryIncludedObjectVersions](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -176,14 +177,14 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	inventoryConfiguration := &types.InventoryConfiguration{
 		Id:        aws.String(name),
-		IsEnabled: d.Get("enabled").(bool),
+		IsEnabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
 	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		tfMap := v.([]interface{})[0].(map[string]interface{})["bucket"].([]interface{})[0].(map[string]interface{})
+		tfMap := v.([]interface{})[0].(map[string]interface{})[names.AttrBucket].([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Destination = &types.InventoryDestination{
 			S3BucketDestination: expandInventoryBucketDestination(tfMap),
 		}
@@ -208,16 +209,20 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.PutBucketInventoryConfigurationInput{
 		Bucket:                 aws.String(bucket),
 		Id:                     aws.String(name),
 		InventoryConfiguration: inventoryConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)
@@ -226,7 +231,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findInventoryConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -259,21 +264,21 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("reading S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	if v := ic.Destination; v != nil {
 		tfMap := map[string]interface{}{
-			"bucket": flattenInventoryBucketDestination(v.S3BucketDestination),
+			names.AttrBucket: flattenInventoryBucketDestination(v.S3BucketDestination),
 		}
 		if err := d.Set("destination", []map[string]interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
-	d.Set("enabled", ic.IsEnabled)
+	d.Set(names.AttrEnabled, ic.IsEnabled)
 	if err := d.Set("filter", flattenInventoryFilter(ic.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set("included_object_versions", ic.IncludedObjectVersions)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("optional_fields", ic.OptionalFields)
 	if err := d.Set("schedule", flattenInventorySchedule(ic.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
@@ -307,7 +312,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findInventoryConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -361,7 +366,7 @@ func expandInventoryBucketDestination(m map[string]interface{}) *types.Inventory
 		Bucket: aws.String(m["bucket_arn"].(string)),
 	}
 
-	if v, ok := m["account_id"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrAccountID]; ok && v.(string) != "" {
 		destination.AccountId = aws.String(v.(string))
 	}
 
@@ -407,7 +412,7 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 	}
 
 	if destination.AccountId != nil {
-		m["account_id"] = aws.ToString(destination.AccountId)
+		m[names.AttrAccountID] = aws.ToString(destination.AccountId)
 	}
 	if destination.Prefix != nil {
 		m["prefix"] = aws.ToString(destination.Prefix)

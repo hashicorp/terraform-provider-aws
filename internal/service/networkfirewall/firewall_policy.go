@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,11 +40,11 @@ func ResourceFirewallPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -65,7 +66,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"key": {
+												names.AttrKey: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -142,7 +143,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -171,7 +172,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
 									},
-									"resource_arn": {
+									names.AttrResourceARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -179,10 +180,15 @@ func ResourceFirewallPolicy() *schema.Resource {
 								},
 							},
 						},
+						"tls_inspection_configuration_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -207,16 +213,18 @@ func ResourceFirewallPolicy() *schema.Resource {
 }
 
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &networkfirewall.CreateFirewallPolicyInput{
 		FirewallPolicy:     expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
-		FirewallPolicyName: aws.String(d.Get("name").(string)),
+		FirewallPolicyName: aws.String(d.Get(names.AttrName).(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("encryption_configuration"); ok {
@@ -226,15 +234,17 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateFirewallPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating NetworkFirewall Firewall Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.FirewallPolicyResponse.FirewallPolicyArn))
 
-	return resourceFirewallPolicyRead(ctx, d, meta)
+	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
 }
 
 func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindFirewallPolicyByARN(ctx, conn, d.Id())
@@ -242,32 +252,34 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Firewall Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
 	response := output.FirewallPolicyResponse
-	d.Set("arn", response.FirewallPolicyArn)
-	d.Set("description", response.Description)
+	d.Set(names.AttrARN, response.FirewallPolicyArn)
+	d.Set(names.AttrDescription, response.Description)
 	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
-		return diag.Errorf("setting firewall_policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
-	d.Set("name", response.FirewallPolicyName)
+	d.Set(names.AttrName, response.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
 	setTagsOut(ctx, response.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
+	if d.HasChanges(names.AttrDescription, "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
 			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
@@ -276,21 +288,23 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		// Only pass non-empty description values, else API request returns an InternalServiceError
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
 		_, err := conn.UpdateFirewallPolicyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceFirewallPolicyRead(ctx, d, meta)
+	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
 }
 
 func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	const (
 		timeout = 10 * time.Minute
 	)
@@ -304,18 +318,18 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	}, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use")
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id(), timeout); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindFirewallPolicyByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
@@ -438,7 +452,7 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 
@@ -466,7 +480,7 @@ func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.Stat
 		if v, ok := tfMap["priority"].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
-		if v, ok := tfMap["resource_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
 			reference.ResourceArn = aws.String(v)
 		}
 		references = append(references, reference)
@@ -508,6 +522,10 @@ func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 		policy.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
 	}
 
+	if v, ok := lRaw["tls_inspection_configuration_arn"].(string); ok && v != "" {
+		policy.TLSInspectionConfigurationArn = aws.String(v)
+	}
+
 	return policy
 }
 
@@ -539,6 +557,9 @@ func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{}
 	}
 	if policy.StatelessRuleGroupReferences != nil {
 		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
+	}
+	if policy.TLSInspectionConfigurationArn != nil {
+		p["tls_inspection_configuration_arn"] = aws.StringValue(policy.TLSInspectionConfigurationArn)
 	}
 
 	return []interface{}{p}
@@ -588,7 +609,7 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			"resource_arn": aws.StringValue(ref.ResourceArn),
+			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		if ref.Priority != nil {
 			reference["priority"] = int(aws.Int64Value(ref.Priority))
@@ -607,8 +628,8 @@ func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRule
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			"priority":     int(aws.Int64Value(ref.Priority)),
-			"resource_arn": aws.StringValue(ref.ResourceArn),
+			"priority":            int(aws.Int64Value(ref.Priority)),
+			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		references = append(references, reference)
 	}

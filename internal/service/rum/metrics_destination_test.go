@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchrum "github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRUMMetricsDestination_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccRUMMetricsDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccRUMMetricsDestination_basic(t *testing.T) {
 				Config: testAccMetricsDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricsDestinationExists(ctx, resourceName, &dest),
-					resource.TestCheckResourceAttrPair(resourceName, "app_monitor_name", "aws_rum_app_monitor.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "app_monitor_name", "aws_rum_app_monitor.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "destination", "CloudWatch"),
 				),
 			},
@@ -55,7 +56,7 @@ func TestAccRUMMetricsDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccRUMMetricsDestination_disappears_appMonitor(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricsDestinationDestroy(ctx),
 		Steps: []resource.TestStep{

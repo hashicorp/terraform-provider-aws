@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `lastUpdatedDate` - Date that the bot alias was updated. When you create a resource, the creation date and the last updated date are the same.
 * `name` - Name of the alias. The name is not case sensitive.
 
-<!-- cache-key: cdktf-0.19.0 input-d573a0e146ccf354bee54f1fcff29eb5da0fe86b28b2cac76717ab2331d57f06 -->
+<!-- cache-key: cdktf-0.20.1 input-d573a0e146ccf354bee54f1fcff29eb5da0fe86b28b2cac76717ab2331d57f06 -->

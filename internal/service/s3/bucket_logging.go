@@ -20,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_bucket_logging")
-func ResourceBucketLogging() *schema.Resource {
+// @SDKResource("aws_s3_bucket_logging", name="Bucket Logging")
+func resourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLoggingCreate,
 		ReadWithoutTimeout:   resourceBucketLoggingRead,
@@ -35,7 +36,7 @@ func ResourceBucketLogging() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -70,11 +71,11 @@ func ResourceBucketLogging() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
@@ -94,6 +95,39 @@ func ResourceBucketLogging() *schema.Resource {
 					},
 				},
 			},
+			"target_object_key_format": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"partitioned_prefix": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"partition_date_source": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.PartitionDateSource](),
+									},
+								},
+							},
+							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
+						},
+						"simple_prefix": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{},
+							},
+							ExactlyOneOf: []string{"target_object_key_format.0.partitioned_prefix", "target_object_key_format.0.simple_prefix"},
+						},
+					},
+				},
+			},
 			"target_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -106,7 +140,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
@@ -122,12 +156,20 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("target_grant"); ok && v.(*schema.Set).Len() > 0 {
-		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
+		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "BucketLoggingStatus is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Logging: %s", bucket, err)
@@ -135,7 +177,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -167,11 +209,18 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Logging (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
-	if err := d.Set("target_grant", flattenBucketLoggingTargetGrants(loggingEnabled.TargetGrants)); err != nil {
+	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
+	}
+	if loggingEnabled.TargetObjectKeyFormat != nil {
+		if err := d.Set("target_object_key_format", []interface{}{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting target_object_key_format: %s", err)
+		}
+	} else {
+		d.Set("target_object_key_format", nil)
 	}
 	d.Set("target_prefix", loggingEnabled.TargetPrefix)
 
@@ -201,7 +250,11 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("target_grant"); ok && v.(*schema.Set).Len() > 0 {
-		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
+		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err = conn.PutBucketLogging(ctx, input)
@@ -273,7 +326,7 @@ func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expect
 	return output.LoggingEnabled, nil
 }
 
-func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
+func expandTargetGrants(l []interface{}) []types.TargetGrant {
 	var grants []types.TargetGrant
 
 	for _, tfMapRaw := range l {
@@ -285,7 +338,7 @@ func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
 		grant := types.TargetGrant{}
 
 		if v, ok := tfMap["grantee"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			grant.Grantee = expandBucketLoggingTargetGrantGrantee(v)
+			grant.Grantee = expandLoggingGrantee(v)
 		}
 
 		if v, ok := tfMap["permission"].(string); ok && v != "" {
@@ -298,7 +351,7 @@ func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
 	return grants
 }
 
-func expandBucketLoggingTargetGrantGrantee(l []interface{}) *types.Grantee {
+func expandLoggingGrantee(l []interface{}) *types.Grantee {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -318,11 +371,11 @@ func expandBucketLoggingTargetGrantGrantee(l []interface{}) *types.Grantee {
 		grantee.EmailAddress = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		grantee.ID = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		grantee.Type = types.Type(v)
 	}
 
@@ -333,7 +386,7 @@ func expandBucketLoggingTargetGrantGrantee(l []interface{}) *types.Grantee {
 	return grantee
 }
 
-func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} {
+func flattenTargetGrants(grants []types.TargetGrant) []interface{} {
 	var results []interface{}
 
 	for _, grant := range grants {
@@ -342,7 +395,7 @@ func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} 
 		}
 
 		if grant.Grantee != nil {
-			m["grantee"] = flattenBucketLoggingTargetGrantGrantee(grant.Grantee)
+			m["grantee"] = flattenLoggingGrantee(grant.Grantee)
 		}
 
 		results = append(results, m)
@@ -351,13 +404,13 @@ func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} 
 	return results
 }
 
-func flattenBucketLoggingTargetGrantGrantee(g *types.Grantee) []interface{} {
+func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	if g == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"type": g.Type,
+		names.AttrType: g.Type,
 	}
 
 	if g.DisplayName != nil {
@@ -369,7 +422,7 @@ func flattenBucketLoggingTargetGrantGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.ID != nil {
-		m["id"] = aws.ToString(g.ID)
+		m[names.AttrID] = aws.ToString(g.ID)
 	}
 
 	if g.URI != nil {
@@ -377,4 +430,66 @@ func flattenBucketLoggingTargetGrantGrantee(g *types.Grantee) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func expandTargetObjectKeyFormat(tfMap map[string]interface{}) *types.TargetObjectKeyFormat {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.TargetObjectKeyFormat{}
+
+	if v, ok := tfMap["partitioned_prefix"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.PartitionedPrefix = expandPartitionedPrefix(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["simple_prefix"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.SimplePrefix = &types.SimplePrefix{}
+	}
+
+	return apiObject
+}
+
+func expandPartitionedPrefix(tfMap map[string]interface{}) *types.PartitionedPrefix {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.PartitionedPrefix{}
+
+	if v, ok := tfMap["partition_date_source"].(string); ok && v != "" {
+		apiObject.PartitionDateSource = types.PartitionDateSource(v)
+	}
+
+	return apiObject
+}
+
+func flattenTargetObjectKeyFormat(apiObject *types.TargetObjectKeyFormat) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.PartitionedPrefix; v != nil {
+		tfMap["partitioned_prefix"] = []interface{}{flattenPartitionedPrefix(v)}
+	}
+
+	if apiObject.SimplePrefix != nil {
+		tfMap["simple_prefix"] = make([]map[string]interface{}, 1)
+	}
+
+	return tfMap
+}
+
+func flattenPartitionedPrefix(apiObject *types.PartitionedPrefix) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"partition_date_source": apiObject.PartitionDateSource,
+	}
+
+	return tfMap
 }

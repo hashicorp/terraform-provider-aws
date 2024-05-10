@@ -11,15 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_connection_notification")
+// @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
 func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionNotificationCreate,
@@ -47,7 +49,7 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,6 +74,7 @@ func resourceVPCEndpointConnectionNotificationCreate(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateVpcEndpointConnectionNotificationInput{
+		ClientToken:               aws.String(id.UniqueId()),
 		ConnectionEvents:          flex.ExpandStringSet(d.Get("connection_events").(*schema.Set)),
 		ConnectionNotificationArn: aws.String(d.Get("connection_notification_arn").(string)),
 	}
@@ -114,7 +117,7 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 	d.Set("connection_events", aws.StringValueSlice(cn.ConnectionEvents))
 	d.Set("connection_notification_arn", cn.ConnectionNotificationArn)
 	d.Set("notification_type", cn.ConnectionNotificationType)
-	d.Set("state", cn.ConnectionNotificationState)
+	d.Set(names.AttrState, cn.ConnectionNotificationState)
 	d.Set("vpc_endpoint_id", cn.VpcEndpointId)
 	d.Set("vpc_endpoint_service_id", cn.ServiceId)
 

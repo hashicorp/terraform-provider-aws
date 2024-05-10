@@ -62,13 +62,19 @@ class MyConvertedCode(TerraformStack):
 This data source supports the following arguments:
 
 * `availability_zone_group` - (Optional) Availability zone group.
+* `engine_latest_version` - (Optional) When set to `true`, the data source attempts to return the most recent version matching the other criteria you provide. You must use `engine_latest_version` with `preferred_instance_classes` and/or `preferred_engine_versions`. Using `engine_latest_version` will avoid `multiple RDS DB Instance Classes` errors. If you use `engine_latest_version` with `preferred_instance_classes`, the data source returns the latest version for the _first_ matching instance class (instance class priority). **Note:** The data source uses a best-effort approach at selecting the latest version but due to the complexity of version identifiers across engines, using `engine_latest_version` may _not_ return the latest version in every situation.
+* `engine_version` - (Optional) Version of the DB engine. If none is provided, the data source tries to use the AWS-defined default version that matches any other criteria.
 * `engine` - (Required) DB engine. Engine values include `aurora`, `aurora-mysql`, `aurora-postgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracle-ee`, `oracle-se`, `oracle-se1`, `oracle-se2`, `postgres`, `sqlserver-ee`, `sqlserver-ex`, `sqlserver-se`, and `sqlserver-web`.
-* `engine_version` - (Optional) Version of the DB engine. If none is provided, the AWS-defined default version will be used.
 * `instance_class` - (Optional) DB instance class. Examples of classes are `db.m3.2xlarge`, `db.t2.small`, and `db.m3.medium`.
 * `license_model` - (Optional) License model. Examples of license models are `general-public-license`, `bring-your-own-license`, and `amazon-license`.
-* `preferred_instance_classes` - (Optional) Ordered list of preferred RDS DB instance classes. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
-* `preferred_engine_versions` - (Optional) Ordered list of preferred RDS DB instance engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned.
+* `preferred_engine_versions` - (Optional) Ordered list of preferred RDS DB instance engine versions. When `engine_latest_version` is not set, the data source will return the first match in this list that matches any other criteria. If the data source finds no preferred matches or multiple matches without `engine_latest_version`, it returns an error. **CAUTION:** We don't recommend using `preferred_engine_versions` without `preferred_instance_classes` since the data source returns an arbitrary `instance_class` based on the first one AWS returns that matches the engine version and any other criteria.
+* `preferred_instance_classes` - (Optional) Ordered list of preferred RDS DB instance classes. The data source will return the first match in this list that matches any other criteria. If the data source finds no preferred matches or multiple matches without `engine_latest_version`, it returns an error. If you use `preferred_instance_classes` without `preferred_engine_versions` or `engine_latest_version`, the data source returns an arbitrary `engine_version` based on the first one AWS returns matching the instance class and any other criteria.
+* `read_replica_capable` - (Optional) Whether a DB instance can have a read replica.
 * `storage_type` - (Optional) Storage types. Examples of storage types are `standard`, `io1`, `gp2`, and `aurora`.
+* `supported_engine_modes` - (Optional) Use to limit results to engine modes such as `provisioned`.
+* `supported_network_types` - (Optional) Use to limit results to network types `IPV4` or `DUAL`.
+* `supports_clusters` - (Optional) Whether to limit results to instances that support clusters.
+* `supports_multi_az` - (Optional) Whether to limit results to instances that are multi-AZ capable.
 * `supports_enhanced_monitoring` - (Optional) Enable this to ensure a DB instance supports Enhanced Monitoring at intervals from 1 to 60 seconds.
 * `supports_global_databases` - (Optional) Enable this to ensure a DB instance supports Aurora global databases with a specific combination of other DB engine attributes.
 * `supports_iam_database_authentication` - (Optional) Enable this to ensure a DB instance supports IAM database authentication.
@@ -92,8 +98,5 @@ This data source exports the following attributes in addition to the arguments a
 * `min_storage_size` - Minimum storage size for a DB instance.
 * `multi_az_capable` - Whether a DB instance is Multi-AZ capable.
 * `outpost_capable` - Whether a DB instance supports RDS on Outposts.
-* `read_replica_capable` - Whether a DB instance can have a read replica.
-* `supported_engine_modes` - A list of the supported DB engine modes.
-* `supported_network_types` - The network types supported by the DB instance (`IPV4` or `DUAL`).
 
-<!-- cache-key: cdktf-0.19.0 input-d3074786a5def42976852645afdb8943af9aab3562de935df98229e60b04c7e9 -->
+<!-- cache-key: cdktf-0.20.1 input-b7d7f1ef4f3717ebf717a671d4388db2e9e81bc8063c21466642709438b646f7 -->

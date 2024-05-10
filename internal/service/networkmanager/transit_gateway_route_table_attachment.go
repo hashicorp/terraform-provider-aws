@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,7 +45,7 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +78,7 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +86,7 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -102,6 +103,8 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 }
 
 func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	peeringID := d.Get("peering_id").(string)
@@ -116,19 +119,21 @@ func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *sc
 	output, err := conn.CreateTransitGatewayRouteTableAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Transit Gateway (%s) Route Table (%s) Attachment: %s", peeringID, transitGatewayRouteTableARN, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway (%s) Route Table (%s) Attachment: %s", peeringID, transitGatewayRouteTableARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayRouteTableAttachment.Attachment.AttachmentId))
 
 	if _, err := waitTransitGatewayRouteTableAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayRouteTableAttachmentRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayRouteTableAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	transitGatewayRouteTableAttachment, err := FindTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
@@ -136,11 +141,11 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Route Table Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := transitGatewayRouteTableAttachment.Attachment
@@ -150,7 +155,7 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("attachment/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("attachment_type", a.AttachmentType)
 	d.Set("core_network_arn", a.CoreNetworkArn)
@@ -158,14 +163,14 @@ func resourceTransitGatewayRouteTableAttachmentRead(ctx context.Context, d *sche
 	d.Set("edge_location", a.EdgeLocation)
 	d.Set("owner_account_id", a.OwnerAccountId)
 	d.Set("peering_id", transitGatewayRouteTableAttachment.PeeringId)
-	d.Set("resource_arn", a.ResourceArn)
+	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
-	d.Set("state", a.State)
+	d.Set(names.AttrState, a.State)
 	d.Set("transit_gateway_route_table_arn", transitGatewayRouteTableAttachment.TransitGatewayRouteTableArn)
 
 	setTagsOut(ctx, a.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayRouteTableAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -174,6 +179,8 @@ func resourceTransitGatewayRouteTableAttachmentUpdate(ctx context.Context, d *sc
 }
 
 func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Route Table Attachment: %s", d.Id())
@@ -182,18 +189,18 @@ func resourceTransitGatewayRouteTableAttachmentDelete(ctx context.Context, d *sc
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Transit Gateway Route Table Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTransitGatewayRouteTableAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Route Table Attachment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Route Table Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.TransitGatewayRouteTableAttachment, error) {

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route: Allow resource creation if a propagated route to the same destination exists
+```

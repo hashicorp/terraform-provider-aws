@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatchrum "github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRUMAppMonitor_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,11 +35,11 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -54,11 +55,11 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Config: testAccAppMonitorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rum", fmt.Sprintf("appmonitor/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
@@ -78,7 +79,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RUMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppMonitorDestroy(ctx),
 		Steps: []resource.TestStep{

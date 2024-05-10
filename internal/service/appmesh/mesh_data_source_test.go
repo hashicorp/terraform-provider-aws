@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMeshDataSource_basic(t *testing.T) {
@@ -21,17 +22,17 @@ func testAccMeshDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
@@ -51,17 +52,17 @@ func testAccMeshDataSource_meshOwner(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_meshOwner(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
@@ -81,17 +82,17 @@ func testAccMeshDataSource_specAndTagsSet(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_specAndTagsSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),
@@ -115,17 +116,17 @@ func testAccMeshDataSource_shared(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, appmesh.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppMeshServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshDataSourceConfig_shared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "created_date", dataSourceName, "created_date"),
-					resource.TestCheckResourceAttrPair(resourceName, "last_updated_date", dataSourceName, "last_updated_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "mesh_owner", dataSourceName, "mesh_owner"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_owner", dataSourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.#", dataSourceName, "spec.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.egress_filter.#", dataSourceName, "spec.0.egress_filter.#"),

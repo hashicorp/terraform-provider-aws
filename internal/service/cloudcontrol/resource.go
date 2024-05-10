@@ -24,13 +24,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mattbaird/jsonpatch"
 )
 
-// @SDKResource("aws_cloudcontrolapi_resource")
-func ResourceResource() *schema.Resource {
+// @SDKResource("aws_cloudcontrolapi_resource", name="Resource")
+func resourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
 		DeleteWithoutTimeout: resourceResourceDelete,
@@ -52,7 +54,7 @@ func ResourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -85,6 +87,8 @@ func ResourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	typeName := d.Get("type_name").(string)
@@ -94,7 +98,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		TypeName:     aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -105,7 +109,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.CreateResource(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Cloud Control API (%s) Resource: %s", typeName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Cloud Control API (%s) Resource: %s", typeName, err)
 	}
 
 	// Always try to capture the identifier before returning errors.
@@ -114,7 +118,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	output.ProgressEvent, err = waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) create: %s", typeName, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) create: %s", typeName, d.Id(), err)
 	}
 
 	// Some resources do not set the identifier until after creation.
@@ -122,36 +126,40 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		d.SetId(aws.ToString(output.ProgressEvent.Identifier))
 	}
 
-	return resourceResourceRead(ctx, d, meta)
+	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	typeName := d.Get("type_name").(string)
-	resourceDescription, err := FindResource(ctx, conn,
+	resourceDescription, err := findResource(ctx, conn,
 		d.Id(),
 		typeName,
 		d.Get("type_version_id").(string),
-		d.Get("role_arn").(string),
+		d.Get(names.AttrRoleARN).(string),
 	)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Cloud Control API Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
 	d.Set("properties", resourceDescription.Properties)
 
-	return nil
+	return diags
 }
 
 func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	if d.HasChange("desired_state") {
@@ -160,7 +168,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		patchDocument, err := patchDocument(oldRaw.(string), newRaw.(string))
 
 		if err != nil {
-			return diag.Errorf("creating JSON Patch: %s", err)
+			return sdkdiag.AppendErrorf(diags, "creating JSON Patch: %s", err)
 		}
 
 		typeName := d.Get("type_name").(string)
@@ -171,7 +179,7 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			TypeName:      aws.String(typeName),
 		}
 
-		if v, ok := d.GetOk("role_arn"); ok {
+		if v, ok := d.GetOk(names.AttrRoleARN); ok {
 			input.RoleArn = aws.String(v.(string))
 		}
 
@@ -182,18 +190,20 @@ func resourceResourceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		output, err := conn.UpdateResource(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 		}
 
 		if _, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) update: %s", typeName, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) update: %s", typeName, d.Id(), err)
 		}
 	}
 
-	return resourceResourceRead(ctx, d, meta)
+	return append(diags, resourceResourceRead(ctx, d, meta)...)
 }
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
 	typeName := d.Get("type_name").(string)
@@ -203,7 +213,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		TypeName:    aws.String(typeName),
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
@@ -215,24 +225,24 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	output, err := conn.DeleteResource(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("deleting Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
 	progressEvent, err := waitProgressEventOperationStatusSuccess(ctx, conn, aws.ToString(output.ProgressEvent.RequestToken), d.Timeout(schema.TimeoutDelete))
 
 	if progressEvent != nil && progressEvent.ErrorCode == types.HandlerErrorCodeNotFound {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("waiting for Cloud Control API (%s) Resource (%s) delete: %s", typeName, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Cloud Control API (%s) Resource (%s) delete: %s", typeName, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceResourceCustomizeDiffGetSchema(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	resourceSchema := diff.Get("schema").(string)
 
@@ -316,7 +326,7 @@ func resourceResourceCustomizeDiffSchemaDiff(ctx context.Context, diff *schema.R
 	return nil
 }
 
-func FindResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, typeName, typeVersionID, roleARN string) (*types.ResourceDescription, error) {
+func findResource(ctx context.Context, conn *cloudcontrol.Client, resourceID, typeName, typeVersionID, roleARN string) (*types.ResourceDescription, error) {
 	input := &cloudcontrol.GetResourceInput{
 		Identifier: aws.String(resourceID),
 		TypeName:   aws.String(typeName),

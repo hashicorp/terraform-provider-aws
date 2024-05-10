@@ -21,6 +21,8 @@ sweeper:
   - 'sweeper'
 skaff:
   - 'skaff'
+function:
+  - 'provider::aws::'
 #
 # AWS Per-Service Labeling
 #
@@ -57,6 +59,8 @@ service/appconfig:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfig_'
 service/appconfigdata:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appconfigdata_'
+service/appfabric:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appfabric_'
 service/appflow:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appflow_'
 service/appintegrations:
@@ -87,8 +91,12 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bcmdataexports:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bcmdataexports_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -97,6 +105,8 @@ service/budgets:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_budgets_'
 service/ce:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ce_'
+service/chatbot:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chatbot_'
 service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
@@ -121,6 +131,8 @@ service/cloudformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudformation_'
 service/cloudfront:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfront_'
+service/cloudfrontkeyvaluestore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfrontkeyvaluestore_'
 service/cloudhsmv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudhsm_v2_'
 service/cloudsearch:
@@ -175,6 +187,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
@@ -187,6 +201,8 @@ service/datapipeline:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datapipeline_'
 service/datasync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datasync_'
+service/datazone:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datazone_'
 service/dax:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dax_'
 service/deploy:
@@ -250,7 +266,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s|_trust_store)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
@@ -379,6 +395,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/launchwizard:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
 service/lexruntime:
@@ -401,6 +419,8 @@ service/lookoutmetrics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutmetrics_'
 service/lookoutvision:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutvision_'
+service/m2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_m2_'
 service/machinelearning:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_machinelearning_'
 service/macie:
@@ -425,6 +445,8 @@ service/medialive:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_medialive_'
 service/mediapackage:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_package_'
+service/mediapackagev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_media_packagev2_'
 service/mediapackagevod:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mediapackagevod_'
 service/mediastore:
@@ -457,6 +479,8 @@ service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
+service/neptunegraph:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
@@ -481,6 +505,10 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/paymentcryptography:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
+service/pcaconnectorad:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -503,6 +531,8 @@ service/pricing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricing_'
 service/proton:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_proton_'
+service/qbusiness:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qbusiness_'
 service/qldb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qldb_'
 service/qldbsession:
@@ -541,6 +571,8 @@ service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53domains_'
+service/route53profiles:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53profiles_'
 service/route53recoverycluster:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53recoverycluster_'
 service/route53recoverycontrolconfig:
@@ -552,7 +584,7 @@ service/route53resolver:
 service/rum:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rum_'
 service/s3:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(canonical_user_id|s3_bucket|s3_object|s3_directory_bucket)'
 service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
@@ -617,6 +649,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmsap:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sso_'
 service/ssoadmin:

@@ -69,7 +69,7 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -79,7 +79,7 @@ func ResourceUser() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -103,12 +103,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -121,7 +121,7 @@ func ResourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -142,7 +142,7 @@ func ResourceUser() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -197,12 +197,12 @@ func ResourceUser() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -254,6 +254,8 @@ const (
 )
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.CreateUserInput{
@@ -274,7 +276,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Locale = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrName); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Name = expandName(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -308,25 +310,27 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateUser(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), err)
 	}
 
 	if out == nil || out.UserId == nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameUser, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.UserId)))
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId, userId, err := resourceUserParseID(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
 	}
 
 	out, err := FindUserByTwoPartKey(ctx, conn, identityStoreId, userId)
@@ -334,11 +338,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
 	}
 
 	d.Set("display_name", out.DisplayName)
@@ -354,29 +358,31 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("user_type", out.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("emails", flattenEmails(out.Emails)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
-	if err := d.Set("name", []interface{}{flattenName(out.Name)}); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+	if err := d.Set(names.AttrName, []interface{}{flattenName(out.Name)}); err != nil {
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
 	if err := d.Set("phone_numbers", flattenPhoneNumbers(out.PhoneNumbers)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameUser, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.UpdateUserInput{
@@ -500,7 +506,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = address.Primary
 
 					if v := address.Region; v != nil {
-						m["region"] = v
+						m[names.AttrRegion] = v
 					}
 
 					if v := address.StreetAddress; v != nil {
@@ -508,7 +514,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					}
 
 					if v := address.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					result = append(result, m)
@@ -533,11 +539,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)
@@ -562,11 +568,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 					m["primary"] = email.Primary
 
 					if v := email.Type; v != nil {
-						m["type"] = v
+						m[names.AttrType] = v
 					}
 
 					if v := email.Value; v != nil {
-						m["value"] = v
+						m[names.AttrValue] = v
 					}
 
 					result = append(result, m)
@@ -602,14 +608,16 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[DEBUG] Updating IdentityStore User (%s): %#v", d.Id(), in)
 		_, err := conn.UpdateUser(ctx, in)
 		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionUpdating, ResNameUser, d.Id(), err)
+			return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionUpdating, ResNameUser, d.Id(), err)
 		}
 	}
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	log.Printf("[INFO] Deleting IdentityStore User %s", d.Id())
@@ -622,13 +630,13 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IdentityStore, create.ErrActionDeleting, ResNameUser, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionDeleting, ResNameUser, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindUserByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, userID string) (*identitystore.DescribeUserOutput, error) {

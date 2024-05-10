@@ -37,20 +37,20 @@ func ResourceDisk() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,11 +77,13 @@ func ResourceDisk() *schema.Resource {
 }
 
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	id := d.Get("name").(string)
+	id := d.Get(names.AttrName).(string)
 	in := lightsail.CreateDiskInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone: aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		SizeInGb:         aws.Int32(int32(d.Get("size_in_gb").(int))),
 		DiskName:         aws.String(id),
 		Tags:             getTagsIn(ctx),
@@ -90,7 +92,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	out, err := conn.CreateDisk(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateDisk), ResDisk, id, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateDisk), ResDisk, id, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateDisk, ResDisk, id)
@@ -101,10 +103,12 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(id)
 
-	return resourceDiskRead(ctx, d, meta)
+	return append(diags, resourceDiskRead(ctx, d, meta)...)
 }
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDiskById(ctx, conn, d.Id())
@@ -112,23 +116,23 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResDisk, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResDisk, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResDisk, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("availability_zone", out.Location.AvailabilityZone)
-	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrAvailabilityZone, out.Location.AvailabilityZone)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrName, out.Name)
 	d.Set("size_in_gb", out.SizeInGb)
 	d.Set("support_code", out.SupportCode)
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,6 +141,8 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := conn.DeleteDisk(ctx, &lightsail.DeleteDiskInput{
@@ -144,11 +150,11 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if IsANotFoundError(err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteDisk), ResDisk, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteDisk), ResDisk, d.Get(names.AttrName).(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteDisk, ResDisk, d.Id())
@@ -157,7 +163,7 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindDiskById(ctx context.Context, conn *lightsail.Client, id string) (*types.Disk, error) {

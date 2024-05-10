@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/connect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) {
@@ -21,14 +21,14 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisFirehoseConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_firehose_config.#", resourceName, "storage_config.0.kinesis_firehose_config.#"),
@@ -49,14 +49,14 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisStreamConfig(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.#", resourceName, "storage_config.0.kinesis_stream_config.#"),
@@ -76,14 +76,14 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigDataSourceConfig_kinesisVideoStreamConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.#", resourceName, "storage_config.0.kinesis_video_stream_config.#"),
@@ -108,14 +108,14 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: testAccInstanceStorageConfigDataSourceConfig_S3Config(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.s3_config.#", resourceName, "storage_config.0.s3_config.#"),

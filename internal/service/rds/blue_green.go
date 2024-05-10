@@ -15,15 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
-
-type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, *rds_sdkv2.Client, ...tfresource.OptionsFunc)
 
 type blueGreenOrchestrator struct {
 	conn           *rds_sdkv2.Client
-	cleanupWaiters []cleanupWaiterFunc //nolint:unused // WIP
+	cleanupWaiters []cleanupWaiterFunc
 }
 
 func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
@@ -32,21 +31,21 @@ func newBlueGreenOrchestrator(conn *rds_sdkv2.Client) *blueGreenOrchestrator {
 	}
 }
 
-func (o *blueGreenOrchestrator) cleanUp(ctx context.Context) { //nolint:unused // WIP
+func (o *blueGreenOrchestrator) CleanUp(ctx context.Context) {
 	if len(o.cleanupWaiters) == 0 {
 		return
 	}
 
 	waiter, waiters := o.cleanupWaiters[0], o.cleanupWaiters[1:]
-	waiter(ctx)
+	waiter(ctx, o.conn)
 	for _, waiter := range waiters {
 		// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
 		// to complete, we don't need to run them concurrently, saving on network traffic.
-		waiter(ctx, tfresource.WithDelay(0))
+		waiter(ctx, o.conn, tfresource.WithDelay(0))
 	}
 }
 
-func (o *blueGreenOrchestrator) createDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) CreateDeployment(ctx context.Context, input *rds_sdkv2.CreateBlueGreenDeploymentInput) (*types.BlueGreenDeployment, error) {
 	createOut, err := o.conn.CreateBlueGreenDeployment(ctx, input)
 	if err != nil {
 		return nil, fmt.Errorf("creating Blue/Green Deployment: %s", err)
@@ -63,7 +62,7 @@ func (o *blueGreenOrchestrator) waitForDeploymentAvailable(ctx context.Context, 
 	return dep, nil
 }
 
-func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
+func (o *blueGreenOrchestrator) Switchover(ctx context.Context, identifier string, timeout time.Duration) (*types.BlueGreenDeployment, error) {
 	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
@@ -84,6 +83,10 @@ func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier strin
 		return nil, fmt.Errorf("switching over Blue/Green Deployment: waiting for completion: %s", err)
 	}
 	return dep, nil
+}
+
+func (o *blueGreenOrchestrator) AddCleanupWaiter(f cleanupWaiterFunc) {
+	o.cleanupWaiters = append(o.cleanupWaiters, f)
 }
 
 type instanceHandler struct {
@@ -127,11 +130,11 @@ func (h *instanceHandler) precondition(ctx context.Context, d *schema.ResourceDa
 func (h *instanceHandler) createBlueGreenInput(d *schema.ResourceData) *rds_sdkv2.CreateBlueGreenDeploymentInput {
 	input := &rds_sdkv2.CreateBlueGreenDeploymentInput{
 		BlueGreenDeploymentName: aws.String(d.Get("identifier").(string)),
-		Source:                  aws.String(d.Get("arn").(string)),
+		Source:                  aws.String(d.Get(names.AttrARN).(string)),
 	}
 
-	if d.HasChange("engine_version") {
-		input.TargetEngineVersion = aws.String(d.Get("engine_version").(string))
+	if d.HasChange(names.AttrEngineVersion) {
+		input.TargetEngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 	}
 	if d.HasChange("parameter_group_name") {
 		input.TargetDBParameterGroupName = aws.String(d.Get("parameter_group_name").(string))

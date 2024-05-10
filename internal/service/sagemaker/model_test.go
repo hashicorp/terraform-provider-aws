@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerModel_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,13 +35,13 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("model/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", "0"),
@@ -62,7 +63,7 @@ func TestAccSageMakerModel_inferenceExecution(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +91,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,7 +136,7 @@ func TestAccSageMakerModel_primaryContainerModelDataURL(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +163,7 @@ func TestAccSageMakerModel_primaryContainerHostname(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +190,7 @@ func TestAccSageMakerModel_primaryContainerImage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +218,7 @@ func TestAccSageMakerModel_primaryContainerEnvironment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -245,7 +246,7 @@ func TestAccSageMakerModel_primaryContainerModeSingle(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -272,7 +273,7 @@ func TestAccSageMakerModel_primaryContainerModelPackageName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -299,7 +300,7 @@ func TestAccSageMakerModel_primaryContainerModelDataSource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -327,7 +328,7 @@ func TestAccSageMakerModel_containers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -356,7 +357,7 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -385,7 +386,7 @@ func TestAccSageMakerModel_primaryContainerPrivateDockerRegistry(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -414,7 +415,7 @@ func TestAccSageMakerModel_networkIsolation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -441,7 +442,7 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{

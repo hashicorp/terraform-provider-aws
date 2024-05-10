@@ -31,7 +31,7 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
 			},
@@ -60,7 +60,7 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
 			},
@@ -145,7 +145,7 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegisterTargetsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,9 +162,9 @@ func TestAccVPCLatticeTargetGroupAttachment_disappears(t *testing.T) {
 }
 
 func testAccTargetGroupAttachmentConfig_baseInstance(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.small"
   subnet_id     = aws_subnet.test[0].id
 

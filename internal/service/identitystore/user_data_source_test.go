@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
@@ -23,9 +23,9 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +36,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", dataSourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, dataSourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "locale", resourceName, "locale"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name.0", resourceName, "name.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "nickname", resourceName, "nickname"),
@@ -65,9 +65,9 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,9 +92,9 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,9 +119,9 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,9 +146,9 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{

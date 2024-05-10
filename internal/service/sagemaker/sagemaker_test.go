@@ -6,13 +6,13 @@ package sagemaker_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.SageMakerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -32,7 +32,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		"App": {
 			"basic":                 testAccApp_basic,
 			"disappears":            testAccApp_disappears,
-			"tags":                  testAccApp_tags,
+			names.AttrTags:          testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
 			"space":                 testAccApp_space,
@@ -40,7 +40,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
 			"disappears":                               testAccDomain_tags,
-			"tags":                                     testAccDomain_disappears,
+			names.AttrTags:                             testAccDomain_disappears,
 			"tensorboardAppSettings":                   testAccDomain_tensorboardAppSettings,
 			"tensorboardAppSettingsWithImage":          testAccDomain_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
@@ -48,6 +48,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
@@ -63,30 +65,37 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
+			"efs":                                                    testAccDomain_efs,
+			"posix":                                                  testAccDomain_posix,
+			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
-			"tags":                           testAccFlowDefinition_tags,
+			names.AttrTags:                   testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 		},
 		"Space": {
 			"basic":                    testAccSpace_basic,
 			"disappears":               testAccSpace_tags,
-			"tags":                     testAccSpace_disappears,
+			names.AttrTags:             testAccSpace_disappears,
 			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
+			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
+			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
+			"storageSettings":                          testAccSpace_storageSettings,
+			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
-			"basic":                           testAccUserProfile_basic,
-			"disappears":                      testAccUserProfile_tags,
-			"tags":                            testAccUserProfile_disappears,
-			"tensorboardAppSettings":          testAccUserProfile_tensorboardAppSettings,
-			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
-			"kernelGatewayAppSettings":        testAccUserProfile_kernelGatewayAppSettings,
+			"basic":                                    testAccUserProfile_basic,
+			"disappears":                               testAccUserProfile_tags,
+			names.AttrTags:                             testAccUserProfile_disappears,
+			"tensorboardAppSettings":                   testAccUserProfile_tensorboardAppSettings,
+			"tensorboardAppSettingsWithImage":          testAccUserProfile_tensorboardAppSettingsWithImage,
+			"kernelGatewayAppSettings":                 testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
@@ -100,7 +109,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
-			"tags":               testAccWorkteam_tags,
+			names.AttrTags:       testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,

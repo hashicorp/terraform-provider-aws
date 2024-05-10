@@ -30,7 +30,7 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,8 +38,8 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, dbResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
@@ -70,7 +70,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rName),
 				),
 			},
@@ -147,7 +147,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rNameUpdated),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,8 +176,8 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *tes
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", "bucket"),
-					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.bucket_name", "aws_s3_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttrPair(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.object_key_prefix", rName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.0.s3_configuration.0.encryption_option", "SSE_KMS"),
 				),
@@ -199,7 +199,7 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -224,7 +224,7 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,7 +275,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -328,7 +328,7 @@ func TestAccTimestreamWriteTable_schema(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{

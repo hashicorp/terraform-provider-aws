@@ -11,19 +11,22 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/budgets"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/budgets"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_budgets_budget_action")
@@ -45,7 +48,7 @@ func ResourceBudgetAction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -63,9 +66,9 @@ func ResourceBudgetAction() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"action_threshold_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.ThresholdType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThresholdType](),
 						},
 						"action_threshold_value": {
 							Type:         schema.TypeFloat,
@@ -76,17 +79,17 @@ func ResourceBudgetAction() *schema.Resource {
 				},
 			},
 			"action_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(budgets.ActionType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ActionType](),
 			},
 			"approval_model": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(budgets.ApprovalModel_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApprovalModel](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -163,9 +166,9 @@ func ResourceBudgetAction() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"action_sub_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(budgets.ActionSubType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ActionSubType](),
 									},
 									"instance_ids": {
 										Type:     schema.TypeSet,
@@ -173,7 +176,7 @@ func ResourceBudgetAction() *schema.Resource {
 										MaxItems: 100,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -189,11 +192,11 @@ func ResourceBudgetAction() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"notification_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(budgets.NotificationType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.NotificationType](),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -211,9 +214,9 @@ func ResourceBudgetAction() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`(.*[\n\r\t\f\ ]?)*`), "Can't contain line breaks."),
 							)},
 						"subscription_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(budgets.SubscriptionType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SubscriptionType](),
 						},
 					},
 				},
@@ -224,35 +227,35 @@ func ResourceBudgetAction() *schema.Resource {
 
 func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	if accountID == "" {
 		accountID = meta.(*conns.AWSClient).AccountID
 	}
 	input := &budgets.CreateBudgetActionInput{
 		AccountId:        aws.String(accountID),
 		ActionThreshold:  expandBudgetActionActionThreshold(d.Get("action_threshold").([]interface{})),
-		ActionType:       aws.String(d.Get("action_type").(string)),
-		ApprovalModel:    aws.String(d.Get("approval_model").(string)),
+		ActionType:       awstypes.ActionType(d.Get("action_type").(string)),
+		ApprovalModel:    awstypes.ApprovalModel(d.Get("approval_model").(string)),
 		BudgetName:       aws.String(d.Get("budget_name").(string)),
 		Definition:       expandBudgetActionActionDefinition(d.Get("definition").([]interface{})),
 		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
-		NotificationType: aws.String(d.Get("notification_type").(string)),
+		NotificationType: awstypes.NotificationType(d.Get("notification_type").(string)),
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateBudgetActionWithContext(ctx, input)
-	}, budgets.ErrCodeAccessDeniedException)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateBudgetAction(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Budget Action: %s", err)
 	}
 
 	output := outputRaw.(*budgets.CreateBudgetActionOutput)
-	actionID := aws.StringValue(output.ActionId)
-	budgetName := aws.StringValue(output.BudgetName)
+	actionID := aws.ToString(output.ActionId)
+	budgetName := aws.ToString(output.BudgetName)
 
 	d.SetId(BudgetActionCreateResourceID(accountID, actionID, budgetName))
 
@@ -261,7 +264,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -269,19 +272,21 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+	output, err := FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
+		return FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Budget Action (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("action_id", actionID)
 	if err := d.Set("action_threshold", flattenBudgetActionActionThreshold(output.ActionThreshold)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action_threshold: %s", err)
@@ -294,14 +299,14 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("budget/%s/action/%s", budgetName, actionID),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 	d.Set("budget_name", budgetName)
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
 	d.Set("execution_role_arn", output.ExecutionRoleArn)
 	d.Set("notification_type", output.NotificationType)
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subscriber: %s", err)
 	}
@@ -311,7 +316,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -330,7 +335,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("approval_model") {
-		input.ApprovalModel = aws.String(d.Get("approval_model").(string))
+		input.ApprovalModel = awstypes.ApprovalModel(d.Get("approval_model").(string))
 	}
 
 	if d.HasChange("definition") {
@@ -342,14 +347,14 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("notification_type") {
-		input.NotificationType = aws.String(d.Get("notification_type").(string))
+		input.NotificationType = awstypes.NotificationType(d.Get("notification_type").(string))
 	}
 
 	if d.HasChange("subscriber") {
 		input.Subscribers = expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set))
 	}
 
-	_, err = conn.UpdateBudgetActionWithContext(ctx, input)
+	_, err = conn.UpdateBudgetAction(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Budget Action (%s): %s", d.Id(), err)
@@ -360,7 +365,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
+	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -369,16 +374,16 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	log.Printf("[DEBUG] Deleting Budget Action: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (any, error) {
-		return conn.DeleteBudgetActionWithContext(ctx, &budgets.DeleteBudgetActionInput{
+	_, err = tfresource.RetryWhenIsA[*awstypes.ResourceLockedException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteBudgetAction(ctx, &budgets.DeleteBudgetActionInput{
 			AccountId:  aws.String(accountID),
 			ActionId:   aws.String(actionID),
 			BudgetName: aws.String(budgetName),
 		})
-	}, budgets.ErrCodeResourceLockedException)
+	})
 
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
@@ -411,16 +416,16 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
-func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accountID, actionID, budgetName string) (*budgets.Action, error) {
+func FindActionByThreePartKey(ctx context.Context, conn *budgets.Client, accountID, actionID, budgetName string) (*awstypes.Action, error) {
 	input := &budgets.DescribeBudgetActionInput{
 		AccountId:  aws.String(accountID),
 		ActionId:   aws.String(actionID),
 		BudgetName: aws.String(budgetName),
 	}
 
-	output, err := conn.DescribeBudgetActionWithContext(ctx, input)
+	output, err := conn.DescribeBudgetAction(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -438,35 +443,35 @@ func FindActionByThreePartKey(ctx context.Context, conn *budgets.Budgets, accoun
 	return output.Action, nil
 }
 
-func expandBudgetActionActionThreshold(l []interface{}) *budgets.ActionThreshold {
+func expandBudgetActionActionThreshold(l []interface{}) *awstypes.ActionThreshold {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &budgets.ActionThreshold{}
+	config := &awstypes.ActionThreshold{}
 
 	if v, ok := m["action_threshold_type"].(string); ok && v != "" {
-		config.ActionThresholdType = aws.String(v)
+		config.ActionThresholdType = awstypes.ThresholdType(v)
 	}
 
 	if v, ok := m["action_threshold_value"].(float64); ok {
-		config.ActionThresholdValue = aws.Float64(v)
+		config.ActionThresholdValue = v
 	}
 
 	return config
 }
 
-func expandBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber {
+func expandBudgetActionSubscriber(l *schema.Set) []awstypes.Subscriber {
 	if l.Len() == 0 {
-		return []*budgets.Subscriber{}
+		return []awstypes.Subscriber{}
 	}
 
-	items := []*budgets.Subscriber{}
+	items := []awstypes.Subscriber{}
 
 	for _, m := range l.List() {
-		config := &budgets.Subscriber{}
+		config := awstypes.Subscriber{}
 		raw := m.(map[string]interface{})
 
 		if v, ok := raw["address"].(string); ok && v != "" {
@@ -474,7 +479,7 @@ func expandBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber {
 		}
 
 		if v, ok := raw["subscription_type"].(string); ok {
-			config.SubscriptionType = aws.String(v)
+			config.SubscriptionType = awstypes.SubscriptionType(v)
 		}
 
 		items = append(items, config)
@@ -483,14 +488,14 @@ func expandBudgetActionSubscriber(l *schema.Set) []*budgets.Subscriber {
 	return items
 }
 
-func expandBudgetActionActionDefinition(l []interface{}) *budgets.Definition {
+func expandBudgetActionActionDefinition(l []interface{}) *awstypes.Definition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &budgets.Definition{}
+	config := &awstypes.Definition{}
 
 	if v, ok := m["ssm_action_definition"].([]interface{}); ok && len(v) > 0 {
 		config.SsmActionDefinition = expandBudgetActionActionSSMActionDefinition(v)
@@ -507,85 +512,85 @@ func expandBudgetActionActionDefinition(l []interface{}) *budgets.Definition {
 	return config
 }
 
-func expandBudgetActionActionScpActionDefinition(l []interface{}) *budgets.ScpActionDefinition {
+func expandBudgetActionActionScpActionDefinition(l []interface{}) *awstypes.ScpActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &budgets.ScpActionDefinition{}
+	config := &awstypes.ScpActionDefinition{}
 
 	if v, ok := m["policy_id"].(string); ok && v != "" {
 		config.PolicyId = aws.String(v)
 	}
 
 	if v, ok := m["target_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.TargetIds = flex.ExpandStringSet(v)
+		config.TargetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return config
 }
 
-func expandBudgetActionActionSSMActionDefinition(l []interface{}) *budgets.SsmActionDefinition {
+func expandBudgetActionActionSSMActionDefinition(l []interface{}) *awstypes.SsmActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &budgets.SsmActionDefinition{}
+	config := &awstypes.SsmActionDefinition{}
 
 	if v, ok := m["action_sub_type"].(string); ok && v != "" {
-		config.ActionSubType = aws.String(v)
+		config.ActionSubType = awstypes.ActionSubType(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
 	if v, ok := m["instance_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.InstanceIds = flex.ExpandStringSet(v)
+		config.InstanceIds = flex.ExpandStringValueSet(v)
 	}
 
 	return config
 }
 
-func expandBudgetActionActionIAMActionDefinition(l []interface{}) *budgets.IamActionDefinition {
+func expandBudgetActionActionIAMActionDefinition(l []interface{}) *awstypes.IamActionDefinition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &budgets.IamActionDefinition{}
+	config := &awstypes.IamActionDefinition{}
 
 	if v, ok := m["policy_arn"].(string); ok && v != "" {
 		config.PolicyArn = aws.String(v)
 	}
 
 	if v, ok := m["groups"].(*schema.Set); ok && v.Len() > 0 {
-		config.Groups = flex.ExpandStringSet(v)
+		config.Groups = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m["roles"].(*schema.Set); ok && v.Len() > 0 {
-		config.Roles = flex.ExpandStringSet(v)
+		config.Roles = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m["users"].(*schema.Set); ok && v.Len() > 0 {
-		config.Users = flex.ExpandStringSet(v)
+		config.Users = flex.ExpandStringValueSet(v)
 	}
 
 	return config
 }
 
-func flattenBudgetActionSubscriber(configured []*budgets.Subscriber) []map[string]interface{} {
+func flattenBudgetActionSubscriber(configured []awstypes.Subscriber) []map[string]interface{} {
 	dataResources := make([]map[string]interface{}, 0, len(configured))
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["address"] = aws.StringValue(raw.Address)
-		item["subscription_type"] = aws.StringValue(raw.SubscriptionType)
+		item["address"] = aws.ToString(raw.Address)
+		item["subscription_type"] = string(raw.SubscriptionType)
 
 		dataResources = append(dataResources, item)
 	}
@@ -593,74 +598,74 @@ func flattenBudgetActionSubscriber(configured []*budgets.Subscriber) []map[strin
 	return dataResources
 }
 
-func flattenBudgetActionActionThreshold(lt *budgets.ActionThreshold) []map[string]interface{} {
+func flattenBudgetActionActionThreshold(lt *awstypes.ActionThreshold) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"action_threshold_type":  aws.StringValue(lt.ActionThresholdType),
-		"action_threshold_value": aws.Float64Value(lt.ActionThresholdValue),
+		"action_threshold_type":  string(lt.ActionThresholdType),
+		"action_threshold_value": lt.ActionThresholdValue,
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenBudgetActionIAMActionDefinition(lt *budgets.IamActionDefinition) []map[string]interface{} {
+func flattenBudgetActionIAMActionDefinition(lt *awstypes.IamActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"policy_arn": aws.StringValue(lt.PolicyArn),
+		"policy_arn": aws.ToString(lt.PolicyArn),
 	}
 
 	if lt.Users != nil && len(lt.Users) > 0 {
-		attrs["users"] = flex.FlattenStringSet(lt.Users)
+		attrs["users"] = flex.FlattenStringValueSet(lt.Users)
 	}
 
 	if lt.Roles != nil && len(lt.Roles) > 0 {
-		attrs["roles"] = flex.FlattenStringSet(lt.Roles)
+		attrs["roles"] = flex.FlattenStringValueSet(lt.Roles)
 	}
 
 	if lt.Groups != nil && len(lt.Groups) > 0 {
-		attrs["groups"] = flex.FlattenStringSet(lt.Groups)
+		attrs["groups"] = flex.FlattenStringValueSet(lt.Groups)
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenBudgetActionScpActionDefinition(lt *budgets.ScpActionDefinition) []map[string]interface{} {
+func flattenBudgetActionScpActionDefinition(lt *awstypes.ScpActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"policy_id": aws.StringValue(lt.PolicyId),
+		"policy_id": aws.ToString(lt.PolicyId),
 	}
 
 	if lt.TargetIds != nil && len(lt.TargetIds) > 0 {
-		attrs["target_ids"] = flex.FlattenStringSet(lt.TargetIds)
+		attrs["target_ids"] = flex.FlattenStringValueSet(lt.TargetIds)
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenBudgetActionSSMActionDefinition(lt *budgets.SsmActionDefinition) []map[string]interface{} {
+func flattenBudgetActionSSMActionDefinition(lt *awstypes.SsmActionDefinition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}
 
 	attrs := map[string]interface{}{
-		"action_sub_type": aws.StringValue(lt.ActionSubType),
-		"instance_ids":    flex.FlattenStringSet(lt.InstanceIds),
-		"region":          aws.StringValue(lt.Region),
+		"action_sub_type": string(lt.ActionSubType),
+		"instance_ids":    flex.FlattenStringValueSet(lt.InstanceIds),
+		names.AttrRegion:  aws.ToString(lt.Region),
 	}
 
 	return []map[string]interface{}{attrs}
 }
 
-func flattenBudgetActionDefinition(lt *budgets.Definition) []map[string]interface{} {
+func flattenBudgetActionDefinition(lt *awstypes.Definition) []map[string]interface{} {
 	if lt == nil {
 		return []map[string]interface{}{}
 	}

@@ -5,6 +5,7 @@ package ssm
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_patch_baseline")
@@ -60,11 +62,11 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -79,7 +81,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,11 +90,11 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -100,11 +102,15 @@ func DataSourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			"json": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrNamePrefix: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 255),
@@ -133,7 +139,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -166,7 +172,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 		},
 	}
 
-	if v, ok := d.GetOk("name_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrNamePrefix); ok {
 		filters = append(filters, &ssm.PatchOrchestratorFilter{
 			Key: aws.String("NAME_PREFIX"),
 			Values: []*string{
@@ -225,15 +231,23 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "getting SSM PatchBaseline: %s", err)
 	}
 
+	jsonDoc, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
+	}
+	jsonString := string(jsonDoc)
+
 	d.SetId(aws.StringValue(baseline.BaselineId))
 	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules))
 	d.Set("default_baseline", baseline.DefaultBaseline)
-	d.Set("description", baseline.BaselineDescription)
+	d.Set(names.AttrDescription, baseline.BaselineDescription)
 	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
-	d.Set("name", baseline.BaselineName)
+	d.Set("json", jsonString)
+	d.Set(names.AttrName, baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)

@@ -6,25 +6,25 @@ package firehose
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/firehose"
 )
 
 // Custom Kinesis Firehose service lister functions using the same format as generated code.
 
-func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Firehose, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error {
+func listDeliveryStreamsPages(ctx context.Context, conn *firehose.Client, input *firehose.ListDeliveryStreamsInput, fn func(*firehose.ListDeliveryStreamsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListDeliveryStreamsWithContext(ctx, input)
+		output, err := conn.ListDeliveryStreams(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := !aws.BoolValue(output.HasMoreDeliveryStreams)
+		lastPage := !aws.ToBool(output.HasMoreDeliveryStreams)
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
-		input.ExclusiveStartDeliveryStreamName = output.DeliveryStreamNames[len(output.DeliveryStreamNames)-1]
+		input.ExclusiveStartDeliveryStreamName = aws.String(output.DeliveryStreamNames[len(output.DeliveryStreamNames)-1])
 	}
 	return nil
 }

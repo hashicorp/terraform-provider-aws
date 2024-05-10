@@ -18,12 +18,15 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -55,11 +58,11 @@ func ResourceSecurityGroup() *schema.Resource {
 		// Keep in sync with aws_default_security_group's schema.
 		// See notes in vpc_default_security_group.go.
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -68,29 +71,29 @@ func ResourceSecurityGroup() *schema.Resource {
 			},
 			"egress":  securityGroupRuleSetNestedBlock,
 			"ingress": securityGroupRuleSetNestedBlock,
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255),
 					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 255-id.UniqueIDSuffixLength),
 					validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
 				),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -101,7 +104,7 @@ func ResourceSecurityGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -135,7 +138,7 @@ var (
 					ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validSecurityGroupRuleDescription,
@@ -157,12 +160,12 @@ var (
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:      schema.TypeString,
 				Required:  true,
 				StateFunc: ProtocolStateFunc,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -182,33 +185,35 @@ var (
 )
 
 func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	inputC := &ec2.CreateSecurityGroupInput{
 		GroupName:         aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeSecurityGroup),
 	}
 
-	if v := d.Get("description"); v != nil {
+	if v := d.Get(names.AttrDescription); v != nil {
 		inputC.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
 		inputC.VpcId = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateSecurityGroupWithContext(ctx, inputC)
 
 	if err != nil {
-		return diag.Errorf("creating Security Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.GroupId))
 
 	// Wait for the security group to truly exist
 	if _, err := WaitSecurityGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Security Group (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) create: %s", d.Id(), err)
 	}
 
 	// AWS defaults all Security Groups to have an ALLOW ALL egress rule.
@@ -230,7 +235,7 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
-		return diag.Errorf("revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "revoking default IPv4 egress rule for Security Group (%s): %s", d.Id(), err)
 	}
 
 	inputR = &ec2.RevokeSecurityGroupEgressInput{
@@ -252,14 +257,16 @@ func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	if _, err := conn.RevokeSecurityGroupEgressWithContext(ctx, inputR); err != nil {
 		// If we have a NotFound or InvalidParameterValue, then we are trying to remove the default IPv6 egress of a non-IPv6 enabled SG.
 		if !tfawserr.ErrCodeEquals(err, errCodeInvalidPermissionNotFound) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "remote-ipv6-range") {
-			return diag.Errorf("revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "revoking default IPv6 egress rule for Security Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSecurityGroupUpdate(ctx, d, meta)
+	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
 }
 
 func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	sg, err := FindSecurityGroupByID(ctx, conn, d.Id())
@@ -267,11 +274,11 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
 	remoteIngressRules := SecurityGroupIPPermGather(d.Id(), sg.IpPermissions, sg.OwnerId)
@@ -293,55 +300,61 @@ func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("security-group/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
-	d.Set("description", sg.Description)
-	d.Set("name", sg.GroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
-	d.Set("owner_id", ownerID)
-	d.Set("vpc_id", sg.VpcId)
+	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrDescription, sg.Description)
+	d.Set(names.AttrName, sg.GroupName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(sg.GroupName)))
+	d.Set(names.AttrOwnerID, ownerID)
+	d.Set(names.AttrVPCID, sg.VpcId)
 
 	if err := d.Set("ingress", ingressRules); err != nil {
-		return diag.Errorf("setting ingress: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ingress: %s", err)
 	}
 
 	if err := d.Set("egress", egressRules); err != nil {
-		return diag.Errorf("setting egress: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting egress: %s", err)
 	}
 
 	setTagsOut(ctx, sg.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	group, err := FindSecurityGroupByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeIngress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, "ingress", group)
 
 	if err != nil {
-		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeIngress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) ingress rules: %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, "egress", group)
 
 	if err != nil {
-		return diag.Errorf("updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) egress rules: %s", d.Id(), err)
 	}
 
-	return resourceSecurityGroupRead(ctx, d, meta)
+	return append(diags, resourceSecurityGroupRead(ctx, d, meta)...)
 }
 
 func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if err := deleteLingeringENIs(ctx, conn, "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("deleting ENIs using Security Group (%s): %s", d.Id(), err)
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+	ctx = tflog.SetField(ctx, names.AttrVPCID, d.Get(names.AttrVPCID))
+
+	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "group-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ENIs using Security Group (%s): %s", d.Id(), err)
 	}
 
 	// conditionally revoke rules first before attempting to delete the group
@@ -349,7 +362,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -359,7 +372,8 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		remainingRetry = 30 * time.Second
 	}
 
-	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
+	tflog.Info(ctx, "Deleting EC2 Security Group")
+
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		firstShortRetry, // short initial attempt followed by full length attempt
@@ -376,7 +390,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 			err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), true)
 
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
@@ -393,11 +407,11 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Group (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
@@ -405,10 +419,10 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Security Group (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Group (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // forceRevokeSecurityGroupRules revokes all of the security group's ingress & egress rules
@@ -569,7 +583,7 @@ func SecurityGroupRuleHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := ProtocolForValue(m["protocol"].(string))
+	p := protocolForValue(m[names.AttrProtocol].(string))
 	buf.WriteString(fmt.Sprintf("%s-", p))
 	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
 
@@ -611,7 +625,7 @@ func SecurityGroupRuleHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}
-	if v, ok := m["security_groups"]; ok {
+	if v, ok := m[names.AttrSecurityGroups]; ok {
 		vs := v.(*schema.Set).List()
 		s := make([]string, len(vs))
 		for i, raw := range vs {
@@ -623,8 +637,8 @@ func SecurityGroupRuleHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", v))
 		}
 	}
-	if m["description"].(string) != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["description"].(string)))
+	if m[names.AttrDescription].(string) != "" {
+		buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDescription].(string)))
 	}
 
 	return create.StringHashcode(buf.String())
@@ -693,7 +707,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 					continue
 				}
 
-				raw, ok := rule["security_groups"]
+				raw, ok := rule[names.AttrSecurityGroups]
 				if !ok {
 					raw = schema.NewSet(schema.HashString, nil)
 				}
@@ -704,7 +718,7 @@ func SecurityGroupIPPermGather(groupId string, permissions []*ec2.IpPermission, 
 				} else {
 					list.Add(*g.GroupId)
 				}
-				rule["security_groups"] = list
+				rule[names.AttrSecurityGroups] = list
 			}
 		}
 	}
@@ -755,7 +769,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 	// not have service issues.
 
 	if len(del) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == "egress" {
 			input := &ec2.RevokeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: del,
@@ -777,7 +791,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 	}
 
 	if len(add) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == "egress" {
 			input := &ec2.AuthorizeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: add,
@@ -811,7 +825,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		var perm ec2.IpPermission
 		m := mRaw.(map[string]interface{})
 
-		perm.IpProtocol = aws.String(ProtocolForValue(m["protocol"].(string)))
+		perm.IpProtocol = aws.String(protocolForValue(m[names.AttrProtocol].(string)))
 
 		if protocol, fromPort, toPort := aws.StringValue(perm.IpProtocol), m["from_port"].(int), m["to_port"].(int); protocol != "-1" {
 			perm.FromPort = aws.Int64(int64(fromPort))
@@ -828,7 +842,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		}
 
 		var groups []string
-		if raw, ok := m["security_groups"]; ok {
+		if raw, ok := m[names.AttrSecurityGroups]; ok {
 			list := raw.(*schema.Set).List()
 			for _, v := range list {
 				groups = append(groups, v.(string))
@@ -876,7 +890,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 			}
 		}
 
-		if raw, ok := m["description"]; ok {
+		if raw, ok := m[names.AttrDescription]; ok {
 			description := raw.(string)
 			if description != "" {
 				for _, v := range perm.IpRanges {
@@ -964,7 +978,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 		// matching against self is required to detect rules that only include self
 		// as the rule. SecurityGroupIPPermGather parses the group out
 		// and replaces it with self if it's ID is found
-		localHash := idHash(rType, l["protocol"].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
+		localHash := idHash(rType, l[names.AttrProtocol].(string), int64(l["to_port"].(int)), int64(l["from_port"].(int)), selfVal)
 
 		// loop remote rules, looking for a matching hash
 		for _, r := range remote {
@@ -975,7 +989,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 
 			// hash this remote rule and compare it for a match consideration with the
 			// local rule we're examining
-			rHash := idHash(rType, r["protocol"].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
+			rHash := idHash(rType, r[names.AttrProtocol].(string), r["to_port"].(int64), r["from_port"].(int64), remoteSelfVal)
 			if rHash == localHash {
 				var numExpectedCidrs, numExpectedIpv6Cidrs, numExpectedPrefixLists, numExpectedSGs, numRemoteCidrs, numRemoteIpv6Cidrs, numRemotePrefixLists, numRemoteSGs int
 				var matchingCidrs []string
@@ -997,9 +1011,9 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 				if ok {
 					numExpectedPrefixLists = len(l["prefix_list_ids"].([]interface{}))
 				}
-				lsRaw, ok := l["security_groups"]
+				lsRaw, ok := l[names.AttrSecurityGroups]
 				if ok {
-					numExpectedSGs = len(l["security_groups"].(*schema.Set).List())
+					numExpectedSGs = len(l[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				rcRaw, ok := r["cidr_blocks"]
@@ -1015,9 +1029,9 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 					numRemotePrefixLists = len(r["prefix_list_ids"].([]string))
 				}
 
-				rsRaw, ok := r["security_groups"]
+				rsRaw, ok := r[names.AttrSecurityGroups]
 				if ok {
-					numRemoteSGs = len(r["security_groups"].(*schema.Set).List())
+					numRemoteSGs = len(r[names.AttrSecurityGroups].(*schema.Set).List())
 				}
 
 				// check some early failures
@@ -1204,14 +1218,14 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 									// pop local sgs from remote
 									diffSGs := remoteSGSet.Difference(localSGSet)
 									if len(diffSGs.List()) > 0 {
-										r["security_groups"] = diffSGs
+										r[names.AttrSecurityGroups] = diffSGs
 									} else {
-										delete(r, "security_groups")
+										delete(r, names.AttrSecurityGroups)
 									}
 
 									// copy over any remote rule description
-									if _, ok := r["description"]; ok {
-										l["description"] = r["description"]
+									if _, ok := r[names.AttrDescription]; ok {
+										l[names.AttrDescription] = r[names.AttrDescription]
 									}
 
 									saves = append(saves, l)
@@ -1238,7 +1252,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 		if rPrefixLists, ok := r["prefix_list_ids"]; ok {
 			lenPrefixLists = len(rPrefixLists.([]string))
 		}
-		if rawSGs, ok := r["security_groups"]; ok {
+		if rawSGs, ok := r[names.AttrSecurityGroups]; ok {
 			lenSGs = len(rawSGs.(*schema.Set).List())
 		}
 
@@ -1260,7 +1274,7 @@ func MatchRules(rType string, local []interface{}, remote []map[string]interface
 // Duplicate ingress/egress block structure and fill out all
 // the required fields
 func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k string, v interface{}) map[string]interface{} {
-	var keys_to_copy = []string{"description", "from_port", "to_port", "protocol"}
+	var keys_to_copy = []string{names.AttrDescription, "from_port", "to_port", names.AttrProtocol}
 
 	dst := make(map[string]interface{})
 	for _, key := range keys_to_copy {
@@ -1285,14 +1299,14 @@ func resourceSecurityGroupCopyRule(src map[string]interface{}, self bool, k stri
 // For more detail, see comments for
 // SecurityGroupExpandRules()
 func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface{} {
-	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+	var keys_to_collapse = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	collapsed := make(map[string]map[string]interface{})
 
 	for _, rule := range rules {
 		r := rule.(map[string]interface{})
 
-		ruleHash := idCollapseHash(ruleset, r["protocol"].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r["description"].(string))
+		ruleHash := idCollapseHash(ruleset, r[names.AttrProtocol].(string), int64(r["to_port"].(int)), int64(r["from_port"].(int)), r[names.AttrDescription].(string))
 
 		if _, ok := collapsed[ruleHash]; ok {
 			if v, ok := r["self"]; ok && v.(bool) {
@@ -1306,7 +1320,7 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 		for _, key := range keys_to_collapse {
 			if _, ok := r[key]; ok {
 				if _, ok := collapsed[ruleHash][key]; ok {
-					if key == "security_groups" {
+					if key == names.AttrSecurityGroups {
 						collapsed[ruleHash][key] = collapsed[ruleHash][key].(*schema.Set).Union(r[key].(*schema.Set))
 					} else {
 						collapsed[ruleHash][key] = append(collapsed[ruleHash][key].([]interface{}), r[key].([]interface{})...)
@@ -1371,7 +1385,7 @@ func SecurityGroupCollapseRules(ruleset string, rules []interface{}) []interface
 // execution. Such compact form helps reduce the number of
 // API calls.
 func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
-	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", "security_groups"}
+	var keys_to_expand = []string{"cidr_blocks", "ipv6_cidr_blocks", "prefix_list_ids", names.AttrSecurityGroups}
 
 	normalized := schema.NewSet(SecurityGroupRuleHash, nil)
 
@@ -1386,14 +1400,14 @@ func SecurityGroupExpandRules(rules *schema.Set) *schema.Set {
 			item, exists := rule[key]
 			if exists {
 				var list []interface{}
-				if key == "security_groups" {
+				if key == names.AttrSecurityGroups {
 					list = item.(*schema.Set).List()
 				} else {
 					list = item.([]interface{})
 				}
 				for _, v := range list {
 					var new_rule map[string]interface{}
-					if key == "security_groups" {
+					if key == names.AttrSecurityGroups {
 						new_v := schema.NewSet(schema.HashString, nil)
 						new_v.Add(v)
 						new_rule = resourceSecurityGroupCopyRule(rule, false, key, new_v)
@@ -1441,7 +1455,7 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 func ProtocolStateFunc(v interface{}) string {
 	switch v := v.(type) {
 	case string:
-		p := ProtocolForValue(v)
+		p := protocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
@@ -1449,11 +1463,11 @@ func ProtocolStateFunc(v interface{}) string {
 	}
 }
 
-// ProtocolForValue converts a valid Internet Protocol number into it's name
+// protocolForValue converts a valid Internet Protocol number into it's name
 // representation. If a name is given, it validates that it's a proper protocol
 // name. Names/numbers are as defined at
 // https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-func ProtocolForValue(v string) string {
+func protocolForValue(v string) string {
 	// special case -1
 	protocol := strings.ToLower(v)
 	if protocol == "-1" || protocol == "all" {
@@ -1513,11 +1527,11 @@ func initSecurityGroupRule(ruleMap map[string]map[string]interface{}, perm *ec2.
 		rule = make(map[string]interface{})
 		ruleMap[k] = rule
 	}
-	rule["protocol"] = aws.StringValue(perm.IpProtocol)
+	rule[names.AttrProtocol] = aws.StringValue(perm.IpProtocol)
 	rule["from_port"] = fromPort
 	rule["to_port"] = toPort
 	if desc != "" {
-		rule["description"] = desc
+		rule[names.AttrDescription] = desc
 	}
 
 	return rule

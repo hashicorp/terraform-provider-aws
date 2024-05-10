@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
 ```
 
 The following example retrieves a set of all subnets in a VPC with a custom
-tag of `tier` set to a value of "Private" so that the `awsInstance` resource
+tag of `Tier` set to a value of "Private" so that the `aws_instance` resource
 can loop through the subnets, putting instances across availability zones.
 
 ```typescript
@@ -164,4 +164,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-fe8a040cf37c7960c6358cab9956de0b13b8749d8ba19ed8500e227449c1329e -->
+<!-- cache-key: cdktf-0.20.1 input-fe8a040cf37c7960c6358cab9956de0b13b8749d8ba19ed8500e227449c1329e -->

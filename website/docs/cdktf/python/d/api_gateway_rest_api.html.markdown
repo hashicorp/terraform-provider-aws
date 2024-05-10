@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
 * `tags` - Key-value map of resource tags.
 
-<!-- cache-key: cdktf-0.19.0 input-f58dd0e8318def3e704471e581c407920560534f1c0b60ba367ee144e50a3888 -->
+<!-- cache-key: cdktf-0.20.1 input-f58dd0e8318def3e704471e581c407920560534f1c0b60ba367ee144e50a3888 -->

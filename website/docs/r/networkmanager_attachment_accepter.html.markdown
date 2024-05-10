@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_attachment_accepter"
 description: |-
-  Terraform resource for managing an AWS NetworkManager Attachment Accepter.
+  Terraform resource for managing an AWS Network Manager Attachment Accepter.
 ---
 
 # Resource: aws_networkmanager_attachment_accepter
 
-Terraform resource for managing an AWS NetworkManager Attachment Accepter.
+Terraform resource for managing an AWS Network Manager Attachment Accepter.
 
 ## Example Usage
 

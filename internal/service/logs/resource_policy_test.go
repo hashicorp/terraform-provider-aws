@@ -27,7 +27,7 @@ func TestAccLogsResourcePolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,7 +64,7 @@ func TestAccLogsResourcePolicy_ignoreEquivalent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
 		Steps: []resource.TestStep{

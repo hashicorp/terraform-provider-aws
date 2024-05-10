@@ -69,6 +69,58 @@ resource "aws_mq_broker" "example" {
 }
 ```
 
+### Cross-Region Data Replication
+
+```terraform
+resource "aws_mq_broker" "example_primary" {
+  # primary broker configured in an alternate region
+  provider = awsalternate
+
+  apply_immediately  = true
+  broker_name        = "example_primary"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.17.6"
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.example_primary.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  user {
+    username = "ExampleUser"
+    password = "MindTheGap"
+  }
+  user {
+    username         = "ExampleReplicationUser"
+    password         = "Example12345"
+    replication_user = true
+  }
+}
+
+resource "aws_mq_broker" "example" {
+  apply_immediately  = true
+  broker_name        = "example"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.17.6"
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.example.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  data_replication_mode               = "CRDR"
+  data_replication_primary_broker_arn = aws_mq_broker.primary.arn
+
+  user {
+    username = "ExampleUser"
+    password = "MindTheGap"
+  }
+  user {
+    username         = "ExampleReplicationUser"
+    password         = "Example12345"
+    replication_user = true
+  }
+}
+```
+
+See the [AWS MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/crdr-for-active-mq.html) on cross-region data replication for additional details.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -85,6 +137,8 @@ The following arguments are optional:
 * `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
 * `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` and `RabbitMQ` only. Detailed below.
+* `data_replication_mode` - (Optional)  Defines whether this broker is a part of a data replication pair. Valid values are `CRDR` and `NONE`.
+* `data_replication_primary_broker_arn` - (Optional) The Amazon Resource Name (ARN) of the primary broker that is used to replicate data from in a data replication pair, and is applied to the replica broker. Must be set when `data_replication_mode` is `CRDR`.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
 * `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
@@ -169,6 +223,7 @@ This resource exports the following attributes in addition to the arguments abov
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+* `pending_data_replication_mode` - (Optional) The data replication mode that will be applied after reboot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

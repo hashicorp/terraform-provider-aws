@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_classifier")
@@ -121,6 +122,12 @@ func ResourceClassifier() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"serde": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(glue.CsvSerdeOption_Values(), false),
+						},
 					},
 				},
 			},
@@ -162,7 +169,7 @@ func ResourceClassifier() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -193,7 +200,7 @@ func ResourceClassifier() *schema.Resource {
 func resourceClassifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := &glue.CreateClassifierInput{}
 
@@ -255,7 +262,7 @@ func resourceClassifierRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting json_classifier: %s", err)
 	}
 
-	d.Set("name", d.Id())
+	d.Set(names.AttrName, d.Id())
 
 	if err := d.Set("xml_classifier", flattenXmlClassifier(classifier.XMLClassifier)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting xml_classifier: %s", err)
@@ -352,6 +359,10 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
+	}
+
 	return csvClassifier
 }
 
@@ -377,6 +388,10 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
 	}
 
 	return csvClassifier
@@ -466,6 +481,7 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 		"quote_symbol":               aws.StringValue(csvClassifier.QuoteSymbol),
 		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),
+		"serde":                      aws.StringValue(csvClassifier.Serde),
 	}
 
 	return []map[string]interface{}{m}

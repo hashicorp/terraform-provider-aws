@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_canonical_user_id")
+// @SDKDataSource("aws_canonical_user_id", name="Canonical User ID")
 func dataSourceCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCanonicalUserIDRead,

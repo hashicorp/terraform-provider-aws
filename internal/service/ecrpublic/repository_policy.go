@@ -8,18 +8,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecrpublic"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecrpublic_repository_policy")
@@ -34,7 +36,7 @@ func ResourceRepositoryPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
@@ -64,9 +66,9 @@ const (
 
 func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
@@ -78,13 +80,12 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		RepositoryName: aws.String(repositoryName),
 	}
 
-	log.Printf("[DEBUG] Setting ECR Public Repository Policy: %s", input)
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
 		func() (interface{}, error) {
-			return conn.SetRepositoryPolicyWithContext(ctx, input)
+			return conn.SetRepositoryPolicy(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, ecrpublic.ErrCodeInvalidParameterException, "Invalid repository policy provided") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Invalid repository policy provided") {
 				return true, err
 			}
 
@@ -97,7 +98,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.IsNewResource() {
-		d.SetId(aws.StringValue(outputRaw.(*ecrpublic.SetRepositoryPolicyOutput).RepositoryName))
+		d.SetId(aws.ToString(outputRaw.(*ecrpublic.SetRepositoryPolicyOutput).RepositoryName))
 	}
 
 	return append(diags, resourceRepositoryPolicyRead(ctx, d, meta)...)
@@ -105,7 +106,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 
 func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
 	output, err := FindRepositoryPolicyByName(ctx, conn, d.Id())
 
@@ -119,7 +120,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading ECR Public Repository Policy (%s): %s", d.Id(), err)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(output.PolicyText))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(output.PolicyText))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
@@ -131,7 +132,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policyToSet, err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 	d.Set("registry_id", output.RegistryId)
 	d.Set("repository_name", output.RepositoryName)
 
@@ -140,14 +141,14 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRPublicConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
-	_, err := conn.DeleteRepositoryPolicyWithContext(ctx, &ecrpublic.DeleteRepositoryPolicyInput{
+	_, err := conn.DeleteRepositoryPolicy(ctx, &ecrpublic.DeleteRepositoryPolicyInput{
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException, ecrpublic.ErrCodeRepositoryPolicyNotFoundException) {
+	if errs.IsA[*awstypes.RepositoryNotFoundException](err) || errs.IsA[*awstypes.RepositoryPolicyNotFoundException](err) {
 		return diags
 	}
 
@@ -158,14 +159,14 @@ func resourceRepositoryPolicyDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindRepositoryPolicyByName(ctx context.Context, conn *ecrpublic.ECRPublic, name string) (*ecrpublic.GetRepositoryPolicyOutput, error) {
+func FindRepositoryPolicyByName(ctx context.Context, conn *ecrpublic.Client, name string) (*ecrpublic.GetRepositoryPolicyOutput, error) {
 	input := &ecrpublic.GetRepositoryPolicyInput{
 		RepositoryName: aws.String(name),
 	}
 
-	output, err := conn.GetRepositoryPolicyWithContext(ctx, input)
+	output, err := conn.GetRepositoryPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ecrpublic.ErrCodeRepositoryNotFoundException, ecrpublic.ErrCodeRepositoryPolicyNotFoundException) {
+	if errs.IsA[*awstypes.RepositoryNotFoundException](err) || errs.IsA[*awstypes.RepositoryPolicyNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

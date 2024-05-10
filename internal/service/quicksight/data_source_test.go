@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightDataSource_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -39,14 +40,14 @@ func TestAccQuickSightDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
 					resource.TestCheckResourceAttr(resourceName, "data_source_id", rId),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("datasource/%s", rId)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("datasource/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", quicksight.DataSourceTypeS3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -69,7 +70,7 @@ func TestAccQuickSightDataSource_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +94,7 @@ func TestAccQuickSightDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,7 +142,7 @@ func TestAccQuickSightDataSource_permissions(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -203,7 +204,7 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,7 +212,7 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -223,13 +224,13 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 				Config: testAccDataSourceConfig_updateName(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName, &dataSource),
-					resource.TestCheckResourceAttr(resourceName, "name", "updated-name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "updated-name"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", quicksight.DataSourceTypeS3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, quicksight.DataSourceTypeS3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

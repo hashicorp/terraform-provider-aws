@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_managed_prefix_list_entry")
@@ -37,7 +39,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsCIDR,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -53,6 +55,8 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 }
 
 func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	cidr := d.Get("cidr").(string)
@@ -61,7 +65,7 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 
 	addPrefixListEntry := &ec2.AddPrefixListEntry{Cidr: aws.String(cidr)}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		addPrefixListEntry.Description = aws.String(v.(string))
 	}
 
@@ -86,25 +90,27 @@ func resourceManagedPrefixListEntryCreate(ctx context.Context, d *schema.Resourc
 	}, errCodeIncorrectState, errCodePrefixListVersionMismatch)
 
 	if err != nil {
-		return diag.Errorf("creating VPC Managed Prefix List Entry (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating VPC Managed Prefix List Entry (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := WaitManagedPrefixListModified(ctx, conn, plID); err != nil {
-		return diag.Errorf("waiting for VPC Managed Prefix List Entry (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Managed Prefix List Entry (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceManagedPrefixListEntryRead(ctx, d, meta)
+	return append(diags, resourceManagedPrefixListEntryRead(ctx, d, meta)...)
 }
 
 func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ManagedPrefixListEntryCreateTimeout, func() (interface{}, error) {
@@ -114,28 +120,30 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Managed Prefix List Entry (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
 	entry := outputRaw.(*ec2.PrefixListEntry)
 
 	d.Set("cidr", entry.Cidr)
-	d.Set("description", entry.Description)
+	d.Set(names.AttrDescription, entry.Description)
 
-	return nil
+	return diags
 }
 
 func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
@@ -159,16 +167,16 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 	}, errCodeIncorrectState, errCodePrefixListVersionMismatch)
 
 	if err != nil {
-		return diag.Errorf("deleting VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting VPC Managed Prefix List Entry (%s): %s", d.Id(), err)
 	}
 
 	_, err = WaitManagedPrefixListModified(ctx, conn, plID)
 
 	if err != nil {
-		return diag.Errorf("waiting for VPC Managed Prefix List Entry (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for VPC Managed Prefix List Entry (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

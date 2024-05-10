@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -76,6 +79,24 @@ func ExpandStringyValueList[E ~string](configured []any) []E {
 	return vs
 }
 
+// ExpandStringValueList takes the result of flatmap.Expand for an array of strings
+// and returns a []string
+func ExpandStringValueListEmpty(configured []interface{}) []string {
+	return ExpandStringyValueListEmpty[string](configured)
+}
+
+func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
+			vs = append(vs, E(val))
+		} else {
+			vs = append(vs, E(""))
+		}
+	}
+	return vs
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
@@ -108,6 +129,14 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
+func FlattenStringyValueList[E ~string](configured []E) []any {
+	vs := make([]interface{}, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, string(v))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to int32
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int32 {
@@ -119,6 +148,20 @@ func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
 	return tfmaps.ApplyToAllValues(m, func(v any) *int64 {
 		return aws.Int64(int64(v.(int)))
+	})
+}
+
+// ExpandInt64ValueMap expands a map of string to interface to a map of string to int64
+func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) int64 {
+		return int64(v.(int))
+	})
+}
+
+// ExpandFloat64ValueMap expands a map of string to interface to a map of string to float64
+func ExpandFloat64ValueMap(m map[string]interface{}) map[string]float64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) float64 {
+		return v.(float64)
 	})
 }
 
@@ -153,6 +196,13 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	})
 }
 
+// Expands a map of string to interface to a map of string to *bool
+func ExpandBoolValueMap(m map[string]interface{}) map[string]bool {
+	return tfmaps.ApplyToAllValues(m, func(v any) bool {
+		return v.(bool)
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
 	return ExpandStringList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
@@ -174,9 +224,23 @@ func FlattenStringValueSet(list []string) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
+func FlattenStringValueSetCaseInsensitive(list []string) *schema.Set {
+	return schema.NewSet(sdkv2.StringCaseInsensitiveSetFunc, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+}
+
+func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
+	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
+}
+
 func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	return tfmaps.ApplyToAllValues(m, func(v *string) any {
 		return aws.StringValue(v)
+	})
+}
+
+func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v string) any {
+		return v
 	})
 }
 
@@ -187,6 +251,27 @@ func ExpandInt64Set(configured *schema.Set) []*int64 {
 
 func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
+}
+
+// Takes the result of flatmap.Expand for an array of int32
+// and returns a []int32
+func ExpandInt32ValueList(configured []interface{}) []int32 {
+	return tfslices.ApplyToAll(configured, func(v any) int32 {
+		return int32(v.(int))
+	})
+}
+
+// Takes the result of schema.Set of strings and returns a []int32
+func ExpandInt32ValueSet(configured *schema.Set) []int32 {
+	return ExpandInt32ValueList(configured.List())
+}
+
+func FlattenInt32Set(set []*int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32List(set))
+}
+
+func FlattenInt32ValueSet(set []int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
 }
 
 // Takes the result of flatmap.Expand for an array of int64
@@ -205,6 +290,12 @@ func ExpandFloat64List(configured []interface{}) []*float64 {
 	})
 }
 
+func FlattenInt32ValueList(list []int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v int32) any {
+		return int(v)
+	})
+}
+
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet
@@ -220,6 +311,15 @@ func FlattenInt64List(list []*int64) []interface{} {
 func FlattenFloat64List(list []*float64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *float64) any {
 		return int(aws.Float64Value(v))
+	})
+}
+
+// Takes list of pointers to int32s. Expand to an array
+// of raw ints and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenInt32List(list []*int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v *int32) any {
+		return int(aws.Int32Value(v))
 	})
 }
 
@@ -282,10 +382,77 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolToStringValue converts a bool pointer to a Go string value.
+func BoolToStringValue(v *bool) string {
+	return strconv.FormatBool(aws.BoolValue(v))
+}
+
+// BoolValueToString converts a Go bool value to a string pointer.
+func BoolValueToString(v bool) *string {
+	return aws.String(strconv.FormatBool(v))
+}
+
 // StringToBoolValue converts a string pointer to a Go bool value.
 // Only the string "true" is converted to true, all other values return false.
 func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
+}
+
+// Float64ToStringValue converts a float64 pointer to a Go string value.
+func Float64ToStringValue(v *float64) string {
+	return strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+}
+
+// IntValueToString converts a Go int value to a string pointer.
+func IntValueToString(v int) *string {
+	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int32ToStringValue(v *int32) string {
+	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int64ToStringValue(v *int64) string {
+	return strconv.FormatInt(aws.Int64Value(v), 10)
+}
+
+// Int64ValueToString converts a Go int64 value to a string pointer.
+func Int64ValueToString(v int64) *string {
+	return aws.String(strconv.FormatInt(v, 10))
+}
+
+// StringToIntValue converts a string pointer to a Go int value.
+// Invalid integer strings are converted to 0.
+func StringToIntValue(v *string) int {
+	i, _ := strconv.Atoi(aws.StringValue(v))
+	return i
+}
+
+// StringToInt32Value converts a string pointer to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringToInt32Value(v *string) int32 {
+	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
+	return int32(i)
+}
+
+// StringValueToBase64String converts a string to a Go base64 string pointer.
+func StringValueToBase64String(v string) *string {
+	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+}
+
+// StringValueToInt64 converts a string to a Go int64 pointer.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64(v string) *int64 {
+	return aws.Int64(StringValueToInt64Value(v))
+}
+
+// StringValueToInt64Value converts a string to a Go int64 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64Value(v string) int64 {
+	i, _ := strconv.ParseInt(v, 0, 64)
+	return i
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant
@@ -295,20 +462,72 @@ func ResourceIdPartCount(id string) int {
 	return len(idParts)
 }
 
-type Set[T comparable] []T
+// DiffStringMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
+	// First, we're creating everything we have.
+	add := ExpandStringMap(newMap)
 
-// Difference find the elements in two sets that are not similar.
-func (s Set[T]) Difference(ns Set[T]) Set[T] {
-	m := make(map[T]struct{})
-	for _, v := range ns {
-		m[v] = struct{}{}
-	}
-
-	var result []T
-	for _, v := range s {
-		if _, ok := m[v]; !ok {
-			result = append(result, v)
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]*string)
+	unchanged := make(map[string]*string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || aws.StringValue(old) != v {
+			// Delete it!
+			remove[k] = aws.String(v)
+		} else if ok {
+			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
+			delete(add, k)
 		}
 	}
-	return result
+
+	return add, remove, unchanged
+}
+
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]string, map[string]string, map[string]string) {
+	// First, we're creating everything we have.
+	add := ExpandStringValueMap(newMap)
+
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]string)
+	unchanged := make(map[string]string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || old != v {
+			// Delete it!
+			remove[k] = v
+		} else if ok {
+			unchanged[k] = v
+			// Already present, so remove from new.
+			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove and what is unchanged.
+	remove := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		if !slices.ContainsFunc(new, eq) {
+			// Delete it!
+			remove = append(remove, e)
+		} else {
+			unchanged = append(unchanged, e)
+			// Already present, so remove from new.
+			add = slices.DeleteFunc(add, eq)
+		}
+	}
+
+	return add, remove, unchanged
 }

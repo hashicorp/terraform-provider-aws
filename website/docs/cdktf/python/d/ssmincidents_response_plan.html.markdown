@@ -87,4 +87,4 @@ The `integration` configuration block exports the following attributes:
         * `service_id` - The ID of the PagerDuty service that the response plan associates with an incident when it launches.
         * `secret_id` - The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access REST API Key or User Token REST API Key &mdash; and other user credentials.
 
-<!-- cache-key: cdktf-0.19.0 input-53143826544758b79c896d3903f1f26c1fb9c78df0ebb1d8a86f77ef47ffac71 -->
+<!-- cache-key: cdktf-0.20.1 input-53143826544758b79c896d3903f1f26c1fb9c78df0ebb1d8a86f77ef47ffac71 -->

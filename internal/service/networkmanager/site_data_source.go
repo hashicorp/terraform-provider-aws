@@ -9,7 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_networkmanager_site")
@@ -18,11 +20,11 @@ func DataSourceSite() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,12 +56,14 @@ func DataSourceSite() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -68,25 +72,25 @@ func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interf
 	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Site (%s): %s", siteID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site (%s): %s", siteID, err)
 	}
 
 	d.SetId(siteID)
-	d.Set("arn", site.SiteArn)
-	d.Set("description", site.Description)
+	d.Set(names.AttrARN, site.SiteArn)
+	d.Set(names.AttrDescription, site.Description)
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("setting location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
 	}
 	d.Set("site_id", site.SiteId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

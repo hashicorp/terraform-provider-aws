@@ -61,16 +61,16 @@ class MyConvertedCode(TerraformStack):
 
 This data source supports the following arguments:
 
-* `name` - (Required) Name of the Systems Manager document.
-* `document_format` - (Optional) Returns the document in the specified format. The document format can be either `JSON`, `YAML` and `TEXT`. JSON is the default format.
-* `document_version` - (Optional) Document version for which you want information.
+* `name` - (Required) The name of the document.
+* `document_format` - The format of the document. Valid values: `JSON`, `TEXT`, `YAML`.
+* `document_version` - The document version.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
-* `content` - Contents of the document.
-* `document_type` - Type of the document.
+* `content` - The content for the SSM document in JSON or YAML format.
+* `document_type` - The type of the document.
 
-<!-- cache-key: cdktf-0.19.0 input-9343adb58c9912030cbf5122132a6b4bd27fc637380c9a974b20e323246d88d8 -->
+<!-- cache-key: cdktf-0.20.1 input-b79cad94249d0d17a6bba99318ef3a5682c698db4bbaa5f76329e198f232d2ee -->

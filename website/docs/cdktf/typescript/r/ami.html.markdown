@@ -14,10 +14,10 @@ The AMI resource allows the creation and management of a completely-custom
 *Amazon Machine Image* (AMI).
 
 If you just want to duplicate an existing AMI, possibly copying it to another
-region, it's better to use `awsAmiCopy` instead.
+region, it's better to use `aws_ami_copy` instead.
 
 If you just want to share an existing AMI with another AWS account,
-it's better to use `awsAmiLaunchPermission` instead.
+it's better to use `aws_ami_launch_permission` instead.
 
 ## Example Usage
 
@@ -69,7 +69,7 @@ This resource supports the following arguments:
   attached to created instances. The structure of this block is described below.
 * `ephemeralBlockDevice` - (Optional) Nested block describing an ephemeral block device that
   should be attached to created instances. The structure of this block is described below.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tpmSupport` - (Optional) If the image is configured for NitroTPM support, the value is `v2.0`. For more information, see [NitroTPM](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nitrotpm.html) in the Amazon Elastic Compute Cloud User Guide.
 * `imdsSupport` - (Optional) If EC2 instances started from this image should require the use of the Instance Metadata Service V2 (IMDSv2), set this argument to `v2.0`. For more information, see [Configure instance metadata options for new instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-IMDS-new-instances.html#configure-IMDS-new-instances-ami-configuration).
 
@@ -92,15 +92,15 @@ Nested `ebsBlockDevice` blocks have the following structure:
 * `deviceName` - (Required) Path at which the device is exposed to created instances.
 * `deleteOnTermination` - (Optional) Boolean controlling whether the EBS volumes created to
   support each created instance will be deleted once that instance is terminated.
-* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshot_id`.
-* `iops` - (Required only when `volume_type` is `io1` or `io2`) Number of I/O operations per second the
+* `encrypted` - (Optional) Boolean controlling whether the created EBS volumes will be encrypted. Can't be used with `snapshotId`.
+* `iops` - (Required only when `volumeType` is `io1` or `io2`) Number of I/O operations per second the
   created volumes will support.
 * `snapshotId` - (Optional) ID of an EBS snapshot that will be used to initialize the created
-  EBS volumes. If set, the `volume_size` attribute must be at least as large as the referenced
+  EBS volumes. If set, the `volumeSize` attribute must be at least as large as the referenced
   snapshot.
-* `throughput` - (Optional) Throughput that the EBS volume supports, in MiB/s. Only valid for `volume_type` of `gp3`.
-* `volumeSize` - (Required unless `snapshot_id` is set) Size of created volumes in GiB.
-  If `snapshot_id` is set and `volume_size` is omitted then the volume will have the same size
+* `throughput` - (Optional) Throughput that the EBS volume supports, in MiB/s. Only valid for `volumeType` of `gp3`.
+* `volumeSize` - (Required unless `snapshotId` is set) Size of created volumes in GiB.
+  If `snapshotId` is set and `volumeSize` is omitted then the volume will have the same size
   as the selected snapshot.
 * `volumeType` - (Optional) Type of EBS volume to create. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `standard`).
 * `outpostArn` - (Optional) ARN of the Outpost on which the snapshot is stored.
@@ -128,7 +128,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `hypervisor` - Hypervisor type of the image.
 * `platform` - This value is set to windows for Windows AMIs; otherwise, it is blank.
 * `public` - Whether the image has public launch permissions.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -140,24 +140,30 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsAmi` using the ID of the AMI. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ami` using the ID of the AMI. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Ami } from "./.gen/providers/aws/ami";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Ami.generateConfigForImport(this, "example", "ami-12345678");
   }
 }
 
 ```
 
-Using `terraform import`, import `awsAmi` using the ID of the AMI. For example:
+Using `terraform import`, import `aws_ami` using the ID of the AMI. For example:
 
 ```console
 % terraform import aws_ami.example ami-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->
+<!-- cache-key: cdktf-0.20.1 input-07ad6907bcdf710f44e4490525952f2744e1fd913c106b86670941ed753bd143 -->

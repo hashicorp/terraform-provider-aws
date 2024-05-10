@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_user_pool_domain")
-func ResourceUserPoolDomain() *schema.Resource {
+// @SDKResource("aws_cognito_user_pool_domain", name="User Pool Domain")
+func resourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolDomainCreate,
 		ReadWithoutTimeout:   resourceUserPoolDomainRead,
@@ -73,7 +73,7 @@ func ResourceUserPoolDomain() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,11 +142,11 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
-	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
+	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("domain", d.Id())
 	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)
-	d.Set("version", desc.Version)
+	d.Set(names.AttrVersion, desc.Version)
 
 	return diags
 }

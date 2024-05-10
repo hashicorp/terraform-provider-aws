@@ -8,14 +8,15 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_lambda_function_url")
-func DataSourceFunctionURL() *schema.Resource {
+// @SDKDataSource("aws_lambda_function_url", name="Function URL")
+func dataSourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionURLRead,
 
@@ -97,24 +98,24 @@ func DataSourceFunctionURL() *schema.Resource {
 }
 
 func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-	id := FunctionURLCreateResourceID(name, qualifier)
-	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
+	id := functionURLCreateResourceID(name, qualifier)
+	output, err := findFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
 
 	if err != nil {
-		return diag.Errorf("reading Lambda Function URL (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function URL (%s): %s", id, err)
 	}
 
-	functionURL := aws.StringValue(output.FunctionUrl)
-
+	functionURL := aws.ToString(output.FunctionUrl)
 	d.SetId(id)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
-			return diag.Errorf("setting cors: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
@@ -128,14 +129,14 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("qualifier", qualifier)
 
 	// Function URL endpoints have the following format:
-	// https://<url-id>.lambda-url.<region>.on.aws
+	// https://<url-id>.lambda-url.<region>.on.aws/
 	if v, err := url.Parse(functionURL); err != nil {
-		return diag.Errorf("parsing URL (%s): %s", functionURL, err)
+		return sdkdiag.AppendErrorf(diags, "parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
 		d.Set("url_id", v[0])
 	} else {
 		d.Set("url_id", nil)
 	}
 
-	return nil
+	return diags
 }

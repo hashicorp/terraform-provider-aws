@@ -47,17 +47,17 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 500),
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -142,7 +142,7 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,8 +167,8 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		Tags:            getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(d.Get("description").(string))
+	if _, ok := d.GetOk(names.AttrDescription); ok {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
@@ -215,11 +215,11 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("rule/%s", aws.ToString(out.Identifier)),
 	}.String()
-	d.Set("arn", ruleArn)
+	d.Set(names.AttrARN, ruleArn)
 
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("resource_type", string(out.ResourceType))
-	d.Set("status", string(out.Status))
+	d.Set(names.AttrStatus, string(out.Status))
 
 	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
@@ -241,8 +241,8 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Identifier: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChanges(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 

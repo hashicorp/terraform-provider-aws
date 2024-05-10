@@ -35,16 +35,10 @@ updates:
       # go-hclog should only be updated via terraform-plugin-log
       - dependency-name: "github.com/hashicorp/go-hclog"
       - dependency-name: "golang.org/x/tools"
+      # grpc should only be updated via terraform-plugin-go/terraform-plugin-framework
       - dependency-name: "google.golang.org/grpc"
-      # TEMPORARY - Remove below once upstream is fixed
-      # Ref: https://github.com/aws/aws-sdk-go-v2/issues/2349
-      #
-      # config and ini have upstream regressions causing valid configurations to break.
-      # feature/s3/manager is also ignored as the latest versions have a dependency
-      # on broken config versions.
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/config"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/internal/ini"
-      - dependency-name: "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+      # protobuf should only be updated via terraform-plugin-go/terraform-plugin-framework
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30
@@ -54,6 +48,7 @@ updates:
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
 
@@ -62,6 +57,7 @@ updates:
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
 
@@ -70,6 +66,14 @@ updates:
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      - dependency-name: "google.golang.org/protobuf"
+    schedule:
+      interval: "daily"
+
+  - directory: "/tools/awssdkpatch"
+    package-ecosystem: "gomod"
+    allow:
+      - dependency-type: direct
     schedule:
       interval: "daily"
 
@@ -82,6 +86,7 @@ updates:
       - dependency-name: "github.com/hashicorp/terraform-plugin-sdk/v2"
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
 

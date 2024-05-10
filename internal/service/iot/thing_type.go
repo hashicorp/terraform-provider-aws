@@ -33,13 +33,13 @@ func ResourceThingType() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("name", d.Id())
+				d.Set(names.AttrName, d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceThingType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +61,7 @@ func ResourceThingType() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -93,7 +93,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateThingTypeInput{
 		Tags:          getTagsIn(ctx),
 		ThingTypeName: aws.String(name),
@@ -143,10 +143,10 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("reading IoT Thing Type (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.ThingTypeArn)
+	d.Set(names.AttrARN, output.ThingTypeArn)
 	if output.ThingTypeMetadata != nil {
 		d.Set("deprecated", output.ThingTypeMetadata.Deprecated)
 	}
@@ -187,7 +187,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -202,7 +202,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry")
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

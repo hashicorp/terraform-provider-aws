@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
@@ -22,20 +22,20 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		CheckDestroy:             nil,
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceDataSourceConfig_alias(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "alias", dataSourceName, "alias"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, dataSourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(resourceName, "prometheus_endpoint", dataSourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 				),
 			},

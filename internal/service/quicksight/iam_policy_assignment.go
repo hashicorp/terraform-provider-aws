@@ -79,7 +79,7 @@ func (r *resourceIAMPolicyAssignment) Schema(ctx context.Context, req resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"namespace": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -316,7 +316,7 @@ func (r *resourceIAMPolicyAssignment) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceIAMPolicyAssignment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func FindIAMPolicyAssignmentByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.IAMPolicyAssignment, error) {

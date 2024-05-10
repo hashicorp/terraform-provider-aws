@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2ExportDataSource_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccAPIGatewayV2ExportDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -42,7 +42,7 @@ func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -50,7 +50,7 @@ func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
 				Config: testAccExportDataSourceConfig_httpStage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "api_id", "aws_apigatewayv2_route.test", "api_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "stage_name", "aws_apigatewayv2_stage.test", "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "stage_name", "aws_apigatewayv2_stage.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "body"),
 				),
 			},

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Fix `panic: interface conversion: interface {} is nil, not map[string]interface {}` when `service_connect_configuration.service.timeout` is empty
+```
+
+```release-note:bug
+resource/aws_ecs_service: `service_connect_configuration.service.tls.issuer_cert_authority.aws_pca_authority_arn` is Required
+```

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,8 +43,8 @@ func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeInstance),
 				),
 			},
@@ -64,7 +65,7 @@ func TestAccSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func TestAccSSMMaintenanceWindowTarget_validation(t *testing.T) {
 	name := sdkacctest.RandString(10)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,7 +124,7 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,8 +139,8 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
 				),
 			},
 			{
@@ -159,8 +160,8 @@ func TestAccSSMMaintenanceWindowTarget_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "tag:Updated"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "new-value"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only - updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only - updated"),
 				),
 			},
 			{
@@ -180,7 +181,7 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,8 +195,8 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.key", "resource-groups:Name"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "resource-group-name"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeResourceGroup),
 				),
 			},
@@ -216,7 +217,7 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,7 +240,7 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 	resourceName := "aws_ssm_maintenance_window_target.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMaintenanceWindowTargetDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -41,7 +41,7 @@ class MyConvertedCode extends TerraformStack {
 This data source exports the following attributes in addition to the arguments above:
 
 * `features` - Current configuration of the detector features.
-    * `additional_configuration` - Additional feature configuration.
+    * `additionalConfiguration` - Additional feature configuration.
         * `name` - The name of the additional configuration.
         * `status` - The status of the additional configuration.
     * `name` - The name of the detector feature.
@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `serviceRoleArn` - Service-linked role that grants GuardDuty access to the resources in the AWS account.
 * `status` - Current status of the detector.
 
-<!-- cache-key: cdktf-0.19.0 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->
+<!-- cache-key: cdktf-0.20.1 input-07755259e17c1389ef594d13cf31fa96fecc80102f8edf0b3ec9e035aef6985e -->

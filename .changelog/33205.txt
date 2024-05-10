@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_lb: Allow the number of `subnets` for Network Load Balancers to be increased without recreating the resource
+```
+
+```release-note:enhancement
+resource/aws_lb: Add plan-time validation that exactly one of either `subnets` or `subnet_mapping` is configured
+```
+
+```release-note:enhancement
+resource/aws_lb: Allow the number of `subnet_mapping`s for Network Load Balancers to be increased without recreating the resource
+```
+
+```release-note:enhancement
+resource/aws_lb: Allow the number of `subnet_mapping`s for Application Load Balancers to be changed without recreating the resource
+```
+
+```release-note:bug
+resource/aws_lb: Correct in-place update of `security_groups` for Network Load Balancers when the new value is Computed
+```

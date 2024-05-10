@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_site_to_site_vpn_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
+  Terraform resource for managing an AWS Network Manager SiteToSiteAttachment.
 ---
 
 # Resource: aws_networkmanager_site_to_site_vpn_attachment
 
-Terraform resource for managing an AWS NetworkManager SiteToSiteAttachment.
+Terraform resource for managing an AWS Network Manager SiteToSiteAttachment.
 
 ## Example Usage
 

@@ -16,7 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_instance_storage_config")
@@ -34,7 +36,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -132,7 +134,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"bucket_name": {
+									names.AttrBucketName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -177,9 +179,11 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 }
 
 func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 	resourceType := d.Get("resource_type").(string)
 
 	input := &connect.AssociateInstanceStorageConfigInput{
@@ -192,25 +196,27 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.AssociateInstanceStorageConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect Instance Storage Config for Connect Instance (%s,%s): %s", instanceId, resourceType, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Instance Storage Config for Connect Instance (%s,%s): %s", instanceId, resourceType, err)
 	}
 
 	if output == nil || output.AssociationId == nil {
-		return diag.Errorf("creating Connect Instance Storage Config for Connect Instance (%s,%s): empty output", instanceId, resourceType)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Instance Storage Config for Connect Instance (%s,%s): empty output", instanceId, resourceType)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", instanceId, aws.StringValue(output.AssociationId), resourceType))
 
-	return resourceInstanceStorageConfigRead(ctx, d, meta)
+	return append(diags, resourceInstanceStorageConfigRead(ctx, d, meta)...)
 }
 
 func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeInstanceStorageConfigWithContext(ctx, &connect.DescribeInstanceStorageConfigInput{
@@ -222,37 +228,39 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Instance Storage Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect Instance Storage Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.StorageConfig == nil {
-		return diag.Errorf("getting Connect Instance Storage Config (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config (%s): empty response", d.Id())
 	}
 
 	storageConfig := resp.StorageConfig
 
 	d.Set("association_id", storageConfig.AssociationId)
-	d.Set("instance_id", instanceId)
+	d.Set(names.AttrInstanceID, instanceId)
 	d.Set("resource_type", resourceType)
 
 	if err := d.Set("storage_config", flattenStorageConfig(storageConfig)); err != nil {
-		return diag.Errorf("setting storage_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &connect.UpdateInstanceStorageConfigInput{
@@ -268,19 +276,21 @@ func resourceInstanceStorageConfigUpdate(ctx context.Context, d *schema.Resource
 	_, err = conn.UpdateInstanceStorageConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Instance Storage Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Instance Storage Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceInstanceStorageConfigRead(ctx, d, meta)
+	return append(diags, resourceInstanceStorageConfigRead(ctx, d, meta)...)
 }
 
 func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, associationId, resourceType, err := InstanceStorageConfigParseId(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DisassociateInstanceStorageConfigWithContext(ctx, &connect.DisassociateInstanceStorageConfigInput{
@@ -290,10 +300,10 @@ func resourceInstanceStorageConfigDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting InstanceStorageConfig (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting InstanceStorageConfig (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func InstanceStorageConfigParseId(id string) (string, string, string, error) {
@@ -403,7 +413,7 @@ func exapandS3Config(tfList []interface{}) *connect.S3Config {
 	}
 
 	result := &connect.S3Config{
-		BucketName:   aws.String(tfMap["bucket_name"].(string)),
+		BucketName:   aws.String(tfMap[names.AttrBucketName].(string)),
 		BucketPrefix: aws.String(tfMap["bucket_prefix"].(string)),
 	}
 
@@ -506,8 +516,8 @@ func flattenS3Config(apiObject *connect.S3Config) []interface{} {
 	}
 
 	values := map[string]interface{}{
-		"bucket_name":   aws.StringValue(apiObject.BucketName),
-		"bucket_prefix": aws.StringValue(apiObject.BucketPrefix),
+		names.AttrBucketName: aws.StringValue(apiObject.BucketName),
+		"bucket_prefix":      aws.StringValue(apiObject.BucketPrefix),
 	}
 
 	if v := apiObject.EncryptionConfig; v != nil {

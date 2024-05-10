@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/skaff
 
-go 1.20
+go 1.22.2
 
 require (
 	github.com/YakDriver/regexache v0.23.0
@@ -9,10 +9,9 @@ require (
 )
 
 require (
-	github.com/google/uuid v1.3.1 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 )
 
 replace github.com/hashicorp/terraform-provider-aws => ../

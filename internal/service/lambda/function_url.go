@@ -11,20 +11,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_lambda_function_url")
-func ResourceFunctionURL() *schema.Resource {
+// @SDKResource("aws_lambda_function_url", name="Function URL")
+func resourceFunctionURL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFunctionURLCreate,
 		ReadWithoutTimeout:   resourceFunctionURLRead,
@@ -41,9 +44,9 @@ func ResourceFunctionURL() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"authorization_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(lambda.FunctionUrlAuthType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
 			},
 			"cors": {
 				Type:     schema.TypeList,
@@ -88,26 +91,20 @@ func ResourceFunctionURL() *schema.Resource {
 				Computed: true,
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Using function name or ARN should not be shown as a diff.
-					// Try to convert the old and new values from ARN to function name
-					oldFunctionName, oldFunctionNameErr := GetFunctionNameFromARN(old)
-					newFunctionName, newFunctionNameErr := GetFunctionNameFromARN(new)
-					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
 			},
 			"function_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"invoke_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      lambda.InvokeModeBuffered,
-				ValidateFunc: validation.StringInSlice(lambda.InvokeMode_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.InvokeModeBuffered,
+				ValidateDiagFunc: enum.Validate[awstypes.InvokeMode](),
 			},
 			"qualifier": {
 				Type:     schema.TypeString,
@@ -123,15 +120,17 @@ func ResourceFunctionURL() *schema.Resource {
 }
 
 func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
 	name := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-	id := FunctionURLCreateResourceID(name, qualifier)
+	id := functionURLCreateResourceID(name, qualifier)
+	authorizationType := awstypes.FunctionUrlAuthType(d.Get("authorization_type").(string))
 	input := &lambda.CreateFunctionUrlConfigInput{
-		AuthType:     aws.String(d.Get("authorization_type").(string)),
+		AuthType:     authorizationType,
 		FunctionName: aws.String(name),
-		InvokeMode:   aws.String(d.Get("invoke_mode").(string)),
+		InvokeMode:   awstypes.InvokeMode(d.Get("invoke_mode").(string)),
 	}
 
 	if qualifier != "" {
@@ -142,20 +141,19 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Lambda Function URL: %s", input)
-	_, err := conn.CreateFunctionUrlConfigWithContext(ctx, input)
+	_, err := conn.CreateFunctionUrlConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Lambda Function URL (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Function URL (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
+	if authorizationType == awstypes.FunctionUrlAuthTypeNone {
 		input := &lambda.AddPermissionInput{
 			Action:              aws.String("lambda:InvokeFunctionUrl"),
 			FunctionName:        aws.String(name),
-			FunctionUrlAuthType: aws.String(v),
+			FunctionUrlAuthType: authorizationType,
 			Principal:           aws.String("*"),
 			StatementId:         aws.String("FunctionURLAllowPublicAccess"),
 		}
@@ -164,48 +162,46 @@ func resourceFunctionURLCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.Qualifier = aws.String(qualifier)
 		}
 
-		log.Printf("[DEBUG] Adding Lambda Permission: %s", input)
-		_, err := conn.AddPermissionWithContext(ctx, input)
+		_, err := conn.AddPermission(ctx, input)
 
 		if err != nil {
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "The statement id (FunctionURLAllowPublicAccess) provided already exists") {
+			if errs.IsAErrorMessageContains[*awstypes.ResourceConflictException](err, "The statement id (FunctionURLAllowPublicAccess) provided already exists") {
 				log.Printf("[DEBUG] function permission statement 'FunctionURLAllowPublicAccess' already exists.")
 			} else {
-				return diag.Errorf("adding Lambda Function URL (%s) permission %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding Lambda Function URL (%s) permission %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceFunctionURLRead(ctx, d, meta)
+	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
 func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name, qualifier, err := FunctionURLParseResourceID(d.Id())
-
+	name, qualifier, err := functionURLParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindFunctionURLByNameAndQualifier(ctx, conn, name, qualifier)
+	output, err := findFunctionURLByTwoPartKey(ctx, conn, name, qualifier)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Function URL %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Lambda Function URL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
-	functionURL := aws.StringValue(output.FunctionUrl)
-
+	functionURL := aws.ToString(output.FunctionUrl)
 	d.Set("authorization_type", output.AuthType)
 	if output.Cors != nil {
 		if err := d.Set("cors", []interface{}{flattenCors(output.Cors)}); err != nil {
-			return diag.Errorf("setting cors: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting cors: %s", err)
 		}
 	} else {
 		d.Set("cors", nil)
@@ -217,25 +213,25 @@ func resourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("qualifier", qualifier)
 
 	// Function URL endpoints have the following format:
-	// https://<url-id>.lambda-url.<region>.on.aws
+	// https://<url-id>.lambda-url.<region>.on.aws/
 	if v, err := url.Parse(functionURL); err != nil {
-		return diag.Errorf("parsing URL (%s): %s", functionURL, err)
+		return sdkdiag.AppendErrorf(diags, "parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
 		d.Set("url_id", v[0])
 	} else {
 		d.Set("url_id", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name, qualifier, err := FunctionURLParseResourceID(d.Id())
-
+	name, qualifier, err := functionURLParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &lambda.UpdateFunctionUrlConfigInput{
@@ -247,38 +243,37 @@ func resourceFunctionURLUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("authorization_type") {
-		input.AuthType = aws.String(d.Get("authorization_type").(string))
+		input.AuthType = awstypes.FunctionUrlAuthType(d.Get("authorization_type").(string))
 	}
 
 	if d.HasChange("cors") {
 		if v, ok := d.GetOk("cors"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Cors = expandCors(v.([]interface{})[0].(map[string]interface{}))
 		} else {
-			input.Cors = &lambda.Cors{}
+			input.Cors = &awstypes.Cors{}
 		}
 	}
 
 	if d.HasChange("invoke_mode") {
-		input.InvokeMode = aws.String(d.Get("invoke_mode").(string))
+		input.InvokeMode = awstypes.InvokeMode(d.Get("invoke_mode").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Lambda Function URL: %s", input)
-	_, err = conn.UpdateFunctionUrlConfigWithContext(ctx, input)
+	_, err = conn.UpdateFunctionUrlConfig(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Lambda Function URL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
-	return resourceFunctionURLRead(ctx, d, meta)
+	return append(diags, resourceFunctionURLRead(ctx, d, meta)...)
 }
 
 func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	name, qualifier, err := FunctionURLParseResourceID(d.Id())
-
+	name, qualifier, err := functionURLParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &lambda.DeleteFunctionUrlConfigInput{
@@ -290,31 +285,34 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting Lambda Function URL: %s", d.Id())
-	_, err = conn.DeleteFunctionUrlConfigWithContext(ctx, input)
+	_, err = conn.DeleteFunctionUrlConfig(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Lambda Function URL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindFunctionURLByNameAndQualifier(ctx context.Context, conn *lambda.Lambda, name, qualifier string) (*lambda.GetFunctionUrlConfigOutput, error) {
+func findFunctionURLByTwoPartKey(ctx context.Context, conn *lambda.Client, name, qualifier string) (*lambda.GetFunctionUrlConfigOutput, error) {
 	input := &lambda.GetFunctionUrlConfigInput{
 		FunctionName: aws.String(name),
 	}
-
 	if qualifier != "" {
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	output, err := conn.GetFunctionUrlConfigWithContext(ctx, input)
+	return findFunctionURL(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+func findFunctionURL(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionUrlConfigInput) (*lambda.GetFunctionUrlConfigOutput, error) {
+	output, err := conn.GetFunctionUrlConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -334,7 +332,7 @@ func FindFunctionURLByNameAndQualifier(ctx context.Context, conn *lambda.Lambda,
 
 const functionURLResourceIDSeparator = "/"
 
-func FunctionURLCreateResourceID(functionName, qualifier string) string {
+func functionURLCreateResourceID(functionName, qualifier string) string {
 	if qualifier == "" {
 		return functionName
 	}
@@ -345,7 +343,7 @@ func FunctionURLCreateResourceID(functionName, qualifier string) string {
 	return id
 }
 
-func FunctionURLParseResourceID(id string) (string, string, error) {
+func functionURLParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, functionURLResourceIDSeparator)
 
 	if len(parts) == 1 && parts[0] != "" {
@@ -355,44 +353,44 @@ func FunctionURLParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]qQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected FUNCTION-NAME%[2]sQUALIFIER or FUNCTION-NAME", id, functionURLResourceIDSeparator)
 }
 
-func expandCors(tfMap map[string]interface{}) *lambda.Cors {
+func expandCors(tfMap map[string]interface{}) *awstypes.Cors {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &lambda.Cors{}
+	apiObject := &awstypes.Cors{}
 
 	if v, ok := tfMap["allow_credentials"].(bool); ok {
 		apiObject.AllowCredentials = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["allow_headers"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AllowHeaders = flex.ExpandStringSet(v)
+		apiObject.AllowHeaders = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["allow_methods"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AllowMethods = flex.ExpandStringSet(v)
+		apiObject.AllowMethods = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["allow_origins"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.AllowOrigins = flex.ExpandStringSet(v)
+		apiObject.AllowOrigins = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["expose_headers"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ExposeHeaders = flex.ExpandStringSet(v)
+		apiObject.ExposeHeaders = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["max_age"].(int); ok && v != 0 {
-		apiObject.MaxAge = aws.Int64(int64(v))
+		apiObject.MaxAge = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func flattenCors(apiObject *lambda.Cors) map[string]interface{} {
+func flattenCors(apiObject *awstypes.Cors) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -400,27 +398,27 @@ func flattenCors(apiObject *lambda.Cors) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AllowCredentials; v != nil {
-		tfMap["allow_credentials"] = aws.BoolValue(v)
+		tfMap["allow_credentials"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.AllowHeaders; v != nil {
-		tfMap["allow_headers"] = aws.StringValueSlice(v)
+		tfMap["allow_headers"] = v
 	}
 
 	if v := apiObject.AllowMethods; v != nil {
-		tfMap["allow_methods"] = aws.StringValueSlice(v)
+		tfMap["allow_methods"] = v
 	}
 
 	if v := apiObject.AllowOrigins; v != nil {
-		tfMap["allow_origins"] = aws.StringValueSlice(v)
+		tfMap["allow_origins"] = v
 	}
 
 	if v := apiObject.ExposeHeaders; v != nil {
-		tfMap["expose_headers"] = aws.StringValueSlice(v)
+		tfMap["expose_headers"] = v
 	}
 
 	if v := apiObject.MaxAge; v != nil {
-		tfMap["max_age"] = aws.Int64Value(v)
+		tfMap["max_age"] = aws.ToInt32(v)
 	}
 
 	return tfMap

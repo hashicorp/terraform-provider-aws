@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,11 +53,11 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -69,7 +70,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
@@ -78,7 +79,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,7 +89,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validateResourceName(snapshotNameMaxLength),
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				// The API will accept an ID, but return the ARN on every read.
 				// For the sake of consistency, force everyone to use ARN-s.
 				// To prevent confusion, the attribute is suffixed _arn rather
@@ -104,20 +105,20 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateResourceName(clusterNameMaxLength),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateResourceNamePrefix(clusterNameMaxLength - id.UniqueIDSuffixLength),
 			},
 			"node_type": {
@@ -141,13 +142,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"security_group_ids": {
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -160,7 +161,7 @@ func ResourceCluster() *schema.Resource {
 				Set:      shardHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -170,7 +171,7 @@ func ResourceCluster() *schema.Resource {
 							Set:      nodeHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"availability_zone": {
+									names.AttrAvailabilityZone: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -178,8 +179,8 @@ func ResourceCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"endpoint": endpointSchema(),
-									"name": {
+									names.AttrEndpoint: endpointSchema(),
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -261,7 +262,7 @@ func endpointSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"port": {
+				names.AttrPort: {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
@@ -271,12 +272,14 @@ func endpointSchema() *schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateClusterInput{
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int64(int64(d.Get("num_replicas_per_shard").(int))),
@@ -289,15 +292,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DataTiering = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -309,11 +312,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("port"); ok {
+	if v, ok := d.GetOk(names.AttrPort); ok {
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("security_group_ids"); ok {
+	if v, ok := d.GetOk(names.AttrSecurityGroupIDs); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -348,22 +351,24 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MemoryDB Cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Cluster (%s): %s", name, err)
 	}
 
 	if err := waitClusterAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
+	if d.HasChangesExcept("final_snapshot_name", names.AttrTags, names.AttrTagsAll) {
 		waitParameterGroupInSync := false
 		waitSecurityGroupsActive := false
 
@@ -375,12 +380,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ACLName = aws.String(d.Get("acl_name").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("engine_version") {
-			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
 
 		if d.HasChange("maintenance_window") {
@@ -408,15 +413,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			waitParameterGroupInSync = true
 		}
 
-		if d.HasChange("security_group_ids") {
+		if d.HasChange(names.AttrSecurityGroupIDs) {
 			// UpdateCluster reads null and empty slice as "no change", so once
 			// at least one security group is present, it's no longer possible
 			// to remove all of them.
 
-			v := d.Get("security_group_ids").(*schema.Set)
+			v := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
 
 			if v.Len() == 0 {
-				return diag.Errorf("unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
+				return sdkdiag.AppendErrorf(diags, "unable to update MemoryDB Cluster (%s): removing all security groups is not possible", d.Id())
 			}
 
 			input.SecurityGroupIds = flex.ExpandStringSet(v)
@@ -447,30 +452,32 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		_, err := conn.UpdateClusterWithContext(ctx, input)
 		if err != nil {
-			return diag.Errorf("updating MemoryDB Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		if err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) to be modified: %s", d.Id(), err)
 		}
 
 		if waitParameterGroupInSync {
 			if err := waitClusterParameterGroupInSync(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) parameter group to be in sync: %s", d.Id(), err)
 			}
 		}
 
 		if waitSecurityGroupsActive {
 			if err := waitClusterSecurityGroupsActive(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for MemoryDB Cluster (%s) security groups to be available: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) security groups to be available: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	cluster, err := FindClusterByName(ctx, conn, d.Id())
@@ -478,43 +485,43 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("acl_name", cluster.ACLName)
-	d.Set("arn", cluster.ARN)
-	d.Set("auto_minor_version_upgrade", cluster.AutoMinorVersionUpgrade)
+	d.Set(names.AttrARN, cluster.ARN)
+	d.Set(names.AttrAutoMinorVersionUpgrade, cluster.AutoMinorVersionUpgrade)
 
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
-		d.Set("port", v.Port)
+		d.Set(names.AttrPort, v.Port)
 	}
 
 	if v := aws.StringValue(cluster.DataTiering); v != "" {
 		b, err := strconv.ParseBool(v)
 		if err != nil {
-			return diag.Errorf("reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
 		}
 
 		d.Set("data_tiering", b)
 	}
 
-	d.Set("description", cluster.Description)
+	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
-	d.Set("engine_version", cluster.EngineVersion)
-	d.Set("kms_key_arn", cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
+	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
+	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
-	d.Set("name", cluster.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(cluster.Name)))
+	d.Set(names.AttrName, cluster.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(cluster.Name)))
 	d.Set("node_type", cluster.NodeType)
 
 	numReplicasPerShard, err := deriveClusterNumReplicasPerShard(cluster)
 	if err != nil {
-		return diag.Errorf("reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading num_replicas_per_shard for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 	d.Set("num_replicas_per_shard", numReplicasPerShard)
 
@@ -525,10 +532,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	for _, v := range cluster.SecurityGroups {
 		securityGroupIds = append(securityGroupIds, v.SecurityGroupId)
 	}
-	d.Set("security_group_ids", flex.FlattenStringSet(securityGroupIds))
+	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(securityGroupIds))
 
 	if err := d.Set("shards", flattenShards(cluster.Shards)); err != nil {
-		return diag.Errorf("failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "failed to set shards for MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
@@ -543,10 +550,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	return nil
+	return diags
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	input := &memorydb.DeleteClusterInput{
@@ -561,26 +570,26 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.DeleteClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeClusterNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MemoryDB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func shardHash(v interface{}) int {
-	return create.StringHashcode(v.(map[string]interface{})["name"].(string))
+	return create.StringHashcode(v.(map[string]interface{})[names.AttrName].(string))
 }
 
 func nodeHash(v interface{}) int {
-	return create.StringHashcode(v.(map[string]interface{})["name"].(string))
+	return create.StringHashcode(v.(map[string]interface{})[names.AttrName].(string))
 }
 
 func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
@@ -595,7 +604,7 @@ func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
 	}
 
 	if v := aws.Int64Value(endpoint.Port); v != 0 {
-		m["port"] = v
+		m[names.AttrPort] = v
 	}
 
 	return []interface{}{m}
@@ -617,18 +626,18 @@ func flattenShards(shards []*memorydb.Shard) *schema.Set {
 			}
 
 			nodeSet.Add(map[string]interface{}{
-				"availability_zone": aws.StringValue(node.AvailabilityZone),
-				"create_time":       aws.TimeValue(node.CreateTime).Format(time.RFC3339),
-				"endpoint":          flattenEndpoint(node.Endpoint),
-				"name":              aws.StringValue(node.Name),
+				names.AttrAvailabilityZone: aws.StringValue(node.AvailabilityZone),
+				"create_time":              aws.TimeValue(node.CreateTime).Format(time.RFC3339),
+				names.AttrEndpoint:         flattenEndpoint(node.Endpoint),
+				names.AttrName:             aws.StringValue(node.Name),
 			})
 		}
 
 		shardSet.Add(map[string]interface{}{
-			"name":      aws.StringValue(shard.Name),
-			"num_nodes": int(aws.Int64Value(shard.NumberOfNodes)),
-			"nodes":     nodeSet,
-			"slots":     aws.StringValue(shard.Slots),
+			names.AttrName: aws.StringValue(shard.Name),
+			"num_nodes":    int(aws.Int64Value(shard.NumberOfNodes)),
+			"nodes":        nodeSet,
+			"slots":        aws.StringValue(shard.Slots),
 		})
 	}
 

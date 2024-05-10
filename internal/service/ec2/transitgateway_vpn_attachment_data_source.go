@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_vpn_attachment")
@@ -27,9 +28,9 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
-			"transit_gateway_id": {
+			"filter":       customFiltersSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -47,29 +48,29 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-type": ec2.TransitGatewayAttachmentResourceTypeVpn,
 		}),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	if v, ok := d.GetOk("tags"); ok {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+	if v, ok := d.GetOk(names.AttrTags); ok {
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
 	if v, ok := d.GetOk("vpn_connection_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"resource-id": v.(string),
 		})...)
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}
@@ -81,10 +82,10 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	}
 
 	d.SetId(aws.StringValue(transitGatewayAttachment.TransitGatewayAttachmentId))
-	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
+	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)
 	d.Set("vpn_connection_id", transitGatewayAttachment.ResourceId)
 
-	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

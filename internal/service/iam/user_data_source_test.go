@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMUserDataSource_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -31,9 +31,9 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "unique_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "path", resourceName, "path"),
 					resource.TestCheckResourceAttr(dataSourceName, "permissions_boundary", ""),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},
 		},
@@ -49,13 +49,13 @@ func TestAccIAMUserDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserDataSourceConfig_tags(userName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},
 		},

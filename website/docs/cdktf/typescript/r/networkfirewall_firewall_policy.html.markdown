@@ -36,6 +36,8 @@ class MyConvertedCode extends TerraformStack {
             resourceArn: Token.asString(awsNetworkfirewallRuleGroupExample.arn),
           },
         ],
+        tlsInspectionConfigurationArn:
+          "arn:aws:network-firewall:REGION:ACCT:tls-configuration/example",
       },
       name: "example",
       tags: {
@@ -146,11 +148,11 @@ This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) A friendly name of the firewall policy.
 
-* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Encryption Configuration
 
-`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `awsOwnedKmsKey`).
+`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
 
 * `keyId` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
 * `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
@@ -161,13 +163,13 @@ The `firewallPolicy` block supports the following arguments:
 
 * `policyVariables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
 
-* `statefulDefaultActions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`.
+* `statefulDefaultActions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `statefulEngineOptions` block with a `ruleOrder` value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`.
 
 * `statefulEngineOptions` - (Optional) A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](#stateful-engine-options) below for details.
 
 * `statefulRuleGroupReference` - (Optional) Set of configuration blocks containing references to the stateful rule groups that are used in the policy. See [Stateful Rule Group Reference](#stateful-rule-group-reference) below for details.
 
-* `statelessCustomAction` - (Optional) Set of configuration blocks describing the custom action definitions that are available for use in the firewall policy's `stateless_default_actions`. See [Stateless Custom Action](#stateless-custom-action) below for details.
+* `statelessCustomAction` - (Optional) Set of configuration blocks describing the custom action definitions that are available for use in the firewall policy's `statelessDefaultActions`. See [Stateless Custom Action](#stateless-custom-action) below for details.
 
 * `statelessDefaultActions` - (Required) Set of actions to take on a packet if it does not match any of the stateless rules in the policy. You must specify one of the standard actions including: `aws:drop`, `aws:pass`, or `aws:forward_to_sfe`.
 In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
@@ -177,11 +179,13 @@ In addition, you can specify custom actions that are compatible with your standa
 
 * `statelessRuleGroupReference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
 
+* `tlsInspectionConfigurationArn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
+
 ### Rule Variables
 
 The `ruleVariables` block supports the following arguments:
 
-* `key` - (Required) An alphanumeric string to identify the `ip_set`. Valid values: `HOME_NET`
+* `key` - (Required) An alphanumeric string to identify the `ipSet`. Valid values: `HOME_NET`
 
 * `ipSet` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
 
@@ -195,7 +199,7 @@ The `ipSet` block supports the following argument:
 
 The `statefulEngineOptions` block supports the following argument:
 
-~> **NOTE:** If the `strictOrder` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `strictOrder`.
+~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `STRICT_ORDER`.
 
 * `ruleOrder` - Indicates how to manage the order of stateful rule evaluation for the policy. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
@@ -205,7 +209,7 @@ The `statefulEngineOptions` block supports the following argument:
 
 The `statefulRuleGroupReference` block supports the following arguments:
 
-* `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
+* `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `statefulEngineOptions` block with a `ruleOrder` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resourceArn` - (Required) The Amazon Resource Name (ARN) of the stateful rule group.
 
@@ -219,7 +223,7 @@ The `statefulRuleGroupReference` block supports the following arguments:
 
 The `statelessCustomAction` block supports the following arguments:
 
-* `actionDefinition` - (Required) A configuration block describing the custom action associated with the `action_name`. See [Action Definition](#action-definition) below for details.
+* `actionDefinition` - (Required) A configuration block describing the custom action associated with the `actionName`. See [Action Definition](#action-definition) below for details.
 
 * `actionName` - (Required, Forces new resource) A friendly name of the custom action.
 
@@ -257,7 +261,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) that identifies the firewall policy.
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `updateToken` - A string token used when updating a firewall policy.
 
@@ -269,9 +273,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NetworkfirewallFirewallPolicy } from "./.gen/providers/aws/networkfirewall-firewall-policy";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NetworkfirewallFirewallPolicy.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example"
+    );
   }
 }
 
@@ -283,4 +297,4 @@ Using `terraform import`, import Network Firewall Policies using their `arn`. Fo
 % terraform import aws_networkfirewall_firewall_policy.example arn:aws:network-firewall:us-west-1:123456789012:firewall-policy/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-17c12b43543ae699c6f2d03a7c541a3ec74530e26b24b77254c63fb4dd0c7b37 -->
+<!-- cache-key: cdktf-0.20.1 input-404c165333a79301aa20f34d18808df0b499908bd2b40ced95421124be533c61 -->

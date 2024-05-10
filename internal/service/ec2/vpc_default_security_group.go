@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,25 +39,25 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		//   - name is Computed-only
 		//   - name_prefix is Computed-only
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"egress":  securityGroupRuleSetNestedBlock,
 			"ingress": securityGroupRuleSetNestedBlock,
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,7 +69,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -81,26 +82,28 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 }
 
 func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": DefaultSecurityGroupName,
 			},
 		),
 	}
 
-	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+	if v, ok := d.GetOk(names.AttrVPCID); ok {
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	} else {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
-				"description": "default group",
+				names.AttrDescription: "default group",
 			},
 		)...)
 	}
@@ -108,7 +111,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading Default Security Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
@@ -119,13 +122,13 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 
 	if !newTags.Equal(oldTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
-			return diag.Errorf("updating Default Security Group (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceSecurityGroupUpdate(ctx, d, meta)
+	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
 }

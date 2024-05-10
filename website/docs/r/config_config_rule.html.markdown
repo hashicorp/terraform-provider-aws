@@ -144,8 +144,8 @@ This resource supports the following arguments:
 * `evaluation_mode` - (Optional) The modes the Config rule can be evaluated in. See [Evaluation Mode](#evaluation-mode) for more details.
 * `input_parameters` - (Optional) A string in JSON format that is passed to the AWS Config rule Lambda function.
 * `maximum_execution_frequency` - (Optional) The maximum frequency with which AWS Config runs evaluations for a rule.
-* `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Source](#source) Below.
-* `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Scope](#scope) Below.
+* `scope` - (Optional) Scope defines which resources can trigger an evaluation for the rule. See [Scope](#scope) Below.
+* `source` - (Required) Source specifies the rule owner, the rule identifier, and the notifications that cause the function to evaluate your AWS resources. See [Source](#source) Below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Evaluation Mode

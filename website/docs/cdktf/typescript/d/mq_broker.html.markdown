@@ -56,7 +56,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
-See the [`awsMqBroker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
+See the [`aws_mq_broker` resource](/docs/providers/aws/r/mq_broker.html) for details on the returned attributes.
 They are identical except for user password, which is not returned when describing broker.
 
-<!-- cache-key: cdktf-0.19.0 input-0e3d67694c8c62cd91f39eb11d121ea946f8feb6536315ac989e72cb171c80c6 -->
+<!-- cache-key: cdktf-0.20.1 input-0e3d67694c8c62cd91f39eb11d121ea946f8feb6536315ac989e72cb171c80c6 -->

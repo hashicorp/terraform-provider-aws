@@ -6,26 +6,29 @@ package ssoadmin
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	ssoadmin_sdkv1 "github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/retry"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ssoadmin_sdkv1.SSOAdmin) (*ssoadmin_sdkv1.SSOAdmin, error) {
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19215.
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		switch err := r.Error; r.Operation.Name {
-		case "AttachCustomerManagedPolicyReferenceToPermissionSet", "DetachCustomerManagedPolicyReferenceFromPermissionSet",
-			"AttachManagedPolicyToPermissionSet", "DetachManagedPolicyFromPermissionSet",
-			"PutPermissionsBoundaryToPermissionSet", "DeletePermissionsBoundaryFromPermissionSet",
-			"ProvisionPermissionSet":
-			if tfawserr.ErrCodeEquals(err, ssoadmin_sdkv1.ErrCodeConflictException, ssoadmin_sdkv1.ErrCodeThrottlingException) {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
-		}
-	})
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ssoadmin.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return conn, nil
+	return ssoadmin.NewFromConfig(cfg, func(o *ssoadmin.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws.String(endpoint)
+		}
+
+		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+			if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.ThrottlingException](err) {
+				return aws.TrueTernary
+			}
+			return aws.UnknownTernary // Delegate to configured Retryer.
+		}))
+	}), nil
 }

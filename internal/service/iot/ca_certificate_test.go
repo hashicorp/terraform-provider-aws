@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTCACertificate_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func TestAccIoTCACertificate_basic(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "SNI_ONLY"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
@@ -59,7 +59,7 @@ func TestAccIoTCACertificate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +128,7 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
@@ -139,7 +139,7 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_certificate_pem"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_mode", "DEFAULT"),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_version"),
@@ -157,6 +157,36 @@ func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "allow_auto_registration", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIoTCACertificate_registrationConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iot_ca_certificate.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"tls": {
+			Source:            "hashicorp/tls",
+			VersionConstraint: "4.0.4",
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCACertificateConfig_registrationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCACertificateExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "registration_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "registration_config.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "registration_config.0.template_body"),
 				),
 			},
 		},
@@ -300,4 +330,150 @@ resource "aws_iot_ca_certificate" "test" {
 
 data "aws_iot_registration_code" "test" {}
 `, active, allowAutoRegistration)
+}
+
+func testAccCACertificateConfig_registrationConfig_iamRole() string {
+	return `
+resource "aws_iam_role" "test" {
+  name = "test_iot_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "iot.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+`
+}
+
+func testAccCACertificateConfig_registrationConfig() string {
+	return acctest.ConfigCompose(testAccCACertificateConfig_registrationConfig_iamRole(), `
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "tls_self_signed_cert" "ca" {
+  private_key_pem = tls_private_key.ca.private_key_pem
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
+  validity_period_hours = 12
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+  is_ca_certificate = true
+}
+
+resource "tls_private_key" "ca" {
+  algorithm = "RSA"
+}
+
+resource "tls_cert_request" "verification" {
+  private_key_pem = tls_private_key.verification.private_key_pem
+  subject {
+    common_name = data.aws_iot_registration_code.test.registration_code
+  }
+}
+
+resource "tls_private_key" "verification" {
+  algorithm = "RSA"
+}
+
+resource "tls_locally_signed_cert" "verification" {
+  cert_request_pem      = tls_cert_request.verification.cert_request_pem
+  ca_private_key_pem    = tls_private_key.ca.private_key_pem
+  ca_cert_pem           = tls_self_signed_cert.ca.cert_pem
+  validity_period_hours = 12
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_iot_ca_certificate" "test" {
+  active                       = true
+  allow_auto_registration      = true
+  ca_certificate_pem           = tls_self_signed_cert.ca.cert_pem
+  certificate_mode             = "DEFAULT"
+  verification_certificate_pem = tls_locally_signed_cert.verification.cert_pem
+  registration_config {
+    role_arn      = aws_iam_role.test.arn
+    template_body = <<EOF
+{
+  "Parameters": {
+    "AWS::IoT::Certificate::CommonName": {
+      "Type": "String"
+    },
+    "AWS::IoT::Certificate::SerialNumber": {
+      "Type": "String"
+    },
+    "AWS::IoT::Certificate::Country": {
+      "Type": "String"
+    },
+    "AWS::IoT::Certificate::Id": {
+      "Type": "String"
+    }
+  },
+  "Resources": {
+    "thing": {
+      "Type":"AWS::IoT::Thing",
+      "Properties": {
+        "ThingName": {
+          "Ref": "AWS::IoT::Certificate::CommonName"
+        },
+        "AttributePayload": {
+          "version":"v1",
+          "serialNumber": {
+            "Ref": "AWS::IoT::Certificate::SerialNumber"
+          }
+        },
+        "ThingTypeName": "lightBulb-versionA",
+        "ThingGroups": [
+          "v1-lightbulbs",
+          {
+            "Ref": "AWS::IoT::Certificate::Country"
+          }
+        ]
+      },
+      "OverrideSettings": {
+        "AttributePayload": "MERGE",
+        "ThingTypeName": "REPLACE",
+        "ThingGroups": "DO_NOTHING"
+      }
+    },
+    "certificate": {
+      "Type": "AWS::IoT::Certificate",
+      "Properties": {
+        "CertificateId": {
+          "Ref": "AWS::IoT::Certificate::Id"
+        },
+        "Status": "ACTIVE"
+      }
+    },
+    "policy": {
+      "Type": "AWS::IoT::Policy",
+      "Properties": {
+        "PolicyDocument":"{ \"Version\": \"2012-10-17\", \"Statement\": [{ \"Effect\": \"Allow\", \"Action\":[\"iot:Publish\"], \"Resource\": [\"arn:${data.aws_partition.current.partition}:iot:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:topic/foo/bar\"] }] }"
+      }
+    }
+  } 
+}
+    EOF
+  }
+}
+
+data "aws_iot_registration_code" "test" {}
+`)
 }

@@ -17,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_macie2_account")
@@ -38,7 +40,7 @@ func ResourceAccount() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(macie2.FindingPublishingFrequency_Values(), false),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -48,7 +50,7 @@ func ResourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,6 +63,8 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.EnableMacieInput{
@@ -70,7 +74,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("finding_publishing_frequency"); ok {
 		input.FindingPublishingFrequency = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input.Status = aws.String(v.(string))
 	}
 
@@ -92,15 +96,17 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("enabling Macie Account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceAccountRead(ctx, d, meta)
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.GetMacieSessionInput{}
@@ -111,23 +117,25 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie not enabled for AWS account (%s), removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Macie Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Macie Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("status", resp.Status)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("finding_publishing_frequency", resp.FindingPublishingFrequency)
 	d.Set("service_role", resp.ServiceRole)
-	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 
-	return nil
+	return diags
 }
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.UpdateMacieSessionInput{}
@@ -136,19 +144,21 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.FindingPublishingFrequency = aws.String(d.Get("finding_publishing_frequency").(string))
 	}
 
-	if d.HasChange("status") {
-		input.Status = aws.String(d.Get("status").(string))
+	if d.HasChange(names.AttrStatus) {
+		input.Status = aws.String(d.Get(names.AttrStatus).(string))
 	}
 
 	_, err := conn.UpdateMacieSessionWithContext(ctx, input)
 	if err != nil {
-		return diag.Errorf("updating Macie Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Macie Account (%s): %s", d.Id(), err)
 	}
 
-	return resourceAccountRead(ctx, d, meta)
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
 func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DisableMacieInput{}
@@ -178,10 +188,10 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.Errorf("disabling Macie Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling Macie Account (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

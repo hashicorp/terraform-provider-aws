@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
@@ -19,7 +19,7 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -30,12 +30,17 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches_enable_non_security", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "default_baseline", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "description", "Default Patch Baseline for CentOS Provided by AWS."),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Default Patch Baseline for CentOS Provided by AWS."),
 					resource.TestCheckResourceAttr(dataSourceName, "global_filter.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", "AWS-CentOSDefaultPatchBaseline"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "AWS-CentOSDefaultPatchBaseline"),
 					resource.TestCheckResourceAttr(dataSourceName, "rejected_patches.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
 					resource.TestCheckResourceAttr(dataSourceName, "source.#", "0"),
+					acctest.CheckResourceAttrJMES(dataSourceName, "json", "ApprovedPatches|length(@)", "0"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "Name", dataSourceName, names.AttrName),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "Description", dataSourceName, names.AttrDescription),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "ApprovedPatchesEnableNonSecurity", dataSourceName, "approved_patches_enable_non_security"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "OperatingSystem", dataSourceName, "operating_system"),
 				),
 			},
 		},
@@ -50,7 +55,7 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,9 +66,9 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "approved_patches_compliance_level", resourceName, "approved_patches_compliance_level"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "approved_patches_enable_non_security", resourceName, "approved_patches_enable_non_security"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "approval_rule", resourceName, "approval_rule"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "global_filter.#", resourceName, "global_filter.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "operating_system", resourceName, "operating_system"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rejected_patches", resourceName, "rejected_patches"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rejected_patches_action", resourceName, "rejected_patches_action"),

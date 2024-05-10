@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_detective_organization_admin_account")
@@ -32,7 +34,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -43,9 +45,11 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	input := &detective.EnableOrganizationAdminAccountInput{
 		AccountId: aws.String(accountID),
 	}
@@ -53,7 +57,7 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("enabling Detective Organization Admin Account (%s): %s", accountID, err)
+		return sdkdiag.AppendErrorf(diags, "enabling Detective Organization Admin Account (%s): %s", accountID, err)
 	}
 
 	d.SetId(accountID)
@@ -63,13 +67,15 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Detective Organization Admin Account (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Detective Organization Admin Account (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceOrganizationAdminAccountRead(ctx, d, meta)
+	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	administrator, err := FindOrganizationAdminAccountByAccountID(ctx, conn, d.Id())
@@ -77,29 +83,31 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Detective Organization Admin Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", administrator.AccountId)
+	d.Set(names.AttrAccountID, administrator.AccountId)
 
-	return nil
+	return diags
 }
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, &detective.DisableOrganizationAdminAccountInput{})
 
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling Detective Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
@@ -107,10 +115,10 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	})
 
 	if err != nil {
-		return diag.Errorf("waiting for Detective Organization Admin Account (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Detective Organization Admin Account (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindOrganizationAdminAccountByAccountID(ctx context.Context, conn *detective.Detective, accountID string) (*detective.Administrator, error) {

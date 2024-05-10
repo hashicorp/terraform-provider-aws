@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
@@ -144,7 +145,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +154,7 @@ func TestAccOpenSearchDomain_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestMatchResourceAttr(resourceName, "dashboard_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_dashboards`)),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -177,7 +178,7 @@ func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,7 +222,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -232,7 +233,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.0.custom_endpoint_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_endpoint_options.0.custom_endpoint"),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_endpoint_options.0.custom_endpoint_certificate_arn", certResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -269,7 +270,7 @@ func TestAccOpenSearchDomain_Cluster_zoneAwareness(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -333,7 +334,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -342,7 +343,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "false",
+						names.AttrEnabled: "false",
 					})),
 			},
 			{
@@ -356,7 +357,7 @@ func TestAccOpenSearchDomain_Cluster_coldStorage(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cluster_config.0.cold_storage_options.*", map[string]string{
-						"enabled": "true",
+						names.AttrEnabled: "true",
 					})),
 			},
 		},
@@ -371,7 +372,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -429,7 +430,7 @@ func TestAccOpenSearchDomain_Cluster_dedicatedMaster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -473,7 +474,7 @@ func TestAccOpenSearchDomain_Cluster_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -510,7 +511,7 @@ func TestAccOpenSearchDomain_Cluster_multiAzWithStandbyEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -550,7 +551,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
@@ -583,7 +584,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 				),
 				ExpectError: regexache.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
@@ -603,7 +604,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -612,7 +613,7 @@ func TestAccOpenSearchDomain_v23(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
-						resourceName, "engine_version", "Elasticsearch_2.3"),
+						resourceName, names.AttrEngineVersion, "Elasticsearch_2.3"),
 				),
 			},
 			{
@@ -637,7 +638,7 @@ func TestAccOpenSearchDomain_complex(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -669,7 +670,7 @@ func TestAccOpenSearchDomain_VPC_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -697,7 +698,7 @@ func TestAccOpenSearchDomain_VPC_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -737,7 +738,7 @@ func TestAccOpenSearchDomain_VPC_internetToVPCEndpoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -776,15 +777,15 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime),
+				Config: testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
@@ -795,6 +796,26 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.7"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "true"),
 				),
 			},
 			{
@@ -819,7 +840,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_userDB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -857,7 +878,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_anonymousAuth(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -902,7 +923,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_iam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -940,7 +961,7 @@ func TestAccOpenSearchDomain_AdvancedSecurityOptions_disabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -977,7 +998,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_indexSlowLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1013,7 +1034,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_searchSlowLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1049,7 +1070,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_applicationLogs(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1085,7 +1106,7 @@ func TestAccOpenSearchDomain_LogPublishingOptions_auditLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1127,7 +1148,7 @@ func TestAccOpenSearchDomain_CognitoOptions_createAndRemove(t *testing.T) {
 			testAccPreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1171,7 +1192,7 @@ func TestAccOpenSearchDomain_CognitoOptions_update(t *testing.T) {
 			testAccPreCheckCognitoIdentityProvider(ctx, t)
 			testAccPreCheckIAMServiceLinkedRole(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1211,7 +1232,7 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1231,6 +1252,51 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Policy_addPrincipal(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	resourceName := "aws_opensearch_domain.test"
+	rName := testAccRandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           rName,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"access_policies"}, // Principals is a set, and `structure.NormalizeJsonString` doesn't guarantee order
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1243,7 +1309,7 @@ func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1273,7 +1339,7 @@ func TestAccOpenSearchDomain_Encryption_atRestDefaultKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1306,7 +1372,7 @@ func TestAccOpenSearchDomain_Encryption_atRestSpecifyKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1339,7 +1405,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1381,7 +1447,7 @@ func TestAccOpenSearchDomain_Encryption_atRestEnableLegacy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1415,7 +1481,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1448,7 +1514,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1490,7 +1556,7 @@ func TestAccOpenSearchDomain_Encryption_nodeToNodeEnableLegacy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1531,7 +1597,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1593,7 +1659,7 @@ func TestAccOpenSearchDomain_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1644,7 +1710,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1700,7 +1766,7 @@ func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1746,7 +1812,7 @@ func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1781,7 +1847,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1789,7 +1855,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Config: testAccDomainConfig_clusterUpdateVersion(rName, "Elasticsearch_5.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.5"),
 				),
 			},
 			{
@@ -1803,7 +1869,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain2),
 					testAccCheckDomainNotRecreated(&domain1, &domain2), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_5.6"),
 				),
 			},
 			{
@@ -1811,7 +1877,7 @@ func TestAccOpenSearchDomain_versionUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain3),
 					testAccCheckDomainNotRecreated(&domain2, &domain3), // note: this check does not work and always passes
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "Elasticsearch_6.3"),
 				),
 			},
 		}})
@@ -1829,7 +1895,7 @@ func TestAccOpenSearchDomain_softwareUpdateOptions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1861,7 +1927,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2064,7 +2130,7 @@ func testAccCheckDomainExists(ctx context.Context, n string, domain *opensearchs
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
-		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+		resp, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
 		}
@@ -2122,7 +2188,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
-			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			_, err := tfopensearch.FindDomainByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2182,7 +2248,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
+func testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
@@ -2206,10 +2272,29 @@ resource "aws_opensearch_domain" "test" {
     }
 
     rollback_on_disable = "NO_ROLLBACK"
-
   }
 }
 `, rName, autoTuneStartAtTime)
+}
+
+func testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  auto_tune_options {
+    desired_state       = "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+    use_off_peak_window = true
+  }
+}
+`, rName)
 }
 
 func testAccDomainConfig_disabledEBSNullVolume(rName string) string {
@@ -2782,6 +2867,51 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  access_policies = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    principals {
+      type        = "AWS"
+      identifiers = aws_iam_role.test[*].arn
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  count              = %[2]d
+  name               = "%[1]s-${count.index}"
+  assume_role_policy = data.aws_iam_policy_document.role.json
+}
+
+data "aws_iam_policy_document" "role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+`, rName, roleCount)
 }
 
 func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {

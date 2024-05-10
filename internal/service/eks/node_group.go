@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -60,7 +61,7 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.AMITypes](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +106,7 @@ func resourceNodeGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -113,7 +114,7 @@ func resourceNodeGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.name"},
 							ValidateFunc:  verify.ValidLaunchTemplateID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -121,7 +122,7 @@ func resourceNodeGroup() *schema.Resource {
 							ConflictsWith: []string{"launch_template.0.id"},
 							ValidateFunc:  verify.ValidLaunchTemplateName,
 						},
-						"version": {
+						names.AttrVersion: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -187,7 +188,7 @@ func resourceNodeGroup() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -225,11 +226,11 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -244,12 +245,12 @@ func resourceNodeGroup() *schema.Resource {
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 63),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 63),
@@ -290,7 +291,7 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -300,6 +301,8 @@ func resourceNodeGroup() *schema.Resource {
 }
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
@@ -310,7 +313,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName:        aws.String(clusterName),
 		NodegroupName:      aws.String(nodeGroupName),
 		NodeRole:           aws.String(d.Get("node_role_arn").(string)),
-		Subnets:            flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		Subnets:            flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:               getTagsIn(ctx),
 	}
 
@@ -358,31 +361,33 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.UpdateConfig = expandNodegroupUpdateConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateNodegroup(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EKS Node Group (%s): %s", groupID, err)
+		return sdkdiag.AppendErrorf(diags, "creating EKS Node Group (%s): %s", groupID, err)
 	}
 
 	d.SetId(groupID)
 
 	if _, err := waitNodegroupCreated(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EKS Node Group (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceNodeGroupRead(ctx, d, meta)
+	return append(diags, resourceNodeGroupRead(ctx, d, meta)...)
 }
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	nodeGroup, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
@@ -390,69 +395,71 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Node Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EKS Node Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Node Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("ami_type", nodeGroup.AmiType)
-	d.Set("arn", nodeGroup.NodegroupArn)
+	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
 	d.Set("cluster_name", nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
 	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
-		return diag.Errorf("setting launch_template: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
-		return diag.Errorf("setting remote_access: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
 	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
-		return diag.Errorf("setting resources: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
 		if err := d.Set("scaling_config", []interface{}{flattenNodeGroupScalingConfig(nodeGroup.ScalingConfig)}); err != nil {
-			return diag.Errorf("setting scaling_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting scaling_config: %s", err)
 		}
 	} else {
 		d.Set("scaling_config", nil)
 	}
-	d.Set("status", nodeGroup.Status)
-	d.Set("subnet_ids", nodeGroup.Subnets)
+	d.Set(names.AttrStatus, nodeGroup.Status)
+	d.Set(names.AttrSubnetIDs, nodeGroup.Subnets)
 	if err := d.Set("taint", flattenTaints(nodeGroup.Taints)); err != nil {
-		return diag.Errorf("setting taint: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting taint: %s", err)
 	}
 	if nodeGroup.UpdateConfig != nil {
 		if err := d.Set("update_config", []interface{}{flattenNodeGroupUpdateConfig(nodeGroup.UpdateConfig)}); err != nil {
-			return diag.Errorf("setting update_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting update_config: %s", err)
 		}
 	} else {
 		d.Set("update_config", nil)
 	}
-	d.Set("version", nodeGroup.Version)
+	d.Set(names.AttrVersion, nodeGroup.Version)
 
 	setTagsOut(ctx, nodeGroup.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Do any version update first.
-	if d.HasChanges("launch_template", "release_version", "version") {
+	if d.HasChanges("launch_template", "release_version", names.AttrVersion) {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
@@ -484,20 +491,20 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.ReleaseVersion = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("version"); ok && d.HasChange("version") {
+		if v, ok := d.GetOk(names.AttrVersion); ok && d.HasChange(names.AttrVersion) {
 			input.Version = aws.String(v.(string))
 		}
 
 		output, err := conn.UpdateNodegroupVersion(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EKS Node Group (%s) version: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) version: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -528,25 +535,27 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		output, err := conn.UpdateNodegroupConfig(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EKS Node Group (%s) config: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Node Group (%s) config: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitNodegroupUpdateSuccessful(ctx, conn, clusterName, nodeGroupName, updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
-	return resourceNodeGroupRead(ctx, d, meta)
+	return append(diags, resourceNodeGroupRead(ctx, d, meta)...)
 }
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
@@ -556,18 +565,18 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EKS Node Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EKS Node Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitNodegroupDeleted(ctx, conn, clusterName, nodeGroupName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EKS Node Group (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EKS Node Group (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findNodegroupByTwoPartKey(ctx context.Context, conn *eks.Client, clusterName, nodeGroupName string) (*types.Nodegroup, error) {
@@ -745,15 +754,15 @@ func expandLaunchTemplateSpecification(l []interface{}) *types.LaunchTemplateSpe
 
 	config := &types.LaunchTemplateSpecification{}
 
-	if v, ok := m["id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrID].(string); ok && v != "" {
 		config.Id = aws.String(v)
 	}
 
-	if v, ok := m["name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrName].(string); ok && v != "" {
 		config.Name = aws.String(v)
 	}
 
-	if v, ok := m["version"].(string); ok && v != "" {
+	if v, ok := m[names.AttrVersion].(string); ok && v != "" {
 		config.Version = aws.String(v)
 	}
 
@@ -798,11 +807,11 @@ func expandTaints(l []interface{}) []types.Taint {
 
 		taint := types.Taint{}
 
-		if k, ok := t["key"].(string); ok {
+		if k, ok := t[names.AttrKey].(string); ok {
 			taint.Key = aws.String(k)
 		}
 
-		if v, ok := t["value"].(string); ok {
+		if v, ok := t[names.AttrValue].(string); ok {
 			taint.Value = aws.String(v)
 		}
 
@@ -940,7 +949,7 @@ func flattenAutoScalingGroups(autoScalingGroups []types.AutoScalingGroup) []map[
 
 	for _, autoScalingGroup := range autoScalingGroups {
 		m := map[string]interface{}{
-			"name": aws.ToString(autoScalingGroup.Name),
+			names.AttrName: aws.ToString(autoScalingGroup.Name),
 		}
 
 		l = append(l, m)
@@ -957,15 +966,15 @@ func flattenLaunchTemplateSpecification(config *types.LaunchTemplateSpecificatio
 	m := map[string]interface{}{}
 
 	if v := config.Id; v != nil {
-		m["id"] = aws.ToString(v)
+		m[names.AttrID] = aws.ToString(v)
 	}
 
 	if v := config.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := config.Version; v != nil {
-		m["version"] = aws.ToString(v)
+		m[names.AttrVersion] = aws.ToString(v)
 	}
 
 	return []map[string]interface{}{m}
@@ -1046,8 +1055,8 @@ func flattenTaints(taints []types.Taint) []interface{} {
 
 	for _, taint := range taints {
 		t := make(map[string]interface{})
-		t["key"] = aws.ToString(taint.Key)
-		t["value"] = aws.ToString(taint.Value)
+		t[names.AttrKey] = aws.ToString(taint.Key)
+		t[names.AttrValue] = aws.ToString(taint.Value)
 		t["effect"] = taint.Effect
 
 		results = append(results, t)

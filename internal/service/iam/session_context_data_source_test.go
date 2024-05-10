@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAssumedRoleRoleSessionName(t *testing.T) {
@@ -108,15 +108,15 @@ func TestAccIAMSessionContextDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionContextDataSourceConfig_basic(rName, "/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_id", resourceName, "unique_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -132,14 +132,14 @@ func TestAccIAMSessionContextDataSource_withPath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionContextDataSourceConfig_basic(rName, "/this/is/a/long/path/", "session-id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_name", resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", "session-id"),
 				),
 			},
@@ -155,13 +155,13 @@ func TestAccIAMSessionContextDataSource_notAssumedRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionContextDataSourceConfig_notAssumed(rName, "/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -178,13 +178,13 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleWithPath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionContextDataSourceConfig_notAssumed(rName, "/this/is/a/long/path/"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "issuer_arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),
@@ -200,13 +200,13 @@ func TestAccIAMSessionContextDataSource_notAssumedRoleUser(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSessionContextDataSourceConfig_user(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrGlobalARN(dataSourceName, "arn", "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
+					acctest.CheckResourceAttrGlobalARN(dataSourceName, names.AttrARN, "iam", fmt.Sprintf("user/division/extra-division/not-assumed-role/%[1]s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "issuer_name", ""),
 					resource.TestCheckResourceAttr(dataSourceName, "session_name", ""),
 				),

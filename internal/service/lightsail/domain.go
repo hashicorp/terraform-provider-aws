@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_lightsail_domain")
@@ -23,12 +24,12 @@ func ResourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Schema: map[string]*schema.Schema{
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,14 +41,14 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	_, err := conn.CreateDomain(ctx, &lightsail.CreateDomainInput{
-		DomainName: aws.String(d.Get("domain_name").(string)),
+		DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
 	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Lightsail Domain: %s", err)
 	}
 
-	d.SetId(d.Get("domain_name").(string))
+	d.SetId(d.Get(names.AttrDomainName).(string))
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
@@ -68,7 +69,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Lightsail Domain (%s):%s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.Domain.Arn)
+	d.Set(names.AttrARN, resp.Domain.Arn)
 	return diags
 }
 
@@ -83,5 +84,5 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Domain (%s):%s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

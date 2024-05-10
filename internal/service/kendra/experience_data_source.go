@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_kendra_experience")
@@ -22,7 +24,7 @@ func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceExperienceRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,20 +74,20 @@ func DataSourceExperience() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -119,15 +121,15 @@ func DataSourceExperience() *schema.Resource {
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,6 +142,8 @@ func DataSourceExperience() *schema.Resource {
 }
 
 func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	experienceID := d.Get("experience_id").(string)
@@ -148,7 +152,7 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := FindExperienceByID(ctx, conn, experienceID, indexID)
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Experience (%s): %s", experienceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Experience (%s): %s", experienceID, err)
 	}
 
 	arn := arn.ARN{
@@ -158,26 +162,26 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexID, experienceID),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("error_message", resp.ErrorMessage)
 	d.Set("experience_id", resp.Id)
 	d.Set("index_id", resp.IndexId)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
-		return diag.Errorf("setting configuration argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
-		return diag.Errorf("setting endpoints argument: %s", err)
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(resp.Endpoints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", experienceID, indexID))
 
-	return nil
+	return diags
 }

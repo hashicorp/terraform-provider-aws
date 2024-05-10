@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEBSDefaultKMSKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccEC2EBSDefaultKMSKey_basic(t *testing.T) {
 				Config: testAccEBSDefaultKMSKeyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSDefaultKMSKey(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_arn", resourceNameKey, names.AttrARN),
 				),
 			},
 			{
@@ -52,16 +53,16 @@ func testAccCheckEBSDefaultKMSKeyDestroy(ctx context.Context) resource.TestCheck
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
 			return err
 		}
 
 		// Verify that the default key is now the account's AWS-managed default CMK.
-		if aws.StringValue(resp.KmsKeyId) != arn.String() {
-			return fmt.Errorf("Default CMK (%s) is not the account's AWS-managed default CMK (%s)", aws.StringValue(resp.KmsKeyId), arn.String())
+		if aws.ToString(resp.KmsKeyId) != arn.String() {
+			return fmt.Errorf("Default CMK (%s) is not the account's AWS-managed default CMK (%s)", aws.ToString(resp.KmsKeyId), arn.String())
 		}
 
 		return nil
@@ -84,16 +85,16 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
+		resp, err := conn.GetEbsDefaultKmsKeyId(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 		if err != nil {
 			return err
 		}
 
 		// Verify that the default key is not the account's AWS-managed default CMK.
-		if aws.StringValue(resp.KmsKeyId) == arn.String() {
-			return fmt.Errorf("Default CMK (%s) is the account's AWS-managed default CMK (%s)", aws.StringValue(resp.KmsKeyId), arn.String())
+		if aws.ToString(resp.KmsKeyId) == arn.String() {
+			return fmt.Errorf("Default CMK (%s) is the account's AWS-managed default CMK (%s)", aws.ToString(resp.KmsKeyId), arn.String())
 		}
 
 		return nil
@@ -102,14 +103,14 @@ func testAccCheckEBSDefaultKMSKey(ctx context.Context, name string) resource.Tes
 
 // testAccEBSManagedDefaultKey returns' the account's AWS-managed default CMK.
 func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSClient(ctx)
 
 	alias, err := tfkms.FindAliasByName(ctx, conn, "alias/aws/ebs")
 	if err != nil {
 		return nil, err
 	}
 
-	aliasARN, err := arn.Parse(aws.StringValue(alias.AliasArn))
+	aliasARN, err := arn.Parse(aws.ToString(alias.AliasArn))
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func testAccEBSManagedDefaultKey(ctx context.Context) (*arn.ARN, error) {
 		Service:   aliasARN.Service,
 		Region:    aliasARN.Region,
 		AccountID: aliasARN.AccountID,
-		Resource:  fmt.Sprintf("key/%s", aws.StringValue(alias.TargetKeyId)),
+		Resource:  fmt.Sprintf("key/%s", aws.ToString(alias.TargetKeyId)),
 	}
 
 	return &arn, nil

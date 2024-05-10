@@ -64,8 +64,8 @@ class MyConvertedCode extends TerraformStack {
 This data source supports the following arguments:
 
 * `bundleId` – (Optional) ID of the bundle.
-* `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
-* `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
+* `owner` – (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundleId`.
+* `name` – (Optional) Name of the bundle. You cannot combine this parameter with `bundleId`.
 
 ## Attribute Reference
 
@@ -91,4 +91,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `capacity` - Size of the user storage.
 
-<!-- cache-key: cdktf-0.19.0 input-fa51236e05e24e0256f2207788b1148c2c3ccab79c92b51106d255e1b69a9e3d -->
+<!-- cache-key: cdktf-0.20.1 input-fa51236e05e24e0256f2207788b1148c2c3ccab79c92b51106d255e1b69a9e3d -->

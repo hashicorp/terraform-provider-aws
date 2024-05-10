@@ -5,9 +5,8 @@ package amp
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	prometheusservice_sdkv1 "github.com/aws/aws-sdk-go/service/prometheusservice"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,18 +19,28 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newScraperResource,
+			Name:    "Scraper",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceWorkspace,
+			Factory:  dataSourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
+			Name:     "Workspace",
 		},
 		{
-			Factory:  DataSourceWorkspaces,
+			Factory:  dataSourceWorkspaces,
 			TypeName: "aws_prometheus_workspaces",
+			Name:     "Workspaces",
 		},
 	}
 }
@@ -39,19 +48,21 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAlertManagerDefinition,
+			Factory:  resourceAlertManagerDefinition,
 			TypeName: "aws_prometheus_alert_manager_definition",
+			Name:     "Alert Manager Definition",
 		},
 		{
-			Factory:  ResourceRuleGroupNamespace,
+			Factory:  resourceRuleGroupNamespace,
 			TypeName: "aws_prometheus_rule_group_namespace",
+			Name:     "Rule Group Namespace",
 		},
 		{
-			Factory:  ResourceWorkspace,
+			Factory:  resourceWorkspace,
 			TypeName: "aws_prometheus_workspace",
 			Name:     "Workspace",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -61,11 +72,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AMP
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*prometheusservice_sdkv1.PrometheusService, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*amp_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return prometheusservice_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return amp_sdkv2.NewFromConfig(cfg, func(o *amp_sdkv2.Options) {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

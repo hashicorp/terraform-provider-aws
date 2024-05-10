@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -81,9 +82,15 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_eip", &resource.Sweeper{
 		Name: "aws_eip",
 		Dependencies: []string{
+			"aws_eip_domain_name",
 			"aws_vpc",
 		},
 		F: sweepEIPs,
+	})
+
+	resource.AddTestSweepers("aws_eip_domain_name", &resource.Sweeper{
+		Name: "aws_eip_domain_name",
+		F:    sweepEIPDomainNames,
 	})
 
 	resource.AddTestSweepers("aws_flow_log", &resource.Sweeper{
@@ -220,7 +227,7 @@ func RegisterSweepers() {
 			"aws_codestarconnections_host",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
-			"aws_dms_replication_instance",
+			"aws_dms_replication_subnet_group",
 			"aws_docdb_subnet_group",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_instance_connect_endpoint",
@@ -328,20 +335,26 @@ func RegisterSweepers() {
 		F:    sweepVPCDHCPOptions,
 	})
 
-	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
-		Name: "aws_vpc_endpoint_service",
-		F:    sweepVPCEndpointServices,
-		Dependencies: []string{
-			"aws_vpc_endpoint",
-		},
-	})
-
 	resource.AddTestSweepers("aws_vpc_endpoint", &resource.Sweeper{
 		Name: "aws_vpc_endpoint",
 		F:    sweepVPCEndpoints,
 		Dependencies: []string{
 			"aws_route_table",
 			"aws_sagemaker_workforce",
+			"aws_vpc_endpoint_connection_accepter",
+		},
+	})
+
+	resource.AddTestSweepers("aws_vpc_endpoint_connection_accepter", &resource.Sweeper{
+		Name: "aws_vpc_endpoint_connection_accepter",
+		F:    sweepVPCEndpointConnectionAccepters,
+	})
+
+	resource.AddTestSweepers("aws_vpc_endpoint_service", &resource.Sweeper{
+		Name: "aws_vpc_endpoint_service",
+		F:    sweepVPCEndpointServices,
+		Dependencies: []string{
+			"aws_vpc_endpoint",
 		},
 	})
 
@@ -406,6 +419,43 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ec2_instance_connect_endpoint", &resource.Sweeper{
 		Name: "aws_ec2_instance_connect_endpoint",
 		F:    sweepInstanceConnectEndpoints,
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_trust_provider", &resource.Sweeper{
+		Name: "aws_verifiedaccess_trust_provider",
+		F:    sweepVerifiedAccessTrustProviders,
+		Dependencies: []string{
+			"aws_verifiedaccess_instance_trust_provider_attachment",
+		},
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_instance_trust_provider_attachment", &resource.Sweeper{
+		Name: "aws_verifiedaccess_instance_trust_provider_attachment",
+		F:    sweepVerifiedAccessTrustProviderAttachments,
+		Dependencies: []string{
+			"aws_verifiedaccess_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_group", &resource.Sweeper{
+		Name: "aws_verifiedaccess_group",
+		F:    sweepVerifiedAccessGroups,
+		Dependencies: []string{
+			"aws_verifiedaccess_endpoint",
+		},
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_endpoint", &resource.Sweeper{
+		Name: "aws_verifiedaccess_endpoint",
+		F:    sweepVerifiedAccessEndpoints,
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_instance", &resource.Sweeper{
+		Name: "aws_verifiedaccess_instance",
+		F:    sweepVerifiedAccessInstances,
+		Dependencies: []string{
+			"aws_verifiedaccess_trust_provider",
+		},
 	})
 }
 
@@ -801,15 +851,13 @@ func sweepEgressOnlyInternetGateways(region string) error {
 func sweepEIPs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.EC2Conn(ctx)
-
 	// There is currently no paginator or Marker/NextToken
 	input := &ec2.DescribeAddressesInput{}
+	conn := client.EC2Conn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeAddressesWithContext(ctx, input)
 
@@ -822,43 +870,76 @@ func sweepEIPs(region string) error {
 		return fmt.Errorf("error describing EC2 EIPs: %s", err)
 	}
 
-	if output == nil || len(output.Addresses) == 0 {
-		log.Print("[DEBUG] No EC2 EIPs to sweep")
-		return nil
-	}
+	for _, v := range output.Addresses {
+		publicIP := aws.StringValue(v.PublicIp)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
-	for _, address := range output.Addresses {
-		publicIP := aws.StringValue(address.PublicIp)
-
-		if address.AssociationId != nil {
-			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(address.AssociationId))
+		if v.AssociationId != nil {
+			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(v.AssociationId))
 			continue
 		}
 
-		r := ResourceEIP()
+		r := resourceEIP()
 		d := r.Data(nil)
-		if address.AllocationId != nil {
-			d.SetId(aws.StringValue(address.AllocationId))
+		if v.AllocationId != nil {
+			d.SetId(aws.StringValue(v.AllocationId))
 		} else {
-			d.SetId(aws.StringValue(address.PublicIp))
+			d.SetId(aws.StringValue(v.PublicIp))
 		}
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 EIPs (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
+	return nil
+}
+
+func sweepEIPDomainNames(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeAddressesAttributeInput{
+		Attribute: aws.String(ec2.AddressAttributeNameDomainName),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeAddressesAttributePagesWithContext(ctx, input, func(page *ec2.DescribeAddressesAttributeOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Addresses {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.AllocationId)),
+			))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EIP Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EIP Domain Names (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EIP Domain Names (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepFlowLogs(region string) error {
@@ -1066,7 +1147,7 @@ func sweepInternetGateways(region string) error {
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
-				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
+				d.Set(names.AttrVPCID, internetGateway.Attachments[0].VpcId)
 			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -1115,7 +1196,7 @@ func sweepKeyPairs(region string) error {
 	}
 
 	for _, v := range output.KeyPairs {
-		r := ResourceKeyPair()
+		r := resourceKeyPair()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.KeyName))
 
@@ -1239,7 +1320,7 @@ func sweepNetworkACLs(region string) error {
 				continue
 			}
 
-			r := ResourceNetworkACL()
+			r := resourceNetworkACL()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.NetworkAclId))
 
@@ -1247,9 +1328,9 @@ func sweepNetworkACLs(region string) error {
 			for _, v := range v.Associations {
 				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
-			d.Set("subnet_ids", subnetIDs)
+			d.Set(names.AttrSubnetIDs, subnetIDs)
 
-			d.Set("vpc_id", v.VpcId)
+			d.Set(names.AttrVPCID, v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -1298,7 +1379,7 @@ func sweepNetworkInterfaces(region string) error {
 				continue
 			}
 
-			r := ResourceNetworkInterface()
+			r := resourceNetworkInterface()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2113,7 +2194,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayPeeringAttachment()
+			r := resourceTransitGatewayPeeringAttachment()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2214,7 +2295,7 @@ func sweepVPCDHCPOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(v.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
+					if aws.StringValue(v.Values[0].Value) == client.EC2RegionalPrivateDNSSuffix(ctx) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(v.Key) == "domain-name-servers" {
@@ -2260,54 +2341,6 @@ func sweepVPCDHCPOptions(region string) error {
 	return nil
 }
 
-func sweepVPCEndpointServices(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.EC2Conn(ctx)
-	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeVpcEndpointServiceConfigurationsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointServiceConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.ServiceConfigurations {
-			if aws.StringValue(v.ServiceState) == ec2.ServiceStateDeleted {
-				continue
-			}
-
-			r := ResourceVPCEndpointService()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ServiceId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing EC2 VPC Endpoint Services (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 VPC Endpoint Services (%s): %w", region, err)
-	}
-
-	return nil
-}
-
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
@@ -2324,13 +2357,21 @@ func sweepVPCEndpoints(region string) error {
 		}
 
 		for _, v := range page.VpcEndpoints {
-			if aws.StringValue(v.State) == vpcEndpointStateDeleted {
+			id := aws.StringValue(v.VpcEndpointId)
+
+			if state := aws.StringValue(v.State); state == vpcEndpointStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, state)
+				continue
+			}
+
+			if requesterManaged := aws.BoolValue(v.RequesterManaged); requesterManaged {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: RequesterManaged=%t", id, requesterManaged)
 				continue
 			}
 
 			r := ResourceVPCEndpoint()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcEndpointId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -2351,6 +2392,103 @@ func sweepVPCEndpoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 VPC Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVPCEndpointConnectionAccepters(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVpcEndpointConnectionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVpcEndpointConnectionsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcEndpointConnections {
+			id := VPCEndpointConnectionAccepterCreateResourceID(aws.StringValue(v.ServiceId), aws.StringValue(v.VpcEndpointId))
+
+			r := ResourceVPCEndpointConnectionAccepter()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC Endpoint Connection sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 VPC Endpoint Connections (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPC Endpoint Connections (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVPCEndpointServices(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVpcEndpointServiceConfigurationsPagesWithContext(ctx, input, func(page *ec2.DescribeVpcEndpointServiceConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ServiceConfigurations {
+			id := aws.StringValue(v.ServiceId)
+
+			if state := aws.StringValue(v.ServiceState); state == ec2.ServiceStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint Service %s: ServiceState=%s", id, state)
+				continue
+			}
+
+			r := ResourceVPCEndpointService()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 VPC Endpoint Service sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 VPC Endpoint Services (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 VPC Endpoint Services (%s): %w", region, err)
 	}
 
 	return nil
@@ -2475,7 +2613,7 @@ func sweepVPNConnections(region string) error {
 			continue
 		}
 
-		r := ResourceVPNConnection()
+		r := resourceVPNConnection()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.VpnConnectionId))
 
@@ -2517,13 +2655,13 @@ func sweepVPNGateways(region string) error {
 			continue
 		}
 
-		r := ResourceVPNGateway()
+		r := resourceVPNGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.VpnGatewayId))
 
 		for _, v := range v.VpcAttachments {
 			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
-				d.Set("vpc_id", v.VpcId)
+				d.Set(names.AttrVPCID, v.VpcId)
 
 				break
 			}
@@ -2567,7 +2705,7 @@ func sweepCustomerGateways(region string) error {
 			continue
 		}
 
-		r := ResourceCustomerGateway()
+		r := resourceCustomerGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.CustomerGatewayId))
 
@@ -2786,8 +2924,8 @@ func sweepInstanceConnectEndpoints(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
-				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
+			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}
 
@@ -2807,6 +2945,232 @@ func sweepInstanceConnectEndpoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Instance Connect Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessEndpoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessEndpointsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessEndpoints {
+			r := ResourceVerifiedAccessEndpoint()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessEndpointId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Endpoint sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Endpoints (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessGroupsPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessGroups {
+			r := ResourceVerifiedAccessGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessGroupId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessInstances(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessInstancesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessInstances {
+			r := ResourceVerifiedAccessInstance()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessInstanceId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Instances (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Instances (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessTrustProviders(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessTrustProvidersPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessTrustProvidersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessTrustProviders {
+			r := ResourceVerifiedAccessTrustProvider()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessTrustProviderId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Trust Provider sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Trust Providers (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Trust Providers (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessTrustProviderAttachments(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessInstancesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessInstances {
+			vaiID := aws.StringValue(v.VerifiedAccessInstanceId)
+
+			for _, v := range v.VerifiedAccessTrustProviders {
+				vatpID := aws.StringValue(v.VerifiedAccessTrustProviderId)
+
+				r := ResourceVerifiedAccessInstanceTrustProviderAttachment()
+				d := r.Data(nil)
+				d.SetId(VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Instance Trust Provider Attachment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
 	}
 
 	return nil

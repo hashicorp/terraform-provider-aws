@@ -44,7 +44,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `hierarchyStructure` - Block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
+* `hierarchyStructure` - Block that defines the hierarchy structure's levels. The `hierarchyStructure` block is documented below.
 
 A `hierarchyStructure` block supports the following attributes:
 
@@ -60,4 +60,4 @@ Each level block supports the following attributes:
 * `id` -  The identifier of the hierarchy level.
 * `name` - Name of the user hierarchy level. Must not be more than 50 characters.
 
-<!-- cache-key: cdktf-0.19.0 input-67c7477b2b97d10d20fdb501a7e53bda8c43d8444a8ca3ea500fed342e44089c -->
+<!-- cache-key: cdktf-0.20.1 input-67c7477b2b97d10d20fdb501a7e53bda8c43d8444a8ca3ea500fed342e44089c -->

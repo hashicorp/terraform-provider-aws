@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,7 +50,7 @@ func ResourceConnectPeer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +111,7 @@ func ResourceConnectPeer() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -143,7 +144,7 @@ func ResourceConnectPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,7 +179,7 @@ func ResourceConnectPeer() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^arn:[^:]{1,63}:ec2:[^:]{0,63}:[^:]{0,63}:subnet\/subnet-[0-9a-f]{8,17}$|^$`), "Must be a valid subnet ARN"),
 				),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,6 +190,8 @@ func ResourceConnectPeer() *schema.Resource {
 }
 
 func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachmentID := d.Get("connect_attachment_id").(string)
@@ -245,19 +248,21 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 		})
 
 	if err != nil {
-		return diag.Errorf("creating Connect Peer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Peer: %s", err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*networkmanager.CreateConnectPeerOutput).ConnectPeer.ConnectPeerId))
 
 	if _, err := waitConnectPeerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Peer (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Peer (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectPeerRead(ctx, d, meta)
+	return append(diags, resourceConnectPeerRead(ctx, d, meta)...)
 }
 
 func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectPeer, err := FindConnectPeerByID(ctx, conn, d.Id())
@@ -265,11 +270,11 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connect Peer %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Connect Peer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -278,7 +283,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	bgpOptions := map[string]interface{}{}
 	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
 	d.Set("bgp_options", []interface{}{bgpOptions})
@@ -286,20 +291,20 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {
-		d.Set("created_at", aws.TimeValue(connectPeer.CreatedAt).Format(time.RFC3339))
+		d.Set(names.AttrCreatedAt, aws.TimeValue(connectPeer.CreatedAt).Format(time.RFC3339))
 	} else {
-		d.Set("created_at", nil)
+		d.Set(names.AttrCreatedAt, nil)
 	}
 	d.Set("edge_location", connectPeer.EdgeLocation)
 	d.Set("connect_attachment_id", connectPeer.ConnectAttachmentId)
 	d.Set("inside_cidr_blocks", connectPeer.Configuration.InsideCidrBlocks)
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
 	d.Set("subnet_arn", connectPeer.SubnetArn)
-	d.Set("state", connectPeer.State)
+	d.Set(names.AttrState, connectPeer.State)
 
 	setTagsOut(ctx, connectPeer.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -308,6 +313,8 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Peer: %s", d.Id())
@@ -316,18 +323,18 @@ func resourceConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Connect Peer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Connect Peer (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectPeerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Peer (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Peer (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPeerOptions(o map[string]interface{}) *networkmanager.BgpOptions {
@@ -403,7 +410,7 @@ func flattenPeerConfiguration(apiObject *networkmanager.ConnectPeerConfiguration
 		confMap["peer_address"] = aws.StringValue(v)
 	}
 	if v := apiObject.Protocol; v != nil {
-		confMap["protocol"] = aws.StringValue(v)
+		confMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	return confMap

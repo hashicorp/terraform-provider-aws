@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDomain_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func testAccDomain_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,16 +38,16 @@ func testAccDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "0"),
@@ -70,7 +71,7 @@ func testAccDomain_domainSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccDomain_kms(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func testAccDomain_kms(t *testing.T) {
 				Config: testAccDomainConfig_kms(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", "key_id"),
 				),
 			},
 			{
@@ -137,7 +138,7 @@ func testAccDomain_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +185,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -222,7 +223,7 @@ func testAccDomain_sharingSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -255,7 +256,7 @@ func testAccDomain_canvasAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -287,7 +288,7 @@ func testAccDomain_modelRegisterSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -319,7 +320,7 @@ func testAccDomain_kendraSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -351,7 +352,7 @@ func testAccDomain_directDeploySettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -383,7 +384,7 @@ func testAccDomain_identityProviderOAuthSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -395,7 +396,7 @@ func testAccDomain_identityProviderOAuthSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.status", "DISABLED"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.secret_arn", "aws_secretsmanager_secret.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.identity_provider_oauth_settings.0.secret_arn", "aws_secretsmanager_secret.test", names.AttrARN),
 				),
 			},
 			{
@@ -416,7 +417,7 @@ func testAccDomain_workspaceSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -448,7 +449,7 @@ func testAccDomain_tensorboardAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -480,7 +481,7 @@ func testAccDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -492,7 +493,7 @@ func testAccDomain_tensorboardAppSettingsWithImage(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.tensor_board_app_settings.0.default_resource_spec.0.sagemaker_image_arn", "aws_sagemaker_image.test", names.AttrARN),
 				),
 			},
 			{
@@ -513,7 +514,7 @@ func testAccDomain_rSessionAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -545,7 +546,7 @@ func testAccDomain_rStudioServerProAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -597,7 +598,7 @@ func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -621,6 +622,70 @@ func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_codeEditorAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_codeEditorAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_jupyterLabAppSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -629,7 +694,7 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -642,7 +707,7 @@ func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.lifecycle_config_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
 				),
 			},
 			{
@@ -668,7 +733,7 @@ func testAccDomain_kernelGatewayAppSettings_customImage(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -707,7 +772,7 @@ func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -719,7 +784,7 @@ func testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage(t 
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.sagemaker_image_version_arn", "aws_sagemaker_image_version.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.app_image_config_name", "aws_sagemaker_app_image_config.test", "app_image_config_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.kernel_gateway_app_settings.0.custom_image.0.image_name", "aws_sagemaker_image.test", "image_name"),
 				),
@@ -742,7 +807,7 @@ func testAccDomain_jupyterServerAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -774,7 +839,7 @@ func testAccDomain_jupyterServerAppSettings_code(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -810,7 +875,7 @@ func testAccDomain_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -834,7 +899,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -842,15 +907,15 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "IAM"),
 					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "PublicInternetOnly"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`domain/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
 				),
@@ -890,7 +955,7 @@ func testAccDomain_spaceSettingsKernelGatewayAppSettings(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -927,6 +992,105 @@ func testAccDomain_spaceSettingsKernelGatewayAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.kernel_gateway_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.small"),
 				),
+			},
+		},
+	})
+}
+
+func testAccDomain_posix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_posix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_spaceStorageSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_spaceStorageSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_efs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_efs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.custom_file_system_config.0.efs_file_system_config.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -1027,6 +1191,29 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_posix(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+    custom_posix_user_config {
+      gid = 1001
+      uid = 10000
+    }
   }
 
   retention_policy {
@@ -1553,6 +1740,31 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, state))
 }
 
+func testAccDomainConfig_codeEditorAppSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    code_editor_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
 func testAccDomainConfig_kernelGatewayAppSettings(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -1565,6 +1777,31 @@ resource "aws_sagemaker_domain" "test" {
     execution_role = aws_iam_role.test.arn
 
     kernel_gateway_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_jupyterLabAppSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
       default_resource_spec {
         instance_type = "ml.t3.micro"
       }
@@ -1746,4 +1983,66 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, baseImage))
+}
+
+func testAccDomainConfig_efs(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    custom_file_system_config {
+      efs_file_system_config {
+        file_system_id   = aws_efs_mount_target.test.file_system_id
+        file_system_path = "/"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_spaceStorageSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+    space_storage_settings {
+      default_ebs_storage_settings {
+        default_ebs_volume_size_in_gb = 10
+        maximum_ebs_volume_size_in_gb = 200
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
 }

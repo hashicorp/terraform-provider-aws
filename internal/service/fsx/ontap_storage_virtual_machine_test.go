@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +38,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`storage-virtual-machine/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`storage-virtual-machine/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.iscsi.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.iscsi.0.dns_name"),
@@ -46,7 +47,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.nfs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.nfs.0.dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "subtype", fsx.StorageVirtualMachineSubtypeDefault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
@@ -69,7 +70,7 @@ func TestAccFSxONTAPStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccFSxONTAPStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 				Config: testAccONTAPStorageVirtualMachineConfig_rootVolumeSecurityStyle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexache.MustCompile(`storage-virtual-machine/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`storage-virtual-machine/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.iscsi.#", "1"),
@@ -109,7 +110,7 @@ func TestAccFSxONTAPStorageVirtualMachine_svmAdminPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +147,7 @@ func TestAccFSxONTAPStorageVirtualMachine_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,7 +172,7 @@ func TestAccFSxONTAPStorageVirtualMachine_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +180,7 @@ func TestAccFSxONTAPStorageVirtualMachine_name(t *testing.T) {
 				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -192,7 +193,7 @@ func TestAccFSxONTAPStorageVirtualMachine_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
 					testAccCheckONTAPStorageVirtualMachineRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -207,7 +208,7 @@ func TestAccFSxONTAPStorageVirtualMachine_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -259,7 +260,7 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +303,7 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryJoin(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckONTAPStorageVirtualMachineDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_user")
@@ -23,7 +25,7 @@ func DataSourceUser() *schema.Resource {
 		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,16 +57,16 @@ func DataSourceUser() *schema.Resource {
 					},
 				},
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "user_id"},
+				ExactlyOneOf: []string{names.AttrName, "user_id"},
 			},
 			"phone_config": {
 				Type:     schema.TypeList,
@@ -101,22 +103,24 @@ func DataSourceUser() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"user_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"user_id", "name"},
+				ExactlyOneOf: []string{"user_id", names.AttrName},
 			},
 		},
 	}
 }
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeUserInput{
 		InstanceId: aws.String(instanceID),
@@ -124,16 +128,16 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("user_id"); ok {
 		input.UserId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		userSummary, err := dataSourceGetUserSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect User Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect User Summary by name (%s): %s", name, err)
 		}
 
 		if userSummary == nil {
-			return diag.Errorf("finding Connect User Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect User Summary by name (%s): not found", name)
 		}
 
 		input.UserId = userSummary.Id
@@ -142,39 +146,39 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.DescribeUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect User: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect User: %s", err)
 	}
 
 	if resp == nil || resp.User == nil {
-		return diag.Errorf("getting Connect User: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect User: empty response")
 	}
 
 	user := resp.User
 
-	d.Set("arn", user.Arn)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("directory_user_id", user.DirectoryUserId)
 	d.Set("hierarchy_group_id", user.HierarchyGroupId)
-	d.Set("instance_id", instanceID)
-	d.Set("name", user.Username)
+	d.Set(names.AttrInstanceID, instanceID)
+	d.Set(names.AttrName, user.Username)
 	d.Set("routing_profile_id", user.RoutingProfileId)
 	d.Set("security_profile_ids", flex.FlattenStringSet(user.SecurityProfileIds))
 	d.Set("user_id", user.Id)
 
 	if err := d.Set("identity_info", flattenIdentityInfo(user.IdentityInfo)); err != nil {
-		return diag.Errorf("setting identity_info: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting identity_info: %s", err)
 	}
 
 	if err := d.Set("phone_config", flattenPhoneConfig(user.PhoneConfig)); err != nil {
-		return diag.Errorf("setting phone_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting phone_config: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(user.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetUserSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.UserSummary, error) {

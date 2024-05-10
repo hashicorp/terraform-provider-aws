@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDocDBClusterInstance_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,26 +37,26 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf("db:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("db:%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, "ca_cert_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "cluster_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "enable_performance_insights"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "performance_insights_kms_key_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "port"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "publicly_accessible"),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_encrypted"),
@@ -76,7 +77,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 					resource.TestCheckResourceAttr(resourceName, "promotion_tier", "3"),
 				),
 			},
@@ -92,7 +93,7 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccDocDBClusterInstance_identifierGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +149,7 @@ func TestAccDocDBClusterInstance_identifierPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -181,7 +182,7 @@ func TestAccDocDBClusterInstance_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -231,7 +232,7 @@ func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -266,7 +267,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -274,7 +275,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 				Config: testAccClusterInstanceConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 				),
 			},
 
@@ -298,7 +299,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -306,7 +307,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 				Config: testAccClusterInstanceConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 
@@ -330,7 +331,7 @@ func TestAccDocDBClusterInstance_copyTagsToSnapshot(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -6,6 +6,7 @@ package elb
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -13,12 +14,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -73,7 +73,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -81,7 +81,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -95,11 +95,11 @@ func ResourceLoadBalancer() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -221,23 +221,23 @@ func ResourceLoadBalancer() *schema.Resource {
 				},
 				Set: ListenerHash,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  ValidName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validNamePrefix,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -278,8 +278,8 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	elbName := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
 	input := &elb.CreateLoadBalancerInput{
@@ -288,7 +288,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -296,7 +296,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Scheme = aws.String("internal")
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -346,8 +346,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
-	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
@@ -362,9 +362,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("internal", scheme)
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
+	d.Set(names.AttrName, lb.LoadBalancerName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
 	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
@@ -551,9 +551,9 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		if logs := d.Get("access_logs").([]interface{}); len(logs) == 1 {
 			l := logs[0].(map[string]interface{})
 			input.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
-				Enabled:        aws.Bool(l["enabled"].(bool)),
+				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
 				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
-				S3BucketName:   aws.String(l["bucket"].(string)),
+				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
 				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
 			}
 		} else if len(logs) == 0 {
@@ -635,10 +635,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &elb.ApplySecurityGroupsToLoadBalancerInput{
 			LoadBalancerName: aws.String(d.Id()),
-			SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups:   flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ApplySecurityGroupsToLoadBalancerWithContext(ctx, input)
@@ -648,8 +648,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("availability_zones") {
-		o, n := d.GetChange("availability_zones")
+	if d.HasChange(names.AttrAvailabilityZones) {
+		o, n := d.GetChange(names.AttrAvailabilityZones)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
@@ -736,7 +736,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s): %s", d.Id(), err)
 	}
 
-	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), d.Id())
+	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Client(ctx), d.Id())
 
 	if err != nil {
 		diags = sdkdiag.AppendWarningf(diags, "cleaning up ELB Classic Load Balancer (%s) ENIs: %s", d.Id(), err)
@@ -930,15 +930,15 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func deleteNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
+func deleteNetworkInterfaces(ctx context.Context, conn *ec2.Client, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-elb", "ELB "+name)
 
 	if err != nil {
 		return err
 	}
 
-	var errs *multierror.Error
+	var errs []error
 
 	for _, networkInterface := range networkInterfaces {
 		if networkInterface.Attachment == nil {
@@ -948,22 +948,18 @@ func deleteNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) er
 		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
 		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
 
-		err = tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
+		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
+			errs = append(errs, err)
 
 			continue
 		}
 
-		err = tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
+		if err := tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			errs = append(errs, err)
 
 			continue
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }

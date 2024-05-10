@@ -56,12 +56,12 @@ This data source exports the following attributes in addition to the arguments a
 * `securityGroupId` - ID of the security group created by the directory/connector.
 * `tags` – A map of tags assigned to the directory/connector.
 
- `vpcSettings` (for `simpleAd` and `microsoftAd`) is also exported with the following attributes:
+ `vpcSettings` (for `SimpleAD` and `MicrosoftAD`) is also exported with the following attributes:
 
 * `subnetIds` - Identifiers of the subnets for the directory servers (2 subnets in 2 different AZs).
 * `vpcId` - ID of the VPC that the directory is in.
 
-`connectSettings` (for `adConnector`) is also exported with the following attributes:
+`connectSettings` (for `ADConnector`) is also exported with the following attributes:
 
 * `connectIps` - IP addresses of the AD Connector servers.
 * `customerUsername` - Username corresponding to the password provided.
@@ -79,4 +79,4 @@ This data source exports the following attributes in addition to the arguments a
 * `radiusTimeout` - Amount of time, in seconds, to wait for the RADIUS server to respond.
 * `useSameUsername` - Not currently used.
 
-<!-- cache-key: cdktf-0.19.0 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->
+<!-- cache-key: cdktf-0.20.1 input-a0542c4af1900563814b75f11b6b9079e80d58db377a8603ef5e97154a0bd43f -->

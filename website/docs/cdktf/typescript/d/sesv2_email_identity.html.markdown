@@ -48,14 +48,14 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Email Identity.
 * `dkimSigningAttributes` - A list of objects that contains at most one element with information about the private key and selector that you want to use to configure DKIM for the identity for Bring Your Own DKIM (BYODKIM) for the identity, or, configures the key length to be used for Easy DKIM.
-    * `current_signing_key_length` - [Easy DKIM] The key length of the DKIM key pair in use.
-    * `last_key_generation_timestamp` - [Easy DKIM] The last time a key pair was generated for this identity.
-    * `next_signing_key_length` - [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day.
-    * `signing_attributes_origin` - A string that indicates how DKIM was configured for the identity. `AWS_SES` indicates that DKIM was configured for the identity by using Easy DKIM. `EXTERNAL` indicates that DKIM was configured for the identity by using Bring Your Own DKIM (BYODKIM).
+    * `currentSigningKeyLength` - [Easy DKIM] The key length of the DKIM key pair in use.
+    * `lastKeyGenerationTimestamp` - [Easy DKIM] The last time a key pair was generated for this identity.
+    * `nextSigningKeyLength` - [Easy DKIM] The key length of the future DKIM key pair to be generated. This can be changed at most once per day.
+    * `signingAttributesOrigin` - A string that indicates how DKIM was configured for the identity. `AWS_SES` indicates that DKIM was configured for the identity by using Easy DKIM. `EXTERNAL` indicates that DKIM was configured for the identity by using Bring Your Own DKIM (BYODKIM).
     * `status` - Describes whether or not Amazon SES has successfully located the DKIM records in the DNS records for the domain. See the [AWS SES API v2 Reference](https://docs.aws.amazon.com/ses/latest/APIReference-V2/API_DkimAttributes.html#SES-Type-DkimAttributes-Status) for supported statuses.
     * `tokens` - If you used Easy DKIM to configure DKIM authentication for the domain, then this object contains a set of unique strings that you use to create a set of CNAME records that you add to the DNS configuration for your domain. When Amazon SES detects these records in the DNS configuration for your domain, the DKIM authentication process is complete. If you configured DKIM authentication for the domain by providing your own public-private key pair, then this object contains the selector for the public key.
 * `identityType` - The email identity type. Valid values: `EMAIL_ADDRESS`, `DOMAIN`.
 * `tags` - Key-value mapping of resource tags.
 * `verifiedForSendingStatus` - Specifies whether or not the identity is verified.
 
-<!-- cache-key: cdktf-0.19.0 input-7c12091698113e4874168fd26ec7c1c02c1487b040cff1044c5b20751c66d041 -->
+<!-- cache-key: cdktf-0.20.1 input-7c12091698113e4874168fd26ec7c1c02c1487b040cff1044c5b20751c66d041 -->

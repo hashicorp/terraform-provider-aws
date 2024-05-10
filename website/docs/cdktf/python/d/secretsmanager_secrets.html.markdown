@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arns` - Set of ARNs of the matched Secrets Manager secrets.
 * `names` - Set of names of the matched Secrets Manager secrets.
 
-<!-- cache-key: cdktf-0.19.0 input-150d44c91f421068bbfdaf75b6d510764b7e066887fe235c7afddf8fee2eaa61 -->
+<!-- cache-key: cdktf-0.20.1 input-150d44c91f421068bbfdaf75b6d510764b7e066887fe235c7afddf8fee2eaa61 -->

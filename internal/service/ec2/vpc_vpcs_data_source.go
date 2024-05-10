@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpcs")
@@ -26,13 +27,13 @@ func DataSourceVPCs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -43,15 +44,15 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	input := &ec2.DescribeVpcsInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			BuildCustomFilterList(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {

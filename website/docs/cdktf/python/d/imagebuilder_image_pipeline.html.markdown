@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the image pipeline.
 * `tags` - Key-value map of resource tags for the image pipeline.
 
-<!-- cache-key: cdktf-0.19.0 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->
+<!-- cache-key: cdktf-0.20.1 input-86d00bfacbf8211ac391b618aacd3783f3887b1dc59f3fa49b15ed84f7aa629d -->

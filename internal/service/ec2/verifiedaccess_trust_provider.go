@@ -11,8 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,7 +45,7 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -145,12 +146,13 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessTrustProviderInput{
+		ClientToken:         aws.String(id.UniqueId()),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
 		TagSpecifications:   getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -197,7 +199,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Trust Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	if v := output.DeviceOptions; v != nil {
 		if err := d.Set("device_options", flattenDeviceOptions(v)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting device_options: %s", err)
@@ -226,13 +228,14 @@ func resourceVerifiedAccessTrustProviderUpdate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyVerifiedAccessTrustProviderInput{
+			ClientToken:                   aws.String(id.UniqueId()),
 			VerifiedAccessTrustProviderId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("oidc_options") {
@@ -257,6 +260,7 @@ func resourceVerifiedAccessTrustProviderDelete(ctx context.Context, d *schema.Re
 
 	log.Printf("[INFO] Deleting Verified Access Trust Provider: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessTrustProvider(ctx, &ec2.DeleteVerifiedAccessTrustProviderInput{
+		ClientToken:                   aws.String(id.UniqueId()),
 		VerifiedAccessTrustProviderId: aws.String(d.Id()),
 	})
 

@@ -12,7 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_connect_contact_flow")
@@ -20,7 +22,7 @@ func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactFlowRead,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -28,28 +30,28 @@ func DataSourceContactFlow() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"contact_flow_id", "name"},
+				ExactlyOneOf: []string{"contact_flow_id", names.AttrName},
 			},
 			"content": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"name", "contact_flow_id"},
+				ExactlyOneOf: []string{names.AttrName, "contact_flow_id"},
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -58,10 +60,12 @@ func DataSourceContactFlow() *schema.Resource {
 }
 
 func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instanceID := d.Get("instance_id").(string)
+	instanceID := d.Get(names.AttrInstanceID).(string)
 
 	input := &connect.DescribeContactFlowInput{
 		InstanceId: aws.String(instanceID),
@@ -69,16 +73,16 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("contact_flow_id"); ok {
 		input.ContactFlowId = aws.String(v.(string))
-	} else if v, ok := d.GetOk("name"); ok {
+	} else if v, ok := d.GetOk(names.AttrName); ok {
 		name := v.(string)
 		contactFlowSummary, err := dataSourceGetContactFlowSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Contact Flow Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Summary by name (%s): %s", name, err)
 		}
 
 		if contactFlowSummary == nil {
-			return diag.Errorf("finding Connect Contact Flow Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Contact Flow Summary by name (%s): not found", name)
 		}
 
 		input.ContactFlowId = contactFlowSummary.Id
@@ -87,30 +91,30 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Contact Flow: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow: %s", err)
 	}
 
 	if resp == nil || resp.ContactFlow == nil {
-		return diag.Errorf("getting Connect Contact Flow: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Contact Flow: empty response")
 	}
 
 	contactFlow := resp.ContactFlow
 
-	d.Set("arn", contactFlow.Arn)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrARN, contactFlow.Arn)
+	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("contact_flow_id", contactFlow.Id)
-	d.Set("name", contactFlow.Name)
-	d.Set("description", contactFlow.Description)
+	d.Set(names.AttrName, contactFlow.Name)
+	d.Set(names.AttrDescription, contactFlow.Description)
 	d.Set("content", contactFlow.Content)
-	d.Set("type", contactFlow.Type)
+	d.Set(names.AttrType, contactFlow.Type)
 
-	if err := d.Set("tags", KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(contactFlow.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetContactFlowSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.ContactFlowSummary, error) {

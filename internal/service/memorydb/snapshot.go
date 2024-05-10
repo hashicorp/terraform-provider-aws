@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -42,7 +43,7 @@ func ResourceSnapshot() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +52,11 @@ func ResourceSnapshot() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"engine_version": {
+						names.AttrEngineVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -63,7 +64,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -79,7 +80,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"port": {
+						names.AttrPort: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -99,7 +100,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -111,7 +112,7 @@ func ResourceSnapshot() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				// The API will accept an ID, but return the ARN on every read.
 				// For the sake of consistency, force everyone to use ARN-s.
 				// To prevent confusion, the attribute is suffixed _arn rather
@@ -121,20 +122,20 @@ func ResourceSnapshot() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validateResourceName(snapshotNameMaxLength),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - id.UniqueIDSuffixLength),
 			},
 			"source": {
@@ -148,16 +149,18 @@ func ResourceSnapshot() *schema.Resource {
 }
 
 func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &memorydb.CreateSnapshotInput{
 		ClusterName:  aws.String(d.Get("cluster_name").(string)),
 		SnapshotName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -165,16 +168,16 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.CreateSnapshotWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MemoryDB Snapshot (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Snapshot (%s): %s", name, err)
 	}
 
 	if err := waitSnapshotAvailable(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceSnapshotRead(ctx, d, meta)
+	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
 func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -183,6 +186,8 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	snapshot, err := FindSnapshotByName(ctx, conn, d.Id())
@@ -190,27 +195,29 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", snapshot.ARN)
+	d.Set(names.AttrARN, snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
-		return diag.Errorf("failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
-	d.Set("kms_key_arn", snapshot.KmsKeyId)
-	d.Set("name", snapshot.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
+	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
+	d.Set(names.AttrName, snapshot.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
 	d.Set("source", snapshot.Source)
 
-	return nil
+	return diags
 }
 
 func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Snapshot: (%s)", d.Id())
@@ -219,18 +226,18 @@ func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta in
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSnapshotNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Snapshot (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{} {
@@ -239,19 +246,19 @@ func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{}
 	}
 
 	m := map[string]interface{}{
-		"description":              aws.StringValue(v.Description),
-		"engine_version":           aws.StringValue(v.EngineVersion),
+		names.AttrDescription:      aws.StringValue(v.Description),
+		names.AttrEngineVersion:    aws.StringValue(v.EngineVersion),
 		"maintenance_window":       aws.StringValue(v.MaintenanceWindow),
-		"name":                     aws.StringValue(v.Name),
+		names.AttrName:             aws.StringValue(v.Name),
 		"node_type":                aws.StringValue(v.NodeType),
 		"num_shards":               aws.Int64Value(v.NumShards),
 		"parameter_group_name":     aws.StringValue(v.ParameterGroupName),
-		"port":                     aws.Int64Value(v.Port),
+		names.AttrPort:             aws.Int64Value(v.Port),
 		"snapshot_retention_limit": aws.Int64Value(v.SnapshotRetentionLimit),
 		"snapshot_window":          aws.StringValue(v.SnapshotWindow),
 		"subnet_group_name":        aws.StringValue(v.SubnetGroupName),
 		"topic_arn":                aws.StringValue(v.TopicArn),
-		"vpc_id":                   aws.StringValue(v.VpcId),
+		names.AttrVPCID:            aws.StringValue(v.VpcId),
 	}
 
 	return []interface{}{m}

@@ -5,6 +5,8 @@ package rds
 
 import (
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -40,6 +42,7 @@ const (
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"
 	storageTypeIO1         = "io1"
+	storageTypeIO2         = "io2"
 	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
@@ -49,11 +52,17 @@ func StorageType_Values() []string {
 		storageTypeGP2,
 		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeIO2,
 		storageTypeAuroraIOPT1,
 	}
 }
 
 const (
+	InstanceEngineAuroraMySQL         = "aurora-mysql"
+	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -64,8 +73,7 @@ const (
 	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
-	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineSQLServerWeb        = "sqlserver-web"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -112,10 +120,10 @@ const (
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (
@@ -132,6 +140,15 @@ const (
 )
 
 func ClusterEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
+	}
+}
+
+func ClusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
@@ -176,9 +193,11 @@ const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
+	ExportableLogTypeDiagLog    = "diag.log"
 	ExportableLogTypeError      = "error"
 	ExportableLogTypeGeneral    = "general"
 	ExportableLogTypeListener   = "listener"
+	ExportableLogTypeNotifyLog  = "notify.log"
 	ExportableLogTypeOEMAgent   = "oemagent"
 	ExportableLogTypePostgreSQL = "postgresql"
 	ExportableLogTypeSlowQuery  = "slowquery"
@@ -202,9 +221,11 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
 		ExportableLogTypeAudit,
+		ExportableLogTypeDiagLog,
 		ExportableLogTypeError,
 		ExportableLogTypeGeneral,
 		ExportableLogTypeListener,
+		ExportableLogTypeNotifyLog,
 		ExportableLogTypeOEMAgent,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
@@ -251,13 +272,13 @@ func TimeoutAction_Values() []string {
 
 const (
 	backupTargetOutposts = "outposts"
-	backupTargetRegion   = "region"
+	backupTargetRegion   = names.AttrRegion
 )
 
 func backupTarget_Values() []string {
 	return []string{
 		backupTargetOutposts,
-		backupTargetRegion,
+		names.AttrRegion,
 	}
 }
 

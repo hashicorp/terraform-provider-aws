@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -51,6 +52,8 @@ func ResourceVoiceConnectorLogging() *schema.Resource {
 }
 
 func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -63,14 +66,16 @@ func resourceVoiceConnectorLoggingCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input); err != nil {
-		return diag.Errorf("creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
+		return sdkdiag.AppendErrorf(diags, "creating Chime Voice Connector (%s) logging configuration: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
-	return resourceVoiceConnectorLoggingRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	resp, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*awstypes.LoggingConfiguration, error) {
@@ -84,17 +89,19 @@ func resourceVoiceConnectorLoggingRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector logging configuration %s not found", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("enable_media_metric_logs", resp.EnableMediaMetricLogs)
 	d.Set("enable_sip_logs", resp.EnableSIPLogs)
 	d.Set("voice_connector_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("enable_sip_logs", "enable_media_metric_logs") {
@@ -107,14 +114,16 @@ func resourceVoiceConnectorLoggingUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		if _, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input); err != nil {
-			return diag.Errorf("updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVoiceConnectorLoggingRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorLoggingRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.PutVoiceConnectorLoggingConfigurationInput{
@@ -128,14 +137,14 @@ func resourceVoiceConnectorLoggingDelete(ctx context.Context, d *schema.Resource
 	_, err := conn.PutVoiceConnectorLoggingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Chime Voice Connector (%s) logging configuration: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findVoiceConnectorLoggingByID(ctx context.Context, conn *chimesdkvoice.Client, id string) (*awstypes.LoggingConfiguration, error) {

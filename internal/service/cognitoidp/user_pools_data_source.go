@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_cognito_user_pools")
-func DataSourceUserPools() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pools", name="User Pools")
+func dataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolsRead,
 
@@ -32,7 +33,7 @@ func DataSourceUserPools() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -50,7 +51,7 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pools: %s", err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	var arns, userPoolIDs []string
 
 	for _, v := range output {

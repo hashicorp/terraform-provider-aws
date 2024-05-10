@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -68,7 +69,7 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 
 func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	managedPolicyARN := d.Get("managed_policy_arn").(string)
@@ -89,7 +90,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	_, err = conn.AttachManagedPolicyToPermissionSetWithContext(ctx, input)
+	_, err = conn.AttachManagedPolicyToPermissionSet(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): %s", managedPolicyARN, permissionSetARN, err)
@@ -107,7 +108,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 
 func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	managedPolicyARN, permissionSetARN, instanceARN, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -136,7 +137,7 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 
 func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSOAdminConn(ctx)
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	managedPolicyARN, permissionSetARN, instanceARN, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
@@ -149,9 +150,9 @@ func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.Resour
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
 
-	_, err = conn.DetachManagedPolicyFromPermissionSetWithContext(ctx, input)
+	_, err = conn.DetachManagedPolicyFromPermissionSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -175,54 +176,60 @@ func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func FindManagedPolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, managedPolicyARN, permissionSetARN, instanceARN string) (*ssoadmin.AttachedManagedPolicy, error) {
+func FindManagedPolicy(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {
 	input := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		InstanceArn:      aws.String(instanceARN),
 		PermissionSetArn: aws.String(permissionSetARN),
 	}
-	filter := func(a *ssoadmin.AttachedManagedPolicy) bool {
-		return aws.StringValue(a.Arn) == managedPolicyARN
+	filter := func(a awstypes.AttachedManagedPolicy) bool {
+		return aws.ToString(a.Arn) == managedPolicyARN
 	}
 
 	return findAttachedManagedPolicy(ctx, conn, input, filter)
 }
 
-func findAttachedManagedPolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, input *ssoadmin.ListManagedPoliciesInPermissionSetInput, filter tfslices.Predicate[*ssoadmin.AttachedManagedPolicy]) (*ssoadmin.AttachedManagedPolicy, error) {
+func findAttachedManagedPolicy(
+	ctx context.Context,
+	conn *ssoadmin.Client,
+	input *ssoadmin.ListManagedPoliciesInPermissionSetInput,
+	filter tfslices.Predicate[awstypes.AttachedManagedPolicy],
+) (*awstypes.AttachedManagedPolicy, error) {
 	output, err := findAttachedManagedPolicies(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedManagedPolicies(ctx context.Context, conn *ssoadmin.SSOAdmin, input *ssoadmin.ListManagedPoliciesInPermissionSetInput, filter tfslices.Predicate[*ssoadmin.AttachedManagedPolicy]) ([]*ssoadmin.AttachedManagedPolicy, error) {
-	var output []*ssoadmin.AttachedManagedPolicy
+func findAttachedManagedPolicies(
+	ctx context.Context,
+	conn *ssoadmin.Client,
+	input *ssoadmin.ListManagedPoliciesInPermissionSetInput,
+	filter tfslices.Predicate[awstypes.AttachedManagedPolicy],
+) ([]awstypes.AttachedManagedPolicy, error) {
+	var output []awstypes.AttachedManagedPolicy
 
-	err := conn.ListManagedPoliciesInPermissionSetPagesWithContext(ctx, input, func(page *ssoadmin.ListManagedPoliciesInPermissionSetOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.AttachedManagedPolicies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+	paginator := ssoadmin.NewListManagedPoliciesInPermissionSetPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.AttachedManagedPolicies {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

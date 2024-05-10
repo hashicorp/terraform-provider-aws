@@ -14,7 +14,7 @@ Use this data source to invoke custom lambda functions as data source.
 The lambda function is invoked with [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax)
 invocation type.
 
-~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`awsLambdaFunction`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
+~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
 
 ## Example Usage
 
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.19.0 input-858416cde9289de24a6c4454bdaf3179b1c69d4515be797eefce2b9c352ef2b3 -->
+<!-- cache-key: cdktf-0.20.1 input-858416cde9289de24a6c4454bdaf3179b1c69d4515be797eefce2b9c352ef2b3 -->

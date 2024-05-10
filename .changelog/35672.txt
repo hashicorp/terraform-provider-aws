@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kinesis_firehose_delivery_stream: Change `extended_s3_configuration.processing_configuration.processors.parameters` from `TypeList` to `TypeSet` as order is not significant
+```

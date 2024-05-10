@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
@@ -20,27 +21,27 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "true"),
 				),
 			},
@@ -55,16 +56,16 @@ func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccParameterDataSourceConfig_basic(name, "false"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_ssm_parameter.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "value", "TestValue"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_ssm_parameter.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "TestValue"),
 					resource.TestCheckResourceAttr(resourceName, "with_decryption", "false"),
 				),
 			},
@@ -81,7 +82,7 @@ func TestAccSSMParameterDataSource_insecureValue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -36,11 +36,11 @@ func ResourceSchema() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2048),
@@ -115,7 +115,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.RegistryId = createRegistryID(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -159,8 +159,8 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := aws.StringValue(output.SchemaArn)
-	d.Set("arn", arn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("schema_name", output.SchemaName)
 	d.Set("compatibility", output.Compatibility)
 	d.Set("data_format", output.DataFormat)
@@ -192,8 +192,8 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	update := false
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 

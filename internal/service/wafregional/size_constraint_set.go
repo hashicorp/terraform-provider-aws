@@ -16,15 +16,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_wafregional_size_constraint_set")
-func ResourceSizeConstraintSet() *schema.Resource {
+// @SDKResource("aws_wafregional_size_constraint_set", name="Size Constraint Set")
+func resourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSizeConstraintSetCreate,
 		ReadWithoutTimeout:   resourceSizeConstraintSetRead,
 		UpdateWithoutTimeout: resourceSizeConstraintSetUpdate,
 		DeleteWithoutTimeout: resourceSizeConstraintSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -38,7 +40,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	log.Printf("[INFO] Creating WAF Regional SizeConstraintSet: %s", name)
 
@@ -65,7 +67,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
-	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get(names.AttrName).(string))
 	params := &waf.GetSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(d.Id()),
 	}
@@ -80,7 +82,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Size Constraint Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", resp.SizeConstraintSet.Name)
+	d.Set(names.AttrName, resp.SizeConstraintSet.Name)
 	d.Set("size_constraints", tfwaf.FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
 
 	return diags
@@ -129,11 +131,13 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 		}
 		return conn.DeleteSizeConstraintSetWithContext(ctx, req)
 	})
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional SizeConstraintSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Size Constraint Set (%s): %s", d.Id(), err)
 	}
 
 	return diags

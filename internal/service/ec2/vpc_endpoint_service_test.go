@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointService_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +38,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "0"),
@@ -69,7 +70,7 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,7 +140,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +175,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +213,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -254,7 +255,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -291,7 +292,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -38,15 +38,45 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `space_name` - (Required) The name of the space.
 * `domain_id` - (Required) The ID of the associated Domain.
+* `ownership_settings` - (Optional) A collection of ownership settings. See [Ownership Settings](#ownership-settings) below.
+* `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
+* `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
+* `space_sharing_settings` - (Optional) A collection of space sharing settings. See [Space Sharing Settings](#space-sharing-settings) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Ownership Settings
+
+* `owner_user_profile_name` - (Required) The user profile who is the owner of the private space.
+
+### Space Sharing Settings
+
+* `sharing_type` - (Required) Specifies the sharing type of the space. Valid values are `Private` and `Shared`.
 
 ### Space Settings
 
+* `app_type` - (Optional) The type of app created within the space.
+* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code-editor-app-settings) below.
+* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. See [Custom File System](#custom-file-system) below.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter-lab-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
+
+#### Code Editor App Settings
+
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### Custom File System
+
+* `efs_file_system` - (Optional) A custom file system in Amazon EFS. see [EFS File System](#efs-file-system) below.
+
+#### Jupyter Lab App Settings
+
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### Kernel Gateway App Settings
 
@@ -60,6 +90,10 @@ This resource supports the following arguments:
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
+#### EFS File System
+
+* `file_system_id` - (Optional) The ID of your Amazon EFS file system.
+
 ##### Code Repository
 
 * `repository_url` - (Optional) The URL of the Git repository.
@@ -69,6 +103,7 @@ This resource supports the following arguments:
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+* `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ##### Custom Image
@@ -81,10 +116,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The space's Amazon Resource Name (ARN).
 * `arn` - The space's Amazon Resource Name (ARN).
 * `home_efs_file_system_uid` - The ID of the space's profile in the Amazon Elastic File System volume.
+* `id` - The space's Amazon Resource Name (ARN).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `url` - Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center.
 
 ## Import
 
@@ -94,9 +130,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.sagemaker_space import SagemakerSpace
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        SagemakerSpace.generate_config_for_import(self, "testSpace", "arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name")
 ```
 
 Using `terraform import`, import SageMaker Spaces using the `id`. For example:
@@ -105,4 +147,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-8d8bef8d2f394c96f9e18caac696a38bb4da69984c3c443105f8620c1e13b1be -->
+<!-- cache-key: cdktf-0.20.1 input-bcf821b3994bdd26dfaebba68c2b4092348b6d04b5b1be5d002bfee4ce934430 -->

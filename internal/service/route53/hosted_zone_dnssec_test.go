@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +38,7 @@ func TestAccRoute53HostedZoneDNSSEC_basic(t *testing.T) {
 				Config: testAccHostedZoneDNSSECConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccHostedZoneDNSSECExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "signing_status", tfroute53.ServeSignatureSigning),
 				),
 			},
@@ -58,7 +59,7 @@ func TestAccRoute53HostedZoneDNSSEC_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func TestAccRoute53HostedZoneDNSSEC_signingStatus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHostedZoneDNSSECDestroy(ctx),
 		Steps: []resource.TestStep{

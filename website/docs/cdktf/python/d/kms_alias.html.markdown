@@ -45,5 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Amazon Resource Name(ARN) of the key alias.
 * `target_key_id` - Key identifier pointed to by the alias.
 * `target_key_arn` - ARN pointed to by the alias.
+* `name` - Name of the alias
+* `name_prefix` - Prefix of the alias
 
-<!-- cache-key: cdktf-0.19.0 input-a26328bd3bb7108ab75996766b208d1cd2fdaf417bd2555aa1588956c0544b01 -->
+<!-- cache-key: cdktf-0.20.1 input-f0c72d32a5703f22842706c4ad41df917ac01904fa6128835963fb7e92acb28f -->

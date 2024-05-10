@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceState_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,8 +33,8 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(state, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", state),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
 			},
 		},
@@ -50,7 +50,7 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,8 +58,8 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(stateStopped, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateStopped),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
 			},
 			{
@@ -71,8 +71,8 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(stateRunning, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateRunning),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateRunning),
 				),
 			},
 		},
@@ -88,7 +88,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -133,11 +133,11 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 
 func testAccInstanceStateConfig_basic(state string, force string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 

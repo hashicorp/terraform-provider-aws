@@ -6,10 +6,10 @@ package ram_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRAMSharingWithOrganization_serial(t *testing.T) {
@@ -32,7 +32,7 @@ func testAccSharingWithOrganization_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -57,7 +57,7 @@ func testAccSharingWithOrganization_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{

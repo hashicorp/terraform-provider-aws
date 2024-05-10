@@ -5,6 +5,7 @@ package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,7 +14,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_transfer_server", name="Server")
 // @Tags(identifierAttribute="arn")
-func ResourceServer() *schema.Resource {
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,
@@ -54,7 +54,7 @@ func ResourceServer() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func ResourceServer() *schema.Resource {
 				Default:      transfer.DomainS3,
 				ValidateFunc: validation.StringInSlice(transfer.Domain_Values(), false),
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,14 +90,14 @@ func ResourceServer() *schema.Resource {
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Computed:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:          schema.TypeSet,
 							Optional:      true,
 							Elem:          &schema.Schema{Type: schema.TypeString},
@@ -109,7 +109,7 @@ func ResourceServer() *schema.Resource {
 							Computed:      true,
 							ConflictsWith: []string{"endpoint_details.0.address_allocation_ids", "endpoint_details.0.security_group_ids", "endpoint_details.0.subnet_ids", "endpoint_details.0.vpc_id"},
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ValidateFunc:  validation.NoZeroValues,
@@ -221,11 +221,33 @@ func ResourceServer() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(transfer.Protocol_Values(), false),
 				},
 			},
+			"s3_storage_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"directory_listing_optimization": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(transfer.DirectoryListingOptimization_Values(), false),
+						},
+					},
+				},
+			},
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
+			},
+			"sftp_authentication_methods": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(transfer.SftpAuthenticationMethods_Values(), false),
 			},
 			"structured_log_destinations": {
 				Type: schema.TypeSet,
@@ -356,6 +378,14 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.IdentityProviderDetails.InvocationRole = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("sftp_authentication_methods"); ok {
+		if input.IdentityProviderDetails == nil {
+			input.IdentityProviderDetails = &transfer.IdentityProviderDetails{}
+		}
+
+		input.IdentityProviderDetails.SftpAuthenticationMethods = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("logging_role"); ok {
 		input.LoggingRole = aws.String(v.(string))
 	}
@@ -374,6 +404,10 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("protocols"); ok && v.(*schema.Set).Len() > 0 {
 		input.Protocols = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("s3_storage_options"); ok && len(v.([]interface{})) > 0 {
+		input.S3StorageOptions = expandS3StorageOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("security_policy_name"); ok {
@@ -449,7 +483,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("certificate", output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
@@ -457,7 +491,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 
@@ -494,6 +528,11 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("invocation_role", "")
 	}
+	if output.IdentityProviderDetails != nil {
+		d.Set("sftp_authentication_methods", output.IdentityProviderDetails.SftpAuthenticationMethods)
+	} else {
+		d.Set("sftp_authentication_methods", "")
+	}
 	d.Set("logging_role", output.LoggingRole)
 	d.Set("post_authentication_login_banner", output.PostAuthenticationLoginBanner)
 	d.Set("pre_authentication_login_banner", output.PreAuthenticationLoginBanner)
@@ -501,6 +540,9 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting protocol_details: %s", err)
 	}
 	d.Set("protocols", aws.StringValueSlice(output.Protocols))
+	if err := d.Set("s3_storage_options", flattenS3StorageOptions(output.S3StorageOptions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting s3_storage_options: %s", err)
+	}
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
@@ -521,7 +563,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var newEndpointTypeVpc bool
 		var oldEndpointTypeVpc bool
 
@@ -634,7 +676,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChanges("directory_id", "function", "invocation_role", "url") {
+		if d.HasChanges("directory_id", "function", "invocation_role", "sftp_authentication_methods", "url") {
 			identityProviderDetails := &transfer.IdentityProviderDetails{}
 
 			if attr, ok := d.GetOk("directory_id"); ok {
@@ -647,6 +689,10 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 			if attr, ok := d.GetOk("invocation_role"); ok {
 				identityProviderDetails.InvocationRole = aws.String(attr.(string))
+			}
+
+			if attr, ok := d.GetOk("sftp_authentication_methods"); ok {
+				identityProviderDetails.SftpAuthenticationMethods = aws.String(attr.(string))
 			}
 
 			if attr, ok := d.GetOk("url"); ok {
@@ -674,6 +720,10 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if d.HasChange("protocols") {
 			input.Protocols = flex.ExpandStringSet(d.Get("protocols").(*schema.Set))
+		}
+
+		if d.HasChange("s3_storage_options") {
+			input.S3StorageOptions = expandS3StorageOptions(d.Get("s3_storage_options").([]interface{}))
 		}
 
 		if d.HasChange("security_policy_name") {
@@ -743,7 +793,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
-		var errs *multierror.Error
+		var errs []error
 
 		err := conn.ListUsersPagesWithContext(ctx, input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
 			if page == nil {
@@ -754,7 +804,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName), d.Timeout(schema.TimeoutDelete))
 
 				if err != nil {
-					errs = multierror.Append(errs, err)
+					errs = append(errs, err)
 
 					continue
 				}
@@ -764,10 +814,10 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
+			errs = append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
 		}
 
-		err = errs.ErrorOrNil()
+		err = errors.Join(errs...)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -809,11 +859,11 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.AddressAllocationIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
@@ -821,7 +871,7 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCID].(string); ok && v != "" {
 		apiObject.VpcId = aws.String(v)
 	}
 
@@ -840,13 +890,13 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.SecurityGroupIds; len(v) > 0 {
-		tfMap["security_group_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(v)
 	} else if len(securityGroupIDs) > 0 {
-		tfMap["security_group_ids"] = aws.StringValueSlice(securityGroupIDs)
+		tfMap[names.AttrSecurityGroupIDs] = aws.StringValueSlice(securityGroupIDs)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = aws.StringValueSlice(v)
+		tfMap[names.AttrSubnetIDs] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
@@ -854,7 +904,7 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCID] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -909,6 +959,36 @@ func flattenProtocolDetails(apiObject *transfer.ProtocolDetails) []interface{} {
 
 	if v := apiObject.TlsSessionResumptionMode; v != nil {
 		tfMap["tls_session_resumption_mode"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandS3StorageOptions(m []interface{}) *transfer.S3StorageOptions {
+	if len(m) < 1 || m[0] == nil {
+		return nil
+	}
+
+	tfMap := m[0].(map[string]interface{})
+
+	apiObject := &transfer.S3StorageOptions{}
+
+	if v, ok := tfMap["directory_listing_optimization"].(string); ok && len(v) > 0 {
+		apiObject.DirectoryListingOptimization = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenS3StorageOptions(apiObject *transfer.S3StorageOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DirectoryListingOptimization; v != nil {
+		tfMap["directory_listing_optimization"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

@@ -105,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
     * `resource_arn` - ARN of the resource.
     * `tags` - Map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->
+<!-- cache-key: cdktf-0.20.1 input-dfacd28e615a77cfbad3e63cc2c0fab691bf6f824574bd266ed9fe2b81be6bdc -->

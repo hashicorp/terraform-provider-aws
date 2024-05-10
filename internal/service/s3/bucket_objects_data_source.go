@@ -17,15 +17,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_bucket_objects")
-func DataSourceBucketObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket_objects", name="Bucket Objects")
+func dataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Deprecated: "Use the aws_s3_objects data source instead",
 				Type:       schema.TypeString,
 				Required:   true,
@@ -80,7 +81,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
@@ -98,7 +99,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	// through the results. "maxKeys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		input.MaxKeys = int32(maxKeys)
+		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
 	if s, ok := d.GetOk("prefix"); ok {
@@ -110,7 +111,7 @@ func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if b, ok := d.GetOk("fetch_owner"); ok {
-		input.FetchOwner = b.(bool)
+		input.FetchOwner = aws.Bool(b.(bool))
 	}
 
 	var nKeys int64

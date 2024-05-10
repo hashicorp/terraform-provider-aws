@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRule_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 	resourceName := "aws_waf_rule.wafrule"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,10 +36,10 @@ func TestAccWAFRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexache.MustCompile(`rule/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rule/.+`)),
 				),
 			},
 			{
@@ -59,7 +60,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
 				),
@@ -76,7 +77,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 				Config: testAccRuleConfig_changeName(wafRuleNewName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
 				),
@@ -93,7 +94,7 @@ func TestAccWAFRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,11 +130,11 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, "aws_waf_ipset.ipset", &ipset),
 					testAccCheckRuleExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "false",
-						"type":    "IPMatch",
+						"negated":      "false",
+						names.AttrType: "IPMatch",
 					}),
 				),
 			},
@@ -142,11 +143,11 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, "aws_waf_byte_match_set.set", &byteMatchSet),
 					testAccCheckRuleExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "true",
-						"type":    "ByteMatch",
+						"negated":      "true",
+						names.AttrType: "ByteMatch",
 					}),
 				),
 			},
@@ -164,7 +165,7 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,11 +174,11 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGeoMatchSetExists(ctx, "aws_waf_geo_match_set.geo_match_set", &geoMatchSet),
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
-						"negated": "true",
-						"type":    "GeoMatch",
+						"negated":      "true",
+						names.AttrType: "GeoMatch",
 					}),
 				),
 			},
@@ -195,7 +196,7 @@ func TestAccWAFRule_webACL(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +221,7 @@ func TestAccWAFRule_noPredicates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -228,7 +229,7 @@ func TestAccWAFRule_noPredicates(t *testing.T) {
 				Config: testAccRuleConfig_noPredicates(ruleName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "0"),
 				),
 			},
@@ -244,7 +245,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -254,7 +255,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -265,7 +266,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -277,7 +278,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
-					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

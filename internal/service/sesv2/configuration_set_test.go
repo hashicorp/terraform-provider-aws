@@ -28,7 +28,7 @@ func TestAccSESV2ConfigurationSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccSESV2ConfigurationSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_set_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ses", regexache.MustCompile(`configuration-set/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`configuration-set/.+`)),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccSESV2ConfigurationSet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccSESV2ConfigurationSet_tlsPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func TestAccSESV2ConfigurationSet_reputationMetricsEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +151,7 @@ func TestAccSESV2ConfigurationSet_sendingEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -187,7 +187,7 @@ func TestAccSESV2ConfigurationSet_suppressedReasons(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -225,7 +225,7 @@ func TestAccSESV2ConfigurationSet_engagementMetrics(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -263,7 +263,7 @@ func TestAccSESV2ConfigurationSet_optimizedSharedDelivery(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -301,7 +301,7 @@ func TestAccSESV2ConfigurationSet_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetDestroy(ctx),
 		Steps: []resource.TestStep{

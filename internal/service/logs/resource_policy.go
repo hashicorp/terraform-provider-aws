@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -56,12 +57,14 @@ func resourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	name := d.Get("policy_name").(string)
@@ -73,15 +76,17 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.PutResourcePolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating CloudWatch Logs Resource Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Resource Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.ResourcePolicy.PolicyName))
 
-	return resourceResourcePolicyRead(ctx, d, meta)
+	return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	resourcePolicy, err := findResourcePolicyByName(ctx, conn, d.Id())
@@ -89,31 +94,33 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Resource Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(resourcePolicy.PolicyDocument))
 
 	if err != nil {
-		return diag.Errorf("while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy_document", policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Resource Policy: %s", d.Id())
@@ -122,14 +129,14 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Resource Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.ResourcePolicy, error) {

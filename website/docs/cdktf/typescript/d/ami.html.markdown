@@ -64,7 +64,7 @@ options to narrow down the list AWS returns.
 ~> **NOTE:** If more or less than a single match is returned by the search,
 Terraform will fail. Ensure that your search is specific enough to return
 a single AMI ID only, or use `mostRecent` to choose the most recent one. If
-you want to match multiple AMIs, use the `awsAmiIds` data source instead.
+you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
 ## Attribute Reference
 
@@ -78,17 +78,17 @@ interpolation.
 * `architecture` - OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `bootMode` - Boot mode of the image.
 * `blockDeviceMappings` - Set of objects with block device mappings of the AMI.
-    * `device_name` - Physical name of the device.
+    * `deviceName` - Physical name of the device.
     * `ebs` - Map containing EBS information, if the device is EBS based. Unlike most object attributes, these are accessed directly (e.g., `ebs.volume_size` or `ebs["volume_size"]`) rather than accessed through the first element of a list (e.g., `ebs[0].volume_size`).
-        * `delete_on_termination` - `true` if the EBS volume will be deleted on termination.
+        * `deleteOnTermination` - `true` if the EBS volume will be deleted on termination.
         * `encrypted` - `true` if the EBS volume is encrypted.
         * `iops` - `0` if the EBS volume is not a provisioned IOPS image, otherwise the supported IOPS count.
-        * `snapshot_id` - The ID of the snapshot.
-        * `volume_size` - The size of the volume, in GiB.
+        * `snapshotId` - The ID of the snapshot.
+        * `volumeSize` - The size of the volume, in GiB.
         * `throughput` - The throughput that the EBS volume supports, in MiB/s.
-        * `volume_type` - The volume type.
-    * `no_device` - Suppresses the specified device included in the block device mapping of the AMI.
-    * `virtual_name` - Virtual device name (for instance stores).
+        * `volumeType` - The volume type.
+    * `noDevice` - Suppresses the specified device included in the block device mapping of the AMI.
+    * `virtualName` - Virtual device name (for instance stores).
 * `creationDate` - Date and time the image was created.
 * `deprecationTime` - Date and time when the image will be deprecated.
 * `description` - Description of the AMI that was provided during image
@@ -139,4 +139,4 @@ interpolation.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
 
-<!-- cache-key: cdktf-0.19.0 input-b27379b47e46b092af0eb0d0592f4690caa729d66535c1d3f2706e8aa24bff38 -->
+<!-- cache-key: cdktf-0.20.1 input-b27379b47e46b092af0eb0d0592f4690caa729d66535c1d3f2706e8aa24bff38 -->

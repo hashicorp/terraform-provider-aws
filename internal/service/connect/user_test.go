@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUser_basic(t *testing.T) {
@@ -33,7 +34,7 @@ func testAccUser_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,13 +42,13 @@ func testAccUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_user_id"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", "example2"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName5),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
 					resource.TestCheckResourceAttr(resourceName, "password", "Password123"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
@@ -77,7 +78,7 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +179,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,7 +243,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +303,7 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -343,7 +344,7 @@ func testAccUser_updateTags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -396,7 +397,7 @@ func testAccUser_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{

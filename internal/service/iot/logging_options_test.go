@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iot"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTLoggingOptions_serial(t *testing.T) {
@@ -31,7 +31,7 @@ func testAccLoggingOptions_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func testAccLoggingOptions_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},
@@ -54,7 +54,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "WARN"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func testAccLoggingOptions_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_log_level", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "disable_all_logs", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 				),
 			},
 		},

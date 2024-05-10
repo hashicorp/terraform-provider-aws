@@ -18,9 +18,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_query_definition")
@@ -36,7 +38,7 @@ func resourceQueryDefinition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -65,9 +67,11 @@ func resourceQueryDefinition() *schema.Resource {
 }
 
 func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutQueryDefinitionInput{
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query_string").(string)),
@@ -84,40 +88,44 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.PutQueryDefinition(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Query Definition (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Query Definition (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(aws.ToString(output.QueryDefinitionId))
 	}
 
-	return resourceQueryDefinitionRead(ctx, d, meta)
+	return append(diags, resourceQueryDefinitionRead(ctx, d, meta)...)
 }
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get("name").(string), d.Id())
+	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Query Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_group_names", result.LogGroupNames)
-	d.Set("name", result.Name)
+	d.Set(names.AttrName, result.Name)
 	d.Set("query_definition_id", result.QueryDefinitionId)
 	d.Set("query_string", result.QueryString)
 
-	return nil
+	return diags
 }
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
@@ -126,14 +134,14 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Query Definition (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

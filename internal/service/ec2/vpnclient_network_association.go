@@ -13,13 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_client_vpn_network_association")
+// @SDKResource("aws_ec2_client_vpn_network_association", name="Client VPN Network Association")
 func ResourceClientVPNNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNNetworkAssociationCreate,
@@ -45,12 +47,12 @@ func ResourceClientVPNNetworkAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,11 +66,10 @@ func resourceClientVPNNetworkAssociationCreate(ctx context.Context, d *schema.Re
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	input := &ec2.AssociateClientVpnTargetNetworkInput{
+		ClientToken:         aws.String(id.UniqueId()),
 		ClientVpnEndpointId: aws.String(endpointID),
-		SubnetId:            aws.String(d.Get("subnet_id").(string)),
+		SubnetId:            aws.String(d.Get(names.AttrSubnetID).(string)),
 	}
-
-	log.Printf("[DEBUG] Creating EC2 Client VPN Network Association: %s", input)
 
 	output, err := conn.AssociateClientVpnTargetNetworkWithContext(ctx, input)
 
@@ -104,8 +105,8 @@ func resourceClientVPNNetworkAssociationRead(ctx context.Context, d *schema.Reso
 
 	d.Set("association_id", network.AssociationId)
 	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
-	d.Set("subnet_id", network.TargetNetworkId)
-	d.Set("vpc_id", network.VpcId)
+	d.Set(names.AttrSubnetID, network.TargetNetworkId)
+	d.Set(names.AttrVPCID, network.VpcId)
 
 	return diags
 }

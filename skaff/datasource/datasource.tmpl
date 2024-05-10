@@ -184,7 +184,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	out, err := find{{ .DataSource }}ByName(ctx, conn, name)
 	if err != nil {
-		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)...)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, name, err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Set the ID
@@ -220,19 +220,19 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
-		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
 	if err != nil {
-		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, DSName{{ .DataSource }}, d.Id(), err)
 	}
 
 	d.Set("policy", p)
@@ -249,7 +249,7 @@ func dataSource{{ .DataSource }}Read(ctx context.Context, d *schema.ResourceData
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, DSName{{ .DataSource }}, d.Id(), err)
 	}
 	{{- end }}
 	{{ if .IncludeComments }}

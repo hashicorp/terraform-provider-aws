@@ -154,47 +154,47 @@ class MyConvertedCode extends TerraformStack {
 
 Version 5.0.0 removes these `provider` arguments:
 
-* `assumeRoleDurationSeconds` - Use `assume_role.duration` instead
-* `assumeRoleWithWebIdentityDurationSeconds` - Use `assume_role_with_web_identity.duration` instead
-* `s3ForcePathStyle` - Use `s3_use_path_style` instead
-* `sharedCredentialsFile` - Use `shared_credentials_files` instead
-* `skipGetEc2Platforms` - Removed following the retirement of EC2-Classic
+* `assume_role.duration_seconds` - Use `assume_role.duration` instead
+* `assume_role_with_web_identity.duration_seconds` - Use `assume_role_with_web_identity.duration` instead
+* `s3_force_path_style` - Use `s3UsePathStyle` instead
+* `shared_credentials_file` - Use `sharedCredentialsFiles` instead
+* `skip_get_ec2_platforms` - Removed following the retirement of EC2-Classic
 
 ## Default Tags
 
 The following enhancements are included:
 
 * Duplicate `defaultTags` can now be included and will be overwritten by resource `tags`.
-* Zero value tags, `""`, can now be included in both `default_tags` and resource `tags`.
+* Zero value tags, `""`, can now be included in both `defaultTags` and resource `tags`.
 * Tags can now be `computed`.
 
 ## EC2-Classic Retirement
 
 Following the retirement of EC2-Classic, we removed a number of resources, arguments, and attributes. This list summarizes what we _removed_:
 
-* `awsDbSecurityGroup` resource
-* `awsElasticacheSecurityGroup` resource
-* `awsRedshiftSecurityGroup` resource
-* [`awsDbInstance`](/docs/providers/aws/r/db_instance.html) resource's `security_group_names` argument
-* [`awsElasticacheCluster`](/docs/providers/aws/r/elasticache_cluster.html) resource's `security_group_names` argument
-* [`awsRedshiftCluster`](/docs/providers/aws/r/redshift_cluster.html) resource's `cluster_security_groups` argument
-* [`awsLaunchConfiguration`](/docs/providers/aws/r/launch_configuration.html) resource's `vpc_classic_link_id` and `vpc_classic_link_security_groups` arguments
-* [`awsVpc`](/docs/providers/aws/r/vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments
-* [`awsDefaultVpc`](/docs/providers/aws/r/default_vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments
-* [`awsVpcPeeringConnection`](/docs/providers/aws/r/vpc_peering_connection.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
-* [`awsVpcPeeringConnectionAccepter`](/docs/providers/aws/r/vpc_peering_connection_accepter.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
-* [`awsVpcPeeringConnectionOptions`](/docs/providers/aws/r/vpc_peering_connection_options.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
-* [`awsDbInstance`](/docs/providers/aws/d/db_instance.html) data source's `db_security_groups` attribute
-* [`awsElasticacheCluster`](/docs/providers/aws/d/elasticache_cluster.html) data source's `security_group_names` attribute
-* [`awsRedshiftCluster`](/docs/providers/aws/d/redshift_cluster.html) data source's `cluster_security_groups` attribute
-* [`awsLaunchConfiguration`](/docs/providers/aws/d/launch_configuration.html) data source's `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes
+* `aws_db_security_group` resource
+* `aws_elasticache_security_group` resource
+* `aws_redshift_security_group` resource
+* [`aws_db_instance`](/docs/providers/aws/r/db_instance.html) resource's `securityGroupNames` argument
+* [`aws_elasticache_cluster`](/docs/providers/aws/r/elasticache_cluster.html) resource's `securityGroupNames` argument
+* [`aws_redshift_cluster`](/docs/providers/aws/r/redshift_cluster.html) resource's `cluster_security_groups` argument
+* [`aws_launch_configuration`](/docs/providers/aws/r/launch_configuration.html) resource's `vpc_classic_link_id` and `vpc_classic_link_security_groups` arguments
+* [`aws_vpc`](/docs/providers/aws/r/vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments
+* [`aws_default_vpc`](/docs/providers/aws/r/default_vpc.html) resource's `enable_classiclink` and `enable_classiclink_dns_support` arguments
+* [`aws_vpc_peering_connection`](/docs/providers/aws/r/vpc_peering_connection.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
+* [`aws_vpc_peering_connection_accepter`](/docs/providers/aws/r/vpc_peering_connection_accepter.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
+* [`aws_vpc_peering_connection_options`](/docs/providers/aws/r/vpc_peering_connection_options.html) resource's `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` arguments
+* [`aws_db_instance`](/docs/providers/aws/d/db_instance.html) data source's `db_security_groups` attribute
+* [`aws_elasticache_cluster`](/docs/providers/aws/d/elasticache_cluster.html) data source's `securityGroupNames` attribute
+* [`aws_redshift_cluster`](/docs/providers/aws/d/redshift_cluster.html) data source's `cluster_security_groups` attribute
+* [`aws_launch_configuration`](/docs/providers/aws/d/launch_configuration.html) data source's `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes
 
 ## Macie Classic Retirement
 
 Following the retirement of Amazon Macie Classic, we removed these resources:
 
-* `awsMacieMemberAccountAssociation`
-* `awsMacieS3BucketAssociation`
+* `aws_macie_member_account_association`
+* `aws_macie_s3_bucket_association`
 
 ## resource/aws_acmpca_certificate_authority
 
@@ -206,7 +206,7 @@ The `minimumCompressionSize` attribute is now a String type, allowing it to be c
 
 ## resource/aws_autoscaling_attachment
 
-Change `albTargetGroupArn`, which no longer exists, to `lbTargetGroupArn` in configurations.
+Change `alb_target_group_arn`, which no longer exists, to `lbTargetGroupArn` in configurations.
 
 ## resource/aws_autoscaling_group
 
@@ -214,7 +214,7 @@ Remove `tags` from configurations as it no longer exists. Use the `tag` attribut
 
 ## resource/aws_budgets_budget
 
-Remove `costFilters` from configurations as it no longer exists.
+Remove `cost_filters` from configurations as it no longer exists.
 
 ## resource/aws_ce_anomaly_subscription
 
@@ -222,43 +222,43 @@ Remove `threshold` from configurations as it no longer exists.
 
 ## resource/aws_cloudwatch_event_target
 
-The `ecsTargetPropagateTags` attribute now has no default value. If no value is specified, the tags are not propagated.
+The `ecs_target.propagate_tags` attribute now has no default value. If no value is specified, the tags are not propagated.
 
 ## resource/aws_codebuild_project
 
-Remove `secondarySourcesAuth` and `sourceAuth` from configurations as they no longer exist.
+Remove `secondary_sources.auth` and `source.auth` from configurations as they no longer exist.
 
 ## resource/aws_connect_hours_of_operation
 
-Remove `hoursOfOperationArn` from configurations as it no longer exists.
+Remove `hours_of_operation_arn` from configurations as it no longer exists.
 
 ## resource/aws_connect_queue
 
-Remove `quickConnectIdsAssociated` from configurations as it no longer exists.
+Remove `quick_connect_ids_associated` from configurations as it no longer exists.
 
 ## resource/aws_connect_routing_profile
 
-Remove `queueConfigsAssociated` from configurations as it no longer exists.
+Remove `queue_configs_associated` from configurations as it no longer exists.
 
 ## resource/aws_db_event_subscription
 
-Configurations that define `sourceIds` using the `id` attribute of `awsDbInstance` must be updated to use `identifier` instead. For example, `source_ids = [aws_db_instance.example.id]` must be updated to `source_ids = [aws_db_instance.example.identifier]`.
+Configurations that define `sourceIds` using the `id` attribute of `aws_db_instance` must be updated to use `identifier` instead. For example, `source_ids = [aws_db_instance.example.id]` must be updated to `source_ids = [aws_db_instance.example.identifier]`.
 
 ## resource/aws_db_instance
 
-`awsDbInstance` has had a number of changes:
+`aws_db_instance` has had a number of changes:
 
 1. [`id` is no longer the identifier](#aws_db_instanceid-is-no-longer-the-identifier)
 2. [Use `dbName` instead of `name`](#use-db_name-instead-of-name)
-3. [Remove `dbSecurityGroups`](#remove-db_security_groups)
+3. [Remove `db_security_groups`](#remove-db_security_groups)
 
 ### aws_db_instance.id is no longer the identifier
 
 **What `id` _is_ has changed and can have far-reaching consequences.** Fortunately, fixing configurations is straightforward.
 
-`id` is _now_ the DBI Resource ID (_i.e._, `dbiResourceId`), an immutable "identifier" for an instance. `id` is now the same as the `resourceId`. (We recommend using `resourceId` rather than `id` when you need to refer to the DBI Resource ID.) _Previously_, `id` was the DB Identifier. Now when you need to refer to the _DB Identifier_, use `identifier`.
+`id` is _now_ the DBI Resource ID (_i.e._, `dbi-resource-id`), an immutable "identifier" for an instance. `id` is now the same as the `resourceId`. (We recommend using `resourceId` rather than `id` when you need to refer to the DBI Resource ID.) _Previously_, `id` was the DB Identifier. Now when you need to refer to the _DB Identifier_, use `identifier`.
 
-Fixing configurations involves changing any `id` references to `identifier`, where the reference expects the DB Identifier. For example, if you're replicating an `awsDbInstance`, you can no longer use `id` to define the `replicateSourceDb`.
+Fixing configurations involves changing any `id` references to `identifier`, where the reference expects the DB Identifier. For example, if you're replicating an `aws_db_instance`, you can no longer use `id` to define the `replicateSourceDb`.
 
 This configuration will now result in an error since `replicateSourceDb` expects a _DB Identifier_:
 
@@ -316,17 +316,17 @@ class MyConvertedCode extends TerraformStack {
 
 Change `name` to `dbName` in configurations as `name` no longer exists.
 
-### Remove `dbSecurityGroups`
+### Remove `db_security_groups`
 
-Remove `dbSecurityGroups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
+Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## resource/aws_db_instance_role_association
 
-Configurations that define `dbInstanceIdentifier` using the `id` attribute of `awsDbInstance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
+Configurations that define `dbInstanceIdentifier` using the `id` attribute of `aws_db_instance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
 
 ## resource/aws_db_proxy_target
 
-Configurations that define `dbInstanceIdentifier` using the `id` attribute of `awsDbInstance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
+Configurations that define `dbInstanceIdentifier` using the `id` attribute of `aws_db_instance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
 
 ## resource/aws_db_security_group
 
@@ -334,19 +334,19 @@ We removed this resource as part of the EC2-Classic retirement.
 
 ## resource/aws_db_snapshot
 
-Configurations that define `dbInstanceIdentifier` using the `id` attribute of `awsDbInstance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
+Configurations that define `dbInstanceIdentifier` using the `id` attribute of `aws_db_instance` must be updated to use `identifier` instead. For example, `db_instance_identifier = aws_db_instance.example.id` must be updated to `db_instance_identifier = aws_db_instance.example.identifier`.
 
 ## resource/aws_default_vpc
 
-Remove `enableClassiclink` and `enableClassiclinkDnsSupport` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_dms_endpoint
 
-Remove `s3SettingsIgnoreHeadersRow` from configurations as it no longer exists. **Be careful to not confuse `ignoreHeadersRow`, which no longer exists, with `ignoreHeaderRows`, which still exists.**
+Remove `s3_settings.ignore_headers_row` from configurations as it no longer exists. **Be careful to not confuse `ignore_headers_row`, which no longer exists, with `ignoreHeaderRows`, which still exists.**
 
 ## resource/aws_docdb_cluster
 
-Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshotIdentifier` attribute into alignment with other RDS resources, such as `awsDbInstance`.
+Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshotIdentifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
@@ -385,8 +385,8 @@ Remove `securityGroupNames` from configurations as it no longer exists. We remov
 
 ## resource/aws_elasticache_replication_group
 
-* Remove the `clusterMode` configuration block. Use top-level `num_node_groups` and `replicas_per_node_group` instead.
-* Remove `availabilityZones`, `number_cache_clusters`, `replication_group_description` arguments from configurations as they no longer exist.  Use `preferred_cache_cluster_azs`, `num_cache_clusters`, and `description`, respectively, instead.
+* Remove the `cluster_mode` configuration block. Use top-level `numNodeGroups` and `replicasPerNodeGroup` instead.
+* Remove `availabilityZones`, `number_cache_clusters`, `replication_group_description` arguments from configurations as they no longer exist.  Use `preferredCacheClusterAzs`, `numCacheClusters`, and `description`, respectively, instead.
 
 ## resource/aws_elasticache_security_group
 
@@ -402,19 +402,19 @@ The `autoEnable` argument has been deprecated. Use the `autoEnableOrganizationMe
 
 ## resource/aws_kinesis_firehose_delivery_stream
 
-* Remove the `s3Configuration` attribute from the root of the resource. `s3_configuration` is now a part of the following blocks: `elasticsearch_configuration`, `opensearch_configuration`, `redshift_configuration`, `splunk_configuration`, and `http_endpoint_configuration`.
+* Remove the `s3Configuration` attribute from the root of the resource. `s3Configuration` is now a part of the following blocks: `elasticsearchConfiguration`, `opensearchConfiguration`, `redshiftConfiguration`, `splunkConfiguration`, and `httpEndpointConfiguration`.
 * Remove `s3` as an option for `destination`. Use `extended_s3` instead
-* Rename `extendedS3Configuration0S3BackupConfiguration0BufferSize` and `extended_s3_configuration.0.s3_backup_configuration.0.buffer_interval` to `extended_s3_configuration.0.s3_backup_configuration.0.buffering_size` and `extended_s3_configuration.0.s3_backup_configuration.0.buffering_interval`, respectively.
-* Rename `redshiftConfiguration0S3BackupConfiguration0BufferSize` and `redshift_configuration.0.s3_backup_configuration.0.buffer_interval` to `redshift_configuration.0.s3_backup_configuration.0.buffering_size` and `redshift_configuration.0.s3_backup_configuration.0.buffering_interval`, respectively.
-* Rename `s3Configuration0BufferSize` and `s3_configuration.0.buffer_interval` to `s3_configuration.0.buffering_size` and `s3_configuration.0.buffering_interval`, respectively.
+* Rename `extended_s3_configuration.0.s3_backup_configuration.0.buffer_size` and `extended_s3_configuration.0.s3_backup_configuration.0.buffer_interval` to `extended_s3_configuration.0.s3_backup_configuration.0.buffering_size` and `extended_s3_configuration.0.s3_backup_configuration.0.buffering_interval`, respectively.
+* Rename `redshift_configuration.0.s3_backup_configuration.0.buffer_size` and `redshift_configuration.0.s3_backup_configuration.0.buffer_interval` to `redshift_configuration.0.s3_backup_configuration.0.buffering_size` and `redshift_configuration.0.s3_backup_configuration.0.buffering_interval`, respectively.
+* Rename `s3_configuration.0.buffer_size` and `s3_configuration.0.buffer_interval` to `s3_configuration.0.buffering_size` and `s3_configuration.0.buffering_interval`, respectively.
 
 ## resource/aws_launch_configuration
 
-Remove `vpcClassicLinkId` and `vpcClassicLinkSecurityGroups` from configurations as they no longer exist. We removed them as part of the EC2-Classic retirement.
+Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. We removed them as part of the EC2-Classic retirement.
 
 ## resource/aws_launch_template
 
-We removed defaults from `metatadataOptions`. Launch template metadata options will now default to unset values, which is the AWS default behavior.
+We removed defaults from `metatadata_options`. Launch template metadata options will now default to unset values, which is the AWS default behavior.
 
 ## resource/aws_lightsail_instance
 
@@ -430,31 +430,31 @@ We removed this resource as part of the Macie Classic retirement.
 
 ## resource/aws_medialive_multiplex_program
 
-Change `statemuxSettings`, which no longer exists, to `statmuxSettings` in configurations.
+Change `statemux_settings`, which no longer exists, to `statmuxSettings` in configurations.
 
 ## resource/aws_msk_cluster
 
-Remove `brokerNodeGroupInfoEbsVolumeSize` from configurations as it no longer exists.
+Remove `broker_node_group_info.ebs_volume_size` from configurations as it no longer exists.
 
 ## resource/aws_neptune_cluster
 
-Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshotIdentifier` attribute into alignment with other RDS resources, such as `awsDbInstance`.
+Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshotIdentifier` attribute into alignment with other RDS resources, such as `aws_db_instance`.
 
 Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
 ## resource/aws_networkmanager_core_network
 
-Remove `policyDocument` from configurations as it no longer exists. Use the `awsNetworkmanagerCoreNetworkPolicyAttachment` resource instead.
+Remove `policyDocument` from configurations as it no longer exists. Use the `aws_networkmanager_core_network_policy_attachment` resource instead.
 
 ## resource/aws_opensearch_domain
 
-* The `kibanaEndpoint` attribute has been deprecated. All configurations using `kibana_endpoint` should be updated to use the `dashboard_endpoint` attribute instead.
+* The `kibanaEndpoint` attribute has been deprecated. All configurations using `kibanaEndpoint` should be updated to use the `dashboardEndpoint` attribute instead.
 * The `engineVersion` attribute no longer has a default value. Omitting this attribute will now create a domain with the latest OpenSearch version, consistent with the behavior of the AWS API.
 
 ## resource/aws_rds_cluster
 
 * Update configurations to always include `engine` since it is now required and has no default. Previously, not including `engine` was equivalent to `engine = "aurora"` and created a MySQL-5.6-compatible cluster.
-* Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshot_identifier` attribute into alignment with other RDS resources, such as `aws_db_instance`. **NOTE:** Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
+* Changes to the `snapshotIdentifier` attribute will now correctly force re-creation of the resource. Previously, changing this attribute would result in a successful apply, but without the cluster being restored (only the resource state was changed). This change brings behavior of the cluster `snapshotIdentifier` attribute into alignment with other RDS resources, such as `aws_db_instance`. **NOTE:** Automated snapshots **should not** be used for this attribute, unless from a different cluster. Automated snapshots are deleted as part of cluster destruction when the resource is replaced.
 
 ## resource/aws_rds_cluster_instance
 
@@ -462,7 +462,7 @@ Update configurations to always include `engine` since it is now required and ha
 
 ## resource/aws_redshift_cluster
 
-Remove `clusterSecurityGroups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
+Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## resource/aws_redshift_security_group
 
@@ -574,7 +574,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## resource/aws_route_table
 
-Update configurations to use `route.*NetworkInterfaceId` rather than `route.*InstanceId`, which no longer exists.
+Update configurations to use `route.*.network_interface_id` rather than `route.*.instance_id`, which no longer exists.
 
 For example, this configuration is _no longer valid_:
 
@@ -722,28 +722,28 @@ The `overwrite` attribute has been deprecated. Existing parameters should be exp
 
 ## resource/aws_vpc
 
-Remove `enableClassiclink` and `enableClassiclinkDnsSupport` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `enable_classiclink` and `enable_classiclink_dns_support` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection
 
-Remove `allowClassicLinkToRemoteVpc` and `allowVpcToRemoteClassicLink` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection_accepter
 
-Remove `allowClassicLinkToRemoteVpc` and `allowVpcToRemoteClassicLink` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_vpc_peering_connection_options
 
-Remove `allowClassicLinkToRemoteVpc` and `allowVpcToRemoteClassicLink` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## resource/aws_wafv2_web_acl
 
-* Remove `statementManagedRuleGroupStatementExcludedRule` and `statement.rule_group_reference_statement.excluded_rule` from configurations as they no longer exist.
-* The `statementRuleGroupReferenceStatementRuleActionOverride` attribute has been added.
+* Remove `statement.managed_rule_group_statement.excluded_rule` and `statement.rule_group_reference_statement.excluded_rule` from configurations as they no longer exist.
+* The `statement.rule_group_reference_statement.rule_action_override` attribute has been added.
 
 ## resource/aws_wafv2_web_acl_logging_configuration
 
-Remove `redactedFieldsAllQueryArguments`, `redactedFieldsBody` and `redactedFieldsSingleQueryArgument` from configurations as they no longer exist.
+Remove `redacted_fields.all_query_arguments`, `redacted_fields.body` and `redacted_fields.single_query_argument` from configurations as they no longer exist.
 
 ## data-source/aws_api_gateway_rest_api
 
@@ -751,11 +751,11 @@ The `minimumCompressionSize` attribute is now a String type, allowing it to be c
 
 ## data-source/aws_connect_hours_of_operation
 
-Remove `hoursOfOperationArn` from configurations as it no longer exists.
+Remove `hours_of_operation_arn` from configurations as it no longer exists.
 
 ## data-source/aws_db_instance
 
-Remove `dbSecurityGroups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
+Remove `db_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## data-source/aws_elasticache_cluster
 
@@ -763,12 +763,12 @@ Remove `securityGroupNames` from configurations as it no longer exists. We remov
 
 ## data-source/aws_elasticache_replication_group
 
-Rename `numberCacheClusters` and `replicationGroupDescription`, which no longer exist, to `numCacheClusters`, and `description`, respectively.
+Rename `number_cache_clusters` and `replication_group_description`, which no longer exist, to `numCacheClusters`, and `description`, respectively.
 
 ## data-source/aws_iam_policy_document
 
-* Remove `sourceJson` and `override_json` from configurations. Use `source_policy_documents` and `override_policy_documents`, respectively, instead.
-* Don't add empty `statementSid` values to `json` attribute value.
+* Remove `source_json` and `override_json` from configurations. Use `sourcePolicyDocuments` and `overridePolicyDocuments`, respectively, instead.
+* Don't add empty `statement.sid` values to `json` attribute value.
 
 ## data-source/aws_identitystore_group
 
@@ -780,7 +780,7 @@ Remove `filter` from configurations as it no longer exists.
 
 ## data-source/aws_launch_configuration
 
-Remove `vpcClassicLinkId` and `vpcClassicLinkSecurityGroups` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `vpc_classic_link_id` and `vpc_classic_link_security_groups` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
 ## data-source/aws_opensearch_domain
 
@@ -792,12 +792,12 @@ The `tagsAll` attribute has been deprecated and will be removed in a future vers
 
 ## data-source/aws_redshift_cluster
 
-Remove `clusterSecurityGroups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
+Remove `cluster_security_groups` from configurations as it no longer exists. We removed it as part of the EC2-Classic retirement.
 
 ## data-source/aws_redshift_service_account
 
 [AWS document](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) that [a service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) be used instead of AWS account ID in any relevant IAM policy.
-The [`awsRedshiftServiceAccount`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
+The [`aws_redshift_service_account`](/docs/providers/aws/d/redshift_service_account.html) data source should now be considered deprecated and will be removed in a future version.
 
 ## data-source/aws_service_discovery_service
 
@@ -809,10 +809,10 @@ Remove `rotationEnabled`, `rotationLambdaArn` and `rotationRules` from configura
 
 ## data-source/aws_subnet_ids
 
-We removed the `awsSubnetIds` data source. Use the [`awsSubnets`](/docs/providers/aws/d/subnets.html) data source instead.
+We removed the `aws_subnet_ids` data source. Use the [`aws_subnets`](/docs/providers/aws/d/subnets.html) data source instead.
 
 ## data-source/aws_vpc_peering_connection
 
-Remove `allowClassicLinkToRemoteVpc` and `allowVpcToRemoteClassicLink` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
+Remove `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` from configurations as they no longer exist. They were part of the EC2-Classic retirement.
 
-<!-- cache-key: cdktf-0.19.0 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->
+<!-- cache-key: cdktf-0.20.1 input-aca6d1f7e7d666acb626774a0855d9b010ab540c0e171c9acb88a23401334cb9 -->

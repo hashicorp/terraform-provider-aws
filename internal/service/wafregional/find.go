@@ -15,14 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindRegexMatchSetByID(ctx context.Context, conn *wafregional.WAFRegional, id string) (*waf.RegexMatchSet, error) {
-	result, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
-		RegexMatchSetId: aws.String(id),
-	})
-
-	return result.RegexMatchSet, err
-}
-
 func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *wafregional.WAFRegional, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
 	hasName := name != ""
 	hasMetricName := metricName != ""

@@ -40,7 +40,7 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -72,6 +72,8 @@ const (
 )
 
 func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.ImportPlaybackKeyPairInput{
@@ -79,29 +81,31 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
 	out, err := conn.ImportPlaybackKeyPairWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.KeyPair == nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.KeyPair.Arn))
 
 	if _, err := waitPlaybackKeyPairCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForCreation, ResNamePlaybackKeyPair, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNamePlaybackKeyPair, d.Id(), err)
 	}
 
-	return resourcePlaybackKeyPairRead(ctx, d, meta)
+	return append(diags, resourcePlaybackKeyPairRead(ctx, d, meta)...)
 }
 
 func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindPlaybackKeyPairByID(ctx, conn, d.Id())
@@ -109,21 +113,23 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVS PlaybackKeyPair (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNamePlaybackKeyPair, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNamePlaybackKeyPair, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("fingerprint", out.Fingerprint)
 
-	return nil
+	return diags
 }
 
 func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS PlaybackKeyPair %s", d.Id())
@@ -133,16 +139,16 @@ func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionDeleting, ResNamePlaybackKeyPair, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionDeleting, ResNamePlaybackKeyPair, d.Id(), err)
 	}
 
 	if _, err := waitPlaybackKeyPairDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForDeletion, ResNamePlaybackKeyPair, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForDeletion, ResNamePlaybackKeyPair, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

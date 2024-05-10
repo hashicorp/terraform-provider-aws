@@ -67,30 +67,30 @@ This data source exports the following attributes in addition to the arguments a
 * `creationDate`: The date and time when the key was created
 * `customKeyStoreId`: A unique identifier for the custom key store that contains the KMS key.
 * `customerMasterKeySpec`: Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports
-* `deletionDate`: The date and time after which AWS KMS deletes the key. This value is present only when `key_state` is `PendingDeletion`, otherwise this value is 0
+* `deletionDate`: The date and time after which AWS KMS deletes the key. This value is present only when `keyState` is `PendingDeletion`, otherwise this value is 0
 * `description`: The description of the key.
-* `enabled`: Specifies whether the key is enabled. When `key_state` is `Enabled` this value is true, otherwise it is false
+* `enabled`: Specifies whether the key is enabled. When `keyState` is `Enabled` this value is true, otherwise it is false
 * `expirationModel`: Specifies whether the Key's key material expires. This value is present only when `origin` is `EXTERNAL`, otherwise this value is empty
 * `keyManager`: The key's manager
 * `keySpec`: Describes the type of key material in the KMS key.
 * `keyState`: The state of the key
 * `keyUsage`: Specifies the intended use of the key
 * `multiRegion`: Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key.
-* `multiRegionConfiguration`: Lists the primary and replica keys in same multi-Region key. Present only when the value of `multi_region` is `true`.
+* `multiRegionConfiguration`: Lists the primary and replica keys in same multi-Region key. Present only when the value of `multiRegion` is `true`.
 * `origin`: When this value is `AWS_KMS`, AWS KMS created the key material. When this value is `EXTERNAL`, the key material was imported from your existing key management infrastructure or the CMK lacks key material
 * `pendingDeletionWindowInDays`: The waiting period before the primary key in a multi-Region key is deleted.
-* `validTo`: The time at which the imported key material expires. This value is present only when `origin` is `EXTERNAL` and whose `expiration_model` is `KEY_MATERIAL_EXPIRES`, otherwise this value is 0
+* `validTo`: The time at which the imported key material expires. This value is present only when `origin` is `EXTERNAL` and whose `expirationModel` is `KEY_MATERIAL_EXPIRES`, otherwise this value is 0
 * `xksKeyConfiguration`: Information about the external key that is associated with a KMS key in an external key store.
 
 The `multiRegionConfiguration` object supports the following:
 
-* `multiRegionKeyType`: Indicates whether the KMS key is a `PRIMARY` or `REPLICA` key.
-* `primaryKey`: The key ARN and Region of the primary key. This is the current KMS key if it is the primary key.
-* `replicaKeys`: The key ARNs and Regions of all replica keys. Includes the current KMS key if it is a replica key.
+* `multi_region_key_type`: Indicates whether the KMS key is a `PRIMARY` or `REPLICA` key.
+* `primary_key`: The key ARN and Region of the primary key. This is the current KMS key if it is the primary key.
+* `replica_keys`: The key ARNs and Regions of all replica keys. Includes the current KMS key if it is a replica key.
 
-The `primaryKey` and `replicaKeys` objects support the following:
+The `primary_key` and `replica_keys` objects support the following:
 
 * `arn`: The key ARN of a primary or replica key of a multi-Region key.
 * `region`: The AWS Region of a primary or replica key in a multi-Region key.
 
-<!-- cache-key: cdktf-0.19.0 input-ea7621c22f20905a0de28c0a03b164a5da43b21e2d3bdf0913f29e827818698b -->
+<!-- cache-key: cdktf-0.20.1 input-ea7621c22f20905a0de28c0a03b164a5da43b21e2d3bdf0913f29e827818698b -->

@@ -12,8 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_managed_prefix_list")
@@ -30,7 +32,7 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -43,15 +45,15 @@ func DataSourceManagedPrefixList() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			"filter": customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -60,17 +62,17 @@ func DataSourceManagedPrefixList() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -79,20 +81,22 @@ func DataSourceManagedPrefixList() *schema.Resource {
 }
 
 func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeManagedPrefixListsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
-			"prefix-list-name": d.Get("name").(string),
+		Filters: newAttributeFilterList(map[string]string{
+			"prefix-list-name": d.Get(names.AttrName).(string),
 		}),
 	}
 
-	if v, ok := d.GetOk("id"); ok {
+	if v, ok := d.GetOk(names.AttrID); ok {
 		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -104,7 +108,7 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	pl, err := FindManagedPrefixList(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Managed Prefix List", err))
 	}
 
 	d.SetId(aws.StringValue(pl.PrefixListId))
@@ -112,22 +116,22 @@ func dataSourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData
 	prefixListEntries, err := FindManagedPrefixListEntriesByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Managed Prefix List (%s) Entries: %s", d.Id(), err)
 	}
 
 	d.Set("address_family", pl.AddressFamily)
-	d.Set("arn", pl.PrefixListArn)
+	d.Set(names.AttrARN, pl.PrefixListArn)
 	if err := d.Set("entries", flattenPrefixListEntries(prefixListEntries)); err != nil {
-		return diag.Errorf("setting entries: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting entries: %s", err)
 	}
 	d.Set("max_entries", pl.MaxEntries)
-	d.Set("name", pl.PrefixListName)
-	d.Set("owner_id", pl.OwnerId)
-	d.Set("version", pl.Version)
+	d.Set(names.AttrName, pl.PrefixListName)
+	d.Set(names.AttrOwnerID, pl.OwnerId)
+	d.Set(names.AttrVersion, pl.Version)
 
-	if err := d.Set("tags", KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, pl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/budgets"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,41 +17,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbudgets "github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
-	var conf budgets.Action
+	var conf awstypes.Action
 
 	const thresholdValue = "1000000000"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, budgets.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, budgets.ApprovalModelAutomatic, thresholdValue),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, "approval_model", budgets.ApprovalModelAutomatic),
+					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelAuto)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", budgets.ActionStatusStandby),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ActionStatusStandby)),
 				),
 			},
 			{
@@ -67,35 +68,35 @@ func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
-	var conf budgets.Action
+	var conf awstypes.Action
 
 	const thresholdValue = "100"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, budgets.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, budgets.ApprovalModelAutomatic, thresholdValue),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, "approval_model", budgets.ApprovalModelAutomatic),
+					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelAuto)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
 			{
@@ -111,35 +112,35 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
-	var conf budgets.Action
+	var conf awstypes.Action
 
 	const thresholdValue = "100"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, budgets.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, budgets.ApprovalModelManual, thresholdValue),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelManual), thresholdValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "budgets", regexache.MustCompile(fmt.Sprintf(`budget/%s/action/.+`, rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "budget_name", "aws_budgets_budget.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
-					resource.TestCheckResourceAttr(resourceName, "approval_model", budgets.ApprovalModelManual),
+					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelManual)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"), // Race condition between "STANDBY" and "PENDING"
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus), // Race condition between "STANDBY" and "PENDING"
 				),
 			},
 			{
@@ -155,16 +156,16 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget_action.test"
-	var conf budgets.Action
+	var conf awstypes.Action
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, budgets.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, budgets.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BudgetsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, budgets.ApprovalModelAutomatic, "100"),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
@@ -175,7 +176,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccBudgetActionExists(ctx context.Context, resourceName string, config *budgets.Action) resource.TestCheckFunc {
+func testAccBudgetActionExists(ctx context.Context, resourceName string, config *awstypes.Action) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -186,7 +187,7 @@ func testAccBudgetActionExists(ctx context.Context, resourceName string, config 
 			return fmt.Errorf("No Budget Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
 		accountID, actionID, budgetName, err := tfbudgets.BudgetActionParseResourceID(rs.Primary.ID)
 
@@ -194,7 +195,9 @@ func testAccBudgetActionExists(ctx context.Context, resourceName string, config 
 			return err
 		}
 
-		output, err := tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+		output, err := tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
+			return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+		})
 
 		if err != nil {
 			return err
@@ -208,7 +211,7 @@ func testAccBudgetActionExists(ctx context.Context, resourceName string, config 
 
 func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BudgetsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_budgets_budget_action" {
@@ -221,7 +224,9 @@ func testAccCheckBudgetActionDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			_, err = tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+			_, err = tfbudgets.FindBudgetWithDelay(ctx, func() (*awstypes.Action, error) {
+				return tfbudgets.FindActionByThreePartKey(ctx, conn, accountID, actionID, budgetName)
+			})
 
 			if tfresource.NotFound(err) {
 				continue

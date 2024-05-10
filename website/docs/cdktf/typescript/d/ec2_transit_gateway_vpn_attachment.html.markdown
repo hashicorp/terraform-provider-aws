@@ -12,7 +12,7 @@ description: |-
 
 Get information on an EC2 Transit Gateway VPN Attachment.
 
--> EC2 Transit Gateway VPN Attachments are implicitly created by VPN Connections referencing an EC2 Transit Gateway so there is no managed resource. For ease, the [`awsVpnConnection` resource](/docs/providers/aws/r/vpn_connection.html) includes a `transitGatewayAttachmentId` attribute which can replace some usage of this data source. For tagging the attachment, see the [`awsEc2Tag` resource](/docs/providers/aws/r/ec2_tag.html).
+-> EC2 Transit Gateway VPN Attachments are implicitly created by VPN Connections referencing an EC2 Transit Gateway so there is no managed resource. For ease, the [`aws_vpn_connection` resource](/docs/providers/aws/r/vpn_connection.html) includes a `transitGatewayAttachmentId` attribute which can replace some usage of this data source. For tagging the attachment, see the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html).
 
 ## Example Usage
 
@@ -95,4 +95,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-88b75ea1f3920ded56d1eddbe0d74b036502601096fcc354c6675666bea832df -->
+<!-- cache-key: cdktf-0.20.1 input-88b75ea1f3920ded56d1eddbe0d74b036502601096fcc354c6675666bea832df -->

@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_resource_server")
-func ResourceResourceServer() *schema.Resource {
+// @SDKResource("aws_cognito_resource_server", name="Resource Server")
+func resourceResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceServerCreate,
 		ReadWithoutTimeout:   resourceResourceServerRead,
@@ -41,7 +41,7 @@ func ResourceResourceServer() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 
 	params := &cognitoidentityprovider.CreateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		UserPoolId: aws.String(userPoolID),
 	}
 
@@ -118,7 +118,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.DescribeResourceServerInput{
@@ -137,7 +137,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
@@ -147,11 +147,11 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.IsNewResource() && (resp == nil || resp.ResourceServer == nil) {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)
-	d.Set("name", resp.ResourceServer.Name)
+	d.Set(names.AttrName, resp.ResourceServer.Name)
 	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
 
 	scopes := flattenServerScope(resp.ResourceServer.Scopes)
@@ -181,7 +181,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Scopes:     expandServerScope(d.Get("scope").(*schema.Set).List()),
 		UserPoolId: aws.String(userPoolID),
 	}
@@ -205,17 +205,16 @@ func resourceResourceServerDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
-	params := &cognitoidentityprovider.DeleteResourceServerInput{
+	_, err = conn.DeleteResourceServerWithContext(ctx, &cognitoidentityprovider.DeleteResourceServerInput{
 		Identifier: aws.String(identifier),
 		UserPoolId: aws.String(userPoolID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
-	_, err = conn.DeleteResourceServerWithContext(ctx, params)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 

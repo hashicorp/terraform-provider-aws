@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_organizational_units")
@@ -29,15 +30,15 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -128,9 +129,9 @@ func flattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[s
 	var result []map[string]interface{}
 	for _, ou := range ous {
 		result = append(result, map[string]interface{}{
-			"arn":  aws.StringValue(ou.Arn),
-			"id":   aws.StringValue(ou.Id),
-			"name": aws.StringValue(ou.Name),
+			names.AttrARN:  aws.StringValue(ou.Arn),
+			names.AttrID:   aws.StringValue(ou.Id),
+			names.AttrName: aws.StringValue(ou.Name),
 		})
 	}
 	return result

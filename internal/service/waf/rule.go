@@ -43,7 +43,7 @@ func ResourceRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func ResourceRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
@@ -78,7 +78,7 @@ func ResourceRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -97,7 +97,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input := &waf.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 			Tags:        getTagsIn(ctx),
 		}
 
@@ -105,7 +105,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Rule (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Rule (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	resp := out.(*waf.CreateRuleOutput)
@@ -156,9 +156,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	for _, predicateSet := range resp.Rule.Predicates {
 		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"negated":      *predicateSet.Negated,
+			names.AttrType: *predicateSet.Type,
+			"data_id":      *predicateSet.DataId,
 		}
 		predicates = append(predicates, predicate)
 	}
@@ -169,9 +169,9 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("rule/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("predicates", predicates)
-	d.Set("name", resp.Rule.Name)
+	d.Set(names.AttrName, resp.Rule.Name)
 	d.Set("metric_name", resp.Rule.MetricName)
 
 	return diags

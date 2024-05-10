@@ -10,7 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecs_cluster")
@@ -19,7 +21,7 @@ func DataSourceCluster() *schema.Resource {
 		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -56,27 +58,29 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -84,32 +88,32 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))
 
 	if err != nil {
-		return diag.Errorf("reading ECS Cluster (%s): %s", clusterName, err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Cluster (%s): %s", clusterName, err)
 	}
 
 	d.SetId(aws.StringValue(cluster.ClusterArn))
-	d.Set("arn", cluster.ClusterArn)
+	d.Set(names.AttrARN, cluster.ClusterArn)
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
-	d.Set("status", cluster.Status)
+	d.Set(names.AttrStatus, cluster.Status)
 
 	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if cluster.ServiceConnectDefaults != nil {
 		if err := d.Set("service_connect_defaults", []interface{}{flattenClusterServiceConnectDefaults(cluster.ServiceConnectDefaults)}); err != nil {
-			return diag.Errorf("setting service_connect_defaults: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting service_connect_defaults: %s", err)
 		}
 	} else {
 		d.Set("service_connect_defaults", nil)
 	}
 
 	if err := d.Set("setting", flattenClusterSettings(cluster.Settings)); err != nil {
-		return diag.Errorf("setting setting: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
 	}
 
-	return nil
+	return diags
 }

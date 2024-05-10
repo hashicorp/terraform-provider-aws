@@ -10,15 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_account_public_access_block")
+// @SDKDataSource("aws_s3_account_public_access_block", name="Account Public Access Block")
 func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -44,10 +45,10 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
 

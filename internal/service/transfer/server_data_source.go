@@ -12,13 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_transfer_server")
 func DataSourceServer() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -30,7 +31,7 @@ func DataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,10 +96,10 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(output.ServerId))
-	d.Set("arn", output.Arn)
+	d.Set(names.AttrARN, output.Arn)
 	d.Set("certificate", output.Certificate)
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", serverID)))
+	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", serverID)))
 	d.Set("endpoint_type", output.EndpointType)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {

@@ -92,9 +92,13 @@ All of the argument attributes except `filter` are also exported as result attri
 * `accepter` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 
-* `cidrBlockSet` - List of objects with CIDR blocks of the requester VPC.
+* `cidrBlockSet` - List of objects with IPv4 CIDR blocks of the requester VPC.
 
-* `peerCidrBlockSet` - List of objects with CIDR blocks of the accepter VPC.
+* `ipv6CidrBlockSet` - List of objects with IPv6 CIDR blocks of the requester VPC.
+
+* `peerCidrBlockSet` - List of objects with IPv4 CIDR blocks of the accepter VPC.
+
+* `peerIpv6CidrBlockSet` - List of objects with IPv6 CIDR blocks of the accepter VPC.
 
 * `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
@@ -114,4 +118,4 @@ private IP addresses when queried from instances in a peer VPC.
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-b38a9587aaca2300c795e51ead64f4c57e57a85ac3044ada5792edf97aa88b1a -->
+<!-- cache-key: cdktf-0.20.1 input-e811d52912227c02c785a36503dfcfbc291177dbfea96d9dda6567025643ccb7 -->

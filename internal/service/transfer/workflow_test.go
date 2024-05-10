@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTransferWorkflow_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +36,8 @@ func TestAccTransferWorkflow_basic(t *testing.T) {
 				Config: testAccWorkflowConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`workflow/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.copy_step_details.#", "0"),
@@ -67,7 +68,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccTransferWorkflow_onExceptionSteps(t *testing.T) {
 				Config: testAccWorkflowConfig_onExceptionSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`workflow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.copy_step_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.0.custom_step_details.#", "0"),
@@ -114,7 +115,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,7 +123,7 @@ func TestAccTransferWorkflow_description(t *testing.T) {
 				Config: testAccWorkflowConfig_description(rName, "testing"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
 				),
 			},
 			{
@@ -142,7 +143,7 @@ func TestAccTransferWorkflow_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +189,7 @@ func TestAccTransferWorkflow_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +213,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkflowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +221,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 				Config: testAccWorkflowConfig_allSteps(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "transfer", regexache.MustCompile(`workflow/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`workflow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "on_exception_steps.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.#", "5"),
 					resource.TestCheckResourceAttr(resourceName, "steps.0.copy_step_details.#", "1"),
@@ -241,7 +242,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "steps.1.custom_step_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "steps.1.custom_step_details.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "steps.1.custom_step_details.0.source_file_location", "${original.file}"),
-					resource.TestCheckResourceAttrPair(resourceName, "steps.1.custom_step_details.0.target", "aws_lambda_function.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "steps.1.custom_step_details.0.target", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "steps.1.custom_step_details.0.timeout_seconds", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "steps.1.decrypt_step_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.1.delete_step_details.#", "0"),
@@ -252,7 +253,7 @@ func TestAccTransferWorkflow_allSteps(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.0.efs_file_location.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.0.efs_file_location.0.file_system_id", "aws_efs_file_system.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.0.efs_file_location.0.file_system_id", "aws_efs_file_system.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.0.efs_file_location.0.path", "/test"),
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.0.destination_file_location.0.s3_file_location.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "steps.2.decrypt_step_details.0.name", rName),

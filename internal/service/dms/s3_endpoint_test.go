@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSS3Endpoint_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,7 +31,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "true"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, names.AttrBucketName),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", "private"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", "false"),
@@ -53,7 +53,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
@@ -63,8 +63,8 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "preserve_transactions", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "false"),
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "11000"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "true"),
@@ -86,7 +86,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "true"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, names.AttrBucketName),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", "private"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", "100"),
@@ -118,7 +118,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
@@ -128,8 +128,8 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "preserve_transactions", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "false"),
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "11000"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "true"),
@@ -142,7 +142,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "updated_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "updated_name"),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", "private"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", "true"),
@@ -164,7 +164,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
-					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
@@ -174,8 +174,8 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "preserve_transactions", "false"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "true"),
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "13000"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test2", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_kms_key_id", "aws_kms_key.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", "tx_commit_time2"),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "true"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
@@ -192,7 +192,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +203,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "beckut_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "beckut_name"),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", ""),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", "false"),
@@ -236,7 +236,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "true"),
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_kms_key_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_csv_no_sup_value", "false"),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
@@ -257,7 +257,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -267,7 +267,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "beckut_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "beckut_name"),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", ""),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_only", "false"),
@@ -292,7 +292,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "true"),
 					resource.TestCheckResourceAttr(resourceName, "row_group_length", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
 					resource.TestCheckResourceAttr(resourceName, "timestamp_column_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "use_task_start_time_for_full_load_timestamp", "false"),
@@ -319,7 +319,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -328,7 +328,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "bucket_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, names.AttrBucketName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path"),
 					resource.TestCheckResourceAttr(resourceName, "csv_delimiter", ";"),
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\r\\n"),
@@ -336,7 +336,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "source"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "true"),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", "private"),
@@ -350,7 +350,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
-					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "external_table_definition", "{\"TableCount\":1,\"Tables\":[{\"TableColumns\":[{\"ColumnIsPk\":\"true\",\"ColumnName\":\"ID\",\"ColumnNullable\":\"false\",\"ColumnType\":\"INT8\"},{\"ColumnLength\":\"20\",\"ColumnName\":\"LastName\",\"ColumnType\":\"STRING\"}],\"TableColumnsTotal\":\"2\",\"TableName\":\"employee\",\"TableOwner\":\"hr\",\"TablePath\":\"hr/employee/\"}]}"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
@@ -364,7 +364,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_name", "beckut_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketName, "beckut_name"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path2"),
 					resource.TestCheckResourceAttr(resourceName, "csv_delimiter", ","),
 					resource.TestCheckResourceAttr(resourceName, "csv_row_delimiter", "\\n"),
@@ -372,7 +372,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "source"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rfc_4180", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_access_role_arn", "aws_iam_role.test", names.AttrARN),
 
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "canned_acl_for_objects", "authenticated-read"),
@@ -387,7 +387,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dict_page_size_limit", "830000"),
 					resource.TestCheckResourceAttr(resourceName, "enable_statistics", "true"),
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain-dictionary"),
-					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "external_table_definition", "{\"TableCount\":1,\"Tables\":[{\"TableColumns\":[{\"ColumnIsPk\":\"true\",\"ColumnName\":\"ID\",\"ColumnNullable\":\"false\",\"ColumnType\":\"INT8\"}],\"TableColumnsTotal\":\"1\",\"TableName\":\"employee\",\"TableOwner\":\"hr\",\"TablePath\":\"hr/employee/\"}]}"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "100"),
@@ -407,7 +407,7 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{

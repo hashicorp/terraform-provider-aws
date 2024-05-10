@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElastiCacheClusterDataSource_basic(t *testing.T) {
@@ -25,13 +26,13 @@ func TestAccElastiCacheClusterDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone", resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAvailabilityZone, resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_address", resourceName, "cluster_address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "configuration_endpoint", resourceName, "configuration_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
@@ -39,7 +40,7 @@ func TestAccElastiCacheClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "node_type", resourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "num_cache_nodes", resourceName, "num_cache_nodes"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPort, resourceName, names.AttrPort),
 					resource.TestCheckResourceAttrPair(dataSourceName, "preferred_outpost_arn", resourceName, "preferred_outpost_arn"),
 				),
 			},
@@ -58,7 +59,7 @@ func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

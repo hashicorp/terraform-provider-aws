@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -459,7 +459,7 @@ func sweepMacSecKeys(region string) error {
 	// key when deleting the MACsec key association. The only option to
 	// clean up the dangling resource is to use Secrets Manager to delete
 	// the MACsec key secret.
-	smConn := client.SecretsManagerConn(ctx)
+	smConn := client.SecretsManagerClient(ctx)
 	dxInput := &directconnect.DescribeConnectionsInput{}
 	var sweeperErrs *multierror.Error
 
@@ -495,7 +495,7 @@ func sweepMacSecKeys(region string) error {
 			}
 
 			log.Printf("[DEBUG] Deleting MACSec secret key: %s", *input.SecretId)
-			_, err := smConn.DeleteSecretWithContext(ctx, input)
+			_, err := smConn.DeleteSecret(ctx, input)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error deleting MACsec Secret (%s): %w", arn, err)

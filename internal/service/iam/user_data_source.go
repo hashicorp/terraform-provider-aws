@@ -7,22 +7,23 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_iam_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,14 +43,14 @@ func DataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get("user_name").(string)
@@ -57,15 +58,15 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Reading IAM User: %s", req)
-	resp, err := conn.GetUserWithContext(ctx, req)
+	log.Printf("[DEBUG] Reading IAM User: %v", req)
+	resp, err := conn.GetUser(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting user: %s", err)
 	}
 
 	user := resp.User
-	d.SetId(aws.StringValue(user.UserId))
-	d.Set("arn", user.Arn)
+	d.SetId(aws.ToString(user.UserId))
+	d.Set(names.AttrARN, user.Arn)
 	d.Set("path", user.Path)
 	d.Set("permissions_boundary", "")
 	if user.PermissionsBoundary != nil {
@@ -76,7 +77,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tags := KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

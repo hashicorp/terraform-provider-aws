@@ -219,6 +219,35 @@ resource "aws_lb_listener" "example" {
 }
 ```
 
+### Mutual TLS Authentication
+
+```terraform
+
+resource "aws_lb" "example" {
+  load_balancer_type = "application"
+
+  # ...
+}
+
+resource "aws_lb_target_group" "example" {
+  # ...
+}
+
+resource "aws_lb_listener" "example" {
+  load_balancer_arn = aws_lb.example.id
+
+  default_action {
+    target_group_arn = aws_lb_target_group.example.id
+    type             = "forward"
+  }
+
+  mutual_authentication {
+    mode            = "verify"
+    trust_store_arn = "..."
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -230,6 +259,7 @@ The following arguments are optional:
 
 * `alpn_policy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
 * `certificate_arn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
+* `mutual_authentication` - (Optional) The mutual authentication configuration information. Detailed below.
 * `port` - (Optional) Port on which the load balancer is listening. Not valid for Gateway Load Balancers.
 * `protocol` - (Optional) Protocol for connections from clients to the load balancer. For Application Load Balancers, valid values are `HTTP` and `HTTPS`, with a default of `HTTP`. For Network Load Balancers, valid values are `TCP`, `TLS`, `UDP`, and `TCP_UDP`. Not valid to use `UDP` or `TCP_UDP` if dual-stack mode is enabled. Not valid for Gateway Load Balancers.
 * `ssl_policy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `HTTPS` or `TLS`.
@@ -248,10 +278,19 @@ The following arguments are optional:
 * `authenticate_cognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. Detailed below.
 * `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. Detailed below.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
-* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `target_group_arn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `target_group_arn`. Detailed below.
-* `order` - (Optional) Order for the action. This value is required for rules with multiple actions. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
+  Specify only if `type` is `forward`.
+  Cannot be specified with `target_group_arn`.
+  Detailed below.
+* `order` - (Optional) Order for the action.
+  The action with the lowest value for order is performed first.
+  Valid values are between `1` and `50000`.
+  Defaults to the position in the list of actions.
 * `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. Detailed below.
-* `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
+* `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic.
+  Specify only if `type` is `forward` and you want to route to a single target group.
+  To route to one or more target groups, use a `forward` block instead.
+  Cannot be specified with `forward`.
 
 #### authenticate_cognito
 
@@ -349,6 +388,12 @@ The following arguments are optional:
 * `port` - (Optional) Port. Specify a value from `1` to `65535` or `#{port}`. Defaults to `#{port}`.
 * `protocol` - (Optional) Protocol. Valid values are `HTTP`, `HTTPS`, or `#{protocol}`. Defaults to `#{protocol}`.
 * `query` - (Optional) Query parameters, URL-encoded when necessary, but not percent-encoded. Do not include the leading "?". Defaults to `#{query}`.
+
+### mutual_authentication
+
+* `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
+* `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
+* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ## Attribute Reference
 

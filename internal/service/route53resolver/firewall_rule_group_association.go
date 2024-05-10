@@ -38,7 +38,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +53,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(route53resolver.MutationProtectionStatus_Values(), false),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validResolverName,
@@ -64,7 +64,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -78,14 +78,14 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.AssociateFirewallRuleGroupInput{
 		CreatorRequestId:    aws.String(id.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
 		Priority:            aws.Int64(int64(d.Get("priority").(int))),
 		Tags:                getTagsIn(ctx),
-		VpcId:               aws.String(d.Get("vpc_id").(string)),
+		VpcId:               aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	if v, ok := d.GetOk("mutation_protection"); ok {
@@ -123,12 +123,12 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	}
 
 	arn := aws.StringValue(ruleGroupAssociation.Arn)
-	d.Set("arn", arn)
-	d.Set("name", ruleGroupAssociation.Name)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
 	d.Set("priority", ruleGroupAssociation.Priority)
-	d.Set("vpc_id", ruleGroupAssociation.VpcId)
+	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
 	return nil
 }
@@ -136,10 +136,10 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges("name", "mutation_protection", "priority") {
+	if d.HasChanges(names.AttrName, "mutation_protection", "priority") {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
 			FirewallRuleGroupAssociationId: aws.String(d.Id()),
-			Name:                           aws.String(d.Get("name").(string)),
+			Name:                           aws.String(d.Get(names.AttrName).(string)),
 			Priority:                       aws.Int64(int64(d.Get("priority").(int))),
 		}
 

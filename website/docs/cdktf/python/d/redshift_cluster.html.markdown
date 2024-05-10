@@ -87,6 +87,7 @@ This data source exports the following attributes in addition to the arguments a
 * `iam_roles` - IAM roles associated to the cluster
 * `kms_key_id` - KMS encryption key associated to the cluster
 * `master_username` - Username for the master DB user
+* `multi_az` - If the cluster is a Multi-AZ deployment
 * `node_type` - Cluster node type
 * `number_of_nodes` - Number of nodes in the cluster
 * `maintenance_track_name` - The name of the maintenance track for the restored cluster.
@@ -107,4 +108,4 @@ Cluster nodes (for `cluster_nodes`) support the following attributes:
 * `private_ip_address` - Private IP address of a node within a cluster
 * `public_ip_address` - Public IP address of a node within a cluster
 
-<!-- cache-key: cdktf-0.19.0 input-b688cc951fcaa53d0c385e11d05c939768ec5145c1f1ba9b8e2ae85e93a68c87 -->
+<!-- cache-key: cdktf-0.20.1 input-aab68f73a05c65a75cc35fff468fa2c875296239afeda093db3bbc836a929675 -->

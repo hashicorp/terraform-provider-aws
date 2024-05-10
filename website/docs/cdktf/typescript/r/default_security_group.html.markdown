@@ -12,13 +12,13 @@ description: |-
 
 Provides a resource to manage a default security group. This resource can manage the default security group of the default or a non-default VPC.
 
-~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `awsDefaultSecurityGroup` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management.
+~> **NOTE:** This is an advanced resource with special caveats. Please read this document in its entirety before using this resource. The `aws_default_security_group` resource behaves differently from normal resources. Terraform does not _create_ this resource but instead attempts to "adopt" it into management.
 
 When Terraform first begins managing the default security group, it **immediately removes all ingress and egress rules in the Security Group**. It then creates any rules specified in the configuration. This way only the rules specified in the configuration are created.
 
-This resource treats its inline rules as absolute; only the rules defined inline are created, and any additions/removals external to this resource will result in diff shown. For these reasons, this resource is incompatible with the `awsSecurityGroupRule` resource.
+This resource treats its inline rules as absolute; only the rules defined inline are created, and any additions/removals external to this resource will result in diff shown. For these reasons, this resource is incompatible with the `aws_security_group_rule` resource.
 
-For more information about default security groups, see the AWS documentation on [Default Security Groups][aws-default-security-groups]. To manage normal security groups, see the [`awsSecurityGroup`](/docs/providers/aws/r/security_group.html) resource.
+For more information about default security groups, see the AWS documentation on [Default Security Groups][aws-default-security-groups]. To manage normal security groups, see the [`aws_security_group`](/docs/providers/aws/r/security_group.html) resource.
 
 ## Example Usage
 
@@ -100,7 +100,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### Removing `awsDefaultSecurityGroup` From Your Configuration
+### Removing `aws_default_security_group` From Your Configuration
 
 Removing this resource from your configuration will remove it from your statefile and management, but will not destroy the Security Group. All ingress or egress rules will be left as they are at the time of removal. You can resume managing them via the AWS Console.
 
@@ -110,8 +110,8 @@ The following arguments are optional:
 
 * `egress` - (Optional, VPC only) Configuration block. Detailed below.
 * `ingress` - (Optional) Configuration block. Detailed below.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpcId` - (Optional, Forces new resource) VPC ID. **Note that changing the `vpc_id` will _not_ restore any default security group rules that were modified, added, or removed.** It will be left in its current state.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpcId` - (Optional, Forces new resource) VPC ID. **Note that changing the `vpcId` will _not_ restore any default security group rules that were modified, added, or removed.** It will be left in its current state.
 
 ### egress and ingress
 
@@ -124,7 +124,7 @@ Both `egress` and `ingress` objects have the same arguments.
 * `fromPort` - (Required) Start port (or ICMP type number if protocol is `icmp`)
 * `ipv6CidrBlocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefixListIds` - (Optional) List of prefix list IDs (for allowing access to VPC endpoints)
-* `protocol` - (Required) Protocol. If you select a protocol of "-1" (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to `0`. If not `icmp`, `tcp`, `udp`, or `-1` use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml).
+* `protocol` - (Required) Protocol. If you select a protocol of "-1" (semantically equivalent to `all`, which is not a valid value here), you must specify a `fromPort` and `toPort` equal to `0`. If not `icmp`, `tcp`, `udp`, or `-1` use the [protocol number](https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml).
 * `securityGroups` - (Optional) List of security groups. A group name can be used relative to the default VPC. Otherwise, group ID.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 * `toPort` - (Required) End range port (or ICMP code if protocol is `icmp`).
@@ -138,7 +138,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the security group.
 * `name` - Name of the security group.
 * `ownerId` - Owner ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [aws-default-security-groups]: http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-network-security.html#default-security-group
 
@@ -150,9 +150,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { DefaultSecurityGroup } from "./.gen/providers/aws/default-security-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    DefaultSecurityGroup.generateConfigForImport(
+      this,
+      "defaultSg",
+      "sg-903004f8"
+    );
   }
 }
 
@@ -164,4 +174,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_default_security_group.default_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1772c4a79e74a3aeb963e0bbd212a020fc07e8e9c6c1eef173ce3d3d6f84d54b -->
+<!-- cache-key: cdktf-0.20.1 input-1772c4a79e74a3aeb963e0bbd212a020fc07e8e9c6c1eef173ce3d3d6f84d54b -->

@@ -88,6 +88,7 @@ This data source exports the following attributes in addition to the arguments a
 * `domainName` - Suffix domain name to used when resolving non Fully Qualified Domain NamesE.g., the `search` value in the `/etc/resolv.conf` file.
 * `domainNameServers` - List of name servers.
 * `id` - EC2 DHCP Options ID
+* `ipv6AddressPreferredLeaseTime` - How frequently, in seconds, a running instance with an IPv6 assigned to it goes through DHCPv6 lease renewal.
 * `netbiosNameServers` - List of NETBIOS name servers.
 * `netbiosNodeType` - NetBIOS node type (1, 2, 4, or 8). For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
 * `ntpServers` - List of NTP servers.
@@ -100,4 +101,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-791925442f0012e5d97b1162afa65bd01197d035ae1eee08f5a4eb0bdfc0c813 -->
+<!-- cache-key: cdktf-0.20.1 input-5e07846ee257802e7847e95f52b4668824fd29e496f4146c97275d9ef810ad8f -->

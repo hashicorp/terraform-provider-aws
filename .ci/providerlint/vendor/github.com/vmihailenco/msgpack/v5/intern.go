@@ -57,18 +57,16 @@ func encodeInternedStringValue(e *Encoder, v reflect.Value) error {
 
 func (e *Encoder) encodeInternedString(s string, intern bool) error {
 	// Interned string takes at least 3 bytes. Plain string 1 byte + string len.
-	if len(s) >= minInternedStringLen {
-		if idx, ok := e.dict[s]; ok {
-			return e.encodeInternedStringIndex(idx)
-		}
+	if idx, ok := e.dict[s]; ok {
+		return e.encodeInternedStringIndex(idx)
+	}
 
-		if intern && len(e.dict) < maxDictLen {
-			if e.dict == nil {
-				e.dict = make(map[string]int)
-			}
-			idx := len(e.dict)
-			e.dict[s] = idx
+	if intern && len(s) >= minInternedStringLen && len(e.dict) < maxDictLen {
+		if e.dict == nil {
+			e.dict = make(map[string]int)
 		}
+		idx := len(e.dict)
+		e.dict[s] = idx
 	}
 
 	return e.encodeNormalString(s)

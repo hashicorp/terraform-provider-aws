@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_domain_list")
@@ -18,7 +19,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 		ReadWithoutTimeout: dataSourceFirewallDomainListRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +39,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func DataSourceFirewallDomainList() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,15 +74,15 @@ func dataSourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(aws.StringValue(firewallDomainList.Id))
-	d.Set("arn", firewallDomainList.Arn)
+	d.Set(names.AttrARN, firewallDomainList.Arn)
 	d.Set("creation_time", firewallDomainList.CreationTime)
 	d.Set("creator_request_id", firewallDomainList.CreatorRequestId)
 	d.Set("domain_count", firewallDomainList.DomainCount)
 	d.Set("firewall_domain_list_id", firewallDomainList.Id)
-	d.Set("name", firewallDomainList.Name)
+	d.Set(names.AttrName, firewallDomainList.Name)
 	d.Set("managed_owner_name", firewallDomainList.ManagedOwnerName)
 	d.Set("modification_time", firewallDomainList.ModificationTime)
-	d.Set("status", firewallDomainList.Status)
+	d.Set(names.AttrStatus, firewallDomainList.Status)
 	d.Set("status_message", firewallDomainList.StatusMessage)
 
 	return nil

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +35,7 @@ func ResourceAppImageConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,6 +47,132 @@ func ResourceAppImageConfig() *schema.Resource {
 					validation.StringLenBetween(1, 63),
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
+			},
+			"code_editor_app_image_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_arguments": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"container_entrypoint": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"container_environment_variables": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"file_system_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_gid": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntInSlice([]int{0, 100}),
+									},
+									"default_uid": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      1000,
+										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
+									},
+									"mount_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "/home/sagemaker-user",
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 1024),
+											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"jupyter_lab_image_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_arguments": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"container_entrypoint": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"container_environment_variables": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"file_system_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_gid": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntInSlice([]int{0, 100}),
+									},
+									"default_uid": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      1000,
+										ValidateFunc: validation.IntInSlice([]int{0, 1000}),
+									},
+									"mount_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "/home/sagemaker-user",
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 1024),
+											validation.StringMatch(regexache.MustCompile(`^\/.*`), "Must start with `/`."),
+										),
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"kernel_gateway_image_config": {
 				Type:     schema.TypeList,
@@ -86,7 +213,7 @@ func ResourceAppImageConfig() *schema.Resource {
 						"kernel_spec": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 1,
+							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"display_name": {
@@ -94,7 +221,7 @@ func ResourceAppImageConfig() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"name": {
+									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -122,8 +249,16 @@ func resourceAppImageConfigCreate(ctx context.Context, d *schema.ResourceData, m
 		Tags:               getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]interface{})) > 0 {
+		input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]interface{})) > 0 {
+		input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-		input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+		input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]interface{}))
 	}
 
 	_, err := conn.CreateAppImageConfigWithContext(ctx, input)
@@ -152,9 +287,17 @@ func resourceAppImageConfigRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := aws.StringValue(image.AppImageConfigArn)
 	d.Set("app_image_config_name", image.AppImageConfigName)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
-	if err := d.Set("kernel_gateway_image_config", flattenAppImageConfigKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
+	if err := d.Set("code_editor_app_image_config", flattenCodeEditorAppImageConfig(image.CodeEditorAppImageConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting code_editor_app_image_config: %s", err)
+	}
+
+	if err := d.Set("kernel_gateway_image_config", flattenKernelGatewayImageConfig(image.KernelGatewayImageConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting kernel_gateway_image_config: %s", err)
+	}
+
+	if err := d.Set("jupyter_lab_image_config", flattenJupyterLabAppImageConfig(image.JupyterLabAppImageConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting kernel_gateway_image_config: %s", err)
 	}
 
@@ -165,13 +308,27 @@ func resourceAppImageConfigUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChange("kernel_gateway_image_config") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &sagemaker.UpdateAppImageConfigInput{
 			AppImageConfigName: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
-			input.KernelGatewayImageConfig = expandAppImageConfigKernelGatewayImageConfig(v.([]interface{}))
+		if d.HasChange("code_editor_app_image_config") {
+			if v, ok := d.GetOk("code_editor_app_image_config"); ok && len(v.([]interface{})) > 0 {
+				input.CodeEditorAppImageConfig = expandCodeEditorAppImageConfig(v.([]interface{}))
+			}
+		}
+
+		if d.HasChange("kernel_gateway_image_config") {
+			if v, ok := d.GetOk("kernel_gateway_image_config"); ok && len(v.([]interface{})) > 0 {
+				input.KernelGatewayImageConfig = expandKernelGatewayImageConfig(v.([]interface{}))
+			}
+		}
+
+		if d.HasChange("jupyter_lab_image_config") {
+			if v, ok := d.GetOk("jupyter_lab_image_config"); ok && len(v.([]interface{})) > 0 {
+				input.JupyterLabAppImageConfig = expandJupyterLabAppImageConfig(v.([]interface{}))
+			}
 		}
 
 		log.Printf("[DEBUG] SageMaker App Image Config update config: %#v", *input)
@@ -202,7 +359,7 @@ func resourceAppImageConfigDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
+func expandKernelGatewayImageConfig(l []interface{}) *sagemaker.KernelGatewayImageConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -212,17 +369,17 @@ func expandAppImageConfigKernelGatewayImageConfig(l []interface{}) *sagemaker.Ke
 	config := &sagemaker.KernelGatewayImageConfig{}
 
 	if v, ok := m["kernel_spec"].([]interface{}); ok && len(v) > 0 {
-		config.KernelSpecs = expandAppImageConfigKernelGatewayImageConfigKernelSpecs(v)
+		config.KernelSpecs = expandKernelGatewayImageConfigKernelSpecs(v)
 	}
 
 	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
-		config.FileSystemConfig = expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(v)
+		config.FileSystemConfig = expandFileSystemConfig(v)
 	}
 
 	return config
 }
 
-func expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
+func expandFileSystemConfig(l []interface{}) *sagemaker.FileSystemConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -238,7 +395,7 @@ func expandAppImageConfigKernelGatewayImageConfigFileSystemConfig(l []interface{
 	return config
 }
 
-func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
+func expandKernelGatewayImageConfigKernelSpecs(tfList []interface{}) []*sagemaker.KernelSpec {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -253,7 +410,7 @@ func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{
 		}
 
 		kernelSpec := &sagemaker.KernelSpec{
-			Name: aws.String(tfMap["name"].(string)),
+			Name: aws.String(tfMap[names.AttrName].(string)),
 		}
 
 		if v, ok := tfMap["display_name"].(string); ok && v != "" {
@@ -266,7 +423,7 @@ func expandAppImageConfigKernelGatewayImageConfigKernelSpecs(tfList []interface{
 	return kernelSpecs
 }
 
-func flattenAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
+func flattenKernelGatewayImageConfig(config *sagemaker.KernelGatewayImageConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -274,17 +431,17 @@ func flattenAppImageConfigKernelGatewayImageConfig(config *sagemaker.KernelGatew
 	m := map[string]interface{}{}
 
 	if config.KernelSpecs != nil {
-		m["kernel_spec"] = flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
+		m["kernel_spec"] = flattenKernelGatewayImageConfigKernelSpecs(config.KernelSpecs)
 	}
 
 	if config.FileSystemConfig != nil {
-		m["file_system_config"] = flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config.FileSystemConfig)
+		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
+func flattenFileSystemConfig(config *sagemaker.FileSystemConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}
@@ -298,13 +455,13 @@ func flattenAppImageConfigKernelGatewayImageConfigFileSystemConfig(config *sagem
 	return []map[string]interface{}{m}
 }
 
-func flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
+func flattenKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sagemaker.KernelSpec) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0, len(kernelSpecs))
 
 	for _, raw := range kernelSpecs {
 		kernelSpec := make(map[string]interface{})
 
-		kernelSpec["name"] = aws.StringValue(raw.Name)
+		kernelSpec[names.AttrName] = aws.StringValue(raw.Name)
 
 		if raw.DisplayName != nil {
 			kernelSpec["display_name"] = aws.StringValue(raw.DisplayName)
@@ -314,4 +471,118 @@ func flattenAppImageConfigKernelGatewayImageConfigKernelSpecs(kernelSpecs []*sag
 	}
 
 	return res
+}
+
+func expandCodeEditorAppImageConfig(l []interface{}) *sagemaker.CodeEditorAppImageConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.CodeEditorAppImageConfig{}
+
+	if v, ok := m["container_config"].([]interface{}); ok && len(v) > 0 {
+		config.ContainerConfig = expandContainerConfig(v)
+	}
+
+	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
+		config.FileSystemConfig = expandFileSystemConfig(v)
+	}
+
+	return config
+}
+
+func flattenCodeEditorAppImageConfig(config *sagemaker.CodeEditorAppImageConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.ContainerConfig != nil {
+		m["container_config"] = flattenContainerConfig(config.ContainerConfig)
+	}
+
+	if config.FileSystemConfig != nil {
+		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandJupyterLabAppImageConfig(l []interface{}) *sagemaker.JupyterLabAppImageConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.JupyterLabAppImageConfig{}
+
+	if v, ok := m["container_config"].([]interface{}); ok && len(v) > 0 {
+		config.ContainerConfig = expandContainerConfig(v)
+	}
+
+	if v, ok := m["file_system_config"].([]interface{}); ok && len(v) > 0 {
+		config.FileSystemConfig = expandFileSystemConfig(v)
+	}
+
+	return config
+}
+
+func flattenJupyterLabAppImageConfig(config *sagemaker.JupyterLabAppImageConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.ContainerConfig != nil {
+		m["container_config"] = flattenContainerConfig(config.ContainerConfig)
+	}
+
+	if config.FileSystemConfig != nil {
+		m["file_system_config"] = flattenFileSystemConfig(config.FileSystemConfig)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandContainerConfig(l []interface{}) *sagemaker.ContainerConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.ContainerConfig{}
+
+	if v, ok := m["container_arguments"].([]interface{}); ok && len(v) > 0 {
+		config.ContainerArguments = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["container_entrypoint"].([]interface{}); ok && len(v) > 0 {
+		config.ContainerEntrypoint = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["container_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
+		config.ContainerEnvironmentVariables = flex.ExpandStringMap(v)
+	}
+
+	return config
+}
+
+func flattenContainerConfig(config *sagemaker.ContainerConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"container_arguments":             flex.FlattenStringList(config.ContainerArguments),
+		"container_entrypoint":            flex.FlattenStringList(config.ContainerEntrypoint),
+		"container_environment_variables": flex.FlattenStringMap(config.ContainerEnvironmentVariables),
+	}
+
+	return []map[string]interface{}{m}
 }

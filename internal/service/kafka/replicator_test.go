@@ -5,21 +5,17 @@ package kafka_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -49,9 +45,9 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
@@ -96,9 +92,9 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				Config: testAccReplicatorConfig_basic(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
@@ -118,9 +114,9 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 				Config: testAccReplicatorConfig_update(rName, sourceCluster, targetCluster),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicatorExists(ctx, resourceName, &replicator),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replicator_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-description"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.subnet_ids.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "kafka_cluster.0.vpc_config.0.security_groups_ids.#", "1"),
@@ -246,44 +242,39 @@ func testAccCheckReplicatorDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.DescribeReplicator(ctx, &kafka.DescribeReplicatorInput{
-				ReplicatorArn: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.NotFoundException](err) {
+			_, err := tfkafka.FindReplicatorByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return create.Error(names.Kafka, create.ErrActionCheckingDestroyed, tfkafka.ResNameReplicator, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("MSK Replicator %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckReplicatorExists(ctx context.Context, name string, replicator *kafka.DescribeReplicatorOutput) resource.TestCheckFunc {
+func testAccCheckReplicatorExists(ctx context.Context, n string, v *kafka.DescribeReplicatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameReplicator, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameReplicator, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaClient(ctx)
-		resp, err := conn.DescribeReplicator(ctx, &kafka.DescribeReplicatorInput{
-			ReplicatorArn: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfkafka.FindReplicatorByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.Kafka, create.ErrActionCheckingExistence, tfkafka.ResNameReplicator, rs.Primary.ID, err)
+			return err
 		}
 
-		*replicator = *resp
+		*v = *output
 
 		return nil
 	}

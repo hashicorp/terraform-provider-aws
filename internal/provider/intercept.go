@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -241,13 +243,13 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 			// Remove system tags.
 			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 
 			if why == Create {
 				break
 			}
 
-			if d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				if d.HasChange(names.AttrTagsAll) {
 					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 						var identifier string
@@ -273,6 +275,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 								UpdateTags(context.Context, any, string, string, any, any) error
 							}); ok && r.tags.ResourceType != "" {
 								err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+							} else {
+								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+									"ResourceType":   r.tags.ResourceType,
+								})
 							}
 
 							// ISO partitions may not support tagging, giving error.
@@ -325,6 +332,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							ListTags(context.Context, any, string, string) error
 						}); ok && r.tags.ResourceType != "" {
 							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
 						}
 
 						// ISO partitions may not support tagging, giving error.
@@ -413,7 +425,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 		case Read:
 			// Get the data source's configured tags.
 			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 		}
 	case After:
 		// Set tags and tags_all in state after CRU.

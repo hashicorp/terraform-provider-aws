@@ -50,4 +50,4 @@ This data source exports the following attributes in addition to the arguments a
 * `subnet_ids` - List of subnets attached to the VPC Link.
 * `tags` - VPC Link Tags.
 
-<!-- cache-key: cdktf-0.19.0 input-db9af2f442336fd7de2229afb09e10b9b5c69f60032807dbab92c400c5bb0259 -->
+<!-- cache-key: cdktf-0.20.1 input-db9af2f442336fd7de2229afb09e10b9b5c69f60032807dbab92c400c5bb0259 -->

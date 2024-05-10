@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_security_group_ids` - Provides a list of VPC security groups that the proxy belongs to.
 * `vpc_subnet_ids` - EC2 subnet IDs for the proxy.
 
-<!-- cache-key: cdktf-0.19.0 input-40613dad61f863b46258986380665de6148f37458b6c3dc04b218f3d733ebd72 -->
+<!-- cache-key: cdktf-0.20.1 input-40613dad61f863b46258986380665de6148f37458b6c3dc04b218f3d733ebd72 -->

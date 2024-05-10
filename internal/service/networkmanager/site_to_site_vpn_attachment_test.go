@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,18 +43,18 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "SITE_TO_SITE_VPN"),
-					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", vpnResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpnResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpn_connection_arn", vpnResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpn_connection_arn", vpnResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -78,7 +79,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSiteToSiteVPNAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

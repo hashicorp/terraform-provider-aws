@@ -53,16 +53,16 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -73,7 +73,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -104,7 +104,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,10 +114,10 @@ func ResourceClusterInstance() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
-					validation.StringInSlice(ClusterEngine_Values(), false),
+					validation.StringInSlice(ClusterInstanceEngine_Values(), false),
 				),
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -146,7 +146,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func ResourceClusterInstance() *schema.Resource {
 					),
 				),
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"preferred_maintenance_window": {
+			names.AttrPreferredMaintenanceWindow: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -219,7 +219,7 @@ func ResourceClusterInstance() *schema.Resource {
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -241,14 +241,14 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	identifier := create.NewNameGenerator(
 		create.WithConfiguredName(d.Get("identifier").(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
 	input := &rds.CreateDBInstanceInput{
-		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
+		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		DBClusterIdentifier:     aws.String(clusterID),
 		DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
@@ -259,7 +259,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zone"); ok {
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
@@ -275,7 +275,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.CustomIamInstanceProfile = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -303,7 +303,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredBackupWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
@@ -390,15 +390,15 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if db.Endpoint != nil {
-		d.Set("endpoint", db.Endpoint.Address)
-		d.Set("port", db.Endpoint.Port)
+		d.Set(names.AttrEndpoint, db.Endpoint.Address)
+		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 
-	d.Set("arn", db.DBInstanceArn)
-	d.Set("auto_minor_version_upgrade", db.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", db.AvailabilityZone)
+	d.Set(names.AttrARN, db.DBInstanceArn)
+	d.Set(names.AttrAutoMinorVersionUpgrade, db.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, db.AvailabilityZone)
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
-	d.Set("cluster_identifier", db.DBClusterIdentifier)
+	d.Set(names.AttrClusterIdentifier, db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
 	d.Set("custom_iam_instance_profile", db.CustomIamInstanceProfile)
 	if len(db.DBParameterGroups) > 0 && db.DBParameterGroups[0] != nil {
@@ -412,7 +412,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("identifier", db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
-	d.Set("kms_key_id", db.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, db.KmsKeyId)
 	d.Set("monitoring_interval", db.MonitoringInterval)
 	d.Set("monitoring_role_arn", db.MonitoringRoleArn)
 	d.Set("network_type", db.NetworkType)
@@ -420,7 +420,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("performance_insights_kms_key_id", db.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", db.PerformanceInsightsRetentionPeriod)
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
-	d.Set("preferred_maintenance_window", db.PreferredMaintenanceWindow)
+	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
@@ -435,14 +435,14 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 
-		if d.HasChange("auto_minor_version_upgrade") {
-			input.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
 
 		if d.HasChange("ca_cert_identifier") {
@@ -485,8 +485,8 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
-		if d.HasChange("preferred_maintenance_window") {
-			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
 		if d.HasChange("promotion_tier") {
@@ -552,7 +552,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func clusterSetResourceDataEngineVersionFromClusterInstance(d *schema.ResourceData, c *rds.DBInstance) {
-	oldVersion := d.Get("engine_version").(string)
+	oldVersion := d.Get(names.AttrEngineVersion).(string)
 	newVersion := aws.StringValue(c.EngineVersion)
 	var pendingVersion string
 	if c.PendingModifiedValues != nil && c.PendingModifiedValues.EngineVersion != nil {

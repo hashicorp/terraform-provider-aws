@@ -61,7 +61,7 @@ This resource supports the following arguments:
   the instance before snapshotting. This is risky since it may cause a snapshot of an
   inconsistent filesystem state, but can be used to avoid downtime if the user otherwise
   guarantees that no filesystem writes will be underway at the time of snapshot.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts
 
@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
-[`awsAmi`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
+[`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
-<!-- cache-key: cdktf-0.19.0 input-d3b464f0179fdca5ee710daa9220402ec177617c9090c92a91af04fa0dca1ffa -->
+<!-- cache-key: cdktf-0.20.1 input-d3b464f0179fdca5ee710daa9220402ec177617c9090c92a91af04fa0dca1ffa -->

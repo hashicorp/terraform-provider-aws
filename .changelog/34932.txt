@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_fsx_lustre_file_system: Allow `per_unit_storage_throughput` to be updated in-place
+```

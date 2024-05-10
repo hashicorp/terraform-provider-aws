@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +35,8 @@ func TestAccVPCEndpointServiceAllowedPrincipal_basic(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,8 +61,8 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_Multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", "id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
 					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
@@ -80,7 +80,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,9 +88,9 @@ func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, "id"),
-					resource.TestCheckResourceAttr(tagResourceName, "key", "Name"),
-					resource.TestCheckResourceAttr(tagResourceName, "value", rName),
+					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
+					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),
 			},
 		},
@@ -105,7 +105,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +139,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckVPCEndpointServiceAllowedPrincipalDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -159,10 +159,10 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 				Config:                   testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "id", regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, "id"),
-					resource.TestCheckResourceAttr(tagResourceName, "key", "Name"),
-					resource.TestCheckResourceAttr(tagResourceName, "value", rName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
+					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
+					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),
 			},
 		},

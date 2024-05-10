@@ -12,9 +12,9 @@ description: |-
 
 Use this resource to invoke a lambda function. The lambda function is invoked with the [RequestResponse](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html#API_Invoke_RequestSyntax) invocation type.
 
-~> **NOTE:** By default this resource _only_ invokes the function when the arguments call for a create or replace. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`awsLambdaInvocation`](/docs/providers/aws/d/lambda_invocation.html) data source. To invoke the lambda function when the terraform resource is updated and deleted, see the [CRUD Lifecycle Scope](#crud-lifecycle-scope) example below.
+~> **NOTE:** By default this resource _only_ invokes the function when the arguments call for a create or replace. In other words, after an initial invocation on _apply_, if the arguments do not change, a subsequent _apply_ does not invoke the function again. To dynamically invoke the function, see the `triggers` example below. To always invoke a function on each _apply_, see the [`aws_lambda_invocation`](/docs/providers/aws/d/lambda_invocation.html) data source. To invoke the lambda function when the terraform resource is updated and deleted, see the [CRUD Lifecycle Scope](#crud-lifecycle-scope) example below.
 
-~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`awsLambdaFunction`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
+~> **NOTE:** If you get a `KMSAccessDeniedException: Lambda was unable to decrypt the environment variables because KMS access was denied` error when invoking an [`aws_lambda_function`](/docs/providers/aws/r/lambda_function.html) with environment variables, the IAM role associated with the function may have been deleted and recreated _after_ the function was created. You can fix the problem two ways: 1) updating the function's role to another role and then updating it back again to the recreated role, or 2) by using Terraform to `taint` the function and `apply` your configuration again to recreate the function. (When you create a function, Lambda grants permissions on the KMS key to the function's IAM role. If the IAM role is recreated, the grant is no longer valid. Changing the function's role or recreating the function causes Lambda to update the grant.)
 
 ## Example Usage
 
@@ -120,7 +120,7 @@ class MyConvertedCode extends TerraformStack {
 The key `tf` gets added with subkeys:
 
 * `action` - Action Terraform performs on the resource. Values are `create`, `update`, or `delete`.
-* `prevInput` - Input JSON payload from the previous invocation. This can be used to handle update and delete events.
+* `prev_input` - Input JSON payload from the previous invocation. This can be used to handle update and delete events.
 
 When the resource from the example above is created, the Lambda will get following JSON payload:
 
@@ -178,7 +178,7 @@ The following arguments are optional:
 
 * `lifecycleScope` - (Optional) Lifecycle scope of the resource to manage. Valid values are `CREATE_ONLY` and `CRUD`. Defaults to `CREATE_ONLY`. `CREATE_ONLY` will invoke the function only on creation or replacement. `CRUD` will invoke the function on each lifecycle event, and augment the input JSON payload with additional lifecycle information.
 * `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
-* `terraformKey` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycle_scope` is set to `CRUD`.
+* `terraformKey` - (Optional) The JSON key used to store lifecycle information in the input JSON payload. Defaults to `tf`. This additional key is only included when `lifecycleScope` is set to `CRUD`.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a re-invocation. To force a re-invocation without changing these keys/values, use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html).
 
 ## Attribute Reference
@@ -187,4 +187,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `result` - String result of the lambda function invocation.
 
-<!-- cache-key: cdktf-0.19.0 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->
+<!-- cache-key: cdktf-0.20.1 input-7112258209b5478d3ef1a608e7acf55c35e00752fc231e672e536ec0d294422f -->

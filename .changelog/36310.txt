@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix bugs causing errors like `InvalidReplicationGroupState: Cluster not in available state to perform tagging operations.`
+```

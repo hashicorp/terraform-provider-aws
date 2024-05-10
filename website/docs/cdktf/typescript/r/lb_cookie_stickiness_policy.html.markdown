@@ -73,4 +73,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `lbPort` - The load balancer port to which the policy is applied.
 * `cookieExpirationPeriod` - The time period after which the session cookie is considered stale, expressed in seconds.
 
-<!-- cache-key: cdktf-0.19.0 input-fab95ad5bcc2bdeffcc1f3be4d3e7e2ca90c885f10678f8fbce6e3f28c5c37b3 -->
+<!-- cache-key: cdktf-0.20.1 input-fab95ad5bcc2bdeffcc1f3be4d3e7e2ca90c885f10678f8fbce6e3f28c5c37b3 -->

@@ -28,7 +28,7 @@ func TestAccQLDBStream_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +36,14 @@ func TestAccQLDBStream_basic(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "qldb", regexache.MustCompile(`stream/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`stream/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "exclusive_end_time", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "inclusive_start_time"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_configuration.0.aggregation_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "kinesis_configuration.0.stream_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "ledger_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "stream_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -60,7 +60,7 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccQLDBStream_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +125,7 @@ func TestAccQLDBStream_withEndTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.QLDBEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QLDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamDestroy(ctx),
 		Steps: []resource.TestStep{

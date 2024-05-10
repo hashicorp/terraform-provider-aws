@@ -25,9 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,7 +57,7 @@ func ResourceGateway() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"activation_key", "gateway_ip_address"},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -197,7 +197,7 @@ func ResourceGateway() *schema.Resource {
 								),
 							},
 						},
-						"domain_name": {
+						names.AttrDomainName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -298,7 +298,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
@@ -335,7 +335,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Received HTTP response: %#v", response)
-		if response.StatusCode != 302 {
+		if response.StatusCode != http.StatusFound {
 			return sdkdiag.AppendErrorf(diags, "expected HTTP status code 302, received: %d", response.StatusCode)
 		}
 
@@ -522,7 +522,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("activation_key", d.Get("activation_key").(string))
 
-	d.Set("arn", output.GatewayARN)
+	d.Set(names.AttrARN, output.GatewayARN)
 	d.Set("gateway_id", output.GatewayId)
 
 	// The Storage Gateway API currently provides no way to read this value
@@ -546,7 +546,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		m := map[string]interface{}{
-			"domain_name":             aws.StringValue(smbSettingsOutput.DomainName),
+			names.AttrDomainName:      aws.StringValue(smbSettingsOutput.DomainName),
 			"active_directory_status": aws.StringValue(smbSettingsOutput.ActiveDirectoryStatus),
 			// The Storage Gateway API currently provides no way to read these values
 			// "password": ...,
@@ -817,7 +817,7 @@ func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.Joi
 	}
 
 	domain := &storagegateway.JoinDomainInput{
-		DomainName:       aws.String(tfMap["domain_name"].(string)),
+		DomainName:       aws.String(tfMap[names.AttrDomainName].(string)),
 		GatewayARN:       aws.String(gatewayArn),
 		Password:         aws.String(tfMap["password"].(string)),
 		UserName:         aws.String(tfMap["username"].(string)),
@@ -864,11 +864,11 @@ func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storag
 
 	apiObject := &storagegateway.UpdateMaintenanceStartTimeInput{}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_month"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(tfMap["day_of_month"].(string)).ValueInt64(); !null && v > 0 {
 		apiObject.DayOfMonth = aws.Int64(v)
 	}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null {
+	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).ValueInt64(); !null {
 		apiObject.DayOfWeek = aws.Int64(v)
 	}
 

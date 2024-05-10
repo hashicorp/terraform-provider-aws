@@ -12,15 +12,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafregional_ipset")
-func DataSourceIPSet() *schema.Resource {
+// @SDKDataSource("aws_wafregional_ipset", name="IPSet")
+func dataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -31,7 +32,7 @@ func DataSourceIPSet() *schema.Resource {
 func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	ipsets := make([]*waf.IPSetSummary, 0)
 	// ListIPSetsInput does not have a name parameter for filtering or a paginator

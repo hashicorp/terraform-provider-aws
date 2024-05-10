@@ -15,7 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eks_addon_version")
@@ -37,7 +39,7 @@ func dataSourceAddonVersion() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,6 +48,8 @@ func dataSourceAddonVersion() *schema.Resource {
 }
 
 func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	addonName := d.Get("addon_name").(string)
@@ -54,16 +58,16 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	versionInfo, err := findAddonVersionByTwoPartKey(ctx, conn, addonName, kubernetesVersion, mostRecent)
 
 	if err != nil {
-		return diag.Errorf("reading EKS Add-On version info (%s, %s): %s", addonName, kubernetesVersion, err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On version info (%s, %s): %s", addonName, kubernetesVersion, err)
 	}
 
 	d.SetId(addonName)
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
 	d.Set("most_recent", mostRecent)
-	d.Set("version", versionInfo.AddonVersion)
+	d.Set(names.AttrVersion, versionInfo.AddonVersion)
 
-	return nil
+	return diags
 }
 
 func findAddonVersionByTwoPartKey(ctx context.Context, conn *eks.Client, addonName, kubernetesVersion string, mostRecent bool) (*types.AddonVersionInfo, error) {

@@ -8,9 +8,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -32,7 +32,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_arn(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
@@ -44,7 +44,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},
@@ -61,7 +61,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 			{
 				Config: testAccCertificateAuthorityDataSourceConfig_s3ObjectACLARN(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
@@ -87,7 +87,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.s3_object_acl", resourceName, "revocation_configuration.0.crl_configuration.0.s3_object_acl"),
 					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
 				),
 			},

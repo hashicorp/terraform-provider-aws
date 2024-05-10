@@ -12,7 +12,7 @@ description: |-
 
 Provides a resource to manage AWS Certificate Manager Private Certificate Authorities (ACM PCA Certificate Authorities).
 
-~> **NOTE:** Creating this resource will leave the certificate authority in a `pendingCertificate` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificateSigningRequest` attribute. The [`awsAcmpcaCertificateAuthorityCertificate`](/docs/providers/aws/r/acmpca_certificate_authority_certificate.html) resource can be used for this purpose.
+~> **NOTE:** Creating this resource will leave the certificate authority in a `PENDING_CERTIFICATE` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificateSigningRequest` attribute. The [`aws_acmpca_certificate_authority_certificate`](/docs/providers/aws/r/acmpca_certificate_authority_certificate.html) resource can be used for this purpose.
 
 ## Example Usage
 
@@ -162,7 +162,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocationConfiguration` - (Optional) Nested argument containing revocation configuration. Defined below.
 * `usageMode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `GENERAL_PURPOSE`. Valid values: `GENERAL_PURPOSE` and `SHORT_LIVED_CERTIFICATE`.
-* `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
 * `keyStorageSecurityStandard` - (Optional) Cryptographic key management compliance standard used for handling CA keys. Defaults to `FIPS_140_2_LEVEL_3_OR_HIGHER`. Valid values: `FIPS_140_2_LEVEL_3_OR_HIGHER` and `FIPS_140_2_LEVEL_2_OR_HIGHER`. Supported standard for each region can be found in the [Storage and security compliance of AWS Private CA private keys Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys).
 * `permanentDeletionTimeInDays` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
@@ -182,11 +182,11 @@ Contains information about the certificate subject. Identifies the entity that o
 * `distinguishedNameQualifier` - (Optional) Disambiguating information for the certificate subject. Must be less than or equal to 64 characters in length.
 * `generationQualifier` - (Optional) Typically a qualifier appended to the name of an individual. Examples include Jr. for junior, Sr. for senior, and III for third. Must be less than or equal to 3 characters in length.
 * `givenName` - (Optional) First name. Must be less than or equal to 16 characters in length.
-* `initials` - (Optional) Concatenation that typically contains the first letter of the `given_name`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
+* `initials` - (Optional) Concatenation that typically contains the first letter of the `givenName`, the first letter of the middle name if one exists, and the first letter of the `surname`. Must be less than or equal to 5 characters in length.
 * `locality` - (Optional) Locality (such as a city or town) in which the certificate subject is located. Must be less than or equal to 128 characters in length.
 * `organization` - (Optional) Legal name of the organization with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
 * `organizationalUnit` - (Optional) Subdivision or unit of the organization (such as sales or finance) with which the certificate subject is affiliated. Must be less than or equal to 64 characters in length.
-* `pseudonym` - (Optional) Typically a shortened version of a longer `given_name`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.
+* `pseudonym` - (Optional) Typically a shortened version of a longer `givenName`. For example, Jonathan is often shortened to John. Elizabeth is often shortened to Beth, Liz, or Eliza. Must be less than or equal to 128 characters in length.
 * `state` - (Optional) State in which the subject of the certificate is located. Must be less than or equal to 128 characters in length.
 * `surname` - (Optional) Family name. In the US and the UK for example, the surname of an individual is ordered last. In Asian cultures the surname is typically ordered first. Must be less than or equal to 40 characters in length.
 * `title` - (Optional) Title such as Mr. or Ms. which is pre-pended to the name to refer formally to the certificate subject. Must be less than or equal to 64 characters in length.
@@ -202,7 +202,7 @@ the custom OCSP responder endpoint. Defined below.
 * `customCname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public. Must be less than or equal to 253 characters in length.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
 * `expirationInDays` - (Optional, Required if `enabled` is `true`) Number of days until a certificate expires. Must be between 1 and 5000.
-* `s3BucketName` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
+* `s3BucketName` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `customCname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
 * `s3ObjectAcl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
 
 #### ocsp_configuration
@@ -222,7 +222,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `notAfter` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `notBefore` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -232,24 +232,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsAcmpcaCertificateAuthority` using the certificate authority ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AcmpcaCertificateAuthority } from "./.gen/providers/aws/acmpca-certificate-authority";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AcmpcaCertificateAuthority.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsAcmpcaCertificateAuthority` using the certificate authority ARN. For example:
+Using `terraform import`, import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
 ```console
 % terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->
+<!-- cache-key: cdktf-0.20.1 input-fb883601ee6544ef5b22499a07d5189a537b1a4c7dcbb9cd6e3997945ee21f4d -->

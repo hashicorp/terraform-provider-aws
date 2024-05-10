@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_endpoint")
@@ -19,7 +20,7 @@ func DataSourceEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,11 +34,11 @@ func DataSourceEndpoint() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -50,19 +51,28 @@ func DataSourceEndpoint() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"protocols": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"status": {
+			"resolver_endpoint_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrStatus: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,12 +122,14 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	ep := endpoints[0]
 	d.SetId(aws.StringValue(ep.Id))
-	d.Set("arn", ep.Arn)
+	d.Set(names.AttrARN, ep.Arn)
 	d.Set("direction", ep.Direction)
-	d.Set("name", ep.Name)
+	d.Set(names.AttrName, ep.Name)
+	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
-	d.Set("status", ep.Status)
-	d.Set("vpc_id", ep.HostVPCId)
+	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
+	d.Set(names.AttrStatus, ep.Status)
+	d.Set(names.AttrVPCID, ep.HostVPCId)
 
 	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
@@ -142,11 +154,11 @@ func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &route53resolver.Filter{
-			Name:   aws.String(m["name"].(string)),
+			Name:   aws.String(m[names.AttrName].(string)),
 			Values: filterValues,
 		})
 	}

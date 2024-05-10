@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Flattens an access log into something that flatmap.Flatten() can handle
@@ -22,7 +23,7 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 
 	r := make(map[string]interface{})
 	if l.S3BucketName != nil {
-		r["bucket"] = aws.StringValue(l.S3BucketName)
+		r[names.AttrBucket] = aws.StringValue(l.S3BucketName)
 	}
 
 	if l.S3BucketPrefix != nil {
@@ -34,7 +35,7 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 	}
 
 	if l.Enabled != nil {
-		r["enabled"] = aws.BoolValue(l.Enabled)
+		r[names.AttrEnabled] = aws.BoolValue(l.Enabled)
 	}
 
 	result = append(result, r)
@@ -164,8 +165,8 @@ func ExpandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 		data := lRaw.(map[string]interface{})
 
 		a := &elb.PolicyAttribute{
-			AttributeName:  aws.String(data["name"].(string)),
-			AttributeValue: aws.String(data["value"].(string)),
+			AttributeName:  aws.String(data[names.AttrName].(string)),
+			AttributeValue: aws.String(data[names.AttrValue].(string)),
 		}
 
 		attributes = append(attributes, a)
@@ -184,8 +185,8 @@ func FlattenPolicyAttributes(list []*elb.PolicyAttributeDescription) []interface
 		}
 
 		attribute := map[string]string{
-			"name":  aws.StringValue(attrdef.AttributeName),
-			"value": aws.StringValue(attrdef.AttributeValue),
+			names.AttrName:  aws.StringValue(attrdef.AttributeName),
+			names.AttrValue: aws.StringValue(attrdef.AttributeValue),
 		}
 
 		attributes = append(attributes, attribute)

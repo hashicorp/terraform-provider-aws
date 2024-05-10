@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
@@ -21,18 +21,18 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
@@ -48,18 +48,18 @@ func TestAccBatchJobQueueDataSource_schedulingPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobQueueDataSourceConfig_schedulingPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
