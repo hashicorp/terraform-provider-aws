@@ -21,7 +21,7 @@ func DataSourceParametersByPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -96,7 +96,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(path)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("names", n)
 	d.Set("types", types)
 	d.Set(names.AttrValues, values)
