@@ -48,7 +48,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -786,7 +786,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
@@ -1075,8 +1075,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				EndpointArn: aws.String(endpointARN),
 			}
 
-			if d.HasChange("certificate_arn") {
-				input.CertificateArn = aws.String(d.Get("certificate_arn").(string))
+			if d.HasChange(names.AttrCertificateARN) {
+				input.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 			}
 
 			if d.HasChange("endpoint_type") {
@@ -1530,7 +1530,7 @@ func validateSSEKMSKey(settingsAttrName string, d *schema.ResourceDiff) error {
 func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) error {
 	d.SetId(aws.StringValue(endpoint.EndpointIdentifier))
 
-	d.Set("certificate_arn", endpoint.CertificateArn)
+	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	// For some reason the AWS API only accepts lowercase type but returns it as uppercase

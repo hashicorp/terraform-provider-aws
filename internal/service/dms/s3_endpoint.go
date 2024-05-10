@@ -46,7 +46,7 @@ func ResourceS3Endpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -336,7 +336,7 @@ func resourceS3EndpointCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
@@ -415,7 +415,7 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 
-	d.Set("certificate_arn", endpoint.CertificateArn)
+	d.Set(names.AttrCertificateARN, endpoint.CertificateArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	d.Set("endpoint_type", strings.ToLower(*endpoint.EndpointType)) // For some reason the AWS API only accepts lowercase type but returns it as uppercase
 	d.Set("engine_display_name", endpoint.EngineDisplayName)
@@ -492,8 +492,8 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 		}
 
-		if d.HasChange("certificate_arn") {
-			input.CertificateArn = aws.String(d.Get("certificate_arn").(string))
+		if d.HasChange(names.AttrCertificateARN) {
+			input.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 		}
 
 		if d.HasChange("endpoint_type") {
@@ -507,7 +507,7 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 
 		if d.HasChangesExcept(
-			"certificate_arn",
+			names.AttrCertificateARN,
 			"endpoint_type",
 			"ssl_mode",
 		) {
