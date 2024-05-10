@@ -781,7 +781,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.HttpEndpointS3BackupMode](),
 							},
 							"s3_configuration": s3ConfigurationSchema(),
-							"url": {
+							names.AttrURL: {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
@@ -2931,7 +2931,7 @@ func expandHTTPEndpointRequestConfiguration(rc map[string]interface{}) *types.Ht
 
 func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpointConfiguration {
 	endpointConfiguration := &types.HttpEndpointConfiguration{
-		Url: aws.String(ep["url"].(string)),
+		Url: aws.String(ep[names.AttrURL].(string)),
 	}
 
 	if Name, ok := ep[names.AttrName]; ok {
@@ -3813,7 +3813,7 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 	}
 	m := map[string]interface{}{
 		names.AttrAccessKey:          configuredAccessKey,
-		"url":                        aws.ToString(description.EndpointConfiguration.Url),
+		names.AttrURL:                aws.ToString(description.EndpointConfiguration.Url),
 		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"s3_backup_mode":             description.S3BackupMode,
