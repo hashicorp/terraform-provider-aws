@@ -1445,3 +1445,13 @@ rules:
       - pattern: '"configuration"'
     severity: ERROR
     fix: "names.AttrConfiguration"
+  - id: literal-parameter-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrParameter` for the string literal "parameter"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"parameter"'
+    severity: ERROR
+    fix: "names.AttrParameter"
