@@ -75,7 +75,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -460,7 +460,7 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -499,7 +499,7 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -825,7 +825,7 @@ func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemp
 		item := make(map[string]interface{})
 		item["action_id"] = aws.ToString(v.ActionId)
 		item[names.AttrDescription] = aws.ToString(v.Description)
-		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
+		item[names.AttrParameter] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = v.StartAfter
 		item[names.AttrTarget] = flattenExperimentTemplateActionTargets(v.Targets)
 
