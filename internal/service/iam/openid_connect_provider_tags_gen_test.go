@@ -107,9 +107,10 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -117,9 +118,10 @@ func TestAccIAMOpenIDConnectProvider_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -166,9 +168,10 @@ func TestAccIAMOpenIDConnectProvider_tags_null(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -189,9 +192,10 @@ func TestAccIAMOpenIDConnectProvider_tags_AddOnUpdate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -266,9 +270,10 @@ func TestAccIAMOpenIDConnectProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -276,9 +281,10 @@ func TestAccIAMOpenIDConnectProvider_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -439,12 +445,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -455,12 +462,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -468,13 +476,14 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -486,13 +495,14 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -500,12 +510,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -516,12 +527,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -529,9 +541,10 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -541,9 +554,10 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_providerOnly(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -643,9 +657,10 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -655,9 +670,10 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nonOverlapping(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -824,12 +840,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToProviderOnly(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
@@ -840,12 +857,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToProviderOnly(t *te
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -867,12 +885,13 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_updateToResourceOnly(t *te
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/OpenIDConnectProvider/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),

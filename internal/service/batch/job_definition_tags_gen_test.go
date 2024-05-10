@@ -118,9 +118,10 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -128,9 +129,10 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -184,9 +186,10 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -208,9 +211,10 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -292,9 +296,10 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -302,9 +307,10 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -480,12 +486,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -496,12 +503,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -512,13 +520,14 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -530,13 +539,14 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -547,12 +557,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -563,12 +574,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -579,9 +591,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -591,9 +604,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -703,9 +717,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -715,9 +730,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -898,12 +914,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -914,12 +931,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -945,12 +963,13 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),

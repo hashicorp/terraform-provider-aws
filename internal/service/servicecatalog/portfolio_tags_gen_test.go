@@ -109,9 +109,10 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -119,9 +120,10 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -169,9 +171,10 @@ func TestAccServiceCatalogPortfolio_tags_null(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -193,9 +196,10 @@ func TestAccServiceCatalogPortfolio_tags_AddOnUpdate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -273,9 +277,10 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -283,9 +288,10 @@ func TestAccServiceCatalogPortfolio_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -453,12 +459,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -469,12 +476,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -482,13 +490,14 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -500,13 +509,14 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -514,12 +524,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -530,12 +541,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -543,9 +555,10 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -555,9 +568,10 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_providerOnly(t *testing.T) 
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -658,9 +672,10 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -670,9 +685,10 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_nonOverlapping(t *testing.T
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -841,12 +857,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),
@@ -857,12 +874,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToProviderOnly(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -885,12 +903,13 @@ func TestAccServiceCatalogPortfolio_tags_DefaultTags_updateToResourceOnly(t *tes
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Portfolio/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &v),

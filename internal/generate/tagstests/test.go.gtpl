@@ -168,9 +168,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -178,9 +179,10 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -221,12 +223,13 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				PlanOnly:           true,
-                ExpectNonEmptyPlan: false,
+				ExpectNonEmptyPlan: false,
 			},
 		},
 	})
@@ -239,9 +242,10 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -310,9 +314,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -320,9 +325,10 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -467,12 +473,13 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -483,24 +490,26 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -512,24 +521,26 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -540,20 +551,22 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key2": config.StringVariable("value2"),
 					}),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -563,9 +576,10 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -655,9 +669,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -667,9 +682,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":     config.StringVariable(rName),
+					"rName":        config.StringVariable(rName),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -820,12 +836,13 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -836,12 +853,13 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -857,12 +875,13 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags0_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
+					names.AttrTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}

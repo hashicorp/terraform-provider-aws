@@ -122,8 +122,6 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", false, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", true, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl)
 		}
