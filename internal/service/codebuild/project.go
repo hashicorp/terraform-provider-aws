@@ -111,7 +111,7 @@ func resourceProject() *schema.Resource {
 							},
 							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -490,7 +490,7 @@ func resourceProject() *schema.Resource {
 							Default:          types.ArtifactPackagingNone,
 							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1283,7 +1283,7 @@ func expandProjectArtifacts(tfMap map[string]interface{}) *types.ProjectArtifact
 		apiObject.Packaging = types.ArtifactPackaging(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
@@ -1727,7 +1727,7 @@ func flattenProjectArtifacts(apiObject *types.ProjectArtifacts) map[string]inter
 	}
 
 	if apiObject.Path != nil {
-		tfMap["path"] = aws.ToString(apiObject.Path)
+		tfMap[names.AttrPath] = aws.ToString(apiObject.Path)
 	}
 
 	return tfMap
@@ -1765,7 +1765,7 @@ func resourceProjectArtifactsHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := tfMap["path"]; ok {
+	if v, ok := tfMap[names.AttrPath]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
