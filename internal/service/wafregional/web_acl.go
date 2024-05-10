@@ -150,7 +150,7 @@ func resourceWebACL() *schema.Resource {
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
