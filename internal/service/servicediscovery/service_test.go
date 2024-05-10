@@ -46,7 +46,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.type", "A"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.routing_policy", "MULTIVALUE"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
@@ -58,7 +58,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServiceConfig_privateUpdate(rName, 5),
@@ -72,7 +72,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.0.ttl", "10"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.type", "AAAA"),
 					resource.TestCheckResourceAttr(resourceName, "dns_config.0.dns_records.1.ttl", "5"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "5"),
@@ -119,7 +119,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServiceConfig_public(rName, 3, "/updated-path"),
@@ -177,7 +177,7 @@ func TestAccServiceDiscoveryService_private_http(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -207,7 +207,7 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -259,7 +259,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
