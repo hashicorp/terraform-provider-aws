@@ -95,7 +95,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -250,7 +250,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -366,7 +366,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 	for i, sgmtActionI := range cfgSegmentActionsIntf {
 		cfgSA := sgmtActionI.(map[string]interface{})
 		sgmtAction := &CoreNetworkPolicySegmentAction{}
-		action := cfgSA["action"].(string)
+		action := cfgSA[names.AttrAction].(string)
 		sgmtAction.Action = action
 		var shareWith, shareWithExcept interface{}
 
@@ -440,7 +440,7 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 			policy.ConditionLogic = cL.(string)
 		}
 
-		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol[names.AttrAction].([]interface{}))
 		if err != nil {
 			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].action: %q", ruleStr, strconv.Itoa(i), err)
 		}
