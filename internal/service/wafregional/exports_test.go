@@ -25,6 +25,7 @@ var (
 	FindRateBasedRuleByID   = findRateBasedRuleByID
 	FindRegexMatchSetByID   = findRegexMatchSetByID
 	FindRegexPatternSetByID = findRegexPatternSetByID
+	FindRuleByID            = findRuleByID
 	FindRuleGroupByID       = findRuleGroupByID
 	FindWebACLByID          = findWebACLByID
 	FindWebACLByResourceARN = findWebACLByResourceARN

@@ -139,8 +139,8 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	for _, predicateSet := range rule.Predicates {
 		predicate := map[string]interface{}{
-			"data_id":      *predicateSet.DataId,
-			"negated":      *predicateSet.Negated,
+			"data_id":      aws.ToString(predicateSet.DataId),
+			"negated":      aws.ToBool(predicateSet.Negated),
 			names.AttrType: predicateSet.Type,
 		}
 		predicates = append(predicates, predicate)
