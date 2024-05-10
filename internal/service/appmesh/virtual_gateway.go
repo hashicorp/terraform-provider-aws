@@ -494,7 +494,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"mode": {
+										names.AttrMode: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.VirtualGatewayListenerTlsMode_Values(), false),
@@ -963,7 +963,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mTls := vTls[0].(map[string]interface{})
 
-				if vMode, ok := mTls["mode"].(string); ok && vMode != "" {
+				if vMode, ok := mTls[names.AttrMode].(string); ok && vMode != "" {
 					tls.Mode = aws.String(vMode)
 				}
 
@@ -1344,7 +1344,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": aws.StringValue(tls.Mode),
+					names.AttrMode: aws.StringValue(tls.Mode),
 				}
 
 				if certificate := tls.Certificate; certificate != nil {

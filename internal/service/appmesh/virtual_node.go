@@ -749,7 +749,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"mode": {
+										names.AttrMode: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.ListenerTlsMode_Values(), false),

@@ -898,7 +898,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 				mTls := vTls[0].(map[string]interface{})
 
-				if vMode, ok := mTls["mode"].(string); ok && vMode != "" {
+				if vMode, ok := mTls[names.AttrMode].(string); ok && vMode != "" {
 					tls.Mode = aws.String(vMode)
 				}
 
@@ -1757,7 +1757,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": aws.StringValue(tls.Mode),
+					names.AttrMode: aws.StringValue(tls.Mode),
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
