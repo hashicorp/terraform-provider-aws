@@ -114,7 +114,7 @@ func resourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,7 +186,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrName, webhookDef.Name)
 	d.Set("target_action", webhookDef.TargetAction)
 	d.Set("target_pipeline", webhookDef.TargetPipeline)
-	d.Set("url", webhook.Url)
+	d.Set(names.AttrURL, webhook.Url)
 
 	setTagsOut(ctx, webhook.Tags)
 
