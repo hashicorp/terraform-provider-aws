@@ -144,7 +144,7 @@ func ResourceCrawler() *schema.Resource {
 				AtLeastOneOf: targets(),
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -243,7 +243,7 @@ func ResourceCrawler() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -297,7 +297,7 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -374,7 +374,7 @@ func ResourceCrawler() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -831,7 +831,7 @@ func expandDynamoDBTargets(targets []interface{}) []*glue.DynamoDBTarget {
 
 func expandDynamoDBTarget(cfg map[string]interface{}) *glue.DynamoDBTarget {
 	target := &glue.DynamoDBTarget{
-		Path:    aws.String(cfg["path"].(string)),
+		Path:    aws.String(cfg[names.AttrPath].(string)),
 		ScanAll: aws.Bool(cfg["scan_all"].(bool)),
 	}
 
@@ -857,7 +857,7 @@ func expandS3Targets(targets []interface{}) []*glue.S3Target {
 
 func expandS3Target(cfg map[string]interface{}) *glue.S3Target {
 	target := &glue.S3Target{
-		Path: aws.String(cfg["path"].(string)),
+		Path: aws.String(cfg[names.AttrPath].(string)),
 	}
 
 	if v, ok := cfg["connection_name"]; ok {
@@ -898,7 +898,7 @@ func expandJDBCTargets(targets []interface{}) []*glue.JdbcTarget {
 
 func expandJDBCTarget(cfg map[string]interface{}) *glue.JdbcTarget {
 	target := &glue.JdbcTarget{
-		Path:           aws.String(cfg["path"].(string)),
+		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
 	}
 
@@ -963,7 +963,7 @@ func expandMongoDBTargets(targets []interface{}) []*glue.MongoDBTarget {
 func expandMongoDBTarget(cfg map[string]interface{}) *glue.MongoDBTarget {
 	target := &glue.MongoDBTarget{
 		ConnectionName: aws.String(cfg["connection_name"].(string)),
-		Path:           aws.String(cfg["path"].(string)),
+		Path:           aws.String(cfg[names.AttrPath].(string)),
 		ScanAll:        aws.Bool(cfg["scan_all"].(bool)),
 	}
 
@@ -1063,7 +1063,7 @@ func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
 	for _, s3Target := range s3Targets {
 		attrs := make(map[string]interface{})
 		attrs["exclusions"] = flex.FlattenStringList(s3Target.Exclusions)
-		attrs["path"] = aws.StringValue(s3Target.Path)
+		attrs[names.AttrPath] = aws.StringValue(s3Target.Path)
 		attrs["connection_name"] = aws.StringValue(s3Target.ConnectionName)
 
 		if s3Target.SampleSize != nil {
@@ -1099,7 +1099,7 @@ func flattenDynamoDBTargets(dynamodbTargets []*glue.DynamoDBTarget) []map[string
 
 	for _, dynamodbTarget := range dynamodbTargets {
 		attrs := make(map[string]interface{})
-		attrs["path"] = aws.StringValue(dynamodbTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(dynamodbTarget.Path)
 		attrs["scan_all"] = aws.BoolValue(dynamodbTarget.ScanAll)
 		attrs["scan_rate"] = aws.Float64Value(dynamodbTarget.ScanRate)
 
@@ -1116,7 +1116,7 @@ func flattenJDBCTargets(jdbcTargets []*glue.JdbcTarget) []map[string]interface{}
 		attrs["connection_name"] = aws.StringValue(jdbcTarget.ConnectionName)
 		attrs["exclusions"] = flex.FlattenStringList(jdbcTarget.Exclusions)
 		attrs["enable_additional_metadata"] = flex.FlattenStringList(jdbcTarget.EnableAdditionalMetadata)
-		attrs["path"] = aws.StringValue(jdbcTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(jdbcTarget.Path)
 
 		result = append(result, attrs)
 	}
@@ -1129,7 +1129,7 @@ func flattenMongoDBTargets(mongoDBTargets []*glue.MongoDBTarget) []map[string]in
 	for _, mongoDBTarget := range mongoDBTargets {
 		attrs := make(map[string]interface{})
 		attrs["connection_name"] = aws.StringValue(mongoDBTarget.ConnectionName)
-		attrs["path"] = aws.StringValue(mongoDBTarget.Path)
+		attrs[names.AttrPath] = aws.StringValue(mongoDBTarget.Path)
 		attrs["scan_all"] = aws.BoolValue(mongoDBTarget.ScanAll)
 
 		result = append(result, attrs)
