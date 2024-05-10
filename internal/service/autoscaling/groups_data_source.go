@@ -103,19 +103,19 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, group := range groups {
 		arns = append(arns, aws.ToString(group.AutoScalingGroupARN))
-		names = append(names, aws.ToString(group.AutoScalingGroupName))
+		nms = append(nms, aws.ToString(group.AutoScalingGroupName))
 	}
 
 	sort.Strings(arns)
-	sort.Strings(names)
+	sort.Strings(nms)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", names)
+	d.Set("names", nms)
 
 	return diags
 }

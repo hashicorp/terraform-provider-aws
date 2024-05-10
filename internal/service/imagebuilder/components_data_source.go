@@ -78,16 +78,16 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Components: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range results {
 		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+		nms = append(nms, aws.StringValue(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", names)
+	d.Set("names", nms)
 
 	return diags
 }

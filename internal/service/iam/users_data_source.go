@@ -58,14 +58,14 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range results {
-		names = append(names, aws.ToString(r.UserName))
+		nms = append(nms, aws.ToString(r.UserName))
 		arns = append(arns, aws.ToString(r.Arn))
 	}
 
-	if err := d.Set("names", names); err != nil {
+	if err := d.Set("names", nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 

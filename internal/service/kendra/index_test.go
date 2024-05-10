@@ -257,7 +257,6 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalGroupAttributeField := "groups"
-	originalUserNameAttributeField := names.AttrUsername
 	updatedGroupAttributeField := "groupings"
 	updatedUserNameAttributeField := "usernames"
 	resourceName := "aws_kendra_index.test"
