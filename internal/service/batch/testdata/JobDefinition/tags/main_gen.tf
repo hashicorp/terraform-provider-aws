@@ -11,7 +11,7 @@ resource "aws_batch_job_definition" "test" {
     vcpus   = 1
   })
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -20,7 +20,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)

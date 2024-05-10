@@ -5,7 +5,7 @@ resource "aws_iam_service_linked_role" "test" {
   aws_service_name = "autoscaling.amazonaws.com"
   custom_suffix    = var.rName
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -14,7 +14,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)

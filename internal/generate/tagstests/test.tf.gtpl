@@ -3,7 +3,7 @@
 
 {{ define "tags" }}
 {{ if eq . "tags" }}
-  tags = var.tags
+  tags = var.resource_tags
 {{- else if eq . "tagsComputed1"}}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
@@ -45,7 +45,7 @@ variable "rName" {
 }
 
 {{ if eq .Tags "tags" -}}
-variable "tags" {
+variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)

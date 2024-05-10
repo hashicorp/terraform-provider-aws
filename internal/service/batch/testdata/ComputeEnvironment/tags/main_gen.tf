@@ -6,7 +6,7 @@ resource "aws_batch_compute_environment" "test" {
   service_role             = aws_iam_role.batch_service.arn
   type                     = "UNMANAGED"
 
-  tags = var.tags
+  tags = var.resource_tags
 
   depends_on = [aws_iam_role_policy_attachment.batch_service]
 }
@@ -72,7 +72,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)

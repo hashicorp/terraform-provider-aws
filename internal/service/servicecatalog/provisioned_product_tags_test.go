@@ -35,7 +35,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -49,7 +49,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -64,7 +64,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
@@ -80,7 +80,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
@@ -96,7 +96,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName": config.StringVariable(rName),
-			// 		names.AttrTags: config.MapVariable(map[string]config.Variable{
+			// 		"resource_tags": config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
 			// 	},
@@ -110,7 +110,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName": config.StringVariable(rName),
-			// 		names.AttrTags: config.MapVariable(map[string]config.Variable{
+			// 		"resource_tags": config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
 			// 	},
@@ -125,7 +125,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -136,7 +136,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
@@ -165,7 +165,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": nil,
 					}),
 				},
@@ -178,7 +178,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": nil,
 					}),
 				},
@@ -192,8 +192,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":        config.StringVariable(rName),
-					names.AttrTags: nil,
+					"rName":         config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -217,8 +217,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":        config.StringVariable(rName),
-					names.AttrTags: nil,
+					"rName":         config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -229,7 +229,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -243,7 +243,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -276,7 +276,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -290,7 +290,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -304,8 +304,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":        config.StringVariable(rName),
-					names.AttrTags: nil,
+					"rName":         config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -315,8 +315,8 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":        config.StringVariable(rName),
-					names.AttrTags: nil,
+					"rName":         config.StringVariable(rName),
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -347,7 +347,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -361,7 +361,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 						"key2": config.StringVariable(""),
 					}),
@@ -377,7 +377,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 						"key2": config.StringVariable(""),
 					}),
@@ -393,7 +393,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -407,7 +407,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Add(t *testi
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -440,7 +440,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -454,7 +454,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -468,7 +468,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnUpdate_Replace(t *t
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -502,7 +502,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -519,7 +519,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -537,7 +537,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -556,7 +556,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 						"key1": config.StringVariable("value1updated"),
 						"key2": config.StringVariable("value2"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -573,7 +573,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 			// 		"provider_tags": config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -590,7 +590,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 			// 		"provider_tags": config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
@@ -604,7 +604,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -617,7 +617,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
@@ -649,7 +649,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -670,7 +670,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -689,7 +689,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -713,7 +713,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -730,7 +730,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	Check: resource.ComposeAggregateTestCheckFunc(
 			// 		testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -743,7 +743,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 			// 	ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName":        config.StringVariable(rName),
-			// 		names.AttrTags: nil,
+			// 		"resource_tags": nil,
 			// 	},
 			// 	ResourceName:      resourceName,
 			// 	ImportState:       true,
@@ -775,7 +775,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -795,7 +795,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -815,7 +815,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -839,7 +839,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -859,7 +859,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -879,7 +879,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_overlapping(t *tes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -910,7 +910,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -930,7 +930,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -947,7 +947,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToProviderOn
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -979,7 +979,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: nil,
+					"resource_tags": nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
@@ -993,7 +993,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1010,7 +1010,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_updateToResourceOn
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1046,7 +1046,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -1066,7 +1066,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_emptyResourceTag(t
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable(""),
 					}),
 				},
@@ -1100,7 +1100,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": nil,
 					}),
 				},
@@ -1119,7 +1119,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullOverlappingRes
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": nil,
 					}),
 				},
@@ -1153,7 +1153,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1172,7 +1172,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nullNonOverlapping
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1257,7 +1257,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1331,7 +1331,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					names.AttrTags: config.MapVariable(map[string]config.Variable{
+					"resource_tags": config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},

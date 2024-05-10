@@ -16,7 +16,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 
   thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 variable "rName" {
@@ -25,7 +25,7 @@ variable "rName" {
   nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
   description = "Tags to set on resource. To specify no tags, set to `null`"
   # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
