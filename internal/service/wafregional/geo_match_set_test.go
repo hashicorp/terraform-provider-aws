@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -236,20 +234,16 @@ func testAccCheckGeoMatchSetExists(ctx context.Context, n string, v *awstypes.Ge
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetGeoMatchSet(ctx, &wafregional.GetGeoMatchSetInput{
-			GeoMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.GeoMatchSet.GeoMatchSetId == rs.Primary.ID {
-			*v = *resp.GeoMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Regional Geo Match Set (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -261,22 +255,18 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetGeoMatchSet(ctx, &wafregional.GetGeoMatchSetInput{
-				GeoMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.GeoMatchSet.GeoMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF Regional Geo Match Set %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindGeoMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the WAF Regional Geo Match Set is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional Geo Match Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -286,7 +276,7 @@ func testAccCheckGeoMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 func testAccGeoMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -304,7 +294,7 @@ resource "aws_wafregional_geo_match_set" "test" {
 func testAccGeoMatchSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -322,7 +312,7 @@ resource "aws_wafregional_geo_match_set" "test" {
 func testAccGeoMatchSetConfig_changeConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   geo_match_constraint {
     type  = "Country"
@@ -340,7 +330,7 @@ resource "aws_wafregional_geo_match_set" "test" {
 func testAccGeoMatchSetConfig_noConstraints(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_geo_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }
