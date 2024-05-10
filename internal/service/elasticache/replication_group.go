@@ -49,7 +49,7 @@ func resourceReplicationGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -752,7 +752,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		requestUpdate := false
 		input := &elasticache.ModifyReplicationGroupInput{
-			ApplyImmediately:   aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:   aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			ReplicationGroupId: aws.String(d.Id()),
 		}
 
