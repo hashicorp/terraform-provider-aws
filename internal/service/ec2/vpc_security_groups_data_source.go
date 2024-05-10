@@ -29,7 +29,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -91,7 +91,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("ids", securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)
 
