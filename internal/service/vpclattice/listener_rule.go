@@ -61,7 +61,7 @@ func ResourceListenerRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -254,7 +254,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateRuleInput{
-		Action:             expandRuleAction(d.Get("action").([]interface{})[0].(map[string]interface{})),
+		Action:             expandRuleAction(d.Get(names.AttrAction).([]interface{})[0].(map[string]interface{})),
 		ClientToken:        aws.String(id.UniqueId()),
 		ListenerIdentifier: aws.String(d.Get("listener_identifier").(string)),
 		Match:              expandRuleMatch(d.Get("match").([]interface{})[0].(map[string]interface{})),
@@ -317,7 +317,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("service_identifier", serviceId)
 	d.Set("rule_id", out.Id)
 
-	if err := d.Set("action", []interface{}{flattenRuleAction(out.Action)}); err != nil {
+	if err := d.Set(names.AttrAction, []interface{}{flattenRuleAction(out.Action)}); err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameListenerRule, d.Id(), err)
 	}
 
@@ -342,8 +342,8 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			ServiceIdentifier:  aws.String(serviceId),
 		}
 
-		if d.HasChange("action") {
-			if v, ok := d.GetOk("action"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrAction) {
+			if v, ok := d.GetOk(names.AttrAction); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				in.Action = expandRuleAction(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
