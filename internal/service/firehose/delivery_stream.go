@@ -1222,7 +1222,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.RedshiftS3BackupMode](),
 							},
 							"s3_configuration": s3ConfigurationSchema(),
-							"username": {
+							names.AttrUsername: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -2373,7 +2373,7 @@ func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *ty
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    expandRedshiftRetryOptions(redshift),
 		Password:        aws.String(redshift[names.AttrPassword].(string)),
-		Username:        aws.String(redshift["username"].(string)),
+		Username:        aws.String(redshift[names.AttrUsername].(string)),
 		RoleARN:         aws.String(roleARN),
 		CopyCommand:     expandCopyCommand(redshift),
 		S3Configuration: expandS3DestinationConfiguration(redshift["s3_configuration"].([]interface{})),
@@ -2399,7 +2399,7 @@ func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *types.Red
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   expandRedshiftRetryOptions(redshift),
 		Password:       aws.String(redshift[names.AttrPassword].(string)),
-		Username:       aws.String(redshift["username"].(string)),
+		Username:       aws.String(redshift[names.AttrUsername].(string)),
 		RoleARN:        aws.String(roleARN),
 		CopyCommand:    expandCopyCommand(redshift),
 	}
@@ -3387,7 +3387,7 @@ func flattenRedshiftDestinationDescription(description *types.RedshiftDestinatio
 		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),
 		"s3_backup_mode":             description.S3BackupMode,
 		"s3_configuration":           flattenS3DestinationDescription(description.S3DestinationDescription),
-		"username":                   aws.ToString(description.Username),
+		names.AttrUsername:           aws.ToString(description.Username),
 	}
 
 	if description.CopyCommand != nil {
