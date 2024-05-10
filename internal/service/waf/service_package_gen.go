@@ -39,8 +39,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Rule",
 		},
 		{
-			Factory:  DataSourceSubscribedRuleGroup,
+			Factory:  dataSourceSubscribedRuleGroup,
 			TypeName: "aws_waf_subscribed_rule_group",
+			Name:     "Subscribed Rule Group",
 		},
 		{
 			Factory:  DataSourceWebACL,
