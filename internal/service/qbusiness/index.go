@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -116,10 +117,10 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"document_attribute_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[documentAttributeConfigurationData](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(500),
+			"document_attribute_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[documentAttributeConfigurationData](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(500),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -338,17 +339,17 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 }
 
 type resourceIndexData struct {
-	ApplicationId                   types.String                                                        `tfsdk:"application_id"`
-	CapacityConfiguration           fwtypes.ListNestedObjectValueOf[capacityConfigurationData]          `tfsdk:"capacity_configuration"`
-	DisplayName                     types.String                                                        `tfsdk:"display_name"`
-	Description                     types.String                                                        `tfsdk:"description"`
-	ID                              types.String                                                        `tfsdk:"id"`
-	IndexId                         types.String                                                        `tfsdk:"index_id"`
-	IndexArn                        types.String                                                        `tfsdk:"arn"`
-	Tags                            types.Map                                                           `tfsdk:"tags"`
-	TagsAll                         types.Map                                                           `tfsdk:"tags_all"`
-	Timeouts                        timeouts.Value                                                      `tfsdk:"timeouts"`
-	DocumentAttributeConfigurations fwtypes.ListNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
+	ApplicationId                   types.String                                                       `tfsdk:"application_id"`
+	CapacityConfiguration           fwtypes.ListNestedObjectValueOf[capacityConfigurationData]         `tfsdk:"capacity_configuration"`
+	DisplayName                     types.String                                                       `tfsdk:"display_name"`
+	Description                     types.String                                                       `tfsdk:"description"`
+	ID                              types.String                                                       `tfsdk:"id"`
+	IndexId                         types.String                                                       `tfsdk:"index_id"`
+	IndexArn                        types.String                                                       `tfsdk:"arn"`
+	Tags                            types.Map                                                          `tfsdk:"tags"`
+	TagsAll                         types.Map                                                          `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value                                                     `tfsdk:"timeouts"`
+	DocumentAttributeConfigurations fwtypes.SetNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
 }
 
 type capacityConfigurationData struct {
