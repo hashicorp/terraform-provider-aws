@@ -1275,3 +1275,13 @@ rules:
       - pattern: '"hosted_zone_id"'
     severity: ERROR
     fix: "names.AttrHostedZoneID"
+  - id: literal-device_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDeviceName` for the string literal "device_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"device_name"'
+    severity: ERROR
+    fix: "names.AttrDeviceName"
