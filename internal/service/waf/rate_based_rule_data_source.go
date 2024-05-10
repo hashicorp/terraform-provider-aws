@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_waf_rate_based_rule")
-func DataSourceRateBasedRule() *schema.Resource {
+// @SDKDataSource("aws_waf_rate_based_rule", name="Rate Based Rule")
+func dataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
 
