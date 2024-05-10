@@ -192,7 +192,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										},
 									},
 								},
-								"target": {
+								names.AttrTarget: {
 									Type:     schema.TypeList,
 									Required: true,
 									MinItems: 1,
@@ -433,7 +433,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"target": {
+										names.AttrTarget: {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -765,7 +765,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
 
-		if vRouteTarget, ok := mRouteAction["target"].([]interface{}); ok {
+		if vRouteTarget, ok := mRouteAction[names.AttrTarget].([]interface{}); ok {
 			routeAction.Target = expandGatewayRouteTarget(vRouteTarget)
 		}
 
@@ -976,7 +976,7 @@ func expandHTTPGatewayRoute(vHttpRoute []interface{}) *appmesh.HttpGatewayRoute 
 
 		mRouteAction := vRouteAction[0].(map[string]interface{})
 
-		if vRouteTarget, ok := mRouteAction["target"].([]interface{}); ok {
+		if vRouteTarget, ok := mRouteAction[names.AttrTarget].([]interface{}); ok {
 			routeAction.Target = expandGatewayRouteTarget(vRouteTarget)
 		}
 
@@ -1038,7 +1038,7 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 
 	if routeAction := grpcRoute.Action; routeAction != nil {
 		mRouteAction := map[string]interface{}{
-			"target": flattenGatewayRouteTarget(routeAction.Target),
+			names.AttrTarget: flattenGatewayRouteTarget(routeAction.Target),
 		}
 
 		mGrpcRoute[names.AttrAction] = []interface{}{mRouteAction}
@@ -1198,8 +1198,8 @@ func flattenHTTPGatewayRoute(httpRoute *appmesh.HttpGatewayRoute) []interface{} 
 
 	if routeAction := httpRoute.Action; routeAction != nil {
 		mRouteAction := map[string]interface{}{
-			"target":  flattenGatewayRouteTarget(routeAction.Target),
-			"rewrite": flattenHTTPGatewayRouteRewrite(routeAction.Rewrite),
+			names.AttrTarget: flattenGatewayRouteTarget(routeAction.Target),
+			"rewrite":        flattenHTTPGatewayRouteRewrite(routeAction.Rewrite),
 		}
 
 		mHttpRoute[names.AttrAction] = []interface{}{mRouteAction}

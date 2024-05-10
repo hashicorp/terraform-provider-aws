@@ -136,7 +136,7 @@ func resourceSchedule() *schema.Resource {
 				Default:          types.ScheduleStateEnabled,
 				ValidateDiagFunc: enum.Validate[types.ScheduleState](),
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -475,7 +475,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.State = types.ScheduleState(v)
 	}
 
-	if v, ok := d.Get("target").([]interface{}); ok && len(v) > 0 {
+	if v, ok := d.Get(names.AttrTarget).([]interface{}); ok && len(v) > 0 {
 		in.Target = expandTarget(ctx, v[0].(map[string]interface{}))
 	}
 
@@ -558,7 +558,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrState, string(out.State))
 
-	if err := d.Set("target", []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
+	if err := d.Set(names.AttrTarget, []interface{}{flattenTarget(ctx, out.Target)}); err != nil {
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
@@ -573,7 +573,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
-		Target:             expandTarget(ctx, d.Get("target").([]interface{})[0].(map[string]interface{})),
+		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {

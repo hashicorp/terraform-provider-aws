@@ -169,7 +169,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -482,7 +482,7 @@ func ResourceWorkflow() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -924,7 +924,7 @@ func expandCustomStepDetails(tfMap []interface{}) *transfer.CustomStepDetails {
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw["target"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrTarget].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -951,7 +951,7 @@ func flattenCustomStepDetails(apiObject *transfer.CustomStepDetails) []interface
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap["target"] = aws.StringValue(v)
+		tfMap[names.AttrTarget] = aws.StringValue(v)
 	}
 
 	if v := apiObject.TimeoutSeconds; v != nil {

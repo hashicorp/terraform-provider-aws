@@ -113,7 +113,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 														},
 													},
 												},
-												"target": {
+												names.AttrTarget: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
@@ -333,7 +333,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 														},
 													},
 												},
-												"target": {
+												names.AttrTarget: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
@@ -788,7 +788,7 @@ func expandActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyAct
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
-		if v, ok := m["target"].(string); ok && v != "" {
+		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
 			rule.Target = aws.String(v)
 		}
 
@@ -813,7 +813,7 @@ func flattenActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []int
 		m := map[string]interface{}{
 			"encryption_configuration": flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
 			"retain_rule":              flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			"target":                   aws.StringValue(rule.Target),
+			names.AttrTarget:           aws.StringValue(rule.Target),
 		}
 
 		result = append(result, m)
@@ -941,7 +941,7 @@ func expandCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyRule {
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.RetainRule = expandCrossRegionCopyRuleRetainRule(v)
 		}
-		if v, ok := m["target"].(string); ok && v != "" {
+		if v, ok := m[names.AttrTarget].(string); ok && v != "" {
 			rule.Target = aws.String(v)
 		}
 
@@ -969,7 +969,7 @@ func flattenCrossRegionCopyRules(rules []*dlm.CrossRegionCopyRule) []interface{}
 			"deprecate_rule":    flattenCrossRegionCopyRuleDeprecateRule(rule.DeprecateRule),
 			names.AttrEncrypted: aws.BoolValue(rule.Encrypted),
 			"retain_rule":       flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			"target":            aws.StringValue(rule.Target),
+			names.AttrTarget:    aws.StringValue(rule.Target),
 		}
 
 		result = append(result, m)

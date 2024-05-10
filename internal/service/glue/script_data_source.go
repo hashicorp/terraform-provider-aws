@@ -31,7 +31,7 @@ func DataSourceScript() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -160,7 +160,7 @@ func expandCodeGenEdges(l []interface{}) []*glue.CodeGenEdge {
 		m := mRaw.(map[string]interface{})
 		edge := &glue.CodeGenEdge{
 			Source: aws.String(m[names.AttrSource].(string)),
-			Target: aws.String(m["target"].(string)),
+			Target: aws.String(m[names.AttrTarget].(string)),
 		}
 		if v, ok := m["target_parameter"]; ok && v.(string) != "" {
 			edge.TargetParameter = aws.String(v.(string))
