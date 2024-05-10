@@ -96,7 +96,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -370,7 +370,7 @@ func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *typ
 		apiObject.Expiration = expandLifecycleExpiration(v)
 	}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 		apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 	}
 
@@ -479,7 +479,7 @@ func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) ma
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenLifecycleRuleFilter(ctx, v)
+		tfMap[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, v)
 	}
 
 	if v := apiObject.ID; v != nil {
