@@ -16,6 +16,7 @@ var (
 	ResourceSizeConstraintSet    = resourceSizeConstraintSet
 	ResourceSQLInjectionMatchSet = resourceSQLInjectionMatchSet
 	ResourceWebACL               = resourceWebACL
+	ResourceXSSMatchSet          = resourceXSSMatchSet
 
 	DiffIPSetDescriptors         = diffIPSetDescriptors
 	FindByteMatchSetByID         = findByteMatchSetByID
@@ -29,5 +30,6 @@ var (
 	FindSizeConstraintSetByID    = findSizeConstraintSetByID
 	FindSQLInjectionMatchSetByID = findSQLInjectionMatchSetByID
 	FindWebACLByID               = findWebACLByID
+	FindXSSMatchSetByID          = findXSSMatchSetByID
 	FlattenFieldToMatch          = flattenFieldToMatch
 )

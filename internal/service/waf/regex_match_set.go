@@ -149,7 +149,7 @@ func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("regex_match_tuple") {
 		o, n := d.GetChange("regex_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-		if err := updateRegexMatchSetResource(ctx, conn, d.Id(), oldT, newT); err != nil {
+		if err := updateRegexMatchSet(ctx, conn, d.Id(), oldT, newT); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -163,7 +163,7 @@ func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, me
 
 	if oldTuples := d.Get("regex_match_tuple").(*schema.Set).List(); len(oldTuples) > 0 {
 		noTuples := []interface{}{}
-		if err := updateRegexMatchSetResource(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+		if err := updateRegexMatchSet(ctx, conn, d.Id(), oldTuples, noTuples); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -214,7 +214,7 @@ func findRegexMatchSetByID(ctx context.Context, conn *waf.Client, id string) (*a
 	return output.RegexMatchSet, nil
 }
 
-func updateRegexMatchSetResource(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
+func updateRegexMatchSet(ctx context.Context, conn *waf.Client, id string, oldT, newT []interface{}) error {
 	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateRegexMatchSetInput{
 			ChangeToken:     token,

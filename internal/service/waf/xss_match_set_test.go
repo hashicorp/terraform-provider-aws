@@ -9,16 +9,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -223,25 +221,17 @@ func testAccCheckXSSMatchSetExists(ctx context.Context, n string, v *awstypes.Xs
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF XSS Match Set ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetXssMatchSet(ctx, &waf.GetXssMatchSetInput{
-			XssMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindXSSMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.XssMatchSet.XssMatchSetId == rs.Primary.ID {
-			*v = *resp.XssMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF XssMatchSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -253,22 +243,18 @@ func testAccCheckXSSMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetXssMatchSet(ctx, &waf.GetXssMatchSetInput{
-				XssMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.XssMatchSet.XssMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF XssMatchSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwaf.FindXSSMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the XssMatchSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF XSS Match Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil

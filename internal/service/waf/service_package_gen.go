@@ -121,8 +121,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceXSSMatchSet,
+			Factory:  resourceXSSMatchSet,
 			TypeName: "aws_waf_xss_match_set",
+			Name:     "XSS Match Set",
 		},
 	}
 }

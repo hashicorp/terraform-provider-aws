@@ -146,7 +146,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
-		if err := updateSizeConstraintSetResource(ctx, conn, d.Id(), oldConstraints, newConstraints); err != nil {
+		if err := updateSizeConstraintSet(ctx, conn, d.Id(), oldConstraints, newConstraints); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -159,7 +159,7 @@ func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if oldConstraints := d.Get("size_constraints").(*schema.Set).List(); len(oldConstraints) > 0 {
-		if err := updateSizeConstraintSetResource(ctx, conn, d.Id(), oldConstraints, []interface{}{}); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+		if err := updateSizeConstraintSet(ctx, conn, d.Id(), oldConstraints, []interface{}{}); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -210,7 +210,7 @@ func findSizeConstraintSetByID(ctx context.Context, conn *waf.Client, id string)
 	return output.SizeConstraintSet, nil
 }
 
-func updateSizeConstraintSetResource(ctx context.Context, conn *waf.Client, id string, oldS, newS []interface{}) error {
+func updateSizeConstraintSet(ctx context.Context, conn *waf.Client, id string, oldS, newS []interface{}) error {
 	_, err := NewRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.UpdateSizeConstraintSetInput{
 			ChangeToken:         token,

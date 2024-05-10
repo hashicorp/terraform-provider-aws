@@ -977,7 +977,7 @@ func sweepXSSMatchSet(region string) error {
 		}
 
 		for _, xssMatchSet := range page.XssMatchSets {
-			r := ResourceXSSMatchSet()
+			r := resourceXSSMatchSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(xssMatchSet.XssMatchSetId)
