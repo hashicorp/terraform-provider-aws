@@ -63,7 +63,7 @@ func resourceUsagePlan() *schema.Resource {
 										Default:  0,
 										Optional: true,
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -331,12 +331,12 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta i
 							th := throttle.(map[string]interface{})
 							operations = append(operations, types.PatchOperation{
 								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th["path"].(string))),
+								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
 								Value: aws.String(strconv.FormatFloat(th["rate_limit"].(float64), 'f', -1, 64)),
 							})
 							operations = append(operations, types.PatchOperation{
 								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th["path"].(string))),
+								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
 								Value: aws.String(strconv.Itoa(th["burst_limit"].(int))),
 							})
 						}
@@ -675,7 +675,7 @@ func expandThrottleSettingsList(tfList []interface{}) map[string]types.ThrottleS
 			apiObject.RateLimit = v
 		}
 
-		if v, ok := tfMap["path"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 			apiObjects[v] = apiObject
 		}
 	}
@@ -692,9 +692,9 @@ func flattenThrottleSettingsMap(apiObjects map[string]types.ThrottleSettings) []
 
 	for k, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"path":        k,
-			"rate_limit":  apiObject.RateLimit,
-			"burst_limit": apiObject.BurstLimit,
+			names.AttrPath: k,
+			"rate_limit":   apiObject.RateLimit,
+			"burst_limit":  apiObject.BurstLimit,
 		})
 	}
 
