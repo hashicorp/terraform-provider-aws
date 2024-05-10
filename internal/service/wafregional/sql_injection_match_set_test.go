@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -213,24 +211,17 @@ func testAccCheckSQLInjectionMatchSetExists(ctx context.Context, n string, v *aw
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF SqlInjectionMatchSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetSqlInjectionMatchSet(ctx, &wafregional.GetSqlInjectionMatchSetInput{
-			SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindSQLInjectionMatchSetByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if *resp.SqlInjectionMatchSet.SqlInjectionMatchSetId == rs.Primary.ID {
-			*v = *resp.SqlInjectionMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF SqlInjectionMatchSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -242,22 +233,18 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetSqlInjectionMatchSet(ctx, &wafregional.GetSqlInjectionMatchSetInput{
-				SqlInjectionMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.SqlInjectionMatchSet.SqlInjectionMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF SqlInjectionMatchSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindSQLInjectionMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the SqlInjectionMatchSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional SQL Injection Match Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -267,7 +254,7 @@ func testAccCheckSQLInjectionMatchSetDestroy(ctx context.Context) resource.TestC
 func testAccSQLInjectionMatchSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
-  name = "%s"
+  name = %[1]q
 
   sql_injection_match_tuple {
     text_transformation = "URL_DECODE"
@@ -283,7 +270,7 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 func testAccSQLInjectionMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
-  name = "%s"
+  name = %[1]q
 
   sql_injection_match_tuple {
     text_transformation = "NONE"
@@ -300,7 +287,7 @@ resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
 func testAccSQLInjectionMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_sql_injection_match_set" "sql_injection_match_set" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }
