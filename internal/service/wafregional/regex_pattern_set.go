@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,7 +55,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get(names.AttrName).(string)
-	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateRegexPatternSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -123,7 +124,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Regex Pattern Set: %s", d.Id())
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(d.Id()),
@@ -169,11 +170,11 @@ func findRegexPatternSetByID(ctx context.Context, conn *wafregional.Client, id s
 }
 
 func updateRegexPatternSet(ctx context.Context, conn *wafregional.Client, region, regexPatternSetID string, oldPatterns, newPatterns []interface{}) error {
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.UpdateRegexPatternSetInput{
 			ChangeToken:       token,
 			RegexPatternSetId: aws.String(regexPatternSetID),
-			Updates:           DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
+			Updates:           diffRegexPatternSetPatternStrings(oldPatterns, newPatterns),
 		}
 
 		return conn.UpdateRegexPatternSet(ctx, input)
@@ -184,4 +185,28 @@ func updateRegexPatternSet(ctx context.Context, conn *wafregional.Client, region
 	}
 
 	return nil
+}
+
+func diffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []awstypes.RegexPatternSetUpdate {
+	updates := make([]awstypes.RegexPatternSetUpdate, 0)
+
+	for _, op := range oldPatterns {
+		if idx := tfslices.IndexOf(newPatterns, op.(string)); idx > -1 {
+			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, awstypes.RegexPatternSetUpdate{
+			Action:             awstypes.ChangeActionDelete,
+			RegexPatternString: aws.String(op.(string)),
+		})
+	}
+
+	for _, np := range newPatterns {
+		updates = append(updates, awstypes.RegexPatternSetUpdate{
+			Action:             awstypes.ChangeActionInsert,
+			RegexPatternString: aws.String(np.(string)),
+		})
+	}
+	return updates
 }

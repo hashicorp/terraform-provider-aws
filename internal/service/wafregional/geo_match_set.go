@@ -65,7 +65,7 @@ func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get(names.AttrName).(string)
-	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateGeoMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(name),
@@ -136,7 +136,7 @@ func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Geo Match Set: %s", d.Id())
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(d.Id()),
@@ -182,7 +182,7 @@ func findGeoMatchSetByID(ctx context.Context, conn *wafregional.Client, id strin
 }
 
 func updateGeoMatchSet(ctx context.Context, conn *wafregional.Client, region string, geoMatchSetID string, oldConstraints, newConstraints []interface{}) error {
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.UpdateGeoMatchSetInput{
 			ChangeToken:   token,
 			GeoMatchSetId: aws.String(geoMatchSetID),

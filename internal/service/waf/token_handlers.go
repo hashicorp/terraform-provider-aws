@@ -14,13 +14,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type wafRetryer struct {
+type retryer struct {
 	connection *waf.Client
 }
 
 type withTokenFunc func(token *string) (interface{}, error)
 
-func (t *wafRetryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interface{}, error) {
+func (t *retryer) RetryWithToken(ctx context.Context, f withTokenFunc) (interface{}, error) {
 	const (
 		key = "WafRetryer"
 	)
@@ -42,6 +42,6 @@ func (t *wafRetryer) RetryWithToken(ctx context.Context, f withTokenFunc) (inter
 	})
 }
 
-func newRetryer(conn *waf.Client) *wafRetryer {
-	return &wafRetryer{connection: conn}
+func newRetryer(conn *waf.Client) *retryer {
+	return &retryer{connection: conn}
 }

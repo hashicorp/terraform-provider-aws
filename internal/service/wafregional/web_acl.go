@@ -170,7 +170,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateWebACLInput{
 			ChangeToken:   token,
 			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -209,7 +209,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
-		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -292,7 +292,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("rule")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -341,7 +341,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	region := meta.(*conns.AWSClient).Region
 
 	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
-		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
@@ -358,7 +358,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", d.Id())
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),

@@ -90,7 +90,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get(names.AttrName).(string)
-	outputRaw, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateRuleInput{
 			ChangeToken: token,
 			MetricName:  aws.String(d.Get("metric_name").(string)),
@@ -179,7 +179,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Rule: %s", d.Id())
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(d.Id()),
@@ -225,11 +225,11 @@ func findRuleByID(ctx context.Context, conn *wafregional.Client, id string) (*aw
 }
 
 func updateRule(ctx context.Context, conn *wafregional.Client, region, ruleID string, oldP, newP []interface{}) error {
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.UpdateRuleInput{
 			ChangeToken: token,
 			RuleId:      aws.String(ruleID),
-			Updates:     DiffRulePredicates(oldP, newP),
+			Updates:     diffRulePredicates(oldP, newP),
 		}
 
 		return conn.UpdateRule(ctx, input)
@@ -252,4 +252,40 @@ func flattenPredicates(ts []awstypes.Predicate) []interface{} {
 		out[i] = m
 	}
 	return out
+}
+
+func diffRulePredicates(oldP, newP []interface{}) []awstypes.RuleUpdate {
+	updates := make([]awstypes.RuleUpdate, 0)
+
+	for _, op := range oldP {
+		predicate := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newP, predicate); contains {
+			newP = append(newP[:idx], newP[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, awstypes.RuleUpdate{
+			Action: awstypes.ChangeActionDelete,
+			Predicate: &awstypes.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    awstypes.PredicateType(predicate[names.AttrType].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+
+	for _, np := range newP {
+		predicate := np.(map[string]interface{})
+
+		updates = append(updates, awstypes.RuleUpdate{
+			Action: awstypes.ChangeActionInsert,
+			Predicate: &awstypes.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    awstypes.PredicateType(predicate[names.AttrType].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+	return updates
 }

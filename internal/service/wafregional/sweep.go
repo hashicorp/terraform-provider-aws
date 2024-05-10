@@ -84,7 +84,7 @@ func sweepRateBasedRules(region string) error {
 				RuleId: rule.RuleId,
 			}
 			id := aws.ToString(rule.RuleId)
-			wr := NewRetryer(conn, region)
+			wr := newRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
@@ -358,7 +358,7 @@ func sweepRules(region string) error {
 				RuleId: rule.RuleId,
 			}
 			id := aws.ToString(rule.RuleId)
-			wr := NewRetryer(conn, region)
+			wr := newRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token
@@ -451,7 +451,7 @@ func sweepWebACLs(region string) error {
 				WebACLId: webACL.WebACLId,
 			}
 			id := aws.ToString(webACL.WebACLId)
-			wr := NewRetryer(conn, region)
+			wr := newRetryer(conn, region)
 
 			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 				deleteInput.ChangeToken = token

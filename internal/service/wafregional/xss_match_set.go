@@ -81,7 +81,7 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get(names.AttrName).(string)
-	output, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateXssMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(d.Get(names.AttrName).(string)),
@@ -158,7 +158,7 @@ func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional XSS Match Set: %s", d.Id())
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(d.Id()),
@@ -204,7 +204,7 @@ func findXSSMatchSetByID(ctx context.Context, conn *wafregional.Client, id strin
 }
 
 func updateXSSMatchSet(ctx context.Context, conn *wafregional.Client, region, xssMatchSetID string, oldT, newT []interface{}) error {
-	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			Updates:       diffXSSMatchSetTuples(oldT, newT),
