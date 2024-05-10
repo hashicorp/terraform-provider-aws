@@ -1315,3 +1315,13 @@ rules:
       - pattern: '"encrypted"'
     severity: ERROR
     fix: "names.AttrEncrypted"
+  - id: literal-file_system_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFileSystemID` for the string literal "file_system_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"file_system_id"'
+    severity: ERROR
+    fix: "names.AttrFileSystemID"
