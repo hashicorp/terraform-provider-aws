@@ -276,7 +276,7 @@ func resourceObjectCopy() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -444,7 +444,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"object_lock_retain_until_date",
 		"request_payer",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_customer_algorithm",
 		"source_customer_key",
 		"source_customer_key_md5",
@@ -503,7 +503,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(bucket),
-		CopySource: aws.String(url.QueryEscape(d.Get("source").(string))),
+		CopySource: aws.String(url.QueryEscape(d.Get(names.AttrSource).(string))),
 		Key:        aws.String(sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))),
 	}
 
