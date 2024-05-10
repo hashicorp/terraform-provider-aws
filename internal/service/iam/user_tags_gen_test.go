@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1130,6 +1132,203 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
 					"tagKey1": config.StringVariable("resourcekey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_tags_ComputedTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.User
+	resourceName := "aws_iam_user.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.User
+	resourceName := "aws_iam_user.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.User
+	resourceName := "aws_iam_user.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", "id"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/User/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

@@ -22,7 +22,6 @@ resource "aws_batch_job_definition" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

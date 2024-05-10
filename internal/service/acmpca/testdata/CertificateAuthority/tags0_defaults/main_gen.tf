@@ -22,12 +22,10 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)
