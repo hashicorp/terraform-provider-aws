@@ -43,7 +43,7 @@ func dataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +110,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("bgp_asn", nil)
 	}
 	d.Set("certificate_arn", cgw.CertificateArn)
-	d.Set("device_name", cgw.DeviceName)
+	d.Set(names.AttrDeviceName, cgw.DeviceName)
 	d.Set("ip_address", cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 

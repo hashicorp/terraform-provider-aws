@@ -103,7 +103,7 @@ func ResourceAMI() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -153,7 +153,7 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -170,7 +170,7 @@ func ResourceAMI() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -183,7 +183,7 @@ func ResourceAMI() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -614,7 +614,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -690,7 +690,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.Encrypted; v != nil {
@@ -753,7 +753,7 @@ func expandBlockDeviceMappingForAMIEphemeralBlockDevice(tfMap map[string]interfa
 
 	apiObject := &ec2.BlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -798,7 +798,7 @@ func flattenBlockDeviceMappingForAMIEphemeralBlockDevice(apiObject *ec2.BlockDev
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VirtualName; v != nil {
