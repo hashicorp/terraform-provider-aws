@@ -64,7 +64,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -426,7 +426,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AlpnPolicy = []string{v.(string)}
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.Certificates = []awstypes.Certificate{{
 			CertificateArn: aws.String(v.(string)),
 		}}
@@ -527,7 +527,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
-		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
@@ -559,7 +559,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AlpnPolicy = []string{v.(string)}
 		}
 
-		if v, ok := d.GetOk("certificate_arn"); ok {
+		if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 			input.Certificates = []awstypes.Certificate{{
 				CertificateArn: aws.String(v.(string)),
 			}}
