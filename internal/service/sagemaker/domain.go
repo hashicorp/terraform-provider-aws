@@ -1394,6 +1394,10 @@ func expandDomainCodeEditorAppSettings(l []interface{}) *sagemaker.CodeEditorApp
 
 	config := &sagemaker.CodeEditorAppSettings{}
 
+	if v, ok := m["custom_image"].([]interface{}); ok && len(v) > 0 {
+		config.CustomImages = expandDomainCustomImages(v)
+	}
+
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
@@ -1969,6 +1973,10 @@ func flattenDomainCodeEditorAppSettings(config *sagemaker.CodeEditorAppSettings)
 	}
 
 	m := map[string]interface{}{}
+
+	if config.CustomImages != nil {
+		m["custom_image"] = flattenDomainCustomImages(config.CustomImages)
+	}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
