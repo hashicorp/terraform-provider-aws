@@ -28,7 +28,7 @@ func DataSourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -173,7 +173,7 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
