@@ -146,7 +146,7 @@ func ResourceContainerService() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -255,7 +255,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("power_id", cs.PowerId)
 	d.Set("principal_arn", cs.PrincipalArn)
 	d.Set("private_domain_name", cs.PrivateDomainName)
-	d.Set("resource_type", cs.ResourceType)
+	d.Set(names.AttrResourceType, cs.ResourceType)
 	d.Set(names.AttrState, cs.State)
 	d.Set(names.AttrURL, cs.Url)
 

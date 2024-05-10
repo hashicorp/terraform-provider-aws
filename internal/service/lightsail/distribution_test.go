@@ -101,7 +101,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.region_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.resource_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin_public_dns"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
