@@ -155,7 +155,7 @@ func expandDuration(vDuration []interface{}) *appmesh.Duration {
 
 	mDuration := vDuration[0].(map[string]interface{})
 
-	if vUnit, ok := mDuration["unit"].(string); ok && vUnit != "" {
+	if vUnit, ok := mDuration[names.AttrUnit].(string); ok && vUnit != "" {
 		duration.Unit = aws.String(vUnit)
 	}
 	if vValue, ok := mDuration[names.AttrValue].(int); ok && vValue > 0 {
@@ -1301,7 +1301,7 @@ func flattenDuration(duration *appmesh.Duration) []interface{} {
 	}
 
 	mDuration := map[string]interface{}{
-		"unit":          aws.StringValue(duration.Unit),
+		names.AttrUnit:  aws.StringValue(duration.Unit),
 		names.AttrValue: int(aws.Int64Value(duration.Value)),
 	}
 
