@@ -100,7 +100,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -312,12 +312,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
 		d.Set("address", dbEndpoint.Address)
 		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
-		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
+		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
 		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
 		d.Set("address", nil)
 		d.Set(names.AttrEndpoint, nil)
-		d.Set("hosted_zone_id", nil)
+		d.Set(names.AttrHostedZoneID, nil)
 		d.Set(names.AttrPort, nil)
 	}
 

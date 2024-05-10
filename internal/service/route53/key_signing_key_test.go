@@ -47,7 +47,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "dnskey_record", regexache.MustCompile(`^257 [0-9]+ [0-9]+ [0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestMatchResourceAttr(resourceName, "ds_record", regexache.MustCompile(`^[0-9]+ [0-9]+ [0-9]+ [0-9A-F]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "flag", "257"),
-					resource.TestCheckResourceAttrPair(resourceName, "hosted_zone_id", route53ZoneResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrHostedZoneID, route53ZoneResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "key_management_service_arn", kmsKeyResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "key_tag", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

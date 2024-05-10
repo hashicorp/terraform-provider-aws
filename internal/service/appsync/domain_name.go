@@ -53,7 +53,7 @@ func ResourceDomainName() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -99,7 +99,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrDomainName, domainName.DomainName)
 	d.Set(names.AttrDescription, domainName.Description)
 	d.Set("certificate_arn", domainName.CertificateArn)
-	d.Set("hosted_zone_id", domainName.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, domainName.HostedZoneId)
 	d.Set("appsync_domain_name", domainName.AppsyncDomainName)
 
 	return diags
