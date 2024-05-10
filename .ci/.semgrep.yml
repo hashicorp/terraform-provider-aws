@@ -1375,3 +1375,13 @@ rules:
       - pattern: '"filter"'
     severity: ERROR
     fix: "names.AttrFilter"
+  - id: literal-prefix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPrefix` for the string literal "prefix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"prefix"'
+    severity: ERROR
+    fix: "names.AttrPrefix"
