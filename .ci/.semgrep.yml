@@ -1505,3 +1505,13 @@ rules:
       - pattern: '"destination"'
     severity: ERROR
     fix: "names.AttrDestination"
+  - id: literal-force_destroy-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrForceDestroy` for the string literal "force_destroy"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"force_destroy"'
+    severity: ERROR
+    fix: "names.AttrForceDestroy"
