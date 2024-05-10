@@ -125,7 +125,7 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			"target": stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
+																			names.AttrTarget: stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
 																		},
 																	},
 																},
@@ -678,7 +678,7 @@ func expandTableFieldLinkConfiguration(tfList []interface{}) *quicksight.TableFi
 
 	options := &quicksight.TableFieldLinkConfiguration{}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		options.Target = aws.String(v)
 	}
 	if v, ok := tfMap["content"].([]interface{}); ok && len(v) > 0 {
@@ -1156,7 +1156,7 @@ func flattenTableFieldLinkConfiguration(apiObject *quicksight.TableFieldLinkConf
 		tfMap["content"] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
 	}
 	if apiObject.Target != nil {
-		tfMap["target"] = aws.StringValue(apiObject.Target)
+		tfMap[names.AttrTarget] = aws.StringValue(apiObject.Target)
 	}
 
 	return []interface{}{tfMap}
