@@ -332,7 +332,7 @@ func numericRangeFilterValueSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"parameter": {
+				names.AttrParameter: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
@@ -357,7 +357,7 @@ func timeRangeFilterValueSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"parameter": {
+				names.AttrParameter: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
@@ -864,7 +864,7 @@ func expandNumericRangeFilterValue(tfList []interface{}) *quicksight.NumericRang
 
 	filter := &quicksight.NumericRangeFilterValue{}
 
-	if v, ok := tfMap["parameter"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrParameter].(string); ok && v != "" {
 		filter.Parameter = aws.String(v)
 	}
 	if v, ok := tfMap["static_value"].(float64); ok {
@@ -1054,7 +1054,7 @@ func expandTimeRangeFilterValue(tfList []interface{}) *quicksight.TimeRangeFilte
 
 	filter := &quicksight.TimeRangeFilterValue{}
 
-	if v, ok := tfMap["parameter"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrParameter].(string); ok && v != "" {
 		filter.Parameter = aws.String(v)
 	}
 	if v, ok := tfMap["static_value"].(string); ok && v != "" {
@@ -1483,7 +1483,7 @@ func flattenNumericRangeFilterValue(apiObject *quicksight.NumericRangeFilterValu
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Parameter != nil {
-		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+		tfMap[names.AttrParameter] = aws.StringValue(apiObject.Parameter)
 	}
 	if apiObject.StaticValue != nil {
 		tfMap["static_value"] = aws.Float64Value(apiObject.StaticValue)
@@ -1636,7 +1636,7 @@ func flattenTimeRangeFilterValue(apiObject *quicksight.TimeRangeFilterValue) []i
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Parameter != nil {
-		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+		tfMap[names.AttrParameter] = aws.StringValue(apiObject.Parameter)
 	}
 	if apiObject.RollingDate != nil {
 		tfMap["rolling_date"] = flattenRollingDateConfiguration(apiObject.RollingDate)
