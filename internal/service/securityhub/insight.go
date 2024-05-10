@@ -118,7 +118,7 @@ func resourceInsight() *schema.Resource {
 						"resource_partition":                                 stringFilterSchema(),
 						"resource_region":                                    stringFilterSchema(),
 						"resource_tags":                                      mapFilterSchema(),
-						"resource_type":                                      stringFilterSchema(),
+						names.AttrResourceType:                                      stringFilterSchema(),
 						"severity_label":                                     stringFilterSchema(),
 						"source_url":                                         stringFilterSchema(),
 						"threat_intel_indicator_category":                    stringFilterSchema(),
@@ -798,7 +798,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_type"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceType].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceType = expandStringFilters(v.List())
 	}
 
@@ -1211,7 +1211,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
 		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
-		"resource_type":                                      flattenStringFilters(filters.ResourceType),
+		names.AttrResourceType:                                      flattenStringFilters(filters.ResourceType),
 		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
 		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
 		"threat_intel_indicator_category":                    flattenStringFilters(filters.ThreatIntelIndicatorCategory),
