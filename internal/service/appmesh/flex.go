@@ -598,7 +598,7 @@ func expandRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 		spec.HttpRoute = expandHTTPRoute(vHttpRoute)
 	}
 
-	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+	if vPriority, ok := mSpec[names.AttrPriority].(int); ok && vPriority > 0 {
 		spec.Priority = aws.Int64(int64(vPriority))
 	}
 
@@ -1573,11 +1573,11 @@ func flattenRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenGRPCRoute(spec.GrpcRoute),
-		"http2_route": flattenHTTPRoute(spec.Http2Route),
-		"http_route":  flattenHTTPRoute(spec.HttpRoute),
-		"priority":    int(aws.Int64Value(spec.Priority)),
-		"tcp_route":   flattenTCPRoute(spec.TcpRoute),
+		"grpc_route":       flattenGRPCRoute(spec.GrpcRoute),
+		"http2_route":      flattenHTTPRoute(spec.Http2Route),
+		"http_route":       flattenHTTPRoute(spec.HttpRoute),
+		names.AttrPriority: int(aws.Int64Value(spec.Priority)),
+		"tcp_route":        flattenTCPRoute(spec.TcpRoute),
 	}
 
 	return []interface{}{mSpec}
