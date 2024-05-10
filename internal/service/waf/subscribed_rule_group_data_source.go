@@ -68,7 +68,7 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 	output, err := findSubscribedRuleGroup(ctx, conn, input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rate Based Rule", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Subscribed Rule Group", err))
 	}
 
 	d.SetId(aws.ToString(output.RuleGroupId))
