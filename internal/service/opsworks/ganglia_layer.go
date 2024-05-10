@@ -28,7 +28,7 @@ func ResourceGangliaLayer() *schema.Resource {
 				Type:     schema.TypeString,
 				Default:  "/ganglia",
 			},
-			"username": {
+			names.AttrUsername: {
 				AttrName: opsworks.LayerAttributesKeysGangliaUser,
 				Type:     schema.TypeString,
 				Default:  "opsworks",

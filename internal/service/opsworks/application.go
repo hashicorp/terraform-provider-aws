@@ -91,7 +91,7 @@ func ResourceApplication() *schema.Resource {
 							Optional: true,
 						},
 
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -477,7 +477,7 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 			m[names.AttrURL] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m["username"] = aws.StringValue(v.Username)
+			m[names.AttrUsername] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
 			m["revision"] = aws.StringValue(v.Revision)

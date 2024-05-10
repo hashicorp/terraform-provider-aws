@@ -34,7 +34,7 @@ func TestAccOpsWorksGangliaLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Ganglia"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPassword),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "/ganglia"),
-					resource.TestCheckResourceAttr(resourceName, "username", "opsworks"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, "opsworks"),
 				),
 			},
 		},
