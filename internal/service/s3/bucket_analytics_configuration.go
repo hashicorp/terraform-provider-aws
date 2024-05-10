@@ -108,7 +108,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: verify.ValidAccountID,
 															},
-															"format": {
+															names.AttrFormat: {
 																Type:             schema.TypeString,
 																Optional:         true,
 																Default:          types.AnalyticsS3ExportFileFormatCsv,
@@ -343,7 +343,7 @@ func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3Buc
 	if len(bdl) != 0 && bdl[0] != nil {
 		bdm := bdl[0].(map[string]interface{})
 		result.Bucket = aws.String(bdm["bucket_arn"].(string))
-		result.Format = types.AnalyticsS3ExportFileFormat(bdm["format"].(string))
+		result.Format = types.AnalyticsS3ExportFileFormat(bdm[names.AttrFormat].(string))
 
 		if v, ok := bdm["bucket_account_id"]; ok && v != "" {
 			result.BucketAccountId = aws.String(v.(string))
@@ -419,8 +419,8 @@ func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3Buc
 	}
 
 	result := map[string]interface{}{
-		"bucket_arn": aws.ToString(bucketDestination.Bucket),
-		"format":     bucketDestination.Format,
+		"bucket_arn":     aws.ToString(bucketDestination.Bucket),
+		names.AttrFormat: bucketDestination.Format,
 	}
 	if bucketDestination.BucketAccountId != nil {
 		result["bucket_account_id"] = aws.ToString(bucketDestination.BucketAccountId)

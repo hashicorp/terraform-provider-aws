@@ -102,7 +102,7 @@ func resourceBucketInventory() *schema.Resource {
 											},
 										},
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
@@ -362,7 +362,7 @@ func flattenInventorySchedule(schedule *types.InventorySchedule) []map[string]in
 
 func expandInventoryBucketDestination(m map[string]interface{}) *types.InventoryS3BucketDestination {
 	destination := &types.InventoryS3BucketDestination{
-		Format: types.InventoryFormat(m["format"].(string)),
+		Format: types.InventoryFormat(m[names.AttrFormat].(string)),
 		Bucket: aws.String(m["bucket_arn"].(string)),
 	}
 
@@ -407,8 +407,8 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := map[string]interface{}{
-		"format":     destination.Format,
-		"bucket_arn": aws.ToString(destination.Bucket),
+		names.AttrFormat: destination.Format,
+		"bucket_arn":     aws.ToString(destination.Bucket),
 	}
 
 	if destination.AccountId != nil {
