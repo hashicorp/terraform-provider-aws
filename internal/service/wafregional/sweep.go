@@ -158,7 +158,7 @@ func sweepRegexMatchSets(region string) error {
 	input := &wafregional.ListRegexMatchSetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = ListRegexMatchSetsPages(ctx, conn, input, func(page *wafregional.ListRegexMatchSetsOutput, lastPage bool) bool {
+	err = listRegexMatchSetsPages(ctx, conn, input, func(page *wafregional.ListRegexMatchSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -211,7 +211,7 @@ func sweepRegexPatternSets(region string) error {
 	input := &wafregional.ListRegexPatternSetsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = ListRegexPatternSetsPages(ctx, conn, input, func(page *wafregional.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = listRegexPatternSetsPages(ctx, conn, input, func(page *wafregional.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
