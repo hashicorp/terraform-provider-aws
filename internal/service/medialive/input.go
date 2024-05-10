@@ -138,7 +138,7 @@ func ResourceInput() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -547,7 +547,7 @@ func flattenSource(apiObject types.InputSource) map[string]interface{} {
 		m["password_param"] = aws.ToString(v)
 	}
 	if v := apiObject.Username; v != nil {
-		m["username"] = aws.ToString(v)
+		m[names.AttrUsername] = aws.ToString(v)
 	}
 	return m
 }
@@ -685,7 +685,7 @@ func expandSources(tfList []interface{}) []types.InputSourceRequest {
 		if val, ok := m[names.AttrURL]; ok {
 			id.Url = aws.String(val.(string))
 		}
-		if val, ok := m["username"]; ok {
+		if val, ok := m[names.AttrUsername]; ok {
 			id.Username = aws.String(val.(string))
 		}
 		s = append(s, id)
