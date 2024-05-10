@@ -31,7 +31,7 @@ func expandRules(l []interface{}) []awstypes.Rule {
 
 func expandRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		Priority:         int32(m["priority"].(int)),
@@ -993,7 +993,7 @@ func expandWebACLRules(l []interface{}) []awstypes.Rule {
 
 func expandWebACLRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
@@ -1638,7 +1638,7 @@ func flattenRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
 		m["priority"] = rule.Priority
@@ -2485,7 +2485,7 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrName] = aws.ToString(rule.Name)
