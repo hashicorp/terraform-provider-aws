@@ -42,7 +42,7 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt1)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
