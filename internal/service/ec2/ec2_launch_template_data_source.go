@@ -757,7 +757,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

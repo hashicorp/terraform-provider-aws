@@ -29,7 +29,7 @@ func TestAccVPCNetworkInsightsPathDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDestination, resourceName, names.AttrDestination),
-					resource.TestCheckResourceAttrPair(datasourceName, "destination_arn", resourceName, "destination_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "destination_ip", resourceName, "destination_ip"),
 					resource.TestCheckResourceAttrPair(datasourceName, "destination_port", resourceName, "destination_port"),
 					resource.TestCheckResourceAttrPair(datasourceName, "network_insights_path_id", resourceName, names.AttrID),

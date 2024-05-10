@@ -46,7 +46,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -119,7 +119,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	}
 	d.Set("resource_id", transitGatewayAttachment.ResourceId)
 	d.Set("resource_owner_id", resourceOwnerID)
-	d.Set("resource_type", transitGatewayAttachment.ResourceType)
+	d.Set(names.AttrResourceType, transitGatewayAttachment.ResourceType)
 	d.Set(names.AttrState, transitGatewayAttachment.State)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayAttachmentID)
 	d.Set(names.AttrTransitGatewayID, transitGatewayAttachment.TransitGatewayId)

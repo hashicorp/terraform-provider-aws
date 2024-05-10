@@ -597,7 +597,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1521,7 +1521,7 @@ func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.StringValue(v)
+		tfMap[names.AttrCertificateARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LastStatusChange; v != nil {
