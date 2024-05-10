@@ -168,7 +168,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
-														"prefix": {
+														names.AttrPrefix: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -242,7 +242,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.IsPortNumber,
 								},
-								"prefix": {
+								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
@@ -462,7 +462,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -516,7 +516,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"prefix": {
+										names.AttrPrefix: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(0, 50),

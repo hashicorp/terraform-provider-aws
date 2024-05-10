@@ -156,7 +156,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
 												},
 											},
-											"prefix": {
+											names.AttrPrefix: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 1,
@@ -256,7 +256,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
-														"prefix": {
+														names.AttrPrefix: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -361,7 +361,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.IsPortNumber,
 								},
-								"prefix": {
+								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
@@ -816,7 +816,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		routeRewrite.Path = routePathRewrite
 	}
 
-	if vRoutePrefixRewrite, ok := mRouteRewrite["prefix"].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
+	if vRoutePrefixRewrite, ok := mRouteRewrite[names.AttrPrefix].([]interface{}); ok && len(vRoutePrefixRewrite) > 0 && vRoutePrefixRewrite[0] != nil {
 		mRoutePrefixRewrite := vRoutePrefixRewrite[0].(map[string]interface{})
 		routePrefixRewrite := &appmesh.HttpGatewayRoutePrefixRewrite{}
 		if vDefaultPrefix, ok := mRoutePrefixRewrite["default_prefix"].(string); ok && vDefaultPrefix != "" {
@@ -844,7 +844,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		routeMatch.Port = aws.Int64(int64(vPort))
 	}
 
-	if vPrefix, ok := mRouteMatch["prefix"].(string); ok && vPrefix != "" {
+	if vPrefix, ok := mRouteMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 		routeMatch.Prefix = aws.String(vPrefix)
 	}
 
@@ -871,7 +871,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 				if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 					header.Match.Exact = aws.String(vExact)
 				}
-				if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+				if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 					header.Match.Prefix = aws.String(vPrefix)
 				}
 				if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -1070,7 +1070,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	}
 
 	if routeMatch.Prefix != nil {
-		mRouteMatch["prefix"] = aws.StringValue(routeMatch.Prefix)
+		mRouteMatch[names.AttrPrefix] = aws.StringValue(routeMatch.Prefix)
 	}
 
 	vHeaders := []interface{}{}
@@ -1083,10 +1083,10 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 		if match := header.Match; match != nil {
 			mMatch := map[string]interface{}{
-				"exact":  aws.StringValue(match.Exact),
-				"prefix": aws.StringValue(match.Prefix),
-				"regex":  aws.StringValue(match.Regex),
-				"suffix": aws.StringValue(match.Suffix),
+				"exact":          aws.StringValue(match.Exact),
+				names.AttrPrefix: aws.StringValue(match.Prefix),
+				"regex":          aws.StringValue(match.Regex),
+				"suffix":         aws.StringValue(match.Suffix),
 			}
 
 			if r := match.Range; r != nil {
@@ -1183,7 +1183,7 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 		if rewritePrefixValue := rewritePrefix.Value; rewritePrefixValue != nil {
 			mRewritePrefix[names.AttrValue] = aws.StringValue(rewritePrefix.Value)
 		}
-		mRouteRewrite["prefix"] = []interface{}{mRewritePrefix}
+		mRouteRewrite[names.AttrPrefix] = []interface{}{mRewritePrefix}
 	}
 
 	return []interface{}{mRouteRewrite}
