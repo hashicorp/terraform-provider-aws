@@ -1415,3 +1415,13 @@ rules:
       - pattern: '"url"'
     severity: ERROR
     fix: "names.AttrURL"
+  - id: literal-arns-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrARNs` for the string literal "arns"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"arns"'
+    severity: ERROR
+    fix: "names.AttrARNs"
