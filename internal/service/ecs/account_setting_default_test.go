@@ -193,8 +193,8 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 			{
 				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", "fargateTaskRetirementWaitPeriod"),
-					resource.TestCheckResourceAttr(resourceName, "value", "14"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},

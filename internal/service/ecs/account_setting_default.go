@@ -146,7 +146,7 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	settingName := d.Get("name").(string)
+	settingName := d.Get(names.AttrName).(string)
 	settingValue := "disabled"
 
 	//Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change
