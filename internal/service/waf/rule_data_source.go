@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_waf_rule")
-func DataSourceRule() *schema.Resource {
+// @SDKDataSource("aws_waf_rule", name="Rule")
+func dataSourceRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRuleRead,
 
