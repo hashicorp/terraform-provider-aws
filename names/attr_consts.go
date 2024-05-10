@@ -59,6 +59,7 @@ const (
 	AttrSharedConfigFiles          = "shared_config_files"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
+	AttrSource                     = "source"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
 	AttrSubnetID                   = "subnet_id"
