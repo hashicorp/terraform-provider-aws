@@ -162,7 +162,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -589,7 +589,7 @@ func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentT
 	config := types.ExperimentTemplateS3LogConfigurationInput{
 		BucketName: aws.String(raw[names.AttrBucketName].(string)),
 	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
 
@@ -909,7 +909,7 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 	dataResources[0] = make(map[string]interface{})
 	dataResources[0][names.AttrBucketName] = configured.BucketName
 	if aws.ToString(configured.Prefix) != "" {
-		dataResources[0]["prefix"] = configured.Prefix
+		dataResources[0][names.AttrPrefix] = configured.Prefix
 	}
 
 	return dataResources
