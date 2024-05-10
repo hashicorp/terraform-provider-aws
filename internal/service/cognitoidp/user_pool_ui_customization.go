@@ -40,7 +40,7 @@ func resourceUserPoolUICustomization() *schema.Resource {
 				Optional: true,
 				Default:  "ALL",
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set("client_id", uiCustomization.ClientId)
-	d.Set("creation_date", aws.TimeValue(uiCustomization.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.TimeValue(uiCustomization.CreationDate).Format(time.RFC3339))
 	d.Set("css", uiCustomization.CSS)
 	d.Set("css_version", uiCustomization.CSSVersion)
 	d.Set("image_url", uiCustomization.ImageUrl)

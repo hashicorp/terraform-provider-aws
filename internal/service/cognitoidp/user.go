@@ -58,7 +58,7 @@ func resourceUser() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -254,7 +254,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("preferred_mfa_setting", user.PreferredMfaSetting)
 	d.Set(names.AttrStatus, user.UserStatus)
 	d.Set(names.AttrEnabled, user.Enabled)
-	d.Set("creation_date", user.UserCreateDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, user.UserCreateDate.Format(time.RFC3339))
 	d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339))
 	d.Set("sub", retrieveUserSub(user.UserAttributes))
 

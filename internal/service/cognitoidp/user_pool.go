@@ -132,7 +132,7 @@ func resourceUserPool() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
 				},
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -846,7 +846,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrARN, userPool.Arn)
 	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
-	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
 	d.Set("deletion_protection", userPool.DeletionProtection)
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {

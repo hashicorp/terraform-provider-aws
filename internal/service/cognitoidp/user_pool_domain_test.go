@@ -100,7 +100,7 @@ func TestAccCognitoIDPUserPoolDomain_custom(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_distribution"),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_distribution_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain", acmCertificateResourceName, names.AttrDomainName),
@@ -143,14 +143,14 @@ func TestAccCognitoIDPUserPoolDomain_customCertUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainExists(ctx, cognitoPoolResourceName),
 					testAccCheckUserPoolDomainCertMatches(ctx, cognitoPoolResourceName, acmInitialCertResourceName),
-					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, "certificate_arn", acmInitialCertResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmInitialCertResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccUserPoolDomainConfig_customCertUpdate(rootDomain, domain, poolName, acmUpdatedValidationResourceName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolDomainCertMatches(ctx, cognitoPoolResourceName, acmUpdatedCertResourceName),
-					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, "certificate_arn", acmUpdatedCertResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(cognitoPoolResourceName, names.AttrCertificateARN, acmUpdatedCertResourceName, names.AttrARN),
 				),
 			},
 		},

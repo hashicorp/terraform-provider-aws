@@ -41,7 +41,7 @@ func resourceUserPoolDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -79,7 +79,7 @@ func resourceUserPoolDomain() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.ForceNewIfChange("certificate_arn", func(_ context.Context, old, new, meta interface{}) bool {
+		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrCertificateARN, func(_ context.Context, old, new, meta interface{}) bool {
 			// If the cert arn is being changed to a new arn, don't force new.
 			return !(old.(string) != "" && new.(string) != "")
 		}),
@@ -97,7 +97,7 @@ func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, m
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CustomDomainConfig = &cognitoidentityprovider.CustomDomainConfigType{
 			CertificateArn: aws.String(v.(string)),
 		}
@@ -136,9 +136,9 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("aws_account_id", desc.AWSAccountId)
-	d.Set("certificate_arn", "")
+	d.Set(names.AttrCertificateARN, "")
 	if desc.CustomDomainConfig != nil {
-		d.Set("certificate_arn", desc.CustomDomainConfig.CertificateArn)
+		d.Set(names.AttrCertificateARN, desc.CustomDomainConfig.CertificateArn)
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
@@ -157,7 +157,7 @@ func resourceUserPoolDomainUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &cognitoidentityprovider.UpdateUserPoolDomainInput{
 		CustomDomainConfig: &cognitoidentityprovider.CustomDomainConfigType{
-			CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+			CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 		},
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
