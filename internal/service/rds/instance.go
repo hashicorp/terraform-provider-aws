@@ -121,7 +121,7 @@ func ResourceInstance() *schema.Resource {
 			// apply_immediately is used to determine when the update modifications
 			// take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -516,7 +516,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -750,7 +750,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DBInstanceIdentifier:       aws.String(identifier),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
-			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
 			Tags:                       getTagsIn(ctx),
 		}
@@ -968,7 +968,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
-			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
 			S3Prefix:                aws.String(tfMap[names.AttrBucketPrefix].(string)),
@@ -1116,7 +1116,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DBInstanceIdentifier:    aws.String(identifier),
 			DBSnapshotIdentifier:    aws.String(v.(string)),
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
-			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
 
@@ -1367,7 +1367,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
 			DeletionProtection:         aws.Bool(d.Get("deletion_protection").(bool)),
-			PubliclyAccessible:         aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			Tags:                       getTagsIn(ctx),
 			TargetDBInstanceIdentifier: aws.String(identifier),
 		}
@@ -1573,7 +1573,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
-			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                    getTagsIn(ctx),
 		}
@@ -1917,7 +1917,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("performance_insights_kms_key_id", v.PerformanceInsightsKMSKeyId)
 	d.Set("performance_insights_retention_period", v.PerformanceInsightsRetentionPeriod)
 	d.Set(names.AttrPort, v.DbInstancePort)
-	d.Set("publicly_accessible", v.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
@@ -2153,7 +2153,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				oldID = o.(string)
 			}
 
-			applyImmediately := d.Get("apply_immediately").(bool)
+			applyImmediately := d.Get(names.AttrApplyImmediately).(bool)
 			input := &rds_sdkv2.ModifyDBInstanceInput{
 				ApplyImmediately:     aws.Bool(applyImmediately),
 				DBInstanceIdentifier: aws.String(oldID),
@@ -2380,9 +2380,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.DBPortNumber = aws.Int32(int32(d.Get(names.AttrPort).(int)))
 	}
 
-	if d.HasChange("publicly_accessible") {
+	if d.HasChange(names.AttrPubliclyAccessible) {
 		needsModify = true
-		input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 	}
 
 	if d.HasChange("replica_mode") {
@@ -2479,7 +2479,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	_, err := conn.DeleteDBInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
-		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
 					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
