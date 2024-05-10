@@ -102,7 +102,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(0, 64),
 							},
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1, //API will accept more, but return only 1
@@ -195,7 +195,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -298,7 +298,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:             getTagsIn(ctx),
 	}
 
-	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
+	targets, err := expandExperimentTemplateTargets(d.Get(names.AttrTarget).(*schema.Set))
 	if err != nil {
 		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get(names.AttrDescription).(string), err)
 	}
@@ -360,8 +360,8 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
-	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
+	if err := d.Set(names.AttrTarget, flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrTarget, err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
@@ -400,8 +400,8 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
 		}
 
-		if d.HasChange("target") {
-			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+		if d.HasChange(names.AttrTarget) {
+			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get(names.AttrTarget).(*schema.Set))
 			if err != nil {
 				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 			}
@@ -468,7 +468,7 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
@@ -507,7 +507,7 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
@@ -827,7 +827,7 @@ func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemp
 		item[names.AttrDescription] = aws.ToString(v.Description)
 		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = v.StartAfter
-		item["target"] = flattenExperimentTemplateActionTargets(v.Targets)
+		item[names.AttrTarget] = flattenExperimentTemplateActionTargets(v.Targets)
 
 		item[names.AttrName] = k
 
