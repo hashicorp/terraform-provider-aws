@@ -84,7 +84,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -377,7 +377,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1935,7 +1935,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	if v.Endpoint != nil {
-		d.Set("address", v.Endpoint.Address)
+		d.Set(names.AttrAddress, v.Endpoint.Address)
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
 			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
@@ -3018,7 +3018,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
