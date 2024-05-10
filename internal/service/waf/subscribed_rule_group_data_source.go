@@ -23,8 +23,9 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"metric_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				AtLeastOneOf: []string{names.AttrName, "metric_name"},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
