@@ -348,10 +348,6 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Rate Based Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 		output, err := tfwaf.FindRateBasedRuleByID(ctx, conn, rs.Primary.ID)
@@ -369,7 +365,7 @@ func testAccCheckRateBasedRuleExists(ctx context.Context, n string, v *awstypes.
 func testAccRateBasedRuleConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -379,8 +375,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rate_based_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 
@@ -390,13 +386,13 @@ resource "aws_waf_rate_based_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccRateBasedRuleConfig_changeLimit(name string, rateLimit int) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -406,8 +402,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rate_based_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%[1]s"
-  metric_name = "%[1]s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = %[2]d
 
@@ -423,7 +419,7 @@ resource "aws_waf_rate_based_rule" "wafrule" {
 func testAccRateBasedRuleConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -433,8 +429,8 @@ resource "aws_waf_ipset" "ipset" {
 
 resource "aws_waf_rate_based_rule" "wafrule" {
   depends_on  = [aws_waf_ipset.ipset]
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 
@@ -444,13 +440,13 @@ resource "aws_waf_rate_based_rule" "wafrule" {
     type    = "IPMatch"
   }
 }
-`, name, name, name)
+`, name)
 }
 
 func testAccRateBasedRuleConfig_changePredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptors {
     type  = "IPV4"
@@ -459,7 +455,7 @@ resource "aws_waf_ipset" "ipset" {
 }
 
 resource "aws_waf_byte_match_set" "set" {
-  name = "%s"
+  name = %[1]q
 
   byte_match_tuples {
     text_transformation   = "NONE"
@@ -474,8 +470,8 @@ resource "aws_waf_byte_match_set" "set" {
 }
 
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 
@@ -485,47 +481,47 @@ resource "aws_waf_rate_based_rule" "wafrule" {
     type    = "ByteMatch"
   }
 }
-`, name, name, name, name)
+`, name)
 }
 
 func testAccRateBasedRuleConfig_noPredicates(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 }
-`, name, name)
+`, name)
 }
 
 func testAccRateBasedRuleConfig_tags1(name, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q"
   rate_key    = "IP"
   rate_limit  = 2000
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
-`, name, name, tag1Key, tag1Value)
+`, name, tag1Key, tag1Value)
 }
 
 func testAccRateBasedRuleConfig_tags2(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_rate_based_rule" "wafrule" {
-  name        = "%s"
-  metric_name = "%s"
+  name        = %[1]q
+  metric_name = %[1]q
   rate_key    = "IP"
   rate_limit  = 2000
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
+`, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }

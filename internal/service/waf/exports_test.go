@@ -5,15 +5,17 @@ package waf
 
 // Exports for use in tests only.
 var (
-	ResourceByteMatchSet = resourceByteMatchSet
-	ResourceGeoMatchSet  = resourceGeoMatchSet
-	ResourceIPSet        = resourceIPSet
-	ResourceWebACL       = resourceWebACL
+	ResourceByteMatchSet  = resourceByteMatchSet
+	ResourceGeoMatchSet   = resourceGeoMatchSet
+	ResourceIPSet         = resourceIPSet
+	ResourceRateBasedRule = resourceRateBasedRule
+	ResourceWebACL        = resourceWebACL
 
-	DiffIPSetDescriptors = diffIPSetDescriptors
-	FindByteMatchSetByID = findByteMatchSetByID
-	FindGeoMatchSetByID  = findGeoMatchSetByID
-	FindIPSetByID        = findIPSetByID
-	FindWebACLByID       = findWebACLByID
-	FlattenFieldToMatch  = flattenFieldToMatch
+	DiffIPSetDescriptors  = diffIPSetDescriptors
+	FindByteMatchSetByID  = findByteMatchSetByID
+	FindGeoMatchSetByID   = findGeoMatchSetByID
+	FindIPSetByID         = findIPSetByID
+	FindRateBasedRuleByID = findRateBasedRuleByID
+	FindWebACLByID        = findWebACLByID
+	FlattenFieldToMatch   = flattenFieldToMatch
 )
