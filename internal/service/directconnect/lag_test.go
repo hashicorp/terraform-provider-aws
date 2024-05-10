@@ -180,6 +180,46 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 	})
 }
 
+func TestAccDirectConnectLag_requestMACSec(t *testing.T) {
+	ctx := acctest.Context(t)
+	var lag directconnect.Lag
+	resourceName := "aws_dx_lag.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLagConfig_requestMACSec(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLagExists(ctx, resourceName, &lag),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
+					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "request_macsec", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccDirectConnectLag_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lag directconnect.Lag
@@ -326,6 +366,19 @@ resource "aws_dx_lag" "test" {
   location              = data.aws_dx_location.test.location_code
 
   provider_name = data.aws_dx_location.test.available_providers[0]
+}
+`, rName)
+}
+
+func testAccLagConfig_requestMACSec(rName string) string {
+	return fmt.Sprintf(`
+data "aws_dx_locations" "test" {}
+
+resource "aws_dx_lag" "test" {
+  name                  = %[1]q
+  connections_bandwidth = "1Gbps"
+  location              = tolist(data.aws_dx_locations.test.location_codes)[0]
+  request_macsec        = true
 }
 `, rName)
 }

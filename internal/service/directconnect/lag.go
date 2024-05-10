@@ -82,6 +82,10 @@ func ResourceLag() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"request_macsec": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -113,6 +117,10 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("provider_name"); ok {
 		input.ProviderName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOkExists("request_macsec"); ok {
+		input.RequestMACSec = aws.Bool(v.(bool))
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect LAG: %s", input)
@@ -165,6 +173,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrName, lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)
+	d.Set("request_macsec", lag.MacSecCapable)
 
 	return diags
 }
