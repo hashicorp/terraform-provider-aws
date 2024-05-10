@@ -5,7 +5,6 @@ package waf
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/waf"
@@ -13,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -37,49 +39,67 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 }
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	output, err := findSubscribedRuleGroupByNameOrMetricName(ctx, conn, d.Get(names.AttrName).(string), d.Get("metric_name").(string))
+	var filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]
+
+	if v, ok := d.GetOk("metric_name"); ok {
+		name := v.(string)
+		filter = func(v *awstypes.SubscribedRuleGroupSummary) bool {
+			return aws.ToString(v.MetricName) == name
+		}
+	}
+
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name := v.(string)
+		f := func(v *awstypes.SubscribedRuleGroupSummary) bool {
+			return aws.ToString(v.Name) == name
+		}
+
+		if filter != nil {
+			filter = tfslices.PredicateAnd(filter, f)
+		} else {
+			filter = f
+		}
+	}
+
+	input := &waf.ListSubscribedRuleGroupsInput{}
+	output, err := findSubscribedRuleGroup(ctx, conn, input, filter)
 
 	if err != nil {
-		return diag.Errorf("reading WAF Subscribed Rule Group: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rate Based Rule", err))
 	}
 
 	d.SetId(aws.ToString(output.RuleGroupId))
 	d.Set("metric_name", output.MetricName)
 	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
 }
 
-func findSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.Client, name, metricName string) (*awstypes.SubscribedRuleGroupSummary, error) {
-	hasName := name != ""
-	hasMetricName := metricName != ""
-	hasMatch := false
+func findSubscribedRuleGroup(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) (*awstypes.SubscribedRuleGroupSummary, error) {
+	output, err := findSubscribedRuleGroups(ctx, conn, input, filter)
 
-	input := &waf.ListSubscribedRuleGroupsInput{}
-	var matchingRuleGroup *awstypes.SubscribedRuleGroupSummary
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSubscribedRuleGroups(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) ([]awstypes.SubscribedRuleGroupSummary, error) {
+	var output []awstypes.SubscribedRuleGroupSummary
+
 	err := listSubscribedRuleGroupsPages(ctx, conn, input, func(page *waf.ListSubscribedRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.RuleGroups {
-			respName := aws.ToString(v.Name)
-			respMetricName := aws.ToString(v.MetricName)
-
-			if hasName && respName != name {
-				continue
+			if filter(&v) {
+				output = append(output, v)
 			}
-			if hasMetricName && respMetricName != metricName {
-				continue
-			}
-			if hasName && hasMetricName && (name != respName || metricName != respMetricName) {
-				continue
-			}
-
-			matchingRuleGroup = &v
-			hasMatch = true
 		}
 
 		return !lastPage
@@ -89,9 +109,5 @@ func findSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.Cl
 		return nil, err
 	}
 
-	if !hasMatch {
-		return nil, fmt.Errorf("no matches found for name %s and metricName %s", name, metricName)
-	}
-
-	return matchingRuleGroup, nil
+	return output, nil
 }
