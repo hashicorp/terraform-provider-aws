@@ -297,7 +297,7 @@ func resourceDeliveryStream() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"destination": {
+				names.AttrDestination: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -1327,7 +1327,7 @@ func resourceDeliveryStream() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				destination := destinationType(d.Get("destination").(string))
+				destination := destinationType(d.Get(names.AttrDestination).(string))
 				requiredAttribute := map[destinationType]string{
 					destinationTypeElasticsearch:        "elasticsearch_configuration",
 					destinationTypeExtendedS3:           "extended_s3_configuration",
@@ -1368,7 +1368,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	switch v := destinationType(d.Get("destination").(string)); v {
+	switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
 	case destinationTypeElasticsearch:
 		if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ElasticsearchDestinationConfiguration = expandElasticsearchDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
@@ -1492,46 +1492,46 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 		destination := s.Destinations[0]
 		switch {
 		case destination.ElasticsearchDestinationDescription != nil:
-			d.Set("destination", destinationTypeElasticsearch)
+			d.Set(names.AttrDestination, destinationTypeElasticsearch)
 			if err := d.Set("elasticsearch_configuration", flattenElasticsearchDestinationDescription(destination.ElasticsearchDestinationDescription)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting elasticsearch_configuration: %s", err)
 			}
 		case destination.HttpEndpointDestinationDescription != nil:
-			d.Set("destination", destinationTypeHTTPEndpoint)
+			d.Set(names.AttrDestination, destinationTypeHTTPEndpoint)
 			configuredAccessKey := d.Get("http_endpoint_configuration.0.access_key").(string)
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointDestinationDescription(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting http_endpoint_configuration: %s", err)
 			}
 		case destination.AmazonopensearchserviceDestinationDescription != nil:
-			d.Set("destination", destinationTypeOpenSearch)
+			d.Set(names.AttrDestination, destinationTypeOpenSearch)
 			if err := d.Set("opensearch_configuration", flattenAmazonopensearchserviceDestinationDescription(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting opensearch_configuration: %s", err)
 			}
 		case destination.AmazonOpenSearchServerlessDestinationDescription != nil:
-			d.Set("destination", destinationTypeOpenSearchServerless)
+			d.Set(names.AttrDestination, destinationTypeOpenSearchServerless)
 			if err := d.Set("opensearchserverless_configuration", flattenAmazonOpenSearchServerlessDestinationDescription(destination.AmazonOpenSearchServerlessDestinationDescription)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting opensearchserverless_configuration: %s", err)
 			}
 		case destination.RedshiftDestinationDescription != nil:
-			d.Set("destination", destinationTypeRedshift)
+			d.Set(names.AttrDestination, destinationTypeRedshift)
 			configuredPassword := d.Get("redshift_configuration.0.password").(string)
 			if err := d.Set("redshift_configuration", flattenRedshiftDestinationDescription(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting redshift_configuration: %s", err)
 			}
 		case destination.SnowflakeDestinationDescription != nil:
-			d.Set("destination", destinationTypeSnowflake)
+			d.Set(names.AttrDestination, destinationTypeSnowflake)
 			configuredKeyPassphrase := d.Get("snowflake_configuration.0.key_passphrase").(string)
 			configuredPrivateKey := d.Get("snowflake_configuration.0.private_key").(string)
 			if err := d.Set("snowflake_configuration", flattenSnowflakeDestinationDescription(destination.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting snowflake_configuration: %s", err)
 			}
 		case destination.SplunkDestinationDescription != nil:
-			d.Set("destination", destinationTypeSplunk)
+			d.Set(names.AttrDestination, destinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenSplunkDestinationDescription(destination.SplunkDestinationDescription)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting splunk_configuration: %s", err)
 			}
 		default:
-			d.Set("destination", destinationTypeExtendedS3)
+			d.Set(names.AttrDestination, destinationTypeExtendedS3)
 			if err := d.Set("extended_s3_configuration", flattenExtendedS3DestinationDescription(destination.ExtendedS3DestinationDescription)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting extended_s3_configuration: %s", err)
 			}
@@ -1555,7 +1555,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			DestinationId:                  aws.String(d.Get("destination_id").(string)),
 		}
 
-		switch v := destinationType(d.Get("destination").(string)); v {
+		switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
 		case destinationTypeElasticsearch:
 			if v, ok := d.GetOk("elasticsearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.ElasticsearchDestinationUpdate = expandElasticsearchDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
