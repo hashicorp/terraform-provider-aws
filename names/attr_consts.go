@@ -43,6 +43,7 @@ const (
 	AttrLastUpdatedDate            = "last_updated_date"
 	AttrMax                        = "max"
 	AttrMin                        = "min"
+	AttrMode                       = "mode"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
 	AttrNetworkInterfaceID         = "network_interface_id"
