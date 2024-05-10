@@ -90,7 +90,7 @@ func ResourceCrawler() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
@@ -506,7 +506,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrName, crawler.Name)
 	d.Set(names.AttrDatabaseName, crawler.DatabaseName)
 	d.Set("role", crawler.Role)
-	d.Set("configuration", crawler.Configuration)
+	d.Set(names.AttrConfiguration, crawler.Configuration)
 	d.Set(names.AttrDescription, crawler.Description)
 	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
 	d.Set("schedule", "")
@@ -672,11 +672,11 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	if tablePrefix, ok := d.GetOk("table_prefix"); ok {
 		crawlerInput.TablePrefix = aws.String(tablePrefix.(string))
 	}
-	if configuration, ok := d.GetOk("configuration"); ok {
+	if configuration, ok := d.GetOk(names.AttrConfiguration); ok {
 		crawlerInput.Configuration = aws.String(configuration.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return nil, fmt.Errorf("configuration contains an invalid JSON: %v", err)
@@ -728,7 +728,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 
 	crawlerInput.TablePrefix = aws.String(d.Get("table_prefix").(string))
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		configuration, err := structure.NormalizeJsonString(v)
 		if err != nil {
 			return nil, fmt.Errorf("Configuration contains an invalid JSON: %v", err)
