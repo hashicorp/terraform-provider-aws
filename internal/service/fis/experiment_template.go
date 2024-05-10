@@ -205,7 +205,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
@@ -787,7 +787,7 @@ func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTe
 		raw := m.(map[string]interface{})
 		config := types.ExperimentTemplateTargetInputFilter{}
 
-		if v, ok := raw["path"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrPath].(string); ok && v != "" {
 			config.Path = aws.String(v)
 		}
 
@@ -947,7 +947,7 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["path"] = aws.ToString(v.Path)
+		item[names.AttrPath] = aws.ToString(v.Path)
 		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)
