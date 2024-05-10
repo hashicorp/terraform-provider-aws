@@ -43,7 +43,7 @@ func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rate Based Rule", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Web ACL", err))
 	}
 
 	d.SetId(aws.ToString(output.WebACLId))
