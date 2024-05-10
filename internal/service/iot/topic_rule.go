@@ -797,7 +797,7 @@ func ResourceTopicRule() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.StringInSlice([]string{
@@ -1169,7 +1169,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unit": {
+									names.AttrUnit: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -1988,7 +1988,7 @@ func expandTimestreamTimestamp(tfList []interface{}) *iot.TimestreamTimestamp {
 	apiObject := &iot.TimestreamTimestamp{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		apiObject.Unit = aws.String(v)
 	}
 
@@ -3313,7 +3313,7 @@ func flattenTimestreamTimestamp(apiObject *iot.TimestreamTimestamp) []interface{
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Unit; v != nil {
-		tfMap["unit"] = aws.StringValue(v)
+		tfMap[names.AttrUnit] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Value; v != nil {
