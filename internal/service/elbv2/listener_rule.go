@@ -69,7 +69,7 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -603,12 +603,12 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.ToString(rule.Priority) == "default" {
-		d.Set("priority", listenerRulePriorityDefault)
+		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
 		} else {
-			d.Set("priority", priority)
+			d.Set(names.AttrPriority, priority)
 		}
 	}
 
@@ -685,12 +685,12 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		if d.HasChange("priority") {
+		if d.HasChange(names.AttrPriority) {
 			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
 					{
 						RuleArn:  aws.String(d.Id()),
-						Priority: aws.Int32(int32(d.Get("priority").(int))),
+						Priority: aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 					},
 				},
 			}
@@ -753,7 +753,7 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 
 func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
 	var resp *elasticloadbalancingv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		var err error
 		params.Priority = aws.Int32(int32(v.(int)))
 		resp, err = conn.CreateRule(ctx, params)
