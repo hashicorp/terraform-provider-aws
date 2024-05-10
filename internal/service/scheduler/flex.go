@@ -107,7 +107,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -191,7 +191,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		m["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		m[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.PlacementConstraints; len(v) > 0 {
