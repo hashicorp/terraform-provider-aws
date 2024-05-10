@@ -399,7 +399,7 @@ func logicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -809,7 +809,7 @@ func physicalTableMapSchema() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -1437,7 +1437,7 @@ func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.Cast
 	if v, ok := tfMap["new_column_type"].(string); ok {
 		castColumnTypeOperation.NewColumnType = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		castColumnTypeOperation.Format = aws.String(v)
 	}
 
@@ -1798,7 +1798,7 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	if v, ok := tfMap["delimiter"].(string); ok {
 		uploadSettings.Delimiter = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		uploadSettings.Format = aws.String(v)
 	}
 	if v, ok := tfMap["start_from_row"].(int); ok {
@@ -2205,7 +2205,7 @@ func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperatio
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.NewColumnType != nil {
 		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
@@ -2556,7 +2556,7 @@ func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
 		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.StartFromRow != nil {
 		tfMap["start_from_row"] = int(aws.Int64Value(apiObject.StartFromRow))
