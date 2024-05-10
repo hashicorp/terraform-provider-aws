@@ -101,7 +101,7 @@ func ResourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -199,7 +199,7 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	input := &ssmincidents.CreateResponsePlanInput{
 		Actions:          expandAction(d.Get(names.AttrAction).([]interface{})),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
-		DisplayName:      aws.String(d.Get("display_name").(string)),
+		DisplayName:      aws.String(d.Get(names.AttrDisplayName).(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
 		IncidentTemplate: expandIncidentTemplate(d.Get("incident_template").([]interface{})),
 		Integrations:     expandIntegration(d.Get("integration").([]interface{})),
@@ -260,8 +260,8 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.ChatChannel = expandChatChannel(d.Get("chat_channel").(*schema.Set))
 		}
 
-		if d.HasChanges("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChanges(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChanges("engagements") {
