@@ -1365,3 +1365,13 @@ rules:
       - pattern: '"target"'
     severity: ERROR
     fix: "names.AttrTarget"
+  - id: literal-filter-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFilter` for the string literal "filter"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"filter"'
+    severity: ERROR
+    fix: "names.AttrFilter"
