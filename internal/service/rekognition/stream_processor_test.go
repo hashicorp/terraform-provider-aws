@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition_test
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====

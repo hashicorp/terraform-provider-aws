@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 package rekognition
+
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -51,11 +52,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-
 )
+
 // TIP: ==== FILE STRUCTURE ====
 // All resources should follow this basic outline. Improve this resource's
 // maintainability by sticking to it.
@@ -70,7 +71,7 @@ import (
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 func newResourceStreamProcessor(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceStreamProcessor{}
-	
+
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
 	// Users can configure timeout lengths but you need to use the times they
 	// provide. Access the timeout they configure (or the defaults) using,
@@ -119,12 +120,12 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 		// Blocks: map[string]schema.Block{
 		// 	"complex_argument": schema.ListNestedBlock{
 		// 		// TIP: ==== LIST VALIDATORS ====
-		// 		// List and set validators take the place of MaxItems and MinItems in 
+		// 		// List and set validators take the place of MaxItems and MinItems in
 		// 		// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-		// 		// make a nested object required. Similar to Plugin-SDK, complex objects 
+		// 		// make a nested object required. Similar to Plugin-SDK, complex objects
 		// 		// can be represented as lists or sets with listvalidator.SizeAtMost(1).
 		// 		//
-		// 		// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields, 
+		// 		// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
 		// 		// see:
 		// 		// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
 		// 		Validators: []validator.List{
@@ -164,20 +165,20 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	// 4. Call the AWS create/put function
 	// 5. Using the output from the create function, set the minimum arguments
 	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes. 
+	//    only attributes.
 	// 6. Use a waiter to wait for create to complete
 	// 7. Save the request plan to response state
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().RekognitionClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan resourceStreamProcessorData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a create input structure
 	in := &rekognition.CreateStreamProcessorInput{
 		Name: aws.String(plan.Name.ValueString()),
@@ -199,7 +200,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 
 	// 	in.ComplexArgument = expandComplexArgument(tfList)
 	// }
-	
+
 	// TIP: -- 4. Call the AWS create function
 	out, err := conn.CreateStreamProcessor(ctx, in)
 	if err != nil {
@@ -218,10 +219,10 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 	plan.ARN = flex.StringToFramework(ctx, out.StreamProcessorArn)
-	
+
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
@@ -232,14 +233,14 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
-	
+
 	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceStreamProcessorData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -260,22 +261,21 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 		)
 		return
 	}
-	
 
 	state.Name = flex.StringToFramework(ctx, out.Name)
-	
+
 	// TIP: Setting a complex type.
 	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
 	// resp.Diagnostics.Append(d...)
 	// state.ComplexArgument = complexArgument
-	
+
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceStreamProcessorData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -283,16 +283,16 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a modify input structure and check for changes
-	if !plan.Name.Equal(state.Name)  {
+	if !plan.Name.Equal(state.Name) {
 
 		in := &rekognition.UpdateStreamProcessorInput{
 			// TIP: Mandatory or fields that will always be present can be set when
 			// you create the Input structure. (Replace these with real fields.)
-			Name:   aws.String(plan.Name.ValueString()),
+			Name: aws.String(plan.Name.ValueString()),
 		}
-		
+
 		// TIP: -- 4. Call the AWS modify/update function
 		_, err := conn.UpdateStreamProcessor(ctx, in)
 		if err != nil {
@@ -312,13 +312,12 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		// 	)
 		// 	return
 		// }
-		
+
 		// TIP: Using the output from the update function, re-set any computed attributes
 		// plan.ARN = flex.StringToFramework(ctx, out.Arn)
 		// plan.ID = flex.StringToFramework(ctx, out.StreamProcessor.StreamProcessorId)
 	}
 
-	
 	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
@@ -330,26 +329,24 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	
 	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceStreamProcessorData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a delete input structure
 	in := &rekognition.DeleteStreamProcessorInput{
 		Name: aws.String(state.Name.ValueString()),
 	}
-	
 
 	_, err := conn.DeleteStreamProcessor(ctx, in)
 
@@ -363,7 +360,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitStreamProcessorDeleted(ctx, conn, state.Name.ValueString(), deleteTimeout)
@@ -382,11 +379,11 @@ func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.
 
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
-		Target:                    []string{			 
+		Pending: []string{},
+		Target: []string{
 			string(awstypes.StreamProcessorStatusStarting),
 			string(awstypes.StreamProcessorStatusRunning),
-			string(awstypes.StreamProcessorStatusFailed),},
+			string(awstypes.StreamProcessorStatusFailed)},
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -403,11 +400,11 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, i
 
 func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.StreamProcessorStatusUpdating)},
-		Target:                    []string{			 
+		Pending: []string{string(awstypes.StreamProcessorStatusUpdating)},
+		Target: []string{
 			string(awstypes.StreamProcessorStatusStarting),
 			string(awstypes.StreamProcessorStatusRunning),
-			string(awstypes.StreamProcessorStatusFailed),},
+			string(awstypes.StreamProcessorStatusFailed)},
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -424,17 +421,17 @@ func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, i
 
 func waitStreamProcessorDeleted(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{
-					string(awstypes.StreamProcessorStatusStopped),
-			 string(awstypes.StreamProcessorStatusStarting),
-			 string(awstypes.StreamProcessorStatusRunning),
-			 string(awstypes.StreamProcessorStatusFailed),
-			 string(awstypes.StreamProcessorStatusStopping),
-			 string(awstypes.StreamProcessorStatusUpdating),
-			},
-		Target:                    []string{},
-		Refresh:                   statusStreamProcessor(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{
+			string(awstypes.StreamProcessorStatusStopped),
+			string(awstypes.StreamProcessorStatusStarting),
+			string(awstypes.StreamProcessorStatusRunning),
+			string(awstypes.StreamProcessorStatusFailed),
+			string(awstypes.StreamProcessorStatusStopping),
+			string(awstypes.StreamProcessorStatusUpdating),
+		},
+		Target:  []string{},
+		Refresh: statusStreamProcessor(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -464,7 +461,7 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	in := &rekognition.DescribeStreamProcessorInput{
 		Name: aws.String(name),
 	}
-	
+
 	out, err := conn.DescribeStreamProcessor(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -484,11 +481,10 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	return out, nil
 }
 
-
 type resourceStreamProcessorData struct {
-	ARN             types.String   `tfsdk:"arn"`
-	Name            types.String   `tfsdk:"name"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+	ARN      types.String   `tfsdk:"arn"`
+	Name     types.String   `tfsdk:"name"`
+	Tags     types.Map      `tfsdk:"tags"`
+	TagsAll  types.Map      `tfsdk:"tags_all"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
