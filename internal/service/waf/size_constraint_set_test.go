@@ -215,10 +215,6 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awsty
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Size Constraint Set ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 		output, err := tfwaf.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)

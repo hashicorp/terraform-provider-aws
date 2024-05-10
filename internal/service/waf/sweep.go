@@ -752,7 +752,7 @@ func sweepSizeConstraintSet(region string) error {
 		}
 
 		for _, sizeConstraintSet := range page.SizeConstraintSets {
-			r := ResourceSizeConstraintSet()
+			r := resourceSizeConstraintSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(sizeConstraintSet.SizeConstraintSetId)

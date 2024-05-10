@@ -101,8 +101,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSizeConstraintSet,
+			Factory:  resourceSizeConstraintSet,
 			TypeName: "aws_waf_size_constraint_set",
+			Name:     "Size Constraint Set",
 		},
 		{
 			Factory:  ResourceSQLInjectionMatchSet,
