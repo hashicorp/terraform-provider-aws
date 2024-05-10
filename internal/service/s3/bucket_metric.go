@@ -55,7 +55,7 @@ func resourceBucketMetric() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.access_point", "filter.0.prefix", "filter.0.tags"},
@@ -201,7 +201,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 	}
 
 	var prefix string
-	if v, ok := m["prefix"]; ok {
+	if v, ok := m[names.AttrPrefix]; ok {
 		prefix = v.(string)
 	}
 
@@ -272,7 +272,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 			m["access_point"] = aws.ToString(v)
 		}
 		if v := v.Value.Prefix; v != nil {
-			m["prefix"] = aws.ToString(v)
+			m[names.AttrPrefix] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
 			m[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
@@ -280,7 +280,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 	case *types.MetricsFilterMemberAccessPointArn:
 		m["access_point"] = v.Value
 	case *types.MetricsFilterMemberPrefix:
-		m["prefix"] = v.Value
+		m[names.AttrPrefix] = v.Value
 	case *types.MetricsFilterMemberTag:
 		tags := []types.Tag{
 			v.Value,

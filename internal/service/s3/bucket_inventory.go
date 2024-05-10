@@ -107,7 +107,7 @@ func resourceBucketInventory() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -128,7 +128,7 @@ func resourceBucketInventory() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -324,7 +324,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 }
 
 func expandInventoryFilter(m map[string]interface{}) *types.InventoryFilter {
-	v, ok := m["prefix"]
+	v, ok := m[names.AttrPrefix]
 	if !ok {
 		return nil
 	}
@@ -342,7 +342,7 @@ func flattenInventoryFilter(filter *types.InventoryFilter) []map[string]interfac
 
 	m := make(map[string]interface{})
 	if filter.Prefix != nil {
-		m["prefix"] = aws.ToString(filter.Prefix)
+		m[names.AttrPrefix] = aws.ToString(filter.Prefix)
 	}
 
 	result = append(result, m)
@@ -370,7 +370,7 @@ func expandInventoryBucketDestination(m map[string]interface{}) *types.Inventory
 		destination.AccountId = aws.String(v.(string))
 	}
 
-	if v, ok := m["prefix"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrPrefix]; ok && v.(string) != "" {
 		destination.Prefix = aws.String(v.(string))
 	}
 
@@ -415,7 +415,7 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 		m[names.AttrAccountID] = aws.ToString(destination.AccountId)
 	}
 	if destination.Prefix != nil {
-		m["prefix"] = aws.ToString(destination.Prefix)
+		m[names.AttrPrefix] = aws.ToString(destination.Prefix)
 	}
 
 	if destination.Encryption != nil {

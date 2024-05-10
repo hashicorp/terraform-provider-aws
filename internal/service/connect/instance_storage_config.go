@@ -107,7 +107,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 											},
 										},
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -395,7 +395,7 @@ func expandKinesisVideoStreamConfig(tfList []interface{}) *connect.KinesisVideoS
 
 	result := &connect.KinesisVideoStreamConfig{
 		EncryptionConfig:     expandEncryptionConfig(tfMap["encryption_config"].([]interface{})),
-		Prefix:               aws.String(tfMap["prefix"].(string)),
+		Prefix:               aws.String(tfMap[names.AttrPrefix].(string)),
 		RetentionPeriodHours: aws.Int64(int64(tfMap["retention_period_hours"].(int))),
 	}
 
@@ -503,7 +503,7 @@ func flattenKinesisVideoStreamConfig(apiObject *connect.KinesisVideoStreamConfig
 		"encryption_config": flattenEncryptionConfig(apiObject.EncryptionConfig),
 		// API returns <prefix>-connect-<connect_instance_alias>-contact-
 		// DiffSuppressFunc used
-		"prefix":                 aws.StringValue(apiObject.Prefix),
+		names.AttrPrefix:         aws.StringValue(apiObject.Prefix),
 		"retention_period_hours": aws.Int64Value(apiObject.RetentionPeriodHours),
 	}
 

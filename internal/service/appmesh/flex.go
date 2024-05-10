@@ -248,7 +248,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 							grpcRouteMetadata.Match.Exact = aws.String(vExact)
 						}
-						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+						if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 							grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
 						}
 						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -388,7 +388,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		if vPort, ok := mHttpRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 			httpRouteMatch.Port = aws.Int64(int64(vPort))
 		}
-		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+		if vPrefix, ok := mHttpRouteMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 			httpRouteMatch.Prefix = aws.String(vPrefix)
 		}
 		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
@@ -418,7 +418,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 						httpRouteHeader.Match.Exact = aws.String(vExact)
 					}
-					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+					if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 						httpRouteHeader.Match.Prefix = aws.String(vPrefix)
 					}
 					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -1348,10 +1348,10 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 
 			if match := grpcRouteMetadata.Match; match != nil {
 				mMatch := map[string]interface{}{
-					"exact":  aws.StringValue(match.Exact),
-					"prefix": aws.StringValue(match.Prefix),
-					"regex":  aws.StringValue(match.Regex),
-					"suffix": aws.StringValue(match.Suffix),
+					"exact":          aws.StringValue(match.Exact),
+					names.AttrPrefix: aws.StringValue(match.Prefix),
+					"regex":          aws.StringValue(match.Regex),
+					"suffix":         aws.StringValue(match.Suffix),
 				}
 
 				if r := match.Range; r != nil {
@@ -1449,10 +1449,10 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 
 			if match := httpRouteHeader.Match; match != nil {
 				mMatch := map[string]interface{}{
-					"exact":  aws.StringValue(match.Exact),
-					"prefix": aws.StringValue(match.Prefix),
-					"regex":  aws.StringValue(match.Regex),
-					"suffix": aws.StringValue(match.Suffix),
+					"exact":          aws.StringValue(match.Exact),
+					names.AttrPrefix: aws.StringValue(match.Prefix),
+					"regex":          aws.StringValue(match.Regex),
+					"suffix":         aws.StringValue(match.Suffix),
 				}
 
 				if r := match.Range; r != nil {
@@ -1505,7 +1505,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 				"method":          aws.StringValue(httpRouteMatch.Method),
 				"path":            vHttpRoutePath,
 				names.AttrPort:    int(aws.Int64Value(httpRouteMatch.Port)),
-				"prefix":          aws.StringValue(httpRouteMatch.Prefix),
+				names.AttrPrefix:  aws.StringValue(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
 				"scheme":          aws.StringValue(httpRouteMatch.Scheme),
 			},

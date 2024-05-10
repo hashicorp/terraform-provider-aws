@@ -165,7 +165,7 @@ func ResourceListenerRule() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"prefix": {
+															names.AttrPrefix: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -199,7 +199,7 @@ func ResourceListenerRule() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
-															"prefix": {
+															names.AttrPrefix: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -609,7 +609,7 @@ func flattenHeaderMatchTypeMemberPrefix(apiObject *types.HeaderMatchTypeMemberPr
 	}
 
 	tfMap := map[string]interface{}{
-		"prefix": apiObject.Value,
+		names.AttrPrefix: apiObject.Value,
 	}
 
 	return tfMap
@@ -667,7 +667,7 @@ func flattenPathMatchTypeMemberPrefix(apiObject *types.PathMatchTypeMemberPrefix
 	}
 
 	tfMap := map[string]interface{}{
-		"prefix": apiObject.Value,
+		names.AttrPrefix: apiObject.Value,
 	}
 
 	return tfMap
@@ -807,7 +807,7 @@ func expandHeaderMatch(tfMap map[string]interface{}) types.HeaderMatch {
 		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
 			apiObject.Match = expandHeaderMatchTypeMemberExact(matchObj)
 		}
-		if matchV, ok := matchObj["prefix"].(string); ok && matchV != "" {
+		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
 			apiObject.Match = expandHeaderMatchTypeMemberPrefix(matchObj)
 		}
 		if matchV, ok := matchObj["contains"].(string); ok && matchV != "" {
@@ -830,7 +830,7 @@ func expandHeaderMatchTypeMemberContains(tfMap map[string]interface{}) types.Hea
 func expandHeaderMatchTypeMemberPrefix(tfMap map[string]interface{}) types.HeaderMatchType {
 	apiObject := &types.HeaderMatchTypeMemberPrefix{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject
@@ -857,7 +857,7 @@ func expandPathMatch(tfMap map[string]interface{}) *types.PathMatch {
 		if matchV, ok := matchObj["exact"].(string); ok && matchV != "" {
 			apiObject.Match = expandPathMatchTypeMemberExact(matchObj)
 		}
-		if matchV, ok := matchObj["prefix"].(string); ok && matchV != "" {
+		if matchV, ok := matchObj[names.AttrPrefix].(string); ok && matchV != "" {
 			apiObject.Match = expandPathMatchTypeMemberPrefix(matchObj)
 		}
 	}
@@ -878,7 +878,7 @@ func expandPathMatchTypeMemberExact(tfMap map[string]interface{}) types.PathMatc
 func expandPathMatchTypeMemberPrefix(tfMap map[string]interface{}) types.PathMatchType {
 	apiObject := &types.PathMatchTypeMemberPrefix{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject

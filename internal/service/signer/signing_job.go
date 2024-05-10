@@ -91,7 +91,7 @@ func ResourceSigningJob() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -469,8 +469,8 @@ func expandSigningJobS3Destination(tfList []interface{}) *types.S3Destination {
 		s3Destination.BucketName = aws.String(tfMap[names.AttrBucket].(string))
 	}
 
-	if _, ok := tfMap["prefix"]; ok {
-		s3Destination.Prefix = aws.String(tfMap["prefix"].(string))
+	if _, ok := tfMap[names.AttrPrefix]; ok {
+		s3Destination.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	}
 
 	return s3Destination

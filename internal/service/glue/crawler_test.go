@@ -1498,10 +1498,10 @@ func TestAccGlueCrawler_removeTablePrefix(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_tablePrefix(rName, "prefix"),
+				Config: testAccCrawlerConfig_tablePrefix(rName, names.AttrPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					resource.TestCheckResourceAttr(resourceName, "table_prefix", "prefix"),
+					resource.TestCheckResourceAttr(resourceName, "table_prefix", names.AttrPrefix),
 				),
 			},
 			{

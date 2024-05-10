@@ -318,7 +318,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.OutputSchemaVersion](),
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -929,7 +929,7 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 		apiObject.OutputSchemaVersion = types.OutputSchemaVersion(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -1258,7 +1258,7 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 	tfMap["output_schema_version"] = apiObject.OutputSchemaVersion
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap
