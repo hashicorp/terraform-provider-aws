@@ -23,7 +23,7 @@ func DataSourceMap() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMapRead,
 		Schema: map[string]*schema.Schema{
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -84,9 +84,9 @@ func dataSourceMapRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.MapName))
 
 	if output.Configuration != nil {
-		d.Set("configuration", []interface{}{flattenConfiguration(output.Configuration)})
+		d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(output.Configuration)})
 	} else {
-		d.Set("configuration", nil)
+		d.Set(names.AttrConfiguration, nil)
 	}
 
 	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
