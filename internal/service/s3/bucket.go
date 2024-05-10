@@ -92,7 +92,7 @@ func resourceBucket() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"bucket_prefix"},
+				ConflictsWith: []string{names.AttrBucketPrefix},
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 63),
 					validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
@@ -102,7 +102,7 @@ func resourceBucket() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket_prefix": {
+			names.AttrBucketPrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -709,7 +709,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get("bucket_prefix").(string))
+	bucket := create.Name(d.Get(names.AttrBucket).(string), d.Get(names.AttrBucketPrefix).(string))
 	region := meta.(*conns.AWSClient).Region
 
 	if err := validBucketName(bucket, region); err != nil {
@@ -804,7 +804,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrBucket, d.Id())
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
-	d.Set("bucket_prefix", create.NamePrefixFromName(d.Id()))
+	d.Set(names.AttrBucketPrefix, create.NamePrefixFromName(d.Id()))
 
 	//
 	// Bucket Policy.
