@@ -308,7 +308,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 														},
 													},
 												},
-												"format": {
+												names.AttrFormat: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.Format](),
@@ -921,7 +921,7 @@ func expandS3BucketDestination(tfMap map[string]interface{}) *types.S3BucketDest
 		apiObject.Encryption = expandStorageLensDataExportEncryption(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = types.Format(v)
 	}
 
@@ -1254,7 +1254,7 @@ func flattenS3BucketDestination(apiObject *types.S3BucketDestination) map[string
 		tfMap["encryption"] = []interface{}{flattenStorageLensDataExportEncryption(v)}
 	}
 
-	tfMap["format"] = apiObject.Format
+	tfMap[names.AttrFormat] = apiObject.Format
 	tfMap["output_schema_version"] = apiObject.OutputSchemaVersion
 
 	if v := apiObject.Prefix; v != nil {
