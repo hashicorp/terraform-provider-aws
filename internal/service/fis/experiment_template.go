@@ -52,7 +52,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -289,7 +289,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
-		Actions:          expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
+		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
 		ClientToken:      aws.String(id.UniqueId()),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
@@ -348,8 +348,8 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrRoleARN, experimentTemplate.RoleArn)
 	d.Set(names.AttrDescription, experimentTemplate.Description)
 
-	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
+	if err := d.Set(names.AttrAction, flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrAction, err)
 	}
 
 	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
@@ -379,8 +379,8 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			Id: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get(names.AttrAction).(*schema.Set))
 		}
 
 		if d.HasChange(names.AttrDescription) {
