@@ -4,7 +4,9 @@
 package wafregional
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -42,7 +45,7 @@ func resourceRegexMatchSet() *schema.Resource {
 			"regex_match_tuple": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Set:      RegexMatchSetTupleHash,
+				Set:      regexMatchSetTupleHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
@@ -108,7 +111,7 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
-	set, err := findRegexMatchSetByID(ctx, conn, d.Id())
+	regexMatchSet, err := findRegexMatchSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Regional Regex Match Set (%s) not found, removing from state", d.Id())
@@ -120,8 +123,10 @@ func resourceRegexMatchSetRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("reading WAF Regional Regex Match Set (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrName, set.Name)
-	d.Set("regex_match_tuple", FlattenRegexMatchTuples(set.RegexMatchTuples))
+	d.Set(names.AttrName, regexMatchSet.Name)
+	if err := d.Set("regex_match_tuple", flattenRegexMatchTuples(regexMatchSet.RegexMatchTuples)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting regex_match_tuple: %s", err)
+	}
 
 	return diags
 }
@@ -134,9 +139,8 @@ func resourceRegexMatchSetUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("regex_match_tuple") {
 		o, n := d.GetChange("regex_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		if err := updateRegexMatchSetResourceWR(ctx, conn, region, d.Id(), oldT, newT); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Regex Match Set (%s): %s", d.Id(), err)
+		if err := updateRegexMatchSet(ctx, conn, region, d.Id(), oldT, newT); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -150,14 +154,12 @@ func resourceRegexMatchSetDelete(ctx context.Context, d *schema.ResourceData, me
 
 	if oldT := d.Get("regex_match_tuple").(*schema.Set).List(); len(oldT) > 0 {
 		var newT []interface{}
-		err := updateRegexMatchSetResourceWR(ctx, conn, region, d.Id(), oldT, newT)
-		if err != nil {
-			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-				return sdkdiag.AppendErrorf(diags, "updating WAF Regional Regex Match Set (%s): %s", d.Id(), err)
-			}
+		if err := updateRegexMatchSet(ctx, conn, region, d.Id(), oldT, newT); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
+	log.Printf("[INFO] Deleting WAF Regional Regex Match Set: %s", d.Id())
 	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.DeleteRegexMatchSetInput{
 			ChangeToken:     token,
@@ -203,16 +205,91 @@ func findRegexMatchSetByID(ctx context.Context, conn *wafregional.Client, id str
 	return output.RegexMatchSet, nil
 }
 
-func updateRegexMatchSetResourceWR(ctx context.Context, conn *wafregional.Client, region, regexMatchSetID string, oldT, newT []interface{}) error {
+func updateRegexMatchSet(ctx context.Context, conn *wafregional.Client, region, regexMatchSetID string, oldT, newT []interface{}) error {
 	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.UpdateRegexMatchSetInput{
 			ChangeToken:     token,
 			RegexMatchSetId: aws.String(regexMatchSetID),
-			Updates:         DiffRegexMatchSetTuples(oldT, newT),
+			Updates:         diffRegexMatchSetTuples(oldT, newT),
 		}
 
 		return conn.UpdateRegexMatchSet(ctx, input)
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("updating WAF Regional Regex Match Set (%s): %w", regexMatchSetID, err)
+	}
+
+	return nil
+}
+
+func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []interface{} {
+	out := make([]interface{}, len(tuples))
+	for i, t := range tuples {
+		m := make(map[string]interface{})
+
+		if t.FieldToMatch != nil {
+			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		}
+		m["regex_pattern_set_id"] = aws.ToString(t.RegexPatternSetId)
+		m["text_transformation"] = string(t.TextTransformation)
+
+		out[i] = m
+	}
+	return out
+}
+
+func expandRegexMatchTuple(tuple map[string]interface{}) *awstypes.RegexMatchTuple {
+	ftm := tuple["field_to_match"].([]interface{})
+	return &awstypes.RegexMatchTuple{
+		FieldToMatch:       ExpandFieldToMatch(ftm[0].(map[string]interface{})),
+		RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
+		TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
+	}
+}
+
+func diffRegexMatchSetTuples(oldT, newT []interface{}) []awstypes.RegexMatchSetUpdate {
+	updates := make([]awstypes.RegexMatchSetUpdate, 0)
+
+	for _, ot := range oldT {
+		tuple := ot.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newT, tuple); contains {
+			newT = append(newT[:idx], newT[idx+1:]...)
+			continue
+		}
+
+		updates = append(updates, awstypes.RegexMatchSetUpdate{
+			Action:          awstypes.ChangeActionDelete,
+			RegexMatchTuple: expandRegexMatchTuple(tuple),
+		})
+	}
+
+	for _, nt := range newT {
+		tuple := nt.(map[string]interface{})
+
+		updates = append(updates, awstypes.RegexMatchSetUpdate{
+			Action:          awstypes.ChangeActionInsert,
+			RegexMatchTuple: expandRegexMatchTuple(tuple),
+		})
+	}
+	return updates
+}
+
+func regexMatchSetTupleHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["field_to_match"]; ok {
+		ftms := v.([]interface{})
+		ftm := ftms[0].(map[string]interface{})
+
+		if v, ok := ftm["data"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
+		}
+		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType]))
+	}
+	buf.WriteString(fmt.Sprintf("%s-", m["regex_pattern_set_id"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))
+
+	return create.StringHashcode(buf.String())
 }

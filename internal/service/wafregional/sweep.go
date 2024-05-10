@@ -175,7 +175,7 @@ func sweepRegexMatchSets(region string) error {
 			r := resourceRegexMatchSet()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("regex_match_tuple", FlattenRegexMatchTuples(v.RegexMatchTuples))
+			d.Set("regex_match_tuple", flattenRegexMatchTuples(v.RegexMatchTuples))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -31,4 +31,5 @@ var (
 	FindWebACLByID               = findWebACLByID
 	FindXSSMatchSetByID          = findXSSMatchSetByID
 	FlattenFieldToMatch          = flattenFieldToMatch
+	RegexMatchSetTupleHash       = regexMatchSetTupleHash
 )

@@ -23,6 +23,8 @@ var (
 	FindGeoMatchSetByID     = findGeoMatchSetByID
 	FindIPSetByID           = findIPSetByID
 	FindRateBasedRuleByID   = findRateBasedRuleByID
+	FindRegexMatchSetByID   = findRegexMatchSetByID
 	FindWebACLByID          = findWebACLByID
 	FindWebACLByResourceARN = findWebACLByResourceARN
+	RegexMatchSetTupleHash  = regexMatchSetTupleHash
 )
