@@ -61,7 +61,7 @@ func dataSourceFunctionURL() *schema.Resource {
 					},
 				},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,7 +120,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("cors", nil)
 	}
-	d.Set("creation_time", output.CreationTime)
+	d.Set(names.AttrCreationTime, output.CreationTime)
 	d.Set("function_arn", output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
