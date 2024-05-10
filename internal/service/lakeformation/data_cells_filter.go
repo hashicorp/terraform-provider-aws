@@ -5,7 +5,6 @@ package lakeformation
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -109,9 +108,6 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							Validators: []validator.String{
 								stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]+$`), "must be a number"),
 							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -132,12 +128,14 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 						"row_filter": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[rowFilter](ctx),
 							Validators: []validator.List{
+								listvalidator.IsRequired(),
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"filter_expression": schema.StringAttribute{
 										Optional: true,
+										Computed: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -159,6 +157,10 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 		},
 	}
 }
+
+const (
+	dataCellsFilterIDPartCount = 4
+)
 
 func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LakeFormationClient(ctx)
@@ -198,7 +200,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		planTD.TableCatalogID.ValueString(),
 		planTD.TableName.ValueString(),
 	}
-	id, err := intflex.FlattenResourceId(idParts, len(idParts), false)
+	id, err := intflex.FlattenResourceId(idParts, dataCellsFilterIDPartCount, false)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -299,6 +301,25 @@ func (r *resourceDataCellsFilter) Update(ctx context.Context, req resource.Updat
 			)
 			return
 		}
+
+		output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
+
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LakeFormation, create.ErrActionUpdating, ResNameDataCellsFilter, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		td := tableData{}
+		resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
+
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		plan.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -319,8 +340,7 @@ func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	id := identifier(state.ID.ValueString())
-	idParts, err := intflex.ExpandResourceId(id.String(), id.Len(), false)
+	idParts, err := intflex.ExpandResourceId(state.ID.ValueString(), dataCellsFilterIDPartCount, false)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -358,22 +378,15 @@ func (r *resourceDataCellsFilter) ConfigValidators(_ context.Context) []resource
 			path.MatchRoot("table_data").AtListIndex(0).AtName("column_names"),
 			path.MatchRoot("table_data").AtListIndex(0).AtName("column_wildcard"),
 		),
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot("table_data").AtListIndex(0).AtName("row_filter").AtListIndex(0).AtName("filter_expression"),
+			path.MatchRoot("table_data").AtListIndex(0).AtName("row_filter").AtListIndex(0).AtName("all_rows_wildcard"),
+		),
 	}
 }
 
-type identifier string
-
-func (i *identifier) String() string {
-	return string(*i)
-}
-
-func (i *identifier) Len() int {
-	return len(strings.Split(string(*i), intflex.ResourceIdSeparator))
-}
-
 func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id string) (*awstypes.DataCellsFilter, error) {
-	identity := identifier(id)
-	idParts, err := intflex.ExpandResourceId(identity.String(), identity.Len(), false)
+	idParts, err := intflex.ExpandResourceId(id, dataCellsFilterIDPartCount, false)
 
 	if err != nil {
 		return nil, err

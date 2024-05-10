@@ -24,6 +24,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":          testAccDataCellsFilter_basic,
 			"columnWildcard": testAccDataCellsFilter_columnWildcard,
 			"disappears":     testAccDataCellsFilter_disappears,
+			"rowFilter":      testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			"basic":          testAccDataLakeSettingsDataSource_basic,
