@@ -656,7 +656,7 @@ func resourceDeliveryStream() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"catalog_id": {
+													names.AttrCatalogID: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
@@ -2206,7 +2206,7 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 		VersionId:    aws.String(m["version_id"].(string)),
 	}
 
-	if v, ok := m["catalog_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
 		config.CatalogId = aws.String(v)
 	}
 	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
@@ -3695,7 +3695,7 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	}
 
 	m := map[string]interface{}{
-		"catalog_id":           aws.ToString(sc.CatalogId),
+		names.AttrCatalogID:    aws.ToString(sc.CatalogId),
 		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
 		names.AttrRegion:       aws.ToString(sc.Region),
 		names.AttrRoleARN:      aws.ToString(sc.RoleARN),

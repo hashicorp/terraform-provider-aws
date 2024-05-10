@@ -78,7 +78,7 @@ func ResourceDataQualityRuleset() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -225,7 +225,7 @@ func expandTargetTable(tfMap map[string]interface{}) *glue.DataQualityTargetTabl
 		TableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -243,7 +243,7 @@ func flattenTargetTable(apiObject *glue.DataQualityTargetTable) []interface{} {
 	}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

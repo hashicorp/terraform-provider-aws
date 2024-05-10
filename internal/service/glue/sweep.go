@@ -106,7 +106,7 @@ func sweepCatalogDatabases(region string) error {
 			d := r.Data(nil)
 			d.SetId("unused")
 			d.Set(names.AttrName, name)
-			d.Set("catalog_id", database.CatalogId)
+			d.Set(names.AttrCatalogID, database.CatalogId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
