@@ -212,7 +212,7 @@ func computeActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priority 
 		ruleResource := tfwaf.ResourceRuleGroup().SchemaMap()["activated_rule"].Elem.(*schema.Resource)
 
 		m := map[string]interface{}{
-			"action": []interface{}{
+			names.AttrAction: []interface{}{
 				map[string]interface{}{
 					names.AttrType: actionType,
 				},

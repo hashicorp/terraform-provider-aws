@@ -46,7 +46,7 @@ func ExpandWebACLUpdate(updateAction string, aclRule map[string]interface{}) *wa
 		}
 	default:
 		rule = &waf.ActivatedRule{
-			Action:   ExpandAction(aclRule["action"].([]interface{})),
+			Action:   ExpandAction(aclRule[names.AttrAction].([]interface{})),
 			Priority: aws.Int64(int64(aclRule["priority"].(int))),
 			RuleId:   aws.String(aclRule["rule_id"].(string)),
 			Type:     aws.String(aclRule[names.AttrType].(string)),
@@ -88,7 +88,7 @@ func FlattenWebACLRules(ts []*waf.ActivatedRule) []map[string]interface{} {
 			actionMap := map[string]interface{}{
 				names.AttrType: aws.StringValue(r.Action.Type),
 			}
-			m["action"] = []map[string]interface{}{actionMap}
+			m[names.AttrAction] = []map[string]interface{}{actionMap}
 		}
 
 		m["priority"] = int(aws.Int64Value(r.Priority))
