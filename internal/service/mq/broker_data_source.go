@@ -50,7 +50,7 @@ func dataSourceBroker() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -245,7 +245,7 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -302,7 +302,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
-	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 

@@ -45,7 +45,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -168,7 +168,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
 		input.Configuration = expandClusterConfiguration(v.([]interface{}))
 	}
 
@@ -239,7 +239,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	cluster := outputRaw.(*ecs.Cluster)
 	d.Set(names.AttrARN, cluster.ClusterArn)
 	if cluster.Configuration != nil {
-		if err := d.Set("configuration", flattenClusterConfiguration(cluster.Configuration)); err != nil {
+		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	}
@@ -265,12 +265,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	if d.HasChanges("configuration", "service_connect_defaults", "setting") {
+	if d.HasChanges(names.AttrConfiguration, "service_connect_defaults", "setting") {
 		input := &ecs.UpdateClusterInput{
 			Cluster: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
 			input.Configuration = expandClusterConfiguration(v.([]interface{}))
 		}
 

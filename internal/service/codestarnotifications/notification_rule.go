@@ -87,7 +87,7 @@ func resourceNotificationRule() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -165,9 +165,9 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
 		targets = append(targets, map[string]interface{}{
-			"address":        aws.ToString(t.TargetAddress),
-			names.AttrType:   aws.ToString(t.TargetType),
-			names.AttrStatus: t.TargetStatus,
+			names.AttrAddress: aws.ToString(t.TargetAddress),
+			names.AttrType:    aws.ToString(t.TargetType),
+			names.AttrStatus:  t.TargetStatus,
 		})
 	}
 	if err := d.Set(names.AttrTarget, targets); err != nil {
@@ -273,7 +273,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 
 		input := &codestarnotifications.DeleteTargetInput{
 			ForceUnsubscribeAll: false,
-			TargetAddress:       aws.String(target["address"].(string)),
+			TargetAddress:       aws.String(target[names.AttrAddress].(string)),
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (interface{}, error) {
@@ -298,7 +298,7 @@ func expandNotificationRuleTargets(targetsData []interface{}) []types.Target {
 	for _, t := range targetsData {
 		target := t.(map[string]interface{})
 		targets = append(targets, types.Target{
-			TargetAddress: aws.String(target["address"].(string)),
+			TargetAddress: aws.String(target[names.AttrAddress].(string)),
 			TargetType:    aws.String(target[names.AttrType].(string)),
 		})
 	}

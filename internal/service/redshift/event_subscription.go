@@ -64,7 +64,7 @@ func resourceEventSubscription() *schema.Resource {
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.StringInSlice([]string{
-						"configuration",
+						names.AttrConfiguration,
 						"management",
 						"monitoring",
 						"security",

@@ -143,7 +143,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"configuration": {
+						names.AttrConfiguration: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

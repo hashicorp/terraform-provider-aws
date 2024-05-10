@@ -136,7 +136,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 													fmt.Sprintf("spec.0.%s.0.action.0.rewrite.0.prefix", attrName),
 												},
 											},
-											"path": {
+											names.AttrPath: {
 												Type:     schema.TypeList,
 												Optional: true,
 												MinItems: 1,
@@ -331,7 +331,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 										fmt.Sprintf("spec.0.%s.0.match.0.prefix", attrName),
 									},
 								},
-								"path": {
+								names.AttrPath: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,
@@ -807,7 +807,7 @@ func expandHTTPGatewayRouteRewrite(vHttpRouteRewrite []interface{}) *appmesh.Htt
 		routeRewrite.Hostname = routeHostnameRewrite
 	}
 
-	if vRoutePathRewrite, ok := mRouteRewrite["path"].([]interface{}); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
+	if vRoutePathRewrite, ok := mRouteRewrite[names.AttrPath].([]interface{}); ok && len(vRoutePathRewrite) > 0 && vRoutePathRewrite[0] != nil {
 		mRoutePathRewrite := vRoutePathRewrite[0].(map[string]interface{})
 		routePathRewrite := &appmesh.HttpGatewayRoutePathRewrite{}
 		if vExact, ok := mRoutePathRewrite["exact"].(string); ok && vExact != "" {
@@ -916,7 +916,7 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		routeMatch.Hostname = hostnameMatch
 	}
 
-	if vPath, ok := mRouteMatch["path"].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
+	if vPath, ok := mRouteMatch[names.AttrPath].([]interface{}); ok && len(vPath) > 0 && vPath[0] != nil {
 		pathMatch := &appmesh.HttpPathMatch{}
 
 		mHostname := vPath[0].(map[string]interface{})
@@ -1129,7 +1129,7 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 			mPath["regex"] = aws.StringValue(path.Regex)
 		}
 
-		mRouteMatch["path"] = []interface{}{mPath}
+		mRouteMatch[names.AttrPath] = []interface{}{mPath}
 	}
 
 	vQueryParameters := []interface{}{}
@@ -1173,7 +1173,7 @@ func flattenHTTPGatewayRouteRewrite(routeRewrite *appmesh.HttpGatewayRouteRewrit
 		mRewritePath := map[string]interface{}{
 			"exact": aws.StringValue(rewritePath.Exact),
 		}
-		mRouteRewrite["path"] = []interface{}{mRewritePath}
+		mRouteRewrite[names.AttrPath] = []interface{}{mRewritePath}
 	}
 
 	if rewritePrefix := routeRewrite.Prefix; rewritePrefix != nil {

@@ -51,7 +51,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -107,7 +107,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -155,7 +155,7 @@ func TestAccRedshiftSnapshotSchedule_identifierGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -186,7 +186,7 @@ func TestAccRedshiftSnapshotSchedule_identifierPrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -219,7 +219,7 @@ func TestAccRedshiftSnapshotSchedule_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -267,7 +267,7 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -301,7 +301,7 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},

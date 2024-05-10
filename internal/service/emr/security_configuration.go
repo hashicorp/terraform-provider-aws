@@ -35,7 +35,7 @@ func resourceSecurityConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -76,7 +76,7 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	).Generate()
 	input := &emr.CreateSecurityConfigurationInput{
 		Name:                  aws.String(name),
-		SecurityConfiguration: aws.String(d.Get("configuration").(string)),
+		SecurityConfiguration: aws.String(d.Get(names.AttrConfiguration).(string)),
 	}
 
 	output, err := conn.CreateSecurityConfigurationWithContext(ctx, input)
@@ -106,7 +106,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading EMR Security Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("configuration", output.SecurityConfiguration)
+	d.Set(names.AttrConfiguration, output.SecurityConfiguration)
 	d.Set("creation_date", aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))

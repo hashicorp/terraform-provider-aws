@@ -40,8 +40,8 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
-						"content_type": "application/x-www-form-urlencoded",
-						"format":       "URLEncoded",
+						"content_type":   "application/x-www-form-urlencoded",
+						names.AttrFormat: "URLEncoded",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.forward_when_content_type_is_unknown", "true"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
@@ -64,8 +64,8 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "content_type_profile_config.0.content_type_profiles.0.items.*", map[string]string{
-						"content_type": "application/x-www-form-urlencoded",
-						"format":       "URLEncoded",
+						"content_type":   "application/x-www-form-urlencoded",
+						names.AttrFormat: "URLEncoded",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", "false"),

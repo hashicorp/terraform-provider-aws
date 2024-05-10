@@ -55,7 +55,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "/",
@@ -93,7 +93,7 @@ func resourceVirtualMFADeviceCreate(ctx context.Context, d *schema.ResourceData,
 
 	name := d.Get("virtual_mfa_device_name").(string)
 	input := &iam.CreateVirtualMFADeviceInput{
-		Path:                 aws.String(d.Get("path").(string)),
+		Path:                 aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                 getTagsIn(ctx),
 		VirtualMFADeviceName: aws.String(name),
 	}
@@ -159,7 +159,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading IAM Virtual MFA Device (%s): %s", d.Id(), err)
 	}
 
-	d.Set("path", path)
+	d.Set(names.AttrPath, path)
 	d.Set("virtual_mfa_device_name", name)
 
 	if v := vMFA.EnableDate; v != nil {

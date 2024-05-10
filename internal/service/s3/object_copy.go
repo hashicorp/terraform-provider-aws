@@ -161,7 +161,7 @@ func resourceObjectCopy() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -476,7 +476,7 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}

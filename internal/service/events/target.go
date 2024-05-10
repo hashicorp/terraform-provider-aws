@@ -255,7 +255,7 @@ func resourceTarget() *schema.Resource {
 				ValidateFunc: validBusNameOrARN,
 				Default:      DefaultEventBusName,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -547,7 +547,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, target.Arn)
 	d.Set("event_bus_name", eventBusName)
-	d.Set("force_destroy", d.Get("force_destroy").(bool))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
 	d.Set(names.AttrRoleARN, target.RoleArn)
@@ -628,7 +628,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChangesExcept("force_destroy") {
+	if d.HasChangesExcept(names.AttrForceDestroy) {
 		input := expandPutTargetsInput(ctx, d)
 
 		output, err := conn.PutTargets(ctx, input)
@@ -658,7 +658,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.Force = v.(bool)
 	}
 

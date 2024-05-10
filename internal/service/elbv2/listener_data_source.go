@@ -221,7 +221,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -267,7 +267,7 @@ func DataSourceListener() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

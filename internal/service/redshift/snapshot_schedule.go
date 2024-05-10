@@ -52,7 +52,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -163,7 +163,7 @@ func resourceSnapshotScheduleDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		diags = append(diags, snapshotScheduleDisassociateAll(ctx, conn, d.Id())...)
 
 		if diags.HasError() {

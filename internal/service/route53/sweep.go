@@ -368,7 +368,7 @@ func sweepZones(region string) error {
 			r := ResourceZone()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 			d.Set(names.AttrName, v.Name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

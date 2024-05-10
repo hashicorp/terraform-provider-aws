@@ -78,7 +78,7 @@ func resourcePolicy() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(policyNamePrefixMaxLen),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -119,7 +119,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreatePolicyInput{
 		Description:    aws.String(d.Get(names.AttrDescription).(string)),
-		Path:           aws.String(d.Get("path").(string)),
+		Path:           aws.String(d.Get(names.AttrPath).(string)),
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -202,7 +202,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, policy.Description)
 	d.Set(names.AttrName, policy.PolicyName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
-	d.Set("path", policy.Path)
+	d.Set(names.AttrPath, policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
 	setTagsOut(ctx, policy.Tags)

@@ -45,7 +45,7 @@ func categoryFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilterConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilterConfiguration.html
 					Type:     schema.TypeList,
 					Required: true,
 					MinItems: 1,
@@ -332,7 +332,7 @@ func numericRangeFilterValueSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"parameter": {
+				names.AttrParameter: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
@@ -357,7 +357,7 @@ func timeRangeFilterValueSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"parameter": {
+				names.AttrParameter: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
@@ -572,7 +572,7 @@ func expandCategoryFilter(tfList []interface{}) *quicksight.CategoryFilter {
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		filter.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
 		filter.Configuration = expandCategoryFilterConfiguration(v)
 	}
 
@@ -864,7 +864,7 @@ func expandNumericRangeFilterValue(tfList []interface{}) *quicksight.NumericRang
 
 	filter := &quicksight.NumericRangeFilterValue{}
 
-	if v, ok := tfMap["parameter"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrParameter].(string); ok && v != "" {
 		filter.Parameter = aws.String(v)
 	}
 	if v, ok := tfMap["static_value"].(float64); ok {
@@ -1054,7 +1054,7 @@ func expandTimeRangeFilterValue(tfList []interface{}) *quicksight.TimeRangeFilte
 
 	filter := &quicksight.TimeRangeFilterValue{}
 
-	if v, ok := tfMap["parameter"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrParameter].(string); ok && v != "" {
 		filter.Parameter = aws.String(v)
 	}
 	if v, ok := tfMap["static_value"].(string); ok && v != "" {
@@ -1311,7 +1311,7 @@ func flattenCategoryFilter(apiObject *quicksight.CategoryFilter) []interface{} {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Configuration != nil {
-		tfMap["configuration"] = flattenCategoryFilterConfiguration(apiObject.Configuration)
+		tfMap[names.AttrConfiguration] = flattenCategoryFilterConfiguration(apiObject.Configuration)
 	}
 	if apiObject.FilterId != nil {
 		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
@@ -1483,7 +1483,7 @@ func flattenNumericRangeFilterValue(apiObject *quicksight.NumericRangeFilterValu
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Parameter != nil {
-		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+		tfMap[names.AttrParameter] = aws.StringValue(apiObject.Parameter)
 	}
 	if apiObject.StaticValue != nil {
 		tfMap["static_value"] = aws.Float64Value(apiObject.StaticValue)
@@ -1636,7 +1636,7 @@ func flattenTimeRangeFilterValue(apiObject *quicksight.TimeRangeFilterValue) []i
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Parameter != nil {
-		tfMap["parameter"] = aws.StringValue(apiObject.Parameter)
+		tfMap[names.AttrParameter] = aws.StringValue(apiObject.Parameter)
 	}
 	if apiObject.RollingDate != nil {
 		tfMap["rolling_date"] = flattenRollingDateConfiguration(apiObject.RollingDate)

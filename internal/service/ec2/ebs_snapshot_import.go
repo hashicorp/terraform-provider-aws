@@ -101,13 +101,13 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -347,11 +347,11 @@ func expandSnapshotDiskContainer(tfMap map[string]interface{}) *awstypes.Snapsho
 		apiObject.Description = aws.String(v)
 	}
 
-	if v, ok := tfMap["format"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFormat].(string); ok && v != "" {
 		apiObject.Format = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 

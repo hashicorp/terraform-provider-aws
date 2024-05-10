@@ -52,7 +52,7 @@ func ResourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -194,7 +194,7 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Configuration = expandConfiguration(v.([]interface{}))
 	}
 
@@ -261,7 +261,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
-	if err := d.Set("configuration", flattenConfiguration(out.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(out.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
@@ -283,8 +283,8 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		IndexId: aws.String(indexId),
 	}
 
-	if d.HasChange("configuration") {
-		in.Configuration = expandConfiguration(d.Get("configuration").([]interface{}))
+	if d.HasChange(names.AttrConfiguration) {
+		in.Configuration = expandConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
 	}
 
 	if d.HasChange(names.AttrDescription) {

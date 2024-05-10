@@ -33,7 +33,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -256,7 +256,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -404,7 +404,7 @@ func InstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, 
 func resourceInstanceResourceV1() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -636,7 +636,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -910,7 +910,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,

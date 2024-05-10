@@ -99,7 +99,7 @@ func resourceWorkgroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -649,7 +649,7 @@ func flattenEndpoint(apiObject *redshiftserverless.Endpoint) map[string]interfac
 
 	tfMap := map[string]interface{}{}
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Port; v != nil {

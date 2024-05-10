@@ -35,7 +35,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			names.AttrTags:             testAccWorkspace_tags,
 			"vpc":                      testAccWorkspace_vpc,
-			"configuration":            testAccWorkspace_configuration,
+			names.AttrConfiguration:    testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
 			names.AttrVersion:          testAccWorkspace_version,
 		},

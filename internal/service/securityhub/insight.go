@@ -299,7 +299,7 @@ func dateFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"unit": {
+							names.AttrUnit: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.DateRangeUnit](),
@@ -450,7 +450,7 @@ func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 
 	dr := &types.DateRange{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		dr.Unit = types.DateRangeUnit(v)
 	}
 
@@ -1021,7 +1021,7 @@ func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"unit":          string(dateRange.Unit),
+		names.AttrUnit:  string(dateRange.Unit),
 		names.AttrValue: aws.ToInt32((dateRange.Value)),
 	}
 

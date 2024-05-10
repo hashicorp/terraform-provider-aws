@@ -152,7 +152,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 350000),
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      fsx.DiskIopsConfigurationModeAutomatic,
@@ -240,7 +240,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
@@ -650,7 +650,7 @@ func expandSelfManagedActiveDirectoryConfigurationCreate(l []interface{}) *fsx.S
 		DomainName: aws.String(data[names.AttrDomainName].(string)),
 		DnsIps:     flex.ExpandStringSet(data["dns_ips"].(*schema.Set)),
 		Password:   aws.String(data[names.AttrPassword].(string)),
-		UserName:   aws.String(data["username"].(string)),
+		UserName:   aws.String(data[names.AttrUsername].(string)),
 	}
 
 	if v, ok := data["file_system_administrators_group"]; ok && v.(string) != "" {
@@ -680,7 +680,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fsx.S
 		req.Password = aws.String(v)
 	}
 
-	if v, ok := data["username"].(string); ok && v != "" {
+	if v, ok := data[names.AttrUsername].(string); ok && v != "" {
 		req.UserName = aws.String(v)
 	}
 
@@ -704,7 +704,7 @@ func flattenSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, adop
 		"file_system_administrators_group":       aws.StringValue(adopts.FileSystemAdministratorsGroup),
 		"organizational_unit_distinguished_name": aws.StringValue(adopts.OrganizationalUnitDistinguishedName),
 		names.AttrPassword:                       d.Get("self_managed_active_directory.0.password").(string),
-		"username":                               aws.StringValue(adopts.UserName),
+		names.AttrUsername:                       aws.StringValue(adopts.UserName),
 	}
 
 	return []map[string]interface{}{m}
@@ -769,7 +769,7 @@ func expandWindowsDiskIopsConfiguration(l []interface{}) *fsx.DiskIopsConfigurat
 		req.Iops = aws.Int64(int64(v))
 	}
 
-	if v, ok := data["mode"].(string); ok && v != "" {
+	if v, ok := data[names.AttrMode].(string); ok && v != "" {
 		req.Mode = aws.String(v)
 	}
 
@@ -787,7 +787,7 @@ func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interf
 		m["iops"] = aws.Int64Value(rs.Iops)
 	}
 	if rs.Mode != nil {
-		m["mode"] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 
 	return []interface{}{m}

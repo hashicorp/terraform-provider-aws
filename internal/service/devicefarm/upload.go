@@ -66,7 +66,7 @@ func ResourceUpload() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(devicefarm.UploadType_Values(), false),
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,7 +120,7 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrName, upload.Name)
 	d.Set(names.AttrType, upload.Type)
 	d.Set("content_type", upload.ContentType)
-	d.Set("url", upload.Url)
+	d.Set(names.AttrURL, upload.Url)
 	d.Set("category", upload.Category)
 	d.Set("metadata", upload.Metadata)
 	d.Set(names.AttrARN, arn)

@@ -1219,7 +1219,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 				Config: testAccScheduleConfig_targetInput(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", "url", func(value string) error {
+					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", names.AttrURL, func(value string) error {
 						queueUrl = value
 						return nil
 					}),

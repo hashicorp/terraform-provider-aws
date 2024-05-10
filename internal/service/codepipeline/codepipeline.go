@@ -136,7 +136,7 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 									},
-									"configuration": {
+									names.AttrConfiguration: {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ValidateDiagFunc: validation.AllDiag(
@@ -835,7 +835,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
-	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
@@ -1324,7 +1324,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 			}
 		}
 
-		tfMap["configuration"] = v
+		tfMap[names.AttrConfiguration] = v
 	}
 
 	if v := apiObject.InputArtifacts; len(v) > 0 {

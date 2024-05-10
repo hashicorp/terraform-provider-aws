@@ -171,7 +171,7 @@ func ResourceTaskSet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"unit": {
+						names.AttrUnit: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ecs.ScaleUnitPercent,

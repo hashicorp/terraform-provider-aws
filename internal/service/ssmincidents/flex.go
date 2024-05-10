@@ -231,7 +231,7 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 			ssmAutomation.TargetAccount = types.SsmTargetAccount(v)
 		}
 
-		if v, ok := automationData["parameter"].(*schema.Set); ok {
+		if v, ok := automationData[names.AttrParameter].(*schema.Set); ok {
 			ssmAutomation.Parameters = expandParameters(v)
 		}
 
@@ -273,7 +273,7 @@ func flattenSSMAutomations(actions []types.Action) []interface{} {
 			}
 
 			if v := ssmAutomation.Parameters; v != nil {
-				a["parameter"] = flattenParameters(v)
+				a[names.AttrParameter] = flattenParameters(v)
 			}
 
 			if v := ssmAutomation.DynamicParameters; v != nil {

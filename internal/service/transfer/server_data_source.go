@@ -73,7 +73,7 @@ func DataSourceServer() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,9 +112,9 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("security_policy_name", output.SecurityPolicyName)
 	d.Set("structured_log_destinations", aws.StringValueSlice(output.StructuredLogDestinations))
 	if output.IdentityProviderDetails != nil {
-		d.Set("url", output.IdentityProviderDetails.Url)
+		d.Set(names.AttrURL, output.IdentityProviderDetails.Url)
 	} else {
-		d.Set("url", "")
+		d.Set(names.AttrURL, "")
 	}
 
 	return diags

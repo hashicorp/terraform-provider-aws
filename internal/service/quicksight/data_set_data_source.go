@@ -257,7 +257,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -588,7 +588,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

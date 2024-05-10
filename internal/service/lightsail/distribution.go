@@ -77,7 +77,7 @@ func ResourceDistribution() *schema.Resource {
 							Description:  "The cache behavior for the specified path.",
 							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
@@ -713,7 +713,7 @@ func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[strin
 	}
 
 	if v := apiObject.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	return m
@@ -810,7 +810,7 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehavio
 		a.Behavior = types.BehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		a.Path = aws.String(v)
 	}
 

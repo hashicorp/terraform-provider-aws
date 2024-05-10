@@ -217,7 +217,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
 								},
-								"path": {
+								names.AttrPath: {
 									Type:     schema.TypeList,
 									Optional: true,
 									MinItems: 0,
@@ -307,7 +307,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -342,7 +342,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -361,7 +361,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									MaxItems: 1,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"unit": {
+											names.AttrUnit: {
 												Type:         schema.TypeString,
 												Required:     true,
 												ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -558,7 +558,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -593,7 +593,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -612,7 +612,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
@@ -717,7 +717,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"unit": {
+													names.AttrUnit: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),

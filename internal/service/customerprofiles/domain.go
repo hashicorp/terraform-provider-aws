@@ -139,7 +139,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"address": {
+									names.AttrAddress: {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -638,7 +638,7 @@ func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSel
 		apiObject.AttributeMatchingModel = types.AttributeMatchingModel(v.(string))
 	}
 
-	if v, ok := tfList["address"]; ok {
+	if v, ok := tfList[names.AttrAddress]; ok {
 		apiObject.Address = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -874,7 +874,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = flex.FlattenStringValueList(v)
+		tfMap[names.AttrAddress] = flex.FlattenStringValueList(v)
 	}
 
 	tfMap["attribute_matching_model"] = apiObject.AttributeMatchingModel

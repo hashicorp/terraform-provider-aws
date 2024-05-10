@@ -74,7 +74,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateResourceNamePrefix(parameterGroupNameMaxLength - id.UniqueIDSuffixLength),
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -131,8 +131,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		toRemove, toAdd := ParameterChanges(o, n)
 
 		log.Printf("[DEBUG] Updating MemoryDB Parameter Group (%s)", d.Id())
@@ -209,7 +209,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set parameter: %s", err)
 	}
 
@@ -402,7 +402,7 @@ func expandParameterNameValue(param map[string]interface{}) *memorydb.ParameterN
 func createUserDefinedParameterMap(d *schema.ResourceData) map[string]string {
 	result := map[string]string{}
 
-	for _, param := range d.Get("parameter").(*schema.Set).List() {
+	for _, param := range d.Get(names.AttrParameter).(*schema.Set).List() {
 		m, ok := param.(map[string]interface{})
 		if !ok {
 			continue

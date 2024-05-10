@@ -25,7 +25,7 @@ func DataSourceInstance() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -310,12 +310,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	// Per AWS SDK Go docs:
 	// The endpoint might not be shown for instances whose status is creating.
 	if dbEndpoint := instance.Endpoint; dbEndpoint != nil {
-		d.Set("address", dbEndpoint.Address)
+		d.Set(names.AttrAddress, dbEndpoint.Address)
 		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set(names.AttrHostedZoneID, dbEndpoint.HostedZoneId)
 		d.Set(names.AttrPort, dbEndpoint.Port)
 	} else {
-		d.Set("address", nil)
+		d.Set(names.AttrAddress, nil)
 		d.Set(names.AttrEndpoint, nil)
 		d.Set(names.AttrHostedZoneID, nil)
 		d.Set(names.AttrPort, nil)

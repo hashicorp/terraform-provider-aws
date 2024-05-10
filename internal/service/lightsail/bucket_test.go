@@ -50,7 +50,7 @@ func TestAccLightsailBucket_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, "force_delete"),
 					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
 				),

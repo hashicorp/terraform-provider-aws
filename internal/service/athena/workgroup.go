@@ -45,7 +45,7 @@ func resourceWorkGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -156,7 +156,7 @@ func resourceWorkGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -190,7 +190,7 @@ func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateWorkGroupInput{
-		Configuration: expandWorkGroupConfiguration(d.Get("configuration").([]interface{})),
+		Configuration: expandWorkGroupConfiguration(d.Get(names.AttrConfiguration).([]interface{})),
 		Name:          aws.String(name),
 		Tags:          getTagsIn(ctx),
 	}
@@ -247,11 +247,11 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
-	if err := d.Set("configuration", flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenWorkGroupConfiguration(wg.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, wg.Description)
-	d.Set("force_destroy", d.Get("force_destroy"))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy))
 	d.Set(names.AttrName, wg.Name)
 	d.Set(names.AttrState, wg.State)
 
@@ -267,8 +267,8 @@ func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			WorkGroup: aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if d.HasChange("configuration") {
-			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.ConfigurationUpdates = expandWorkGroupConfigurationUpdates(d.Get(names.AttrConfiguration).([]interface{}))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -297,7 +297,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 

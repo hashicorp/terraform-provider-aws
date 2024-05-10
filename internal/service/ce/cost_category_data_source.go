@@ -94,7 +94,7 @@ func dataSourceCostCategory() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"parameter": {
+							names.AttrParameter: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem: &schema.Resource{

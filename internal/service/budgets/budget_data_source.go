@@ -80,7 +80,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -101,7 +101,7 @@ func DataSourceBudget() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"unit": {
+									names.AttrUnit: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -239,7 +239,7 @@ func DataSourceBudget() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -362,8 +362,8 @@ func flattenSpend(apiObject *awstypes.Spend) []interface{} {
 	}
 
 	attrs := map[string]interface{}{
-		"amount": aws.ToString(apiObject.Amount),
-		"unit":   aws.ToString(apiObject.Unit),
+		"amount":       aws.ToString(apiObject.Amount),
+		names.AttrUnit: aws.ToString(apiObject.Unit),
 	}
 
 	return []interface{}{attrs}

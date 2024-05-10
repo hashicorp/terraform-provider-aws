@@ -215,7 +215,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"unit": {
+									names.AttrUnit: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(sagemaker.TtlDurationUnit_Values(), false),
@@ -514,7 +514,7 @@ func expandFeatureGroupOnlineStoreConfigTTLDuration(l []interface{}) *sagemaker.
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.TtlDuration{
-		Unit:  aws.String(m["unit"].(string)),
+		Unit:  aws.String(m[names.AttrUnit].(string)),
 		Value: aws.Int64(int64(m[names.AttrValue].(int))),
 	}
 
@@ -527,7 +527,7 @@ func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *sagemaker.TtlDurati
 	}
 
 	m := map[string]interface{}{
-		"unit":          aws.StringValue(config.Unit),
+		names.AttrUnit:  aws.StringValue(config.Unit),
 		names.AttrValue: aws.Int64Value(config.Value),
 	}
 

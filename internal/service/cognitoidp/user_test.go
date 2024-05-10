@@ -306,7 +306,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
+		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
 
 		return err
 	}
@@ -321,7 +321,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
+			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -350,7 +350,7 @@ func testAccUserTemporaryPassword(ctx context.Context, userResName string, clien
 			return fmt.Errorf("Not found: %s", clientResName)
 		}
 
-		userName := userRs.Primary.Attributes["username"]
+		userName := userRs.Primary.Attributes[names.AttrUsername]
 		userPassword := userRs.Primary.Attributes["temporary_password"]
 		clientId := clientRs.Primary.Attributes[names.AttrID]
 
@@ -390,7 +390,7 @@ func testAccUserPassword(ctx context.Context, userResName string, clientResName 
 			return fmt.Errorf("Not found: %s", clientResName)
 		}
 
-		userName := userRs.Primary.Attributes["username"]
+		userName := userRs.Primary.Attributes[names.AttrUsername]
 		userPassword := userRs.Primary.Attributes[names.AttrPassword]
 		clientId := clientRs.Primary.Attributes[names.AttrID]
 

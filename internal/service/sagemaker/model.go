@@ -96,7 +96,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -173,7 +173,7 @@ func ResourceModel() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.InferenceExecutionMode_Values(), false),
@@ -243,7 +243,7 @@ func ResourceModel() *schema.Resource {
 								},
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -497,7 +497,7 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 		container.Image = aws.String(v.(string))
 	}
 
-	if v, ok := m["mode"]; ok && v.(string) != "" {
+	if v, ok := m[names.AttrMode]; ok && v.(string) != "" {
 		container.Mode = aws.String(v.(string))
 	}
 
@@ -616,7 +616,7 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	}
 
 	if container.Mode != nil {
-		cfg["mode"] = aws.StringValue(container.Mode)
+		cfg[names.AttrMode] = aws.StringValue(container.Mode)
 	}
 
 	if container.ContainerHostname != nil {
@@ -722,7 +722,7 @@ func expandModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceEx
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.InferenceExecutionConfig{
-		Mode: aws.String(m["mode"].(string)),
+		Mode: aws.String(m[names.AttrMode].(string)),
 	}
 
 	return config
@@ -735,7 +735,7 @@ func flattenModelInferenceExecutionConfig(config *sagemaker.InferenceExecutionCo
 
 	cfg := make(map[string]interface{})
 
-	cfg["mode"] = aws.StringValue(config.Mode)
+	cfg[names.AttrMode] = aws.StringValue(config.Mode)
 
 	return []interface{}{cfg}
 }

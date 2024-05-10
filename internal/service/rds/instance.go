@@ -84,7 +84,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -377,7 +377,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -657,7 +657,7 @@ func ResourceInstance() *schema.Resource {
 					"s3_import",
 				},
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -948,7 +948,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("username"); !ok {
+		if _, ok := d.GetOk(names.AttrUsername); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
 		if diags.HasError() {
@@ -967,7 +967,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
-			MasterUsername:          aws.String(d.Get("username").(string)),
+			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
@@ -1554,7 +1554,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if _, ok := d.GetOk("engine"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"engine": required field is not set`)
 		}
-		if _, ok := d.GetOk("username"); !ok {
+		if _, ok := d.GetOk(names.AttrUsername); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
 		}
 		if diags.HasError() {
@@ -1572,7 +1572,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
 			Engine:                  aws.String(d.Get("engine").(string)),
 			EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
-			MasterUsername:          aws.String(d.Get("username").(string)),
+			MasterUsername:          aws.String(d.Get(names.AttrUsername).(string)),
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
 			Tags:                    getTagsIn(ctx),
@@ -1927,7 +1927,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
 	d.Set("timezone", v.Timezone)
-	d.Set("username", v.MasterUsername)
+	d.Set(names.AttrUsername, v.MasterUsername)
 	var vpcSecurityGroupIDs []string
 	for _, v := range v.VpcSecurityGroups {
 		vpcSecurityGroupIDs = append(vpcSecurityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
@@ -1935,7 +1935,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
 	if v.Endpoint != nil {
-		d.Set("address", v.Endpoint.Address)
+		d.Set(names.AttrAddress, v.Endpoint.Address)
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
 			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
@@ -3018,7 +3018,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {

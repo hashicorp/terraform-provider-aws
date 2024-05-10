@@ -53,7 +53,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "private_domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", "ContainerService"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "READY"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 				),
 			},
 			{

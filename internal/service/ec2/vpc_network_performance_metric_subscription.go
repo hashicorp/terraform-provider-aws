@@ -29,7 +29,7 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 		DeleteWithoutTimeout: resourceNetworkPerformanceMetricSubscriptionDelete,
 
 		Schema: map[string]*schema.Schema{
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -67,7 +67,7 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	source := d.Get(names.AttrSource).(string)
-	destination := d.Get("destination").(string)
+	destination := d.Get(names.AttrDestination).(string)
 	metric := d.Get("metric").(string)
 	statistic := d.Get("statistic").(string)
 	id := NetworkPerformanceMetricSubscriptionCreateResourceID(source, destination, metric, statistic)
@@ -112,7 +112,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 		return sdkdiag.AppendErrorf(diags, "reading EC2 AWS Network Performance Metric Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination", subscription.Destination)
+	d.Set(names.AttrDestination, subscription.Destination)
 	d.Set("metric", subscription.Metric)
 	d.Set("period", subscription.Period)
 	d.Set(names.AttrSource, subscription.Source)

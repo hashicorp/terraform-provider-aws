@@ -86,12 +86,12 @@ func ResourceApplication() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -474,10 +474,10 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 			m[names.AttrType] = aws.StringValue(v.Type)
 		}
 		if v.Url != nil {
-			m["url"] = aws.StringValue(v.Url)
+			m[names.AttrURL] = aws.StringValue(v.Url)
 		}
 		if v.Username != nil {
-			m["username"] = aws.StringValue(v.Username)
+			m[names.AttrUsername] = aws.StringValue(v.Username)
 		}
 		if v.Revision != nil {
 			m["revision"] = aws.StringValue(v.Revision)

@@ -86,7 +86,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),

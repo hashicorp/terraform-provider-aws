@@ -68,7 +68,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"destination": {
+						names.AttrDestination: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -486,7 +486,7 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 			rule.DeleteMarkerReplication = expandDeleteMarkerReplication(v)
 		}
 
-		if v, ok := tfMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Destination = expandDestination(v)
 		}
 
@@ -881,7 +881,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Destination != nil {
-			m["destination"] = flattenDestination(rule.Destination)
+			m[names.AttrDestination] = flattenDestination(rule.Destination)
 		}
 
 		if rule.ExistingObjectReplication != nil {

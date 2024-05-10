@@ -286,7 +286,7 @@ func ResourceListener() *schema.Resource {
 										Default:      "#{host}",
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
@@ -353,7 +353,7 @@ func ResourceListener() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
@@ -855,7 +855,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 
 	return &awstypes.RedirectActionConfig{
 		Host:       aws.String(tfMap["host"].(string)),
-		Path:       aws.String(tfMap["path"].(string)),
+		Path:       aws.String(tfMap[names.AttrPath].(string)),
 		Port:       aws.String(tfMap[names.AttrPort].(string)),
 		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
@@ -896,7 +896,7 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 		return nil
 	}
 
-	switch mode := tfMap["mode"].(string); mode {
+	switch mode := tfMap[names.AttrMode].(string); mode {
 	case mutualAuthenticationOff:
 		return &awstypes.MutualAuthenticationAttributes{
 			Mode: aws.String(mode),
@@ -1057,13 +1057,13 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 	if mode == mutualAuthenticationOff {
 		return []interface{}{
 			map[string]interface{}{
-				"mode": mode,
+				names.AttrMode: mode,
 			},
 		}
 	}
 
 	m := map[string]interface{}{
-		"mode":                             aws.ToString(description.Mode),
+		names.AttrMode:                     aws.ToString(description.Mode),
 		"trust_store_arn":                  aws.ToString(description.TrustStoreArn),
 		"ignore_client_certificate_expiry": aws.ToBool(description.IgnoreClientCertificateExpiry),
 	}
@@ -1178,7 +1178,7 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 
 	m := map[string]interface{}{
 		"host":             aws.ToString(config.Host),
-		"path":             aws.ToString(config.Path),
+		names.AttrPath:     aws.ToString(config.Path),
 		names.AttrPort:     aws.ToString(config.Port),
 		names.AttrProtocol: aws.ToString(config.Protocol),
 		"query":            aws.ToString(config.Query),

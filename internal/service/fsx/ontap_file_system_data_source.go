@@ -48,7 +48,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

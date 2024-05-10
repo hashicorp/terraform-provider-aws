@@ -172,7 +172,7 @@ func expandVolumes(volumes []interface{}) []*batch.EksVolume {
 		if h, ok := volumeMap["host_path"].([]interface{}); ok && len(h) > 0 {
 			volume.HostPath = &batch.EksHostPath{}
 			if host, ok := h[0].(map[string]interface{}); ok {
-				if v, ok := host["path"]; ok {
+				if v, ok := host[names.AttrPath]; ok {
 					volume.HostPath.Path = aws.String(v.(string))
 				}
 			}
@@ -371,7 +371,7 @@ func flattenEKSVolumes(volumes []*batch.EksVolume) (tfList []interface{}) {
 
 		if v := v.HostPath; v != nil {
 			tfMap["host_path"] = []map[string]interface{}{{
-				"path": aws.StringValue(v.Path),
+				names.AttrPath: aws.StringValue(v.Path),
 			}}
 		}
 

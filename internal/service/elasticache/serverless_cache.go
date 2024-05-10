@@ -205,7 +205,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 											int64planmodifier.RequiresReplace(),
 										},
 									},
-									"unit": schema.StringAttribute{
+									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
 										Required:   true,
 									},

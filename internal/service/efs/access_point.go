@@ -89,7 +89,7 @@ func ResourceAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -280,7 +280,7 @@ func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 
 	rootDir := &efs.RootDirectory{}
 
-	if v, ok := m["path"]; ok {
+	if v, ok := m[names.AttrPath]; ok {
 		rootDir.Path = aws.String(v.(string))
 	}
 
@@ -327,7 +327,7 @@ func flattenAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"path":          aws.StringValue(rDir.Path),
+		names.AttrPath:  aws.StringValue(rDir.Path),
 		"creation_info": flattenAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
 	}
 

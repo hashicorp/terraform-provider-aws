@@ -67,7 +67,7 @@ func (d *dataSourceTemplates) Schema(ctx context.Context, req datasource.SchemaR
 						"service_name": schema.StringAttribute{
 							Computed: true,
 						},
-						"unit": schema.StringAttribute{
+						names.AttrUnit: schema.StringAttribute{
 							Computed: true,
 						},
 						names.AttrValue: schema.Float64Attribute{
@@ -117,7 +117,7 @@ var templatesSourceAttrTypes = map[string]attr.Type{
 	names.AttrRegion: types.StringType,
 	"service_code":   types.StringType,
 	"service_name":   types.StringType,
-	"unit":           types.StringType,
+	names.AttrUnit:   types.StringType,
 	names.AttrValue:  types.Float64Type,
 }
 
@@ -140,7 +140,7 @@ func flattenTemplates(ctx context.Context, apiObject []awstypes.ServiceQuotaIncr
 			names.AttrRegion: flex.StringToFramework(ctx, t.AwsRegion),
 			"service_code":   flex.StringToFramework(ctx, t.ServiceCode),
 			"service_name":   flex.StringToFramework(ctx, t.ServiceName),
-			"unit":           flex.StringToFramework(ctx, t.Unit),
+			names.AttrUnit:   flex.StringToFramework(ctx, t.Unit),
 			names.AttrValue:  flex.Float64ToFramework(ctx, t.DesiredValue),
 		}
 		objVal, d := types.ObjectValue(templatesSourceAttrTypes, obj)

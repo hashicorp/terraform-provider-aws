@@ -159,7 +159,7 @@ func ResourceRuleGroup() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"destination": {
+															names.AttrDestination: {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -241,7 +241,7 @@ func ResourceRuleGroup() *schema.Resource {
 																			Required: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"destination": {
+																					names.AttrDestination: {
 																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
@@ -685,7 +685,7 @@ func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
 		return nil
 	}
 	header := &networkfirewall.Header{}
-	if v, ok := tfMap["destination"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDestination].(string); ok && v != "" {
 		header.Destination = aws.String(v)
 	}
 	if v, ok := tfMap["destination_port"].(string); ok && v != "" {
@@ -1005,7 +1005,7 @@ func expandMatchAttributes(l []interface{}) *networkfirewall.MatchAttributes {
 		return nil
 	}
 	matchAttributes := &networkfirewall.MatchAttributes{}
-	if v, ok := tfMap["destination"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrDestination].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Destinations = expandAddresses(v.List())
 	}
 	if v, ok := tfMap["destination_port"].(*schema.Set); ok && v.Len() > 0 {
@@ -1258,12 +1258,12 @@ func flattenHeader(h *networkfirewall.Header) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"destination":      aws.StringValue(h.Destination),
-		"destination_port": aws.StringValue(h.DestinationPort),
-		"direction":        aws.StringValue(h.Direction),
-		names.AttrProtocol: aws.StringValue(h.Protocol),
-		names.AttrSource:   aws.StringValue(h.Source),
-		"source_port":      aws.StringValue(h.SourcePort),
+		names.AttrDestination: aws.StringValue(h.Destination),
+		"destination_port":    aws.StringValue(h.DestinationPort),
+		"direction":           aws.StringValue(h.Direction),
+		names.AttrProtocol:    aws.StringValue(h.Protocol),
+		names.AttrSource:      aws.StringValue(h.Source),
+		"source_port":         aws.StringValue(h.SourcePort),
 	}
 
 	return []interface{}{m}
@@ -1335,12 +1335,12 @@ func flattenMatchAttributes(ma *networkfirewall.MatchAttributes) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"destination":      flattenAddresses(ma.Destinations),
-		"destination_port": flattenPortRanges(ma.DestinationPorts),
-		"protocols":        flex.FlattenInt64Set(ma.Protocols),
-		names.AttrSource:   flattenAddresses(ma.Sources),
-		"source_port":      flattenPortRanges(ma.SourcePorts),
-		"tcp_flag":         flattenTCPFlags(ma.TCPFlags),
+		names.AttrDestination: flattenAddresses(ma.Destinations),
+		"destination_port":    flattenPortRanges(ma.DestinationPorts),
+		"protocols":           flex.FlattenInt64Set(ma.Protocols),
+		names.AttrSource:      flattenAddresses(ma.Sources),
+		"source_port":         flattenPortRanges(ma.SourcePorts),
+		"tcp_flag":            flattenTCPFlags(ma.TCPFlags),
 	}
 
 	return []interface{}{m}

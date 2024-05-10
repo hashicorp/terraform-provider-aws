@@ -409,7 +409,7 @@ func testAccWorkspace_configuration(t *testing.T) {
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": true }, "plugins": {"pluginAdminEnabled": false}}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":true},"plugins":{"pluginAdminEnabled":false}}`),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConfiguration, `{"unifiedAlerting":{"enabled":true},"plugins":{"pluginAdminEnabled":false}}`),
 				),
 			},
 			{
@@ -421,7 +421,7 @@ func testAccWorkspace_configuration(t *testing.T) {
 				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": false }, "plugins": {"pluginAdminEnabled": true}}`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":false},"plugins":{"pluginAdminEnabled":true}}`),
+					resource.TestCheckResourceAttr(resourceName, names.AttrConfiguration, `{"unifiedAlerting":{"enabled":false},"plugins":{"pluginAdminEnabled":true}}`),
 				),
 			},
 		},

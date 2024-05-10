@@ -106,7 +106,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -417,7 +417,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf["username"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -473,7 +473,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf["username"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -518,7 +518,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.UserName != nil {
-		m["username"] = aws.StringValue(rs.UserName)
+		m[names.AttrUsername] = aws.StringValue(rs.UserName)
 	}
 
 	// Since we are in a configuration block and the FSx API does not return

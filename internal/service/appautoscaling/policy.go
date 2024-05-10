@@ -221,7 +221,7 @@ func resourcePolicy() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 100),
 															},
-															"unit": {
+															names.AttrUnit: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -247,7 +247,7 @@ func resourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
 										ValidateFunc:  validation.StringInSlice(applicationautoscaling.MetricStatistic_Values(), false),
 									},
-									"unit": {
+									names.AttrUnit: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -556,7 +556,7 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 				spec.Namespace = aws.String(v.(string))
 			}
 
-			if v, ok := data["unit"].(string); ok && v != "" {
+			if v, ok := data[names.AttrUnit].(string); ok && v != "" {
 				spec.Unit = aws.String(v)
 			}
 
@@ -615,7 +615,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 				Metric: metric,
 				Stat:   aws.String(metricStatSpec["stat"].(string)),
 			}
-			if v, ok := metricStatSpec["unit"]; ok && len(v.(string)) > 0 {
+			if v, ok := metricStatSpec[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				metricStat.Unit = aws.String(v.(string))
 			}
 			metricDataQuery.MetricStat = metricStat
@@ -859,7 +859,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 		}
 
 		if v := cfg.Unit; v != nil {
-			m["unit"] = aws.StringValue(v)
+			m[names.AttrUnit] = aws.StringValue(v)
 		}
 	}
 
@@ -899,7 +899,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
 			if rawMetricStat.Unit != nil {
-				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
+				metricStatSpec[names.AttrUnit] = aws.StringValue(rawMetricStat.Unit)
 			}
 			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
 		}

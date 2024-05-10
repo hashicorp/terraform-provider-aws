@@ -31,7 +31,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
@@ -43,7 +43,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
 					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
@@ -76,7 +76,7 @@ func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_managedMasterPassword(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
@@ -87,7 +87,7 @@ func TestAccRDSInstanceDataSource_ManagedMasterPassword_managed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.kms_key_id", resourceName, "master_user_secret.0.kms_key_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_arn", resourceName, "master_user_secret.0.secret_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "master_user_secret.0.secret_status", resourceName, "master_user_secret.0.secret_status"),
@@ -122,7 +122,7 @@ func TestAccRDSInstanceDataSource_tags(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAddress, resourceName, names.AttrAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAutoMinorVersionUpgrade, resourceName, names.AttrAutoMinorVersionUpgrade),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, names.AttrARN),
@@ -134,7 +134,7 @@ func TestAccRDSInstanceDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, names.AttrUsername),
 					resource.TestCheckResourceAttrPair(dataSourceName, "max_allocated_storage", resourceName, "max_allocated_storage"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),

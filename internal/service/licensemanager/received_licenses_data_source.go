@@ -22,7 +22,7 @@ func DataSourceReceivedLicenses() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReceivedLicensesRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -59,7 +59,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", licenseARNs)
+	d.Set(names.AttrARNs, licenseARNs)
 
 	return diags
 }

@@ -161,7 +161,7 @@ func ResourceContainerService() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -257,7 +257,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("private_domain_name", cs.PrivateDomainName)
 	d.Set("resource_type", cs.ResourceType)
 	d.Set(names.AttrState, cs.State)
-	d.Set("url", cs.Url)
+	d.Set(names.AttrURL, cs.Url)
 
 	setTagsOut(ctx, cs.Tags)
 

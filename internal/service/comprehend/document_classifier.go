@@ -144,7 +144,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.SyntaxLanguageCode](),
 			},
-			"mode": {
+			names.AttrMode: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.DocumentClassifierMode](),
@@ -255,7 +255,7 @@ func ResourceDocumentClassifier() *schema.Resource {
 				return nil
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-				mode := types.DocumentClassifierMode(diff.Get("mode").(string))
+				mode := types.DocumentClassifierMode(diff.Get(names.AttrMode).(string))
 
 				if mode == types.DocumentClassifierModeMultiClass {
 					config := diff.GetRawConfig()
@@ -312,7 +312,7 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, out.DocumentClassifierArn)
 	d.Set("data_access_role_arn", out.DataAccessRoleArn)
 	d.Set("language_code", out.LanguageCode)
-	d.Set("mode", out.Mode)
+	d.Set(names.AttrMode, out.Mode)
 	d.Set("model_kms_key_id", out.ModelKmsKeyId)
 	d.Set("version_name", out.VersionName)
 	d.Set("version_name_prefix", create.NamePrefixFromName(aws.ToString(out.VersionName)))
@@ -472,7 +472,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		InputDataConfig:        expandDocumentClassifierInputDataConfig(d),
 		LanguageCode:           types.LanguageCode(d.Get("language_code").(string)),
 		DocumentClassifierName: aws.String(d.Get(names.AttrName).(string)),
-		Mode:                   types.DocumentClassifierMode(d.Get("mode").(string)),
+		Mode:                   types.DocumentClassifierMode(d.Get(names.AttrMode).(string)),
 		OutputDataConfig:       expandDocumentClassifierOutputDataConfig(d.Get("output_data_config").([]interface{})),
 		VersionName:            versionName,
 		VpcConfig:              expandVPCConfig(d.Get("vpc_config").([]interface{})),

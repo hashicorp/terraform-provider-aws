@@ -151,7 +151,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -260,7 +260,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// additional attributes
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("username", out.Username)
+	d.Set(names.AttrUsername, out.Username)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", out.Hardware.CpuCount)
 	d.Set("ram_size", out.Hardware.RamSizeInGb)

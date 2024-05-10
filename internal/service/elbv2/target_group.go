@@ -104,7 +104,7 @@ func ResourceTargetGroup() *schema.Resource {
 							Computed: true,
 							Optional: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -412,7 +412,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		healthCheckProtocol := tfMap[names.AttrProtocol].(string)
 		if healthCheckProtocol != elbv2.ProtocolEnumTcp {
-			if v, ok := tfMap["path"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 				input.HealthCheckPath = aws.String(v)
 			}
 
@@ -621,7 +621,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 						}
 					}
 				}
-				input.HealthCheckPath = aws.String(tfMap["path"].(string))
+				input.HealthCheckPath = aws.String(tfMap[names.AttrPath].(string))
 			}
 
 			if targetType != elbv2.TargetTypeEnumLambda {
@@ -1003,9 +1003,9 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 			))
 		}
 
-		if m := healthCheck["path"].(string); m != "" {
+		if m := healthCheck[names.AttrPath].(string); m != "" {
 			return sdkdiag.DiagnosticError(errs.NewAttributeConflictsWhenError(
-				healtCheckPath.GetAttr("path"),
+				healtCheckPath.GetAttr(names.AttrPath),
 				healtCheckPath.GetAttr(names.AttrProtocol),
 				elbv2.ProtocolEnumTcp,
 			))
@@ -1107,7 +1107,7 @@ func flattenTargetGroupHealthCheck(apiObject *elbv2.TargetGroup) []interface{} {
 	}
 
 	if v := apiObject.HealthCheckPath; v != nil {
-		tfMap["path"] = aws.StringValue(v)
+		tfMap[names.AttrPath] = aws.StringValue(v)
 	}
 
 	if apiObject := apiObject.Matcher; apiObject != nil {

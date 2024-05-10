@@ -142,7 +142,7 @@ func resourceConnectorProfile() *schema.Resource {
 																Sensitive:    true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"username": {
+															names.AttrUsername: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -526,7 +526,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -621,7 +621,7 @@ func resourceConnectorProfile() *schema.Resource {
 																Sensitive:    true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"username": {
+															names.AttrUsername: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.All(
@@ -714,7 +714,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -814,7 +814,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -855,7 +855,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1758,7 +1758,7 @@ func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.M
 func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *types.RedshiftConnectorProfileCredentials {
 	credentials := &types.RedshiftConnectorProfileCredentials{
 		Password: aws.String(m[names.AttrPassword].(string)),
-		Username: aws.String(m["username"].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1805,7 +1805,7 @@ func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *types.
 func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *types.ServiceNowConnectorProfileCredentials {
 	credentials := &types.ServiceNowConnectorProfileCredentials{
 		Password: aws.String(m[names.AttrPassword].(string)),
-		Username: aws.String(m["username"].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1836,7 +1836,7 @@ func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.Sla
 func expandSnowflakeConnectorProfileCredentials(m map[string]interface{}) *types.SnowflakeConnectorProfileCredentials {
 	credentials := &types.SnowflakeConnectorProfileCredentials{
 		Password: aws.String(m[names.AttrPassword].(string)),
-		Username: aws.String(m["username"].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1853,7 +1853,7 @@ func expandTrendmicroConnectorProfileCredentials(m map[string]interface{}) *type
 func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.VeevaConnectorProfileCredentials {
 	credentials := &types.VeevaConnectorProfileCredentials{
 		Password: aws.String(m[names.AttrPassword].(string)),
-		Username: aws.String(m["username"].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1908,7 +1908,7 @@ func expandBasicAuthCredentials(m map[string]interface{}) *types.BasicAuthCreden
 		credentials.Password = aws.String(v)
 	}
 
-	if v, ok := m["username"].(string); ok && v != "" {
+	if v, ok := m[names.AttrUsername].(string); ok && v != "" {
 		credentials.Username = aws.String(v)
 	}
 

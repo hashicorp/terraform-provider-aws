@@ -30,7 +30,7 @@
 	ImportStateVerify: true,
 	{{ if gt (len .) 0 -}}
 	ImportStateVerifyIgnore: []string{
-	{{ range $i, $v := . }}"{{ $v }}",{{ end }}
+	{{ range $i, $v := . }}{{ $v }},{{ end }}
 	},
 	{{- end }}
 {{ end }}
