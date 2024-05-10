@@ -7,4 +7,5 @@ package waf
 var (
 	ListRegexMatchSetsPages   = listRegexMatchSetsPages
 	ListRegexPatternSetsPages = listRegexPatternSetsPages
+	RegexMatchSetTupleHash    = regexMatchSetTupleHash
 )

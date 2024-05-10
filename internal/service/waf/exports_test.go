@@ -9,6 +9,7 @@ var (
 	ResourceGeoMatchSet   = resourceGeoMatchSet
 	ResourceIPSet         = resourceIPSet
 	ResourceRateBasedRule = resourceRateBasedRule
+	ResourceRegexMatchSet = resourceRegexMatchSet
 	ResourceWebACL        = resourceWebACL
 
 	DiffIPSetDescriptors  = diffIPSetDescriptors
@@ -16,6 +17,7 @@ var (
 	FindGeoMatchSetByID   = findGeoMatchSetByID
 	FindIPSetByID         = findIPSetByID
 	FindRateBasedRuleByID = findRateBasedRuleByID
+	FindRegexMatchSetByID = findRegexMatchSetByID
 	FindWebACLByID        = findWebACLByID
 	FlattenFieldToMatch   = flattenFieldToMatch
 )

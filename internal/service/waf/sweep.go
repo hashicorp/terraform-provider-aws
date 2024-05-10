@@ -452,7 +452,7 @@ func sweepRegexMatchSet(region string) error {
 		}
 
 		for _, regexMatchSet := range page.RegexMatchSets {
-			r := ResourceRegexMatchSet()
+			r := resourceRegexMatchSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(regexMatchSet.RegexMatchSetId)

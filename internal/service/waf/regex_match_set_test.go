@@ -10,15 +10,14 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/waf"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -187,7 +186,7 @@ func testAccRegexMatchSet_disappears(t *testing.T) {
 				Config: testAccRegexMatchSetConfig_basic(matchSetName, patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexMatchSetExists(ctx, resourceName, &matchSet),
-					testAccCheckRegexMatchSetDisappears(ctx, &matchSet),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceRegexMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -209,46 +208,6 @@ func computeRegexMatchSetTuple(patternSet *awstypes.RegexPatternSet, fieldToMatc
 	}
 }
 
-func testAccCheckRegexMatchSetDisappears(ctx context.Context, set *awstypes.RegexMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-
-		wr := tfwaf.NewRetryer(conn)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateRegexMatchSetInput{
-				ChangeToken:     token,
-				RegexMatchSetId: set.RegexMatchSetId,
-			}
-
-			for _, tuple := range set.RegexMatchTuples {
-				copyObject := tuple
-				req.Updates = append(req.Updates, awstypes.RegexMatchSetUpdate{
-					Action:          awstypes.ChangeAction("DELETE"),
-					RegexMatchTuple: &copyObject,
-				})
-			}
-
-			return conn.UpdateRegexMatchSet(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regex Match Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRegexMatchSetInput{
-				ChangeToken:     token,
-				RegexMatchSetId: set.RegexMatchSetId,
-			}
-			return conn.DeleteRegexMatchSet(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed deleting WAF Regex Match Set: %s", err)
-		}
-
-		return nil
-	}
-}
-
 func testAccCheckRegexMatchSetExists(ctx context.Context, n string, v *awstypes.RegexMatchSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -256,25 +215,17 @@ func testAccCheckRegexMatchSetExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Regex Match Set ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-		resp, err := conn.GetRegexMatchSet(ctx, &waf.GetRegexMatchSetInput{
-			RegexMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwaf.FindRegexMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.RegexMatchSet.RegexMatchSetId == rs.Primary.ID {
-			*v = *resp.RegexMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Regex Match Set (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -286,22 +237,18 @@ func testAccCheckRegexMatchSetDestroy(ctx context.Context) resource.TestCheckFun
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
-			resp, err := conn.GetRegexMatchSet(ctx, &waf.GetRegexMatchSetInput{
-				RegexMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.RegexMatchSet.RegexMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF Regex Match Set %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwaf.FindRegexMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the Regex Pattern Set is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regex Match Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -311,7 +258,7 @@ func testAccCheckRegexMatchSetDestroy(ctx context.Context) resource.TestCheckFun
 func testAccRegexMatchSetConfig_basic(matchSetName, patternSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   regex_match_tuple {
     field_to_match {
@@ -325,7 +272,7 @@ resource "aws_waf_regex_match_set" "test" {
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name                  = "%s"
+  name                  = %[2]q
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -334,7 +281,7 @@ resource "aws_waf_regex_pattern_set" "test" {
 func testAccRegexMatchSetConfig_changePatterns(matchSetName, patternSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 
   regex_match_tuple {
     field_to_match {
@@ -348,7 +295,7 @@ resource "aws_waf_regex_match_set" "test" {
 }
 
 resource "aws_waf_regex_pattern_set" "test" {
-  name                  = "%s"
+  name                  = %[2]q
   regex_pattern_strings = ["one", "two"]
 }
 `, matchSetName, patternSetName)
@@ -357,7 +304,7 @@ resource "aws_waf_regex_pattern_set" "test" {
 func testAccRegexMatchSetConfig_noPatterns(matchSetName string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_match_set" "test" {
-  name = "%s"
+  name = %[1]q
 }
 `, matchSetName)
 }
