@@ -477,11 +477,6 @@ func (data *resourceRetrieverData) setID() {
 	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.RetrieverId.ValueString()}, retrieverResourceIDPartCount, false)))
 }
 
-type dateBoostConfigurationDataI struct {
-	BoostingLevel          awstypes.DocumentAttributeBoostingLevel
-	AttributeValueBoosting map[string]string
-}
-
 func (data *resourceRetrieverData) flattenConfiguration(ctx context.Context, retrieverConf awstypes.RetrieverConfiguration) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -502,7 +497,10 @@ func (data *resourceRetrieverData) flattenConfiguration(ctx context.Context, ret
 		for k, v := range conf.Value.BoostingOverride {
 			if stringConf, d := v.(*awstypes.DocumentAttributeBoostingConfigurationMemberStringConfiguration); d {
 				var sb stringBoostConfigurationData
-				diags.Append(fwflex.Flatten(ctx, dateBoostConfigurationDataI{
+				diags.Append(fwflex.Flatten(ctx, struct {
+					BoostingLevel          awstypes.DocumentAttributeBoostingLevel
+					AttributeValueBoosting map[string]string
+				}{
 					BoostingLevel:          stringConf.Value.BoostingLevel,
 					AttributeValueBoosting: convertStringAttributeValueBoostingLevelMap(stringConf.Value.AttributeValueBoosting),
 				}, &sb)...)
