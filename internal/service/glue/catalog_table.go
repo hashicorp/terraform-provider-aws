@@ -42,7 +42,7 @@ func ResourceCatalogTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -331,7 +331,7 @@ func ResourceCatalogTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -452,7 +452,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
 	}.String()
 	d.Set(names.AttrARN, tableArn)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
@@ -1112,7 +1112,7 @@ func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier 
 
 	apiObject := &glue.TableIdentifier{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -1139,7 +1139,7 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
