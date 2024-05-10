@@ -65,7 +65,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -239,7 +239,7 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 	}
 
 	if v, ok := d.GetOk("expected_bucket_owner"); ok {
