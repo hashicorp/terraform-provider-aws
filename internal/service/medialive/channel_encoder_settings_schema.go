@@ -567,7 +567,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"archive_cdn_settings": {
@@ -606,7 +606,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"frame_capture_cdn_settings": {
@@ -643,7 +643,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"ad_markers": {
@@ -1054,7 +1054,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 												},
@@ -1074,7 +1074,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"acquisition_point_id": {
@@ -2501,7 +2501,7 @@ func outputSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 						},
 					},
 				},
@@ -2511,7 +2511,7 @@ func outputSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 							"certificate_mode": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -2548,7 +2548,7 @@ func outputSettingsSchema() *schema.Schema {
 										}(),
 									}},
 							},
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 							"buffer_msec": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -3590,7 +3590,7 @@ func expandMediaPackageGroupSettings(tfList []interface{}) *types.MediaPackageGr
 
 	var o types.MediaPackageGroupSettings
 
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
 
@@ -3606,7 +3606,7 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 
 	var o types.ArchiveGroupSettings
 
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
 	if v, ok := m["archive_cdn_settings"].([]interface{}); ok && len(v) > 0 {
@@ -3627,7 +3627,7 @@ func expandFrameCaptureGroupSettings(tfList []interface{}) *types.FrameCaptureGr
 	m := tfList[0].(map[string]interface{})
 
 	var out types.FrameCaptureGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["frame_capture_cdn_settings"].([]interface{}); ok && len(v) > 0 {
@@ -3674,7 +3674,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
@@ -3812,7 +3812,7 @@ func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSetti
 	m := tfList[0].(map[string]interface{})
 
 	var out types.MsSmoothGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["acquisition_point_id"].(string); ok && v != "" {
@@ -4314,7 +4314,7 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 
 			data := inner[0].(map[string]interface{})
 			var mos types.MultiplexOutputSettings
-			if v, ok := data["destination"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := data[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 				mos.Destination = expandDestination(v)
 			}
 			return &mos
@@ -4566,7 +4566,7 @@ func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.RtmpOutputSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["certificate_mode"].(string); ok && v != "" {
@@ -4593,7 +4593,7 @@ func expandOutputsOutputSettingsUdpOutputSettings(tfList []interface{}) *types.U
 	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
 		settings.ContainerSettings = expandOutputsOutputSettingsUdpSettingsContainerSettings(v)
 	}
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["buffer_msec"].(int); ok && v != 0 {
@@ -5920,7 +5920,7 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 				return nil
 			}
 			data := map[string]interface{}{
-				"destination": flattenDestination(inner.Destination),
+				names.AttrDestination: flattenDestination(inner.Destination),
 			}
 
 			return []interface{}{data}
@@ -6082,7 +6082,7 @@ func flattenOutputsOutputSettingsRtmpOutputSettings(in *types.RtmpOutputSettings
 	}
 
 	m := map[string]interface{}{
-		"destination":               flattenDestination(in.Destination),
+		names.AttrDestination:       flattenDestination(in.Destination),
 		"certificate_mode":          string(in.CertificateMode),
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"num_retries":               int(aws.ToInt32(in.NumRetries)),
@@ -6098,7 +6098,7 @@ func flattenOutputsOutputSettingsUdpOutputSettings(in *types.UdpOutputSettings) 
 
 	m := map[string]interface{}{
 		"container_settings":  flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in.ContainerSettings),
-		"destination":         flattenDestination(in.Destination),
+		names.AttrDestination: flattenDestination(in.Destination),
 		"buffer_msec":         int(aws.ToInt32(in.BufferMsec)),
 		"fec_output_settings": flattenFecOutputSettings(in.FecOutputSettings),
 	}
@@ -6250,7 +6250,7 @@ func flattenOutputGroupSettingsArchiveGroupSettings(in *types.ArchiveGroupSettin
 	}
 
 	m := map[string]interface{}{
-		"destination":          flattenDestination(in.Destination),
+		names.AttrDestination:  flattenDestination(in.Destination),
 		"archive_cdn_settings": flattenOutputGroupSettingsArchiveCDNSettings(in.ArchiveCdnSettings),
 		"rollover_interval":    int(aws.ToInt32(in.RolloverInterval)),
 	}
@@ -6264,7 +6264,7 @@ func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureG
 	}
 
 	m := map[string]interface{}{
-		"destination":                flattenDestination(in.Destination),
+		names.AttrDestination:        flattenDestination(in.Destination),
 		"frame_capture_cdn_settings": flattenFrameCaptureCDNSettings(in.FrameCaptureCdnSettings),
 	}
 
@@ -6277,7 +6277,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 	}
 
 	m := map[string]interface{}{
-		"destination":                  flattenDestination(in.Destination),
+		names.AttrDestination:          flattenDestination(in.Destination),
 		"ad_markers":                   flattenHLSAdMarkers(in.AdMarkers),
 		"base_url_content":             aws.ToString(in.BaseUrlContent),
 		"base_url_content1":            aws.ToString(in.BaseUrlContent1),
@@ -6330,7 +6330,7 @@ func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSett
 	}
 
 	m := map[string]interface{}{
-		"destination":                 flattenDestination(in.Destination),
+		names.AttrDestination:         flattenDestination(in.Destination),
 		"acquisition_point_id":        aws.ToString(in.AcquisitionPointId),
 		"audio_only_timecode_control": string(in.AudioOnlyTimecodeControl),
 		"certificate_mode":            string(in.CertificateMode),
@@ -6548,7 +6548,7 @@ func flattenOutputGroupSettingsMediaPackageGroupSettings(mp *types.MediaPackageG
 	}
 
 	m := map[string]interface{}{
-		"destination": flattenDestination(mp.Destination),
+		names.AttrDestination: flattenDestination(mp.Destination),
 	}
 
 	return []interface{}{m}
