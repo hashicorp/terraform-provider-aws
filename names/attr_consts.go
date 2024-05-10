@@ -12,6 +12,7 @@ const (
 	AttrAvailabilityZones          = "availability_zones"
 	AttrBucket                     = "bucket"
 	AttrBucketName                 = "bucket_name"
+	AttrBucketPrefix               = "bucket_prefix"
 	AttrCatalogID                  = "catalog_id"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrCreatedAt                  = "created_at"

@@ -70,7 +70,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
@@ -131,7 +131,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccS3Bucket_Basic_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrBucket, "tf-test-"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", "tf-test-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, "tf-test-"),
 				),
 			},
 			{

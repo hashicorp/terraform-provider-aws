@@ -77,7 +77,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -554,7 +554,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
 				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
 				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
-				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
+				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
 		} else if len(logs) == 0 {
 			// disable access logs

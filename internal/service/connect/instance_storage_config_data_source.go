@@ -107,7 +107,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

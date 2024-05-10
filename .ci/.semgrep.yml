@@ -1295,3 +1295,13 @@ rules:
       - pattern: '"catalog_id"'
     severity: ERROR
     fix: "names.AttrCatalogID"
+  - id: literal-bucket_prefix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrBucketPrefix` for the string literal "bucket_prefix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"bucket_prefix"'
+    severity: ERROR
+    fix: "names.AttrBucketPrefix"

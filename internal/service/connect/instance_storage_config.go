@@ -139,7 +139,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
@@ -414,7 +414,7 @@ func exapandS3Config(tfList []interface{}) *connect.S3Config {
 
 	result := &connect.S3Config{
 		BucketName:   aws.String(tfMap[names.AttrBucketName].(string)),
-		BucketPrefix: aws.String(tfMap["bucket_prefix"].(string)),
+		BucketPrefix: aws.String(tfMap[names.AttrBucketPrefix].(string)),
 	}
 
 	if v, ok := tfMap["encryption_config"].([]interface{}); ok && len(v) > 0 {
@@ -516,8 +516,8 @@ func flattenS3Config(apiObject *connect.S3Config) []interface{} {
 	}
 
 	values := map[string]interface{}{
-		names.AttrBucketName: aws.StringValue(apiObject.BucketName),
-		"bucket_prefix":      aws.StringValue(apiObject.BucketPrefix),
+		names.AttrBucketName:   aws.StringValue(apiObject.BucketName),
+		names.AttrBucketPrefix: aws.StringValue(apiObject.BucketPrefix),
 	}
 
 	if v := apiObject.EncryptionConfig; v != nil {
