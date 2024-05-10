@@ -48,7 +48,7 @@ func resourceBucketIntelligentTieringConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
@@ -271,7 +271,7 @@ func expandIntelligentTieringFilter(ctx context.Context, tfMap map[string]interf
 
 	var prefix string
 
-	if v, ok := tfMap["prefix"].(string); ok {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		prefix = v
 	}
 
@@ -362,7 +362,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 
 	if apiObject.And == nil {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {
@@ -372,7 +372,7 @@ func flattenIntelligentTieringFilter(ctx context.Context, apiObject *types.Intel
 		apiObject := apiObject.And
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tags; v != nil {

@@ -48,7 +48,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
-						"prefix":                      "foo",
+						names.AttrPrefix:              "foo",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
@@ -64,7 +64,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
-						"prefix":                      "foo",
+						names.AttrPrefix:              "foo",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassGlacier),
@@ -80,7 +80,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
-						"prefix":         "foo",
+						names.AttrPrefix: "foo",
 						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
 						"destination.#":  "1",
 						"destination.0.encryption_configuration.#":                       "1",
@@ -329,7 +329,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
-						"prefix":         "foo",
+						names.AttrPrefix: "foo",
 						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
 						"destination.#":  "1",
 						"destination.0.access_control_translation.#":       "1",
@@ -353,7 +353,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
-						"prefix":         "foo",
+						names.AttrPrefix: "foo",
 						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
 						"destination.#":  "1",
 						"destination.0.access_control_translation.#":                     "1",
@@ -407,7 +407,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "foobar",
-						"prefix":                      "foo",
+						names.AttrPrefix:              "foo",
 						names.AttrStatus:              string(types.ReplicationRuleStatusEnabled),
 						"destination.#":               "1",
 						"destination.0.storage_class": string(types.StorageClassStandard),
@@ -429,7 +429,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
-						"prefix":         "foo",
+						names.AttrPrefix: "foo",
 						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
 						"destination.#":  "1",
 						"destination.0.access_control_translation.#":       "1",
@@ -621,7 +621,7 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:     "foobar",
-						"prefix":         "foo",
+						names.AttrPrefix: "foo",
 						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
 						"destination.#":  "1",
 					}),

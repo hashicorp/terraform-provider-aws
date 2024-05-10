@@ -545,7 +545,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 						"expiration.#":      "1",
 						"expiration.0.days": "365",
 						names.AttrID:        rName,
-						"prefix":            "path1/",
+						names.AttrPrefix:    "path1/",
 						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
 					}),
 				),
