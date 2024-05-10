@@ -49,7 +49,7 @@ func resourceReplicationConfiguration() *schema.Resource {
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 25,
@@ -212,7 +212,7 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
 		config := types.ReplicationRule{
-			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
+			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]interface{})),
 			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
 
@@ -230,8 +230,8 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"destination":       flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
-			"repository_filter": flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
+			names.AttrDestination: flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
+			"repository_filter":   flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
 
 		tfList = append(tfList, tfMap)
