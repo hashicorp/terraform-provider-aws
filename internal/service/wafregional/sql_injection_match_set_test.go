@@ -38,7 +38,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sqlInjectionMatchSet),
+						resourceName, names.AttrName, sqlInjectionMatchSet),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
 						"field_to_match.#":      "1",
 						"field_to_match.0.data": "",
@@ -74,7 +74,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sqlInjectionMatchSet),
+						resourceName, names.AttrName, sqlInjectionMatchSet),
 					resource.TestCheckResourceAttr(
 						resourceName, "sql_injection_match_tuple.#", "1"),
 				),
@@ -84,7 +84,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", sqlInjectionMatchSetNewName),
+						resourceName, names.AttrName, sqlInjectionMatchSetNewName),
 					resource.TestCheckResourceAttr(
 						resourceName, "sql_injection_match_tuple.#", "1"),
 				),
@@ -139,7 +139,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "sql_injection_match_tuple.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
@@ -155,7 +155,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "sql_injection_match_tuple.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
@@ -192,7 +192,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(
-						resourceName, "name", setName),
+						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
 						resourceName, "sql_injection_match_tuple.#", "0"),
 				),

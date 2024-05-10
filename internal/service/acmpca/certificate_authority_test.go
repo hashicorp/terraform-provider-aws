@@ -40,7 +40,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
@@ -49,7 +49,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
@@ -59,7 +59,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SUBORDINATE"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
@@ -112,8 +112,8 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, acmpca.CertificateAuthorityTypeRoot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &certificateAuthority),
 				),
 			},
@@ -121,15 +121,15 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, acmpca.CertificateAuthorityTypeRoot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 			{
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -226,8 +226,8 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 				Config: testAccCertificateAuthorityConfig_root(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, acmpca.CertificateAuthorityTypeRoot),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},
@@ -250,7 +250,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm-pca", regexache.MustCompile(`certificate-authority/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.key_algorithm", "RSA_4096"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority_configuration.0.signing_algorithm", "SHA512WITHRSA"),
@@ -259,7 +259,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "key_storage_security_standard", "FIPS_140_2_LEVEL_3_OR_HIGHER"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_after"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "not_before"),
@@ -269,7 +269,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "revocation_configuration.0.crl_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "serial", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "SUBORDINATE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SUBORDINATE"),
 					resource.TestCheckResourceAttr(resourceName, "usage_mode", "SHORT_LIVED_CERTIFICATE"),
 				),
 			},
@@ -1089,91 +1089,6 @@ resource "aws_s3_bucket_policy" "test" {
   policy = data.aws_iam_policy_document.acmpca_bucket_access.json
 }
 `, rName)
-}
-
-func testAccCertificateAuthorityConfig_tags0(commonName string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-}
-`, commonName)
-}
-
-func testAccCertificateAuthorityConfig_tags1(commonName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, commonName, tagKey1, tagValue1)
-}
-
-func testAccCertificateAuthorityConfig_tags2(commonName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, commonName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccCertificateAuthorityConfig_tagsNull(commonName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_acmpca_certificate_authority" "test" {
-  permanent_deletion_time_in_days = 7
-  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, commonName, tagKey1)
 }
 
 func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType, keyStorageSecurityStandard string) string {

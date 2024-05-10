@@ -128,8 +128,8 @@ func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string)
 			Service:   "ses",
 		}
 
-		if rs.Primary.Attributes["arn"] != expected.String() {
-			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes["arn"])
+		if rs.Primary.Attributes[names.AttrARN] != expected.String() {
+			return fmt.Errorf("Incorrect ARN: expected %q, got %q", expected, rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil

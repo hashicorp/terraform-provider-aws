@@ -33,8 +33,8 @@ func TestAccSageMakerEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("endpoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -71,14 +71,14 @@ func TestAccSageMakerEndpoint_endpointName(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName1, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName1, names.AttrName),
 				),
 			},
 			{
 				Config: testAccEndpointConfig_nameUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "endpoint_config_name", sagemakerEndpointConfigurationResourceName2, names.AttrName),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccSageMakerEndpoint_deploymentConfig(t *testing.T) {
 				Config: testAccEndpointConfig_deploymentBasic(rName, "ALL_AT_ONCE", 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.blue_green_update_policy.#", "1"),
@@ -190,7 +190,7 @@ func TestAccSageMakerEndpoint_deploymentConfig_blueGreen(t *testing.T) {
 				Config: testAccEndpointConfig_deploymentBlueGreen(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.0.alarms.#", "1"),
@@ -235,7 +235,7 @@ func TestAccSageMakerEndpoint_deploymentConfig_rolling(t *testing.T) {
 				Config: testAccEndpointConfig_deploymentRolling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config.0.auto_rollback_configuration.0.alarms.#", "1"),

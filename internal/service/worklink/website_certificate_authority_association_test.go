@@ -40,7 +40,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
-						"aws_worklink_fleet.test", "arn"),
+						"aws_worklink_fleet.test", names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},

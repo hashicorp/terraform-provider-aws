@@ -36,6 +36,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
 					resource.TestCheckResourceAttr(resourceName, "ptr_record", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
@@ -199,7 +200,7 @@ func TestAccEC2EIP_instance(t *testing.T) {
 				Config: testAccEIPConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -231,14 +232,14 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 				),
 				Taint: []string{resourceName},
 			},
@@ -267,7 +268,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instance1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -282,7 +283,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instance2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -322,7 +323,7 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -420,7 +421,7 @@ func TestAccEC2EIP_association(t *testing.T) {
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface", eniResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface", eniResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -429,7 +430,7 @@ func TestAccEC2EIP_association(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),

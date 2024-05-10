@@ -24,7 +24,7 @@ func TestAccElasticBeanstalkSolutionStackDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSolutionStackDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexache.MustCompile("^64bit Amazon Linux (.*) running Python (.*)$")),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile("^64bit Amazon Linux (.*) running Python (.*)$")),
 				),
 			},
 		},

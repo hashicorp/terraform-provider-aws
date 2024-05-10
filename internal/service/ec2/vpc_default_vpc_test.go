@@ -95,7 +95,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -114,7 +114,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -142,7 +142,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -161,7 +161,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -217,7 +217,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -236,7 +236,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -264,7 +264,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlock(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -283,7 +283,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -340,7 +340,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlockAdoptionStep1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -359,7 +359,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -382,7 +382,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 				Config: testAccVPCDefaultVPCConfig_assignGeneratedIPv6CIDRBlockAdoptionStep3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_block", "172.31.0.0/16"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_network_acl_id"),
@@ -401,7 +401,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -492,7 +492,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		r := tfec2.ResourceInternetGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(igw.InternetGatewayId))
-		d.Set("vpc_id", vpcID)
+		d.Set(names.AttrVPCID, vpcID)
 
 		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 

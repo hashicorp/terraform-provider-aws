@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codebuild_source_credential", name="Source Credential")
@@ -32,7 +33,7 @@ func resourceSourceCredential() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +106,7 @@ func resourceSourceCredentialRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Source Credential (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", credentials.Arn)
+	d.Set(names.AttrARN, credentials.Arn)
 	d.Set("auth_type", credentials.AuthType)
 	d.Set("server_type", credentials.ServerType)
 

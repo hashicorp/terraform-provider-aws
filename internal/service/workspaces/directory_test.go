@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDirectory_basic(t *testing.T) {
@@ -49,11 +50,11 @@ func testAccDirectory_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "directory_type", string(types.WorkspaceDirectoryTypeSimpleAd)),
 					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
@@ -315,7 +316,7 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", "true"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_maintenance_mode", "false"),
@@ -361,7 +362,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
 				),
 			},
@@ -399,7 +400,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_alpha", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_alpha", names.AttrID),
 				),
 			},
 			{
@@ -412,8 +413,8 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_beta", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_gamma", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_beta", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_gamma", names.AttrID),
 				),
 			},
 			{

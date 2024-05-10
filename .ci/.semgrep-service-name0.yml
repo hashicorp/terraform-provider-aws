@@ -2005,6 +2005,67 @@ rules:
             - pattern-not-regex: "[Ss]ervice"
             - pattern-not-regex: "[Cc]ancel"
     severity: WARNING
+  - id: chatbot-in-func-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in func name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+      exclude:
+        - internal/service/chatbot/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
+    severity: WARNING
+  - id: chatbot-in-test-name
+    languages:
+      - go
+    message: Include "Chatbot" in test name
+    paths:
+      include:
+        - internal/service/chatbot/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccChatbot"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: chatbot-in-const-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in const name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
+    severity: WARNING
+  - id: chatbot-in-var-name
+    languages:
+      - go
+    message: Do not use "Chatbot" in var name inside chatbot package
+    paths:
+      include:
+        - internal/service/chatbot
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Chatbot"
+    severity: WARNING
   - id: chime-in-func-name
     languages:
       - go
@@ -4069,19 +4130,4 @@ rules:
             - pattern-regex: "(?i)ConfigService"
       - focus-metavariable: $NAME
       - pattern-not: func $NAME($T *testing.T) { ... }
-    severity: WARNING
-  - id: configservice-in-test-name
-    languages:
-      - go
-    message: Include "ConfigService" in test name
-    paths:
-      include:
-        - internal/service/configservice/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
     severity: WARNING

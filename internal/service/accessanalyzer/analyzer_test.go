@@ -37,10 +37,10 @@ func testAccAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.TypeAccount)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeAccount)),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.TypeOrganization)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeOrganization)),
 				),
 			},
 			{
@@ -198,51 +198,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
 }
 `, rName)
-}
-
-func testAccAnalyzerConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-}
-`, rName)
-}
-
-func testAccAnalyzerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAnalyzerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAnalyzerConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_accessanalyzer_analyzer" "test" {
-  analyzer_name = %[1]q
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
 
 func testAccAnalyzerConfig_typeOrganization(rName string) string {

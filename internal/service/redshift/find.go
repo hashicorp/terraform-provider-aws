@@ -62,7 +62,7 @@ func findCluster(ctx context.Context, conn *redshift.Redshift, input *redshift.D
 	return output[0], nil
 }
 
-func FindClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
+func findClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) {
 	input := &redshift.DescribeClustersInput{
 		ClusterIdentifier: aws.String(id),
 	}
@@ -83,7 +83,7 @@ func FindClusterByID(ctx context.Context, conn *redshift.Redshift, id string) (*
 	return output, nil
 }
 
-func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
+func findScheduledActionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ScheduledAction, error) {
 	input := &redshift.DescribeScheduledActionsInput{
 		ScheduledActionName: aws.String(name),
 	}
@@ -112,7 +112,7 @@ func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, nam
 	return output.ScheduledActions[0], nil
 }
 
-func FindHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
+func findHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
 	input := redshift.DescribeHsmClientCertificatesInput{
 		HsmClientCertificateIdentifier: aws.String(id),
 	}
@@ -140,7 +140,7 @@ func FindHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, 
 	return out.HsmClientCertificates[0], nil
 }
 
-func FindHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmConfiguration, error) {
+func findHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmConfiguration, error) {
 	input := redshift.DescribeHsmConfigurationsInput{
 		HsmConfigurationIdentifier: aws.String(id),
 	}
@@ -168,7 +168,7 @@ func FindHSMConfigurationByID(ctx context.Context, conn *redshift.Redshift, id s
 	return out.HsmConfigurations[0], nil
 }
 
-func FindUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.UsageLimit, error) {
+func findUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.UsageLimit, error) {
 	input := &redshift.DescribeUsageLimitsInput{
 		UsageLimitId: aws.String(id),
 	}
@@ -197,7 +197,7 @@ func FindUsageLimitByID(ctx context.Context, conn *redshift.Redshift, id string)
 	return output.UsageLimits[0], nil
 }
 
-func FindAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.AuthenticationProfile, error) {
+func findAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.AuthenticationProfile, error) {
 	input := redshift.DescribeAuthenticationProfilesInput{
 		AuthenticationProfileName: aws.String(id),
 	}
@@ -225,7 +225,7 @@ func FindAuthenticationProfileByID(ctx context.Context, conn *redshift.Redshift,
 	return out.AuthenticationProfiles[0], nil
 }
 
-func FindEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
+func findEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EventSubscription, error) {
 	input := &redshift.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(name),
 	}
@@ -254,7 +254,7 @@ func FindEventSubscriptionByName(ctx context.Context, conn *redshift.Redshift, n
 	return output.EventSubscriptionsList[0], nil
 }
 
-func FindSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ClusterSubnetGroup, error) {
+func findSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ClusterSubnetGroup, error) {
 	input := &redshift.DescribeClusterSubnetGroupsInput{
 		ClusterSubnetGroupName: aws.String(name),
 	}
@@ -283,7 +283,7 @@ func FindSubnetGroupByName(ctx context.Context, conn *redshift.Redshift, name st
 	return output.ClusterSubnetGroups[0], nil
 }
 
-func FindEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EndpointAccess, error) {
+func findEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.EndpointAccess, error) {
 	input := &redshift.DescribeEndpointAccessInput{
 		EndpointName: aws.String(name),
 	}
@@ -312,7 +312,7 @@ func FindEndpointAccessByName(ctx context.Context, conn *redshift.Redshift, name
 	return output.EndpointAccessList[0], nil
 }
 
-func FindEndpointAuthorizationById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAuthorization, error) {
+func findEndpointAuthorizationByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAuthorization, error) {
 	account, clusterId, err := DecodeEndpointAuthorizationID(id)
 	if err != nil {
 		return nil, err
@@ -347,7 +347,7 @@ func FindEndpointAuthorizationById(ctx context.Context, conn *redshift.Redshift,
 	return output.EndpointAuthorizationList[0], nil
 }
 
-func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
+func findPartnerByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.PartnerIntegrationInfo, error) {
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(id)
 	if err != nil {
 		return nil, err
@@ -384,7 +384,7 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 	return output.PartnerIntegrationInfoList[0], nil
 }
 
-func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
+func findClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
 	input := &redshift.DescribeClusterSnapshotsInput{
 		SnapshotIdentifier: aws.String(id),
 	}
@@ -420,7 +420,7 @@ func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id st
 	return output.Snapshots[0], nil
 }
 
-func FindResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
 	input := &redshift.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}

@@ -48,7 +48,7 @@ func ResourceTheme() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -296,7 +296,7 @@ func ResourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -323,7 +323,7 @@ func ResourceTheme() *schema.Resource {
 						},
 					},
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -363,7 +363,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &quicksight.CreateThemeInput{
 		AwsAccountId: aws.String(awsAccountId),
 		ThemeId:      aws.String(themeId),
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 		BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
 		Tags:         getTagsIn(ctx),
 	}
@@ -382,7 +382,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err := conn.CreateThemeWithContext(ctx, input)
 	if err != nil {
-		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get("name").(string), err)
+		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTheme, d.Get(names.AttrName).(string), err)
 	}
 
 	if _, err := waitThemeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -412,13 +412,13 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.QuickSight, create.ErrActionReading, ResNameTheme, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
 	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
-	d.Set("name", out.Name)
-	d.Set("status", out.Version.Status)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Version.Status)
 	d.Set("theme_id", out.ThemeId)
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
@@ -451,12 +451,12 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", "tags", "tags_all") {
+	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateThemeInput{
 			AwsAccountId: aws.String(awsAccountId),
 			ThemeId:      aws.String(themeId),
 			BaseThemeId:  aws.String(d.Get("base_theme_id").(string)),
-			Name:         aws.String(d.Get("name").(string)),
+			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

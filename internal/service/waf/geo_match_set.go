@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_waf_geo_match_set")
@@ -30,12 +31,12 @@ func ResourceGeoMatchSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,11 +45,11 @@ func ResourceGeoMatchSet() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -63,13 +64,13 @@ func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
 
-	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get(names.AttrName).(string))
 
 	wr := NewRetryer(conn)
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateGeoMatchSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		return conn.CreateGeoMatchSetWithContext(ctx, params)
@@ -87,7 +88,7 @@ func resourceGeoMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get("name").(string))
+	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get(names.AttrName).(string))
 	params := &waf.GetGeoMatchSetInput{
 		GeoMatchSetId: aws.String(d.Id()),
 	}
@@ -103,7 +104,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading WAF GeoMatchSet: %s", err)
 	}
 
-	d.Set("name", resp.GeoMatchSet.Name)
+	d.Set(names.AttrName, resp.GeoMatchSet.Name)
 	d.Set("geo_match_constraint", FlattenGeoMatchConstraint(resp.GeoMatchSet.GeoMatchConstraints))
 
 	arn := arn.ARN{
@@ -112,7 +113,7 @@ func resourceGeoMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("geomatchset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }

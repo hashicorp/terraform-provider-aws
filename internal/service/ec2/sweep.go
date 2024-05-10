@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -916,7 +917,7 @@ func sweepEIPDomainNames(region string) error {
 
 		for _, v := range page.Addresses {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
-				framework.NewAttribute("id", aws.StringValue(v.AllocationId)),
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.AllocationId)),
 			))
 		}
 
@@ -1146,7 +1147,7 @@ func sweepInternetGateways(region string) error {
 			d := r.Data(nil)
 			d.SetId(internetGatewayID)
 			if len(internetGateway.Attachments) > 0 {
-				d.Set("vpc_id", internetGateway.Attachments[0].VpcId)
+				d.Set(names.AttrVPCID, internetGateway.Attachments[0].VpcId)
 			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -1327,9 +1328,9 @@ func sweepNetworkACLs(region string) error {
 			for _, v := range v.Associations {
 				subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
 			}
-			d.Set("subnet_ids", subnetIDs)
+			d.Set(names.AttrSubnetIDs, subnetIDs)
 
-			d.Set("vpc_id", v.VpcId)
+			d.Set(names.AttrVPCID, v.VpcId)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -2660,7 +2661,7 @@ func sweepVPNGateways(region string) error {
 
 		for _, v := range v.VpcAttachments {
 			if aws.StringValue(v.State) != ec2.AttachmentStatusDetached {
-				d.Set("vpc_id", v.VpcId)
+				d.Set(names.AttrVPCID, v.VpcId)
 
 				break
 			}
@@ -2924,7 +2925,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 			}
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
-				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
+				framework.NewAttribute(names.AttrID, aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}
 

@@ -31,7 +31,7 @@ func TestAccOpsWorksMySQLLayer_basic(t *testing.T) {
 				Config: testAccMySQLLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", "MySQL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "MySQL"),
 					resource.TestCheckNoResourceAttr(resourceName, "root_password"),
 					resource.TestCheckResourceAttr(resourceName, "root_password_on_all_instances", "true"),
 				),

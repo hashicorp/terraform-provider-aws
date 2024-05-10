@@ -29,10 +29,10 @@ func TestAccChimeSDKVoiceVoiceProfileDomain_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"VoiceProfileDomain": {
-			"basic":      testAccVoiceProfileDomain_basic,
-			"disappears": testAccVoiceProfileDomain_disappears,
-			"update":     testAccVoiceProfileDomain_update,
-			"tags":       testAccVoiceProfileDomain_tags,
+			"basic":        testAccVoiceProfileDomain_basic,
+			"disappears":   testAccVoiceProfileDomain_disappears,
+			"update":       testAccVoiceProfileDomain_update,
+			names.AttrTags: testAccVoiceProfileDomain_tags,
 		},
 	}
 
@@ -59,9 +59,9 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &voiceprofiledomain),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -124,9 +124,9 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 				Config: testAccVoiceProfileDomainConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 			{
@@ -134,10 +134,10 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceProfileDomainExists(ctx, resourceName, &v2),
 					testAccCheckVoiceProfileDomainNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "server_side_encryption_configuration.0.kms_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", regexache.MustCompile(`voice-profile-domain/+.`)),
 				),
 			},
 		},

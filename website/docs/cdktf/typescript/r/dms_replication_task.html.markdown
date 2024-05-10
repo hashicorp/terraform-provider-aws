@@ -64,6 +64,7 @@ This resource supports the following arguments:
     - Cannot contain two consecutive hyphens.
 
 * `replicationTaskSettings` - (Optional) An escaped JSON string that contains the task settings. For a complete list of task settings, see [Task Settings for AWS Database Migration Service Tasks](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html).
+* `resourceIdentifier` - (Optional) A friendly name for the resource identifier at the end of the EndpointArn response parameter that is returned in the created Endpoint object.
 * `sourceEndpointArn` - (Required) The Amazon Resource Name (ARN) string that uniquely identifies the source endpoint.
 * `startReplicationTask` - (Optional) Whether to run or stop the replication task.
 * `tableMappings` - (Required) An escaped JSON string that contains the table mappings. For information on table mapping see [Using Table Mapping with an AWS Database Migration Service Task to Select and Filter Data](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
@@ -110,4 +111,4 @@ Using `terraform import`, import replication tasks using the `replicationTaskId`
 % terraform import aws_dms_replication_task.test test-dms-replication-task-tf
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a7384712dc027a38981caba659d64fc86f2705a3d8e80b7b58726721fa408cf2 -->
+<!-- cache-key: cdktf-0.20.1 input-f6a2cf35d679f8c0d5a5807b21d86c1b58933bfdd518a00e3db5d76c95c9a78e -->

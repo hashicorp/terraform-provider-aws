@@ -17,42 +17,44 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appmesh_virtual_gateway")
-func DataSourceVirtualGateway() *schema.Resource {
+// @SDKDataSource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
+func dataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualGatewayRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualGatewaySpecSchema()),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceVirtualGatewaySpecSchema()),
+				names.AttrTags: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -62,8 +64,8 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	virtualGatewayName := d.Get("name").(string)
-	virtualGateway, err := FindVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
+	virtualGatewayName := d.Get(names.AttrName).(string)
+	virtualGateway, err := findVirtualGatewayByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), virtualGatewayName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Gateway (%s): %s", virtualGatewayName, err)
@@ -71,13 +73,13 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(aws.StringValue(virtualGateway.VirtualGatewayName))
 	arn := aws.StringValue(virtualGateway.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, virtualGateway.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, virtualGateway.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", virtualGateway.MeshName)
 	meshOwner := aws.StringValue(virtualGateway.Metadata.MeshOwner)
 	d.Set("mesh_owner", meshOwner)
-	d.Set("name", virtualGateway.VirtualGatewayName)
+	d.Set(names.AttrName, virtualGateway.VirtualGatewayName)
 	d.Set("resource_owner", virtualGateway.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualGatewaySpec(virtualGateway.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -96,7 +98,7 @@ func dataSourceVirtualGatewayRead(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

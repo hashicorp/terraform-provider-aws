@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ram_resource_association", name="Resource Association")
@@ -37,7 +38,7 @@ func resourceResourceAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +62,7 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get("resource_arn").(string)
+	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get(names.AttrResourceARN).(string)
 	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false))
 	_, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
@@ -117,7 +118,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceAssociation.AssociatedEntity)
+	d.Set(names.AttrResourceARN, resourceAssociation.AssociatedEntity)
 	d.Set("resource_share_arn", resourceAssociation.ResourceShareArn)
 
 	return diags

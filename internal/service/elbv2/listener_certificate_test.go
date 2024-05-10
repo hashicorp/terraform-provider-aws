@@ -41,8 +41,8 @@ func TestAccELBV2ListenerCertificate_basic(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -74,8 +74,8 @@ func TestAccELBV2ListenerCertificate_CertificateARN_underscores(t *testing.T) {
 				Config: testAccListenerCertificateConfig_arnUnderscores(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", iamServerCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", lbListenerResourceName, names.AttrARN),
 				),
 			},
 			{

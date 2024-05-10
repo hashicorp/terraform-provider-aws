@@ -37,7 +37,7 @@ func TestAccRoute53CIDRLocation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 			{
@@ -103,7 +103,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.2.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.5.0/24"),
-					resource.TestCheckResourceAttr(resourceName, "name", locationName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, locationName),
 				),
 			},
 		},

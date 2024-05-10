@@ -39,8 +39,8 @@ func testAccDomainName_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_basic(rName, appsyncCertDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -70,14 +70,14 @@ func testAccDomainName_description(t *testing.T) {
 				Config: testAccDomainNameConfig_description(rName, appsyncCertDomain, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccDomainNameConfig_description(rName, appsyncCertDomain, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 			{

@@ -37,12 +37,12 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "attachment_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "policy", expectedPolicyText),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
 				),
@@ -72,7 +72,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 				Config: testAccPolicyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 				Config: testAccPolicyConfig_namePrefix(acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestMatchResourceAttr(resourceName, "name", regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf("^%s", acctest.ResourcePrefix))),
 				),
 			},
 			{
@@ -223,14 +223,14 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "policy", policy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy1),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "policy", policy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, policy2),
 				),
 			},
 			{
@@ -524,111 +524,6 @@ resource "aws_iam_policy" "test" {
   policy = %q
 }
 `, rName, policy)
-}
-
-func testAccPolicyConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "test" {
-  name = %q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-`, rName)
-}
-
-func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "test" {
-  name = %q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "test" {
-  name = %q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccPolicyConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_policy" "test" {
-  name = %q
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "ec2:Describe*"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
 
 func testAccPolicyConfig_diffs(rName string, tags string) string {

@@ -146,7 +146,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &shield.UpdateProtectionGroupInput{
 			Aggregation:       awstypes.ProtectionGroupAggregation(d.Get("aggregation").(string)),
 			Pattern:           awstypes.ProtectionGroupPattern(d.Get("pattern").(string)),

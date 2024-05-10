@@ -40,7 +40,7 @@ func TestAccVPCLatticeTargetGroupAttachment_instance(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccVPCLatticeTargetGroupAttachment_alb(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", albResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "target.0.port", "80"),
 				),
 			},

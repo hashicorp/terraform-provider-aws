@@ -32,10 +32,10 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 			{
 				Config: testAccParameterGroupDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "family", resourceName, "family"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},

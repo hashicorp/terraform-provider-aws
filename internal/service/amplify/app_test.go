@@ -40,7 +40,7 @@ func testAccApp_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckNoResourceAttr(resourceName, "access_token"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
@@ -48,14 +48,14 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "default_domain", regexache.MustCompile(`\.amplifyapp\.com$`)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_branch_creation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_build", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_branch_auto_deletion", "false"),
 					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "iam_service_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, "oauth_token"),
 					resource.TestCheckResourceAttr(resourceName, "platform", "WEB"),
 					resource.TestCheckResourceAttr(resourceName, "production_branch.#", "0"),
@@ -397,7 +397,7 @@ func testAccApp_Description(t *testing.T) {
 				Config: testAccAppConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app1),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 				),
 			},
 			{
@@ -410,7 +410,7 @@ func testAccApp_Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app2),
 					testAccCheckAppNotRecreated(&app1, &app2),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 				),
 			},
 			{
@@ -418,7 +418,7 @@ func testAccApp_Description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app3),
 					testAccCheckAppRecreated(&app2, &app3),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 		},
@@ -488,7 +488,7 @@ func testAccApp_IAMServiceRole(t *testing.T) {
 				Config: testAccAppConfig_iamServiceRoleARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app1),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole1ResourceName, "arn")),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole1ResourceName, names.AttrARN)),
 			},
 			{
 				ResourceName:      resourceName,
@@ -500,7 +500,7 @@ func testAccApp_IAMServiceRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app2),
 					testAccCheckAppNotRecreated(&app1, &app2),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_service_role_arn", iamRole2ResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -532,7 +532,7 @@ func testAccApp_Name(t *testing.T) {
 				Config: testAccAppConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -544,7 +544,7 @@ func testAccApp_Name(t *testing.T) {
 				Config: testAccAppConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_transit_gateway_route")
@@ -45,7 +46,7 @@ func ResourceTransitGatewayRoute() *schema.Resource {
 				ValidateFunc:     verify.ValidCIDRNetworkAddress,
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
 			},
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -71,7 +72,7 @@ func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceDa
 	input := &ec2.CreateTransitGatewayRouteInput{
 		Blackhole:                  aws.Bool(d.Get("blackhole").(bool)),
 		DestinationCidrBlock:       aws.String(destination),
-		TransitGatewayAttachmentId: aws.String(d.Get("transit_gateway_attachment_id").(string)),
+		TransitGatewayAttachmentId: aws.String(d.Get(names.AttrTransitGatewayAttachmentID).(string)),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	}
 
@@ -119,10 +120,10 @@ func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("destination_cidr_block", transitGatewayRoute.DestinationCidrBlock)
 	if len(transitGatewayRoute.TransitGatewayAttachments) > 0 && transitGatewayRoute.TransitGatewayAttachments[0] != nil {
-		d.Set("transit_gateway_attachment_id", transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayRoute.TransitGatewayAttachments[0].TransitGatewayAttachmentId)
 		d.Set("blackhole", false)
 	} else {
-		d.Set("transit_gateway_attachment_id", "")
+		d.Set(names.AttrTransitGatewayAttachmentID, "")
 		d.Set("blackhole", true)
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)

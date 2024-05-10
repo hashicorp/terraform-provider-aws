@@ -13,15 +13,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func SizeConstraintSetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"arn": {
+		names.AttrARN: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"name": {
+		names.AttrName: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -45,7 +46,7 @@ func SizeConstraintSetSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Optional: true,
 								},
-								"type": {
+								names.AttrType: {
 									Type:     schema.TypeString,
 									Required: true,
 								},
@@ -123,8 +124,8 @@ func FlattenGeoMatchConstraint(ts []*waf.GeoMatchConstraint) []interface{} {
 	out := make([]interface{}, len(ts))
 	for i, t := range ts {
 		m := make(map[string]interface{})
-		m["type"] = aws.StringValue(t.Type)
-		m["value"] = aws.StringValue(t.Value)
+		m[names.AttrType] = aws.StringValue(t.Type)
+		m[names.AttrValue] = aws.StringValue(t.Value)
 		out[i] = m
 	}
 	return out
@@ -144,8 +145,8 @@ func DiffGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetUpda
 		updates = append(updates, &waf.GeoMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			GeoMatchConstraint: &waf.GeoMatchConstraint{
-				Type:  aws.String(constraint["type"].(string)),
-				Value: aws.String(constraint["value"].(string)),
+				Type:  aws.String(constraint[names.AttrType].(string)),
+				Value: aws.String(constraint[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -156,8 +157,8 @@ func DiffGeoMatchSetConstraints(oldT, newT []interface{}) []*waf.GeoMatchSetUpda
 		updates = append(updates, &waf.GeoMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			GeoMatchConstraint: &waf.GeoMatchConstraint{
-				Type:  aws.String(constraint["type"].(string)),
-				Value: aws.String(constraint["value"].(string)),
+				Type:  aws.String(constraint[names.AttrType].(string)),
+				Value: aws.String(constraint[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -203,7 +204,7 @@ func DiffRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
 			Action: aws.String(waf.ChangeActionDelete),
 			Predicate: &waf.Predicate{
 				Negated: aws.Bool(predicate["negated"].(bool)),
-				Type:    aws.String(predicate["type"].(string)),
+				Type:    aws.String(predicate[names.AttrType].(string)),
 				DataId:  aws.String(predicate["data_id"].(string)),
 			},
 		})
@@ -216,7 +217,7 @@ func DiffRulePredicates(oldP, newP []interface{}) []*waf.RuleUpdate {
 			Action: aws.String(waf.ChangeActionInsert),
 			Predicate: &waf.Predicate{
 				Negated: aws.Bool(predicate["negated"].(bool)),
-				Type:    aws.String(predicate["type"].(string)),
+				Type:    aws.String(predicate[names.AttrType].(string)),
 				DataId:  aws.String(predicate["data_id"].(string)),
 			},
 		})
@@ -256,14 +257,14 @@ func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 	out := make([]interface{}, len(activatedRules))
 	for i, ar := range activatedRules {
 		rule := map[string]interface{}{
-			"priority": aws.Int64Value(ar.Priority),
-			"rule_id":  aws.StringValue(ar.RuleId),
-			"type":     aws.StringValue(ar.Type),
+			"priority":     aws.Int64Value(ar.Priority),
+			"rule_id":      aws.StringValue(ar.RuleId),
+			names.AttrType: aws.StringValue(ar.Type),
 		}
 		if ar.Action != nil {
 			rule["action"] = []interface{}{
 				map[string]interface{}{
-					"type": aws.StringValue(ar.Action.Type),
+					names.AttrType: aws.StringValue(ar.Action.Type),
 				},
 			}
 		}
@@ -276,13 +277,13 @@ func ExpandActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 	r := &waf.ActivatedRule{
 		Priority: aws.Int64(int64(rule["priority"].(int))),
 		RuleId:   aws.String(rule["rule_id"].(string)),
-		Type:     aws.String(rule["type"].(string)),
+		Type:     aws.String(rule[names.AttrType].(string)),
 	}
 
 	if a, ok := rule["action"].([]interface{}); ok && len(a) > 0 {
 		m := a[0].(map[string]interface{})
 		r.Action = &waf.WafAction{
-			Type: aws.String(m["type"].(string)),
+			Type: aws.String(m[names.AttrType].(string)),
 		}
 	}
 	return r
@@ -351,7 +352,7 @@ func RegexMatchSetTupleHash(v interface{}) int {
 		if v, ok := ftm["data"]; ok {
 			buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(v.(string))))
 		}
-		buf.WriteString(fmt.Sprintf("%s-", ftm["type"].(string)))
+		buf.WriteString(fmt.Sprintf("%s-", ftm[names.AttrType].(string)))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["regex_pattern_set_id"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["text_transformation"].(string)))

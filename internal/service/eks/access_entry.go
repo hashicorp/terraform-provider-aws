@@ -58,7 +58,7 @@ func resourceAccessEntry() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +82,7 @@ func resourceAccessEntry() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -109,7 +109,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get("type").(string)),
+		Type:         aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
@@ -156,11 +156,11 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("access_entry_arn", output.AccessEntryArn)
 	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", aws.ToTime(output.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
-	d.Set("type", output.Type)
+	d.Set(names.AttrType, output.Type)
 	d.Set("user_name", output.Username)
 
 	setTagsOut(ctx, output.Tags)
@@ -172,7 +172,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		clusterName, principalARN, err := accessEntryParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

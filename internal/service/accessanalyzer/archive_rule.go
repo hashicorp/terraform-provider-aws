@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 // @SDKResource("aws_accessanalyzer_archive_rule")
@@ -282,7 +282,7 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}

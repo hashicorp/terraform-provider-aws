@@ -15,7 +15,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
-	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -203,25 +203,13 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		testcase := testcase
 
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV2)
-			})
-		}
-	})
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, region, testcase, callService)
+		})
+	}
 }
 
 func defaultEndpoint(region string) string {
@@ -241,7 +229,7 @@ func defaultEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	var endpoint string
@@ -265,31 +253,17 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) str
 	return endpoint
 }
 
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
-	t.Helper()
-
-	client := meta.LambdaConn(ctx)
-
-	req, _ := client.ListFunctionsRequest(&lambda_sdkv1.ListFunctionsInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
-
-	return endpoint
-}
-
 func withNoConfig(_ *caseSetup) {
 	// no-op
 }
 
 func withPackageNameEndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
@@ -360,17 +334,17 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		"access_key":                  servicemocks.MockStaticAccessKey,
-		"secret_key":                  servicemocks.MockStaticSecretKey,
-		"region":                      region,
-		"skip_credentials_validation": true,
-		"skip_requesting_account_id":  true,
+		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
+		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
+		names.AttrRegion:                    region,
+		names.AttrSkipCredentialsValidation: true,
+		names.AttrSkipRequestingAccountID:   true,
 	}
 
 	maps.Copy(config, setup.config)
 
 	if setup.configFile.baseUrl != "" || setup.configFile.serviceUrl != "" {
-		config["profile"] = "default"
+		config[names.AttrProfile] = "default"
 		tempDir := t.TempDir()
 		writeSharedConfigFile(t, &config, tempDir, generateSharedConfigFile(setup.configFile))
 	}
@@ -513,10 +487,10 @@ func writeSharedConfigFile(t *testing.T, config *map[string]any, tempDir, conten
 		t.Fatalf(" writing shared configuration file: %s", err)
 	}
 
-	if v, ok := (*config)["shared_config_files"]; !ok {
-		(*config)["shared_config_files"] = []any{file.Name()}
+	if v, ok := (*config)[names.AttrSharedConfigFiles]; !ok {
+		(*config)[names.AttrSharedConfigFiles] = []any{file.Name()}
 	} else {
-		(*config)["shared_config_files"] = append(v.([]any), file.Name())
+		(*config)[names.AttrSharedConfigFiles] = append(v.([]any), file.Name())
 	}
 
 	return file.Name()

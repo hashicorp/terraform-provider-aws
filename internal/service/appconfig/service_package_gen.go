@@ -23,7 +23,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceEnvironment,
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -57,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appconfig_application",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -65,7 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appconfig_configuration_profile",
 			Name:     "Connection Profile",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appconfig_deployment",
 			Name:     "Deployment",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appconfig_deployment_strategy",
 			Name:     "Deployment Strategy",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -89,7 +89,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appconfig_extension",
 			Name:     "Extension",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -112,7 +112,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return appconfig_sdkv2.NewFromConfig(cfg, func(o *appconfig_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

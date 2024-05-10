@@ -29,9 +29,9 @@ func TestAccKMSPublicKeyDataSource_basic(t *testing.T) {
 				Config: testAccPublicKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
-					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
 					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),
 					resource.TestCheckResourceAttrSet(datasourceName, "public_key_pem"),
@@ -56,8 +56,8 @@ func TestAccKMSPublicKeyDataSource_encrypt(t *testing.T) {
 				Config: testAccPublicKeyDataSourceConfig_encrypt(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccPublicKeyCheckDataSource(datasourceName),
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "key_id", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_usage", resourceName, "key_usage"),
 					resource.TestCheckResourceAttrSet(datasourceName, "public_key"),

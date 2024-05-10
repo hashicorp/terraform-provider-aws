@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ses_receipt_filter")
@@ -30,11 +31,11 @@ func ResourceReceiptFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +57,7 @@ func ResourceReceiptFilter() *schema.Resource {
 				),
 			},
 
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -73,14 +74,14 @@ func resourceReceiptFilterCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	createOpts := &ses.CreateReceiptFilterInput{
 		Filter: &ses.ReceiptFilter{
 			Name: aws.String(name),
 			IpFilter: &ses.ReceiptIpFilter{
 				Cidr:   aws.String(d.Get("cidr").(string)),
-				Policy: aws.String(d.Get("policy").(string)),
+				Policy: aws.String(d.Get(names.AttrPolicy).(string)),
 			},
 		},
 	}
@@ -122,8 +123,8 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("cidr", filter.IpFilter.Cidr)
-	d.Set("policy", filter.IpFilter.Policy)
-	d.Set("name", filter.Name)
+	d.Set(names.AttrPolicy, filter.IpFilter.Policy)
+	d.Set(names.AttrName, filter.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -132,7 +133,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

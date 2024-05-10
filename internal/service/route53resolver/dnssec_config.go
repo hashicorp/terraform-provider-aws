@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_resolver_dnssec_config")
@@ -32,11 +33,11 @@ func ResourceDNSSECConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,8 +101,8 @@ func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("resolver-dnssec-config/%s", resourceID),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
 	d.Set("resource_id", resourceID)
 	d.Set("validation_status", dnssecConfig.ValidationStatus)
 

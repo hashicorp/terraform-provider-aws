@@ -74,7 +74,7 @@ func ResourceRepository() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -110,7 +110,7 @@ func ResourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -200,7 +200,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("repository_name", d.Id())
 	d.Set("registry_id", repository.RegistryId)
-	d.Set("arn", repository.RepositoryArn)
+	d.Set(names.AttrARN, repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
 	if v, ok := d.GetOk("force_destroy"); ok {
@@ -325,7 +325,7 @@ func flattenRepositoryCatalogData(apiObject *ecrpublic.GetRepositoryCatalogDataO
 	}
 
 	if v := catalogData.Description; v != nil {
-		tfMap["description"] = aws.ToString(v)
+		tfMap[names.AttrDescription] = aws.ToString(v)
 	}
 
 	if v := catalogData.OperatingSystems; v != nil {
@@ -358,7 +358,7 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *awstypes.Reposit
 		repositoryCatalogDataInput.Architectures = architectures
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		repositoryCatalogDataInput.Description = aws.String(v)
 	}
 

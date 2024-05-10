@@ -53,10 +53,10 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 			{
 				Config: testAccGroupConfig_basic(rName, desc2, query2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc2),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", query2+"\n"),
 				),
 			},
@@ -167,15 +167,15 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.name", "allowed-host-families"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.0.values.0", "mac1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
@@ -188,21 +188,21 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 				Config: testAccGroupConfig_configuration(rName, desc1, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", desc1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.name", "auto-allocate-host"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.parameters.2.values.0", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccGroupConfig_configuration(rName, desc2, configType1, configType2, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", desc2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc2),
 				),
 			},
 			// Check that trying to change the configuration group to a resource-query group fails
@@ -233,8 +233,8 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 				Config: testAccGroupConfig_configurationParametersOptional(rName, configType1, configType2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.1.type", configType2),
@@ -269,8 +269,8 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 				Config: testAccGroupConfig_resourceQueryAndConfiguration(rName, testAccResourceGroupQueryConfig, configType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "resource_query.0.query", testAccResourceGroupQueryConfig+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.type", configType),

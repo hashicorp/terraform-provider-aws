@@ -37,10 +37,10 @@ func testAccLandingZone_basic(t *testing.T) {
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
 				),
 			},
 			{

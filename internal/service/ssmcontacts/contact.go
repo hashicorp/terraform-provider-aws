@@ -35,7 +35,7 @@ func ResourceContact() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourceContact() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -73,7 +73,7 @@ func resourceContactCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DisplayName: aws.String(d.Get("display_name").(string)),
 		Plan:        &types.Plan{Stages: []types.Stage{}},
 		Tags:        getTagsIn(ctx),
-		Type:        types.ContactType(d.Get("type").(string)),
+		Type:        types.ContactType(d.Get(names.AttrType).(string)),
 	}
 
 	output, err := client.CreateContact(ctx, input)

@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_appmesh_virtual_node", name="Virtual Node")
 // @Tags(identifierAttribute="arn")
-func ResourceVirtualNode() *schema.Resource {
+func resourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualNodeCreate,
@@ -42,45 +42,47 @@ func ResourceVirtualNode() *schema.Resource {
 		SchemaVersion: 1,
 		MigrateState:  resourceVirtualNodeMigrateState,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"mesh_owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":            resourceVirtualNodeSpecSchema(),
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"mesh_owner": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":            resourceVirtualNodeSpecSchema(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -396,13 +398,13 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											Computed:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
@@ -439,7 +441,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -458,7 +460,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 													},
-													"value": {
+													names.AttrValue: {
 														Type:     schema.TypeInt,
 														Required: true,
 													},
@@ -485,12 +487,12 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"port": {
+										names.AttrPort: {
 											Type:         schema.TypeInt,
 											Required:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"protocol": {
+										names.AttrProtocol: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.PortProtocol_Values(), false),
@@ -524,7 +526,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -543,7 +545,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -572,7 +574,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -591,7 +593,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -620,7 +622,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -639,7 +641,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -668,7 +670,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Required:     true,
 																	ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 																},
-																"value": {
+																names.AttrValue: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -866,12 +868,12 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 																	Optional: true,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"key": {
+																			names.AttrKey: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
 																			},
-																			"value": {
+																			names.AttrValue: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -972,7 +974,7 @@ func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
@@ -1000,7 +1002,7 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get("name").(string))
+		return findVirtualNodeByThreePartKey(ctx, conn, d.Get("mesh_name").(string), d.Get("mesh_owner").(string), d.Get(names.AttrName).(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -1016,12 +1018,12 @@ func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta i
 	vn := outputRaw.(*appmesh.VirtualNodeData)
 
 	arn := aws.StringValue(vn.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", vn.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, vn.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, vn.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_name", vn.MeshName)
 	d.Set("mesh_owner", vn.Metadata.MeshOwner)
-	d.Set("name", vn.VirtualNodeName)
+	d.Set(names.AttrName, vn.VirtualNodeName)
 	d.Set("resource_owner", vn.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenVirtualNodeSpec(vn.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -1038,7 +1040,7 @@ func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &appmesh.UpdateVirtualNodeInput{
 			MeshName:        aws.String(d.Get("mesh_name").(string)),
 			Spec:            expandVirtualNodeSpec(d.Get("spec").([]interface{})),
-			VirtualNodeName: aws.String(d.Get("name").(string)),
+			VirtualNodeName: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("mesh_owner"); ok {
@@ -1062,7 +1064,7 @@ func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
 	input := &appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
-		VirtualNodeName: aws.String(d.Get("name").(string)),
+		VirtualNodeName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("mesh_owner"); ok {
@@ -1092,7 +1094,7 @@ func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta
 	meshName := parts[0]
 	name := parts[1]
 
-	vn, err := FindVirtualNodeByThreePartKey(ctx, conn, meshName, "", name)
+	vn, err := findVirtualNodeByThreePartKey(ctx, conn, meshName, "", name)
 
 	if err != nil {
 		return nil, err
@@ -1100,12 +1102,12 @@ func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(vn.Metadata.Uid))
 	d.Set("mesh_name", vn.MeshName)
-	d.Set("name", vn.VirtualNodeName)
+	d.Set(names.AttrName, vn.VirtualNodeName)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindVirtualNodeByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualNodeData, error) {
+func findVirtualNodeByThreePartKey(ctx context.Context, conn *appmesh.AppMesh, meshName, meshOwner, name string) (*appmesh.VirtualNodeData, error) {
 	input := &appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(meshName),
 		VirtualNodeName: aws.String(name),

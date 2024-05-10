@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -49,7 +50,7 @@ func sweepBots(region string) error {
 
 			log.Printf("[INFO] Deleting Lex V2 Models Bot: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceBot, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

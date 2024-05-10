@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_delegated_administrators")
@@ -26,7 +27,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -38,7 +39,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,11 +51,11 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -102,14 +103,14 @@ func flattenDelegatedAdministrators(apiObjects []*organizations.DelegatedAdminis
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			"arn":                     aws.StringValue(apiObject.Arn),
+			names.AttrARN:             aws.StringValue(apiObject.Arn),
 			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
 			"email":                   aws.StringValue(apiObject.Email),
-			"id":                      aws.StringValue(apiObject.Id),
+			names.AttrID:              aws.StringValue(apiObject.Id),
 			"joined_method":           aws.StringValue(apiObject.JoinedMethod),
 			"joined_timestamp":        aws.TimeValue(apiObject.JoinedTimestamp).Format(time.RFC3339),
-			"name":                    aws.StringValue(apiObject.Name),
-			"status":                  aws.StringValue(apiObject.Status),
+			names.AttrName:            aws.StringValue(apiObject.Name),
+			names.AttrStatus:          aws.StringValue(apiObject.Status),
 		})
 	}
 

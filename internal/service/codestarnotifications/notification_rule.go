@@ -43,7 +43,7 @@ func resourceNotificationRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func resourceNotificationRule() *schema.Resource {
 				MaxItems: 200,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -73,7 +73,7 @@ func resourceNotificationRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          types.NotificationRuleStatusEnabled,
@@ -92,11 +92,11 @@ func resourceNotificationRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Default:  "SNS",
 							Optional: true,
@@ -114,13 +114,13 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeStarNotificationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codestarnotifications.CreateNotificationRuleInput{
 		DetailType:   types.DetailType(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringValueSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(name),
 		Resource:     aws.String(d.Get("resource").(string)),
-		Status:       types.NotificationRuleStatus(d.Get("status").(string)),
+		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
 		Tags:         getTagsIn(ctx),
 		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
@@ -152,22 +152,22 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", rule.Arn)
+	d.Set(names.AttrARN, rule.Arn)
 	d.Set("detail_type", rule.DetailType)
 	eventTypeIDs := tfslices.ApplyToAll(rule.EventTypes, func(v types.EventTypeSummary) string {
 		return aws.ToString(v.EventTypeId)
 	})
 	d.Set("event_type_ids", eventTypeIDs)
-	d.Set("name", rule.Name)
+	d.Set(names.AttrName, rule.Name)
 	d.Set("resource", rule.Resource)
-	d.Set("status", rule.Status)
+	d.Set(names.AttrStatus, rule.Status)
 
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
 		targets = append(targets, map[string]interface{}{
-			"address": aws.ToString(t.TargetAddress),
-			"type":    aws.ToString(t.TargetType),
-			"status":  t.TargetStatus,
+			"address":        aws.ToString(t.TargetAddress),
+			names.AttrType:   aws.ToString(t.TargetType),
+			names.AttrStatus: t.TargetStatus,
 		})
 	}
 	if err := d.Set("target", targets); err != nil {
@@ -187,8 +187,8 @@ func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData,
 		Arn:          aws.String(d.Id()),
 		DetailType:   types.DetailType(d.Get("detail_type").(string)),
 		EventTypeIds: flex.ExpandStringValueSet(d.Get("event_type_ids").(*schema.Set)),
-		Name:         aws.String(d.Get("name").(string)),
-		Status:       types.NotificationRuleStatus(d.Get("status").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
 		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
 	}
 
@@ -299,7 +299,7 @@ func expandNotificationRuleTargets(targetsData []interface{}) []types.Target {
 		target := t.(map[string]interface{})
 		targets = append(targets, types.Target{
 			TargetAddress: aws.String(target["address"].(string)),
-			TargetType:    aws.String(target["type"].(string)),
+			TargetType:    aws.String(target[names.AttrType].(string)),
 		})
 	}
 	return targets

@@ -131,7 +131,7 @@ func testPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactOneResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func testPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactTwoResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -504,7 +504,7 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelOneResourceName,
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -532,7 +532,7 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelTwoResourceName,
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,

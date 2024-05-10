@@ -50,11 +50,11 @@ func resourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -77,7 +77,7 @@ func resourceDomainName() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -128,7 +128,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
@@ -174,8 +174,8 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  "/domainnames/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDomainName, output.DomainName)
 	if err := d.Set("domain_name_configuration", flattenDomainNameConfiguration(output.DomainNameConfigurations[0])); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_name_configuration: %s", err)
 	}
@@ -366,7 +366,7 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 	tfMap["endpoint_type"] = string(apiObject.EndpointType)
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	tfMap["security_policy"] = string(apiObject.SecurityPolicy)

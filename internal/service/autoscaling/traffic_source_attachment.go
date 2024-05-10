@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_autoscaling_traffic_source_attachment", name="Traffic Source Attachment")
@@ -55,7 +56,7 @@ func resourceTrafficSourceAttachment() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,

@@ -13,8 +13,8 @@ func ListOfMap(tags tftags.KeyValueTags) []any {
 
 	for _, key := range tags.Keys() {
 		m := map[string]any{
-			"key":                   key,
-			"value":                 aws.StringValue(tags.KeyValue(key)),
+			names.AttrKey:                   key,
+			names.AttrValue:                 aws.StringValue(tags.KeyValue(key)),
 			{{ if .TagTypeAddBoolElem }}
 			"{{ .TagTypeAddBoolElemSnake }}": aws.BoolValue(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
 			{{ end }}
@@ -175,7 +175,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 				continue
 			}
 
-			key, ok := tfMap["key"].(string)
+			key, ok := tfMap[names.AttrKey].(string)
 
 			if !ok {
 				continue
@@ -183,7 +183,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 
 			tagData := &tftags.TagData{}
 
-			if v, ok := tfMap["value"].(string); ok {
+			if v, ok := tfMap[names.AttrValue].(string); ok {
 				tagData.Value = &v
 			}
 

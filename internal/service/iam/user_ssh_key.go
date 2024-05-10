@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_user_ssh_key", name="User SSH Key")
@@ -61,7 +62,7 @@ func resourceUserSSHKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -101,7 +102,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM User SSH Key (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("status"); ok {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
 		input := &iam.UpdateSSHPublicKeyInput{
 			SSHPublicKeyId: aws.String(d.Id()),
 			Status:         awstypes.StatusType(v.(string)),
@@ -142,7 +143,7 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("public_key", publicKey)
 	d.Set("ssh_public_key_id", key.SSHPublicKeyId)
-	d.Set("status", key.Status)
+	d.Set(names.AttrStatus, key.Status)
 
 	return diags
 }
@@ -153,7 +154,7 @@ func resourceUserSSHKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &iam.UpdateSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
-		Status:         awstypes.StatusType(d.Get("status").(string)),
+		Status:         awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 		UserName:       aws.String(d.Get("username").(string)),
 	}
 

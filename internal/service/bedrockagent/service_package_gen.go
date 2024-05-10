@@ -32,10 +32,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newAgentKnowledgeBaseAssociationResource,
+			Name:    "Agent Knowledge Base Association",
+		},
+		{
 			Factory: newAgentResource,
 			Name:    "Agent",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
+			},
+		},
+		{
+			Factory: newDataSourceResource,
+			Name:    "Data Source",
+		},
+		{
+			Factory: newKnowledgeBaseResource,
+			Name:    "Knowledge Base",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -58,7 +73,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return bedrockagent_sdkv2.NewFromConfig(cfg, func(o *bedrockagent_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

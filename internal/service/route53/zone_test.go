@@ -110,8 +110,8 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("hostedzone/.+")),
-					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -235,7 +235,7 @@ func TestAccRoute53Zone_delegationSetID(t *testing.T) {
 				Config: testAccZoneConfig_delegationSetID(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttrPair(resourceName, "delegation_set_id", delegationSetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "delegation_set_id", delegationSetResourceName, names.AttrID),
 				),
 			},
 			{

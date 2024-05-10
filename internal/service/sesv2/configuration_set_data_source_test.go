@@ -29,7 +29,7 @@ func TestAccSESV2ConfigurationSetDataSource_basic(t *testing.T) {
 				Config: testAccConfigurationSetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, dataSourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_set_name", dataSourceName, "configuration_set_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "delivery_options.#", dataSourceName, "delivery_options.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "delivery_options.0.sending_pool_name", dataSourceName, "delivery_options.0.sending_pool_name"),

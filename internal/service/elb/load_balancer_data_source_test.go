@@ -27,7 +27,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLoadBalancerDataSourceConfig_basic(rName, t.Name()),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "idle_timeout", "30"),
 					resource.TestCheckResourceAttr(dataSourceName, "internal", "true"),
@@ -39,7 +39,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "tags.TestName", t.Name()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "dns_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "zone_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", "aws_elb.test", "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_elb.test", names.AttrARN),
 				),
 			},
 		},

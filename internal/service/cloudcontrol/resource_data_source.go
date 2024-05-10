@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_cloudcontrolapi_resource", name="Resource")
@@ -29,7 +30,7 @@ func dataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -57,7 +58,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),
-		d.Get("role_arn").(string),
+		d.Get(names.AttrRoleARN).(string),
 	)
 
 	if err != nil {

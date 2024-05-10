@@ -39,10 +39,10 @@ func TestAccServiceDiscoveryHTTPNamespace_basic(t *testing.T) {
 				Config: testAccHTTPNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "servicediscovery", regexache.MustCompile(`namespace/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`namespace/.+`)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "http_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -102,7 +102,7 @@ func TestAccServiceDiscoveryHTTPNamespace_description(t *testing.T) {
 				Config: testAccHTTPNamespaceConfig_description(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHTTPNamespaceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
 			},
 			{

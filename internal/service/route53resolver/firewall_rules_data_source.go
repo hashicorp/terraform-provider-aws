@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_rules")
@@ -72,7 +73,7 @@ func DataSourceResolverFirewallRules() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -181,7 +182,7 @@ func flattenFirewallRule(apiObject *route53resolver.FirewallRule) map[string]int
 		tfMap["modification_time"] = aws.StringValue(apiObject.ModificationTime)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Priority != nil {
 		tfMap["priority"] = aws.Int64Value(apiObject.Priority)

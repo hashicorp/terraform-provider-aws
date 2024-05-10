@@ -187,6 +187,7 @@ gen: prereq-go ## Run all Go generators
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/service/**/*_gen_test.go
+	rm -f internal/service/**/*_gen.tf
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md

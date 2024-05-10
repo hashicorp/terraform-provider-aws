@@ -49,7 +49,7 @@ func resourceBranch() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +88,7 @@ func resourceBranch() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -196,7 +196,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.BasicAuthCredentials = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -273,13 +273,13 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("app_id", appID)
-	d.Set("arn", branch.BranchArn)
+	d.Set(names.AttrARN, branch.BranchArn)
 	d.Set("associated_resources", branch.AssociatedResources)
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
 	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
 	d.Set("branch_name", branch.BranchName)
 	d.Set("custom_domains", branch.CustomDomains)
-	d.Set("description", branch.Description)
+	d.Set(names.AttrDescription, branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
 	d.Set("display_name", branch.DisplayName)
 	d.Set("enable_auto_build", branch.EnableAutoBuild)
@@ -303,7 +303,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		appID, branchName, err := branchParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -322,8 +322,8 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("display_name") {

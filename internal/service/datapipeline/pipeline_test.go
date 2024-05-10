@@ -37,7 +37,7 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -45,7 +45,7 @@ func TestAccDataPipelinePipeline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 				Config: testAccPipelineConfig_description(rName, "test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 				),
 			},
 			{
@@ -81,7 +81,7 @@ func TestAccDataPipelinePipeline_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf2),
 					testAccCheckPipelineNotEqual(&conf1, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "description", "update description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "update description"),
 				),
 			},
 			{

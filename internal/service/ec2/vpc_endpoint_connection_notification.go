@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
@@ -48,7 +49,7 @@ func ResourceVPCEndpointConnectionNotification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +117,7 @@ func resourceVPCEndpointConnectionNotificationRead(ctx context.Context, d *schem
 	d.Set("connection_events", aws.StringValueSlice(cn.ConnectionEvents))
 	d.Set("connection_notification_arn", cn.ConnectionNotificationArn)
 	d.Set("notification_type", cn.ConnectionNotificationType)
-	d.Set("state", cn.ConnectionNotificationState)
+	d.Set(names.AttrState, cn.ConnectionNotificationState)
 	d.Set("vpc_endpoint_id", cn.VpcEndpointId)
 	d.Set("vpc_endpoint_service_id", cn.ServiceId)
 

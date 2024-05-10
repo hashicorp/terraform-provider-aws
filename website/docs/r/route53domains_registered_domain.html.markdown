@@ -56,7 +56,7 @@ This argument supports the following arguments:
 
 ### Contact Blocks
 
-The `admin_contact`, `registrant_contact` and `tech_contact` blocks support the following:
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.

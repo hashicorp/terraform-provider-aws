@@ -33,7 +33,7 @@ func TestAccSSOAdminPermissionSet_basic(t *testing.T) {
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT1H"),
 				),
 			},
@@ -116,14 +116,14 @@ func TestAccSSOAdminPermissionSet_updateDescription(t *testing.T) {
 				Config: testAccPermissionSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccPermissionSetConfig_updateDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -220,8 +220,8 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 				Config: testAccPermissionSetConfig_relayState(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT1H"),
 				),
@@ -230,8 +230,8 @@ func TestAccSSOAdminPermissionSet_RelayState_updateSessionDuration(t *testing.T)
 				Config: testAccPermissionSetConfig_relayStateUpdateSessionDuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "relay_state", "https://example.com"),
 					resource.TestCheckResourceAttr(resourceName, "session_duration", "PT2H"),
 				),

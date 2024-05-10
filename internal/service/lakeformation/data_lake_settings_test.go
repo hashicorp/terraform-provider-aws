@@ -34,7 +34,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 					resource.TestCheckResourceAttr(resourceName, "create_database_default_permissions.#", "1"),
@@ -47,7 +47,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "create_table_default_permissions.0.permissions.0", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "true"),
 					resource.TestCheckResourceAttr(resourceName, "external_data_filtering_allow_list.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "external_data_filtering_allow_list.0", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authorized_session_tag_value_list.0", "engine1"),
 				),
@@ -133,8 +133,8 @@ func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheck
 
 			input := &lakeformation.GetDataLakeSettingsInput{}
 
-			if rs.Primary.Attributes["catalog_id"] != "" {
-				input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
+			if rs.Primary.Attributes[names.AttrCatalogID] != "" {
+				input.CatalogId = aws.String(rs.Primary.Attributes[names.AttrCatalogID])
 			}
 
 			output, err := conn.GetDataLakeSettings(ctx, input)
@@ -171,8 +171,8 @@ func testAccCheckDataLakeSettingsExists(ctx context.Context, resourceName string
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 
-		if rs.Primary.Attributes["catalog_id"] != "" {
-			input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
+		if rs.Primary.Attributes[names.AttrCatalogID] != "" {
+			input.CatalogId = aws.String(rs.Primary.Attributes[names.AttrCatalogID])
 		}
 
 		_, err := conn.GetDataLakeSettings(ctx, input)

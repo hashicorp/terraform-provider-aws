@@ -20,11 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	costCategoryRuleRootElementSchemaLevel = 3
 )
 
 // @SDKResource("aws_ce_cost_category", name="Cost Category")
@@ -44,7 +47,7 @@ func resourceCostCategory() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -62,7 +65,7 @@ func resourceCostCategory() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -96,14 +99,14 @@ func resourceCostCategory() *schema.Resource {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
-								Elem:     elemExpression(),
+								Elem:     expressionElem(costCategoryRuleRootElementSchemaLevel),
 							},
-							"type": {
+							names.AttrType: {
 								Type:             schema.TypeString,
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.CostCategoryRuleType](),
 							},
-							"value": {
+							names.AttrValue: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 50),
@@ -132,12 +135,12 @@ func resourceCostCategory() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"type": {
+										names.AttrType: {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CostCategorySplitChargeRuleParameterType](),
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -175,211 +178,122 @@ func resourceCostCategory() *schema.Resource {
 	}
 }
 
-func elemExpression() *schema.Resource {
-	elemNestedExpression := func() *schema.Resource {
-		return &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"cost_category": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 50),
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
+func expressionElem(level int) *schema.Resource {
+	// This is the non-recursive part of the schema.
+	expressionSchema := map[string]*schema.Schema{
+		"cost_category": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringLenBetween(1, 50),
 					},
-				},
-				"dimension": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
-					},
-				},
-				"tags": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-	}
-
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"and": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"cost_category": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 50),
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
-						},
-					},
-				},
-			},
-			"dimension": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
 							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-				},
-			},
-			"not": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"or": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"tags": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
+					names.AttrValues: {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
 					},
 				},
 			},
 		},
+		"dimension": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:             schema.TypeString,
+						Optional:         true,
+						ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
+					},
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					names.AttrValues: {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+		names.AttrTags: {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					names.AttrKey: {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					names.AttrValues: {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if level > 1 {
+		// Add in the recursive part of the schema.
+		expressionSchema["and"] = &schema.Schema{
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+		expressionSchema["not"] = &schema.Schema{
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+		expressionSchema["or"] = &schema.Schema{
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+	}
+
+	return &schema.Resource{
+		Schema: expressionSchema,
 	}
 }
 
@@ -387,7 +301,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
 		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
@@ -437,11 +351,11 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Category (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", costCategory.CostCategoryArn)
+	d.Set(names.AttrARN, costCategory.CostCategoryArn)
 	d.Set("default_value", costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
-	d.Set("name", costCategory.Name)
+	d.Set(names.AttrName, costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
@@ -457,7 +371,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
@@ -529,26 +443,52 @@ func findCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn s
 	return output.CostCategory, nil
 }
 
-func expandCostCategoryRule(tfMap map[string]interface{}) awstypes.CostCategoryRule {
-	apiObject := awstypes.CostCategoryRule{}
+func expandCostCategoryRule(tfMap map[string]interface{}) *awstypes.CostCategoryRule {
+	apiObject := &awstypes.CostCategoryRule{}
 
 	if v, ok := tfMap["inherited_value"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.InheritedValue = expandCostCategoryInheritedValueDimension(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Rule = expandCostExpression(v[0].(map[string]interface{}))
+		apiObject.Rule = expandExpression(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = awstypes.CostCategoryRuleType(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = aws.String(v)
 	}
 
 	return apiObject
+}
+
+func expandCostCategoryRules(tfList []interface{}) []awstypes.CostCategoryRule {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.CostCategoryRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCostCategoryRule(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandCostCategoryInheritedValueDimension(tfMap map[string]interface{}) *awstypes.CostCategoryInheritedValueDimension {
@@ -569,7 +509,7 @@ func expandCostCategoryInheritedValueDimension(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func expandCostExpression(tfMap map[string]interface{}) *awstypes.Expression {
+func expandExpression(tfMap map[string]interface{}) *awstypes.Expression {
 	if tfMap == nil {
 		return nil
 	}
@@ -577,7 +517,7 @@ func expandCostExpression(tfMap map[string]interface{}) *awstypes.Expression {
 	apiObject := &awstypes.Expression{}
 
 	if v, ok := tfMap["and"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.And = expandCostExpressions(v.List())
+		apiObject.And = expandExpressions(v.List())
 	}
 
 	if v, ok := tfMap["cost_category"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -589,18 +529,43 @@ func expandCostExpression(tfMap map[string]interface{}) *awstypes.Expression {
 	}
 
 	if v, ok := tfMap["not"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Not = expandCostExpression(v[0].(map[string]interface{}))
+		apiObject.Not = expandExpression(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["or"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Or = expandCostExpressions(v.List())
+		apiObject.Or = expandExpressions(v.List())
 	}
 
-	if v, ok := tfMap["tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrTags].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Tags = expandTagValues(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
+}
+
+func expandExpressions(tfList []interface{}) []awstypes.Expression {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.Expression
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := expandExpression(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCategoryValues {
@@ -610,7 +575,7 @@ func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCatego
 
 	apiObject := &awstypes.CostCategoryValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -618,7 +583,7 @@ func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCatego
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -632,7 +597,7 @@ func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValu
 
 	apiObject := &awstypes.DimensionValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = awstypes.Dimension(v)
 	}
 
@@ -640,7 +605,7 @@ func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValu
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -654,7 +619,7 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 
 	apiObject := &awstypes.TagValues{}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
@@ -662,62 +627,15 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandCostExpressions(tfList []interface{}) []awstypes.Expression {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.Expression
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		apiObject := expandCostExpression(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, *apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandCostCategoryRules(tfList []interface{}) []awstypes.CostCategoryRule {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.CostCategoryRule
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandCostCategoryRule(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandCostCategorySplitChargeRule(tfMap map[string]interface{}) awstypes.CostCategorySplitChargeRule {
-	apiObject := awstypes.CostCategorySplitChargeRule{
+func expandCostCategorySplitChargeRule(tfMap map[string]interface{}) *awstypes.CostCategorySplitChargeRule {
+	apiObject := &awstypes.CostCategorySplitChargeRule{
 		Method:  awstypes.CostCategorySplitChargeMethod(tfMap["method"].(string)),
 		Source:  aws.String(tfMap["source"].(string)),
 		Targets: flex.ExpandStringValueSet(tfMap["targets"].(*schema.Set)),
@@ -729,10 +647,36 @@ func expandCostCategorySplitChargeRule(tfMap map[string]interface{}) awstypes.Co
 	return apiObject
 }
 
-func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) awstypes.CostCategorySplitChargeRuleParameter {
-	apiObject := awstypes.CostCategorySplitChargeRuleParameter{
-		Type:   awstypes.CostCategorySplitChargeRuleParameterType(tfMap["type"].(string)),
-		Values: flex.ExpandStringValueList(tfMap["values"].([]interface{})),
+func expandCostCategorySplitChargeRules(tfList []interface{}) []awstypes.CostCategorySplitChargeRule {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.CostCategorySplitChargeRule
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCostCategorySplitChargeRule(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *awstypes.CostCategorySplitChargeRuleParameter {
+	apiObject := &awstypes.CostCategorySplitChargeRuleParameter{
+		Type:   awstypes.CostCategorySplitChargeRuleParameterType(tfMap[names.AttrType].(string)),
+		Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 	}
 
 	return apiObject
@@ -754,49 +698,46 @@ func expandCostCategorySplitChargeRuleParameters(tfList []interface{}) []awstype
 
 		apiObject := expandCostCategorySplitChargeRuleParameter(tfMap)
 
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandCostCategorySplitChargeRules(tfList []interface{}) []awstypes.CostCategorySplitChargeRule {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.CostCategorySplitChargeRule
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
+		if apiObject == nil {
 			continue
 		}
 
-		apiObject := expandCostCategorySplitChargeRule(tfMap)
-
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenCostCategoryRule(apiObject awstypes.CostCategoryRule) map[string]interface{} {
+func flattenCostCategoryRule(apiObject *awstypes.CostCategoryRule) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
-	var expressions []*awstypes.Expression
-	expressions = append(expressions, apiObject.Rule)
-
-	tfMap["inherited_value"] = flattenCostCategoryRuleInheritedValue(apiObject.InheritedValue)
-	tfMap["rule"] = flattenCostCategoryRuleExpressions(expressions)
-	tfMap["type"] = string(apiObject.Type)
-	tfMap["value"] = aws.ToString(apiObject.Value)
+	tfMap["inherited_value"] = flattenCostCategoryInheritedValueDimension(apiObject.InheritedValue)
+	tfMap["rule"] = []interface{}{flattenExpression(apiObject.Rule)}
+	tfMap[names.AttrType] = string(apiObject.Type)
+	tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
 
 	return tfMap
 }
 
-func flattenCostCategoryRuleInheritedValue(apiObject *awstypes.CostCategoryInheritedValueDimension) []map[string]interface{} {
+func flattenCostCategoryRules(apiObjects []awstypes.CostCategoryRule) []map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenCostCategoryRule(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenCostCategoryInheritedValueDimension(apiObject *awstypes.CostCategoryInheritedValueDimension) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -812,74 +753,29 @@ func flattenCostCategoryRuleInheritedValue(apiObject *awstypes.CostCategoryInher
 	return tfList
 }
 
-func flattenCostCategoryRuleExpression(apiObject *awstypes.Expression) map[string]interface{} {
+func flattenExpression(apiObject *awstypes.Expression) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["and"] = flattenCostCategoryRuleOperandExpressions(tfslices.ToPointers[[]awstypes.Expression](apiObject.And))
-	tfMap["cost_category"] = flattenCostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
-	tfMap["dimension"] = flattenCostCategoryRuleExpressionDimension(apiObject.Dimensions)
-	tfMap["not"] = flattenCostCategoryRuleOperandExpressions([]*awstypes.Expression{apiObject.Not})
-	tfMap["or"] = flattenCostCategoryRuleOperandExpressions(tfslices.ToPointers[[]awstypes.Expression](apiObject.Or))
-	tfMap["tags"] = flattenCostCategoryRuleExpressionTag(apiObject.Tags)
+	if len(apiObject.And) > 0 {
+		tfMap["and"] = flattenExpressions(apiObject.And)
+	}
+	tfMap["cost_category"] = flattenCostCategoryValues(apiObject.CostCategories)
+	tfMap["dimension"] = flattenDimensionValues(apiObject.Dimensions)
+	if apiObject.Not != nil {
+		tfMap["not"] = []interface{}{flattenExpression(apiObject.Not)}
+	}
+	if len(apiObject.Or) > 0 {
+		tfMap["or"] = flattenExpressions(apiObject.Or)
+	}
+	tfMap[names.AttrTags] = flattenTagValues(apiObject.Tags)
 
 	return tfMap
 }
 
-func flattenCostCategoryRuleExpressionCostCategory(apiObject *awstypes.CostCategoryValues) []map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-	tfMap := map[string]interface{}{}
-
-	tfMap["key"] = aws.ToString(apiObject.Key)
-	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
-
-	tfList = append(tfList, tfMap)
-
-	return tfList
-}
-
-func flattenCostCategoryRuleExpressionDimension(apiObject *awstypes.DimensionValues) []map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-	tfMap := map[string]interface{}{}
-
-	tfMap["key"] = string(apiObject.Key)
-	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
-
-	tfList = append(tfList, tfMap)
-
-	return tfList
-}
-
-func flattenCostCategoryRuleExpressionTag(apiObject *awstypes.TagValues) []map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-	tfMap := map[string]interface{}{}
-
-	tfMap["key"] = aws.ToString(apiObject.Key)
-	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
-
-	tfList = append(tfList, tfMap)
-
-	return tfList
-}
-
-func flattenCostCategoryRuleExpressions(apiObjects []*awstypes.Expression) []map[string]interface{} {
+func flattenExpressions(apiObjects []awstypes.Expression) []map[string]interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -887,62 +783,68 @@ func flattenCostCategoryRuleExpressions(apiObjects []*awstypes.Expression) []map
 	var tfList []map[string]interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenCostCategoryRuleExpression(apiObject))
+		tfList = append(tfList, flattenExpression(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenCostCategoryRuleOperandExpression(apiObject *awstypes.Expression) map[string]interface{} {
+func flattenCostCategoryValues(apiObject *awstypes.CostCategoryValues) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
+	var tfList []map[string]interface{}
 	tfMap := map[string]interface{}{}
-	tfMap["cost_category"] = flattenCostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
-	tfMap["dimension"] = flattenCostCategoryRuleExpressionDimension(apiObject.Dimensions)
-	tfMap["tags"] = flattenCostCategoryRuleExpressionTag(apiObject.Tags)
 
-	return tfMap
-}
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	tfMap[names.AttrValues] = apiObject.Values
 
-func flattenCostCategoryRuleOperandExpressions(apiObjects []*awstypes.Expression) []map[string]interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenCostCategoryRuleOperandExpression(apiObject))
-	}
+	tfList = append(tfList, tfMap)
 
 	return tfList
 }
 
-func flattenCostCategoryRules(apiObjects []awstypes.CostCategoryRule) []map[string]interface{} {
-	if len(apiObjects) == 0 {
+func flattenDimensionValues(apiObject *awstypes.DimensionValues) []map[string]interface{} {
+	if apiObject == nil {
 		return nil
 	}
 
 	var tfList []map[string]interface{}
+	tfMap := map[string]interface{}{}
 
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenCostCategoryRule(apiObject))
-	}
+	tfMap[names.AttrKey] = string(apiObject.Key)
+	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	tfMap[names.AttrValues] = apiObject.Values
+
+	tfList = append(tfList, tfMap)
 
 	return tfList
 }
 
-func flattenCostCategorySplitChargeRule(apiObject awstypes.CostCategorySplitChargeRule) map[string]interface{} {
+func flattenTagValues(apiObject *awstypes.TagValues) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []map[string]interface{}
+	tfMap := map[string]interface{}{}
+
+	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
+	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
+	tfMap[names.AttrValues] = apiObject.Values
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
+}
+
+func flattenCostCategorySplitChargeRule(apiObject *awstypes.CostCategorySplitChargeRule) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 	tfMap["method"] = string(apiObject.Method)
 	tfMap["parameter"] = flattenCostCategorySplitChargeRuleParameters(apiObject.Parameters)
@@ -952,10 +854,28 @@ func flattenCostCategorySplitChargeRule(apiObject awstypes.CostCategorySplitChar
 	return tfMap
 }
 
-func flattenCostCategorySplitChargeRuleParameter(apiObject awstypes.CostCategorySplitChargeRuleParameter) map[string]interface{} {
+func flattenCostCategorySplitChargeRules(apiObjects []awstypes.CostCategorySplitChargeRule) []map[string]interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenCostCategorySplitChargeRule(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenCostCategorySplitChargeRuleParameter(apiObject *awstypes.CostCategorySplitChargeRuleParameter) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
-	tfMap["type"] = string(apiObject.Type)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrType] = string(apiObject.Type)
+	tfMap[names.AttrValues] = apiObject.Values
 
 	return tfMap
 }
@@ -968,21 +888,7 @@ func flattenCostCategorySplitChargeRuleParameters(apiObjects []awstypes.CostCate
 	var tfList []map[string]interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenCostCategorySplitChargeRuleParameter(apiObject))
-	}
-
-	return tfList
-}
-
-func flattenCostCategorySplitChargeRules(apiObjects []awstypes.CostCategorySplitChargeRule) []map[string]interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []map[string]interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenCostCategorySplitChargeRule(apiObject))
+		tfList = append(tfList, flattenCostCategorySplitChargeRuleParameter(&apiObject))
 	}
 
 	return tfList

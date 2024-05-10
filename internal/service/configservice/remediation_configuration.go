@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_config_remediation_configuration", name="Remediation Configuration")
@@ -37,7 +38,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -90,7 +91,7 @@ func resourceRemediationConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -215,7 +216,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", remediationConfiguration.Arn)
+	d.Set(names.AttrARN, remediationConfiguration.Arn)
 	d.Set("automatic", remediationConfiguration.Automatic)
 	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
 	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
@@ -342,11 +343,11 @@ func expandRemediationParameterValues(tfList []interface{}) map[string]types.Rem
 			continue
 		}
 
-		if v, ok := tfMap["name"].(string); !ok || v == "" {
+		if v, ok := tfMap[names.AttrName].(string); !ok || v == "" {
 			continue
 		}
 
-		apiObjects[tfMap["name"].(string)] = expandRemediationParameterValue(tfMap)
+		apiObjects[tfMap[names.AttrName].(string)] = expandRemediationParameterValue(tfMap)
 	}
 
 	return apiObjects
@@ -389,7 +390,7 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 
 	for key, value := range apiObjects {
 		tfMap := map[string]interface{}{
-			"name": key,
+			names.AttrName: key,
 		}
 
 		if v := value.ResourceValue; v != nil {
@@ -410,11 +411,11 @@ func flattenRemediationParameterValues(apiObjects map[string]types.RemediationPa
 	}
 
 	slices.SortFunc(tfList, func(a, b interface{}) int {
-		if a.(map[string]interface{})["name"].(string) < b.(map[string]interface{})["name"].(string) {
+		if a.(map[string]interface{})[names.AttrName].(string) < b.(map[string]interface{})[names.AttrName].(string) {
 			return -1
 		}
 
-		if a.(map[string]interface{})["name"].(string) > b.(map[string]interface{})["name"].(string) {
+		if a.(map[string]interface{})[names.AttrName].(string) > b.(map[string]interface{})[names.AttrName].(string) {
 			return 1
 		}
 

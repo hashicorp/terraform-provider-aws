@@ -24,7 +24,7 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 				Config: testAccFoundationModelDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "customizations_supported.#"),
-					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(datasourceName, "inference_types_supported.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "input_modalities.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_arn"),

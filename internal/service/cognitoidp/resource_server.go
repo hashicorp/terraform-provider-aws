@@ -41,7 +41,7 @@ func resourceResourceServer() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -90,7 +90,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 
 	params := &cognitoidentityprovider.CreateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		UserPoolId: aws.String(userPoolID),
 	}
 
@@ -151,7 +151,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("identifier", resp.ResourceServer.Identifier)
-	d.Set("name", resp.ResourceServer.Name)
+	d.Set(names.AttrName, resp.ResourceServer.Name)
 	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
 
 	scopes := flattenServerScope(resp.ResourceServer.Scopes)
@@ -181,7 +181,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Scopes:     expandServerScope(d.Get("scope").(*schema.Set).List()),
 		UserPoolId: aws.String(userPoolID),
 	}

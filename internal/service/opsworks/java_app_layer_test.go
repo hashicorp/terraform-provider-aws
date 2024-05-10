@@ -36,7 +36,7 @@ func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "jvm_options", ""),
 					resource.TestCheckResourceAttr(resourceName, "jvm_type", "openjdk"),
 					resource.TestCheckResourceAttr(resourceName, "jvm_version", "7"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Java App Server"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Java App Server"),
 				),
 			},
 		},

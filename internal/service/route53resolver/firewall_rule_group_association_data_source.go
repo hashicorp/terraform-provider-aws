@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_resolver_firewall_rule_group_association")
@@ -18,7 +19,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 		ReadWithoutTimeout: dataSourceRuleGroupAssociationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +51,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +59,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +67,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +86,7 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
-	d.Set("arn", ruleGroupAssociation.Arn)
+	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
 	d.Set("creation_time", ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
@@ -93,11 +94,11 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("managed_owner_name", ruleGroupAssociation.ManagedOwnerName)
 	d.Set("modification_time", ruleGroupAssociation.ModificationTime)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
-	d.Set("name", ruleGroupAssociation.Name)
+	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set("priority", ruleGroupAssociation.Priority)
-	d.Set("status", ruleGroupAssociation.Status)
+	d.Set(names.AttrStatus, ruleGroupAssociation.Status)
 	d.Set("status_message", ruleGroupAssociation.StatusMessage)
-	d.Set("vpc_id", ruleGroupAssociation.VpcId)
+	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
 	return nil
 }

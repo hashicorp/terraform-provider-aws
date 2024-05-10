@@ -9,59 +9,59 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_lambda_alias")
-func ResourceAlias() *schema.Resource {
+// @SDKResource("aws_lambda_alias", name="Alias")
+func resourceAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAliasCreate,
 		ReadWithoutTimeout:   resourceAliasRead,
 		UpdateWithoutTimeout: resourceAliasUpdate,
 		DeleteWithoutTimeout: resourceAliasDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceAliasImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"function_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Using function name or ARN should not be shown as a diff.
-					// Try to convert the old and new values from ARN to function name
-					oldFunctionName, oldFunctionNameErr := GetFunctionNameFromARN(old)
-					newFunctionName, newFunctionNameErr := GetFunctionNameFromARN(new)
-					return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
-				},
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentFunctionNameOrARN,
 			},
 			"function_version": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"invoke_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"routing_config": {
 				Type:     schema.TypeList,
@@ -81,132 +81,100 @@ func ResourceAlias() *schema.Resource {
 	}
 }
 
-// resourceAliasCreate maps to:
-// CreateAlias in the API / SDK
 func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName := d.Get("function_name").(string)
-	aliasName := d.Get("name").(string)
-
-	log.Printf("[DEBUG] Creating Lambda alias: alias %s for function %s", aliasName, functionName)
-
-	params := &lambda.CreateAliasInput{
-		Description:     aws.String(d.Get("description").(string)),
-		FunctionName:    aws.String(functionName),
+	name := d.Get(names.AttrName).(string)
+	input := &lambda.CreateAliasInput{
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
-		Name:            aws.String(aliasName),
+		Name:            aws.String(name),
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
-	aliasConfiguration, err := conn.CreateAliasWithContext(ctx, params)
+	output, err := conn.CreateAlias(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Lambda alias: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Alias (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
+	d.SetId(aws.ToString(output.AliasArn))
 
 	return append(diags, resourceAliasRead(ctx, d, meta)...)
 }
 
-// resourceAliasRead maps to:
-// GetAlias in the API / SDK
 func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
+	output, err := findAliasByTwoPartKey(ctx, conn, d.Get("function_name").(string), d.Get(names.AttrName).(string))
 
-	params := &lambda.GetAliasInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-		Name:         aws.String(d.Get("name").(string)),
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lambda Alias %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	aliasConfiguration, err := conn.GetAliasWithContext(ctx, params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading Lambda Alias (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", aliasConfiguration.Description)
-	d.Set("function_version", aliasConfiguration.FunctionVersion)
-	d.Set("name", aliasConfiguration.Name)
-	d.Set("arn", aliasConfiguration.AliasArn)
-	d.SetId(aws.StringValue(aliasConfiguration.AliasArn))
-
-	invokeArn := functionInvokeARN(*aliasConfiguration.AliasArn, meta)
-	d.Set("invoke_arn", invokeArn)
-
-	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(aliasConfiguration.RoutingConfig)); err != nil {
+	aliasARN := aws.ToString(output.AliasArn)
+	d.SetId(aliasARN) // For import.
+	d.Set(names.AttrARN, aliasARN)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("function_version", output.FunctionVersion)
+	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
+	d.Set(names.AttrName, output.Name)
+	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)
 	}
 
 	return diags
 }
 
-// resourceAliasDelete maps to:
-// DeleteAlias in the API / SDK
-func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
-
-	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
-
-	params := &lambda.DeleteAliasInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-		Name:         aws.String(d.Get("name").(string)),
-	}
-
-	_, err := conn.DeleteAliasWithContext(ctx, params)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Lambda alias: %s", err)
-	}
-
-	return diags
-}
-
-// resourceAliasUpdate maps to:
-// UpdateAlias in the API / SDK
 func resourceAliasUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LambdaConn(ctx)
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
-
-	params := &lambda.UpdateAliasInput{
-		Description:     aws.String(d.Get("description").(string)),
+	input := &lambda.UpdateAliasInput{
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		FunctionName:    aws.String(d.Get("function_name").(string)),
 		FunctionVersion: aws.String(d.Get("function_version").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		RoutingConfig:   expandAliasRoutingConfiguration(d.Get("routing_config").([]interface{})),
 	}
 
-	_, err := conn.UpdateAliasWithContext(ctx, params)
+	_, err := conn.UpdateAlias(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Lambda alias: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Alias (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceAliasRead(ctx, d, meta)...)
+}
+
+func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+
+	log.Printf("[INFO] Deleting Lambda Alias: %s", d.Id())
+	_, err := conn.DeleteAlias(ctx, &lambda.DeleteAliasInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Alias (%s): %s", d.Id(), err)
 	}
 
 	return diags
-}
-
-func expandAliasRoutingConfiguration(l []interface{}) *lambda.AliasRoutingConfiguration {
-	aliasRoutingConfiguration := &lambda.AliasRoutingConfiguration{}
-
-	if len(l) == 0 || l[0] == nil {
-		return aliasRoutingConfiguration
-	}
-
-	m := l[0].(map[string]interface{})
-
-	if v, ok := m["additional_version_weights"]; ok {
-		aliasRoutingConfiguration.AdditionalVersionWeights = expandFloat64Map(v.(map[string]interface{}))
-	}
-
-	return aliasRoutingConfiguration
 }
 
 func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -219,6 +187,72 @@ func resourceAliasImport(ctx context.Context, d *schema.ResourceData, meta inter
 	alias := idParts[1]
 
 	d.Set("function_name", functionName)
-	d.Set("name", alias)
+	d.Set(names.AttrName, alias)
 	return []*schema.ResourceData{d}, nil
+}
+
+func findAliasByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, aliasName string) (*lambda.GetAliasOutput, error) {
+	input := &lambda.GetAliasInput{
+		FunctionName: aws.String(functionName),
+		Name:         aws.String(aliasName),
+	}
+
+	return findAlias(ctx, conn, input)
+}
+
+func findAlias(ctx context.Context, conn *lambda.Client, input *lambda.GetAliasInput) (*lambda.GetAliasOutput, error) {
+	output, err := conn.GetAlias(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func expandAliasRoutingConfiguration(tfList []interface{}) *awstypes.AliasRoutingConfiguration {
+	apiObject := &awstypes.AliasRoutingConfiguration{}
+
+	if len(tfList) == 0 || tfList[0] == nil {
+		return apiObject
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["additional_version_weights"]; ok {
+		apiObject.AdditionalVersionWeights = flex.ExpandFloat64ValueMap(v.(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func flattenAliasRoutingConfiguration(apiObject *awstypes.AliasRoutingConfiguration) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"additional_version_weights": apiObject.AdditionalVersionWeights,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func suppressEquivalentFunctionNameOrARN(k, old, new string, d *schema.ResourceData) bool {
+	// Using function name or ARN should not be shown as a diff.
+	// Try to convert the old and new values from ARN to function name
+	oldFunctionName, oldFunctionNameErr := getFunctionNameFromARN(old)
+	newFunctionName, newFunctionNameErr := getFunctionNameFromARN(new)
+	return (oldFunctionName == new && oldFunctionNameErr == nil) || (newFunctionName == old && newFunctionNameErr == nil)
 }

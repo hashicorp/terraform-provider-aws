@@ -50,7 +50,7 @@ func flattenResourceLocation(apiObject *types.ResourceLocation) map[string]inter
 	m := map[string]interface{}{}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		m["availability_zone"] = aws.ToString(v)
+		m[names.AttrAvailabilityZone] = aws.ToString(v)
 	}
 
 	if v := apiObject.RegionName; string(v) != "" {

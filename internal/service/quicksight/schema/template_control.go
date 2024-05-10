@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func filterControlsSchema() *schema.Schema {
@@ -30,7 +31,7 @@ func filterControlsSchema() *schema.Schema {
 							"source_filter_id":  idSchema(),
 							"title":             stringSchema(true, validation.StringLenBetween(1, 2048)),
 							"display_options":   dateTimePickerControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimePickerControlDisplayOptions.html
-							"type":              stringSchema(false, validation.StringInSlice(quicksight.SheetControlDateTimePickerType_Values(), false)),
+							names.AttrType:      stringSchema(false, validation.StringInSlice(quicksight.SheetControlDateTimePickerType_Values(), false)),
 						},
 					},
 				},
@@ -47,7 +48,7 @@ func filterControlsSchema() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 dropDownControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DropDownControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							"type":                            stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
+							names.AttrType:                    stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
 						},
 					},
 				},
@@ -64,7 +65,7 @@ func filterControlsSchema() *schema.Schema {
 							"cascading_control_configuration": cascadingControlConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CascadingControlConfiguration.html
 							"display_options":                 listControlDisplayOptionsSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ListControlDisplayOptions.html
 							"selectable_values":               filterSelectableValuesSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterSelectableValues.html
-							"type":                            stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
+							names.AttrType:                    stringSchema(false, validation.StringInSlice(quicksight.SheetControlListType_Values(), false)),
 						},
 					},
 				},
@@ -116,7 +117,7 @@ func filterControlsSchema() *schema.Schema {
 								Required: true,
 							},
 							"display_options": sliderControlDisplayOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SliderControlDisplayOptions.html
-							"type":            stringSchema(false, validation.StringInSlice(quicksight.SheetControlSliderType_Values(), false)),
+							names.AttrType:    stringSchema(false, validation.StringInSlice(quicksight.SheetControlSliderType_Values(), false)),
 						},
 					},
 				},
@@ -362,7 +363,7 @@ func expandFilterDateTimePickerControl(tfList []interface{}) *quicksight.FilterD
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["display_options"].([]interface{}); ok && len(v) > 0 {
@@ -415,7 +416,7 @@ func expandFilterDropDownControl(tfList []interface{}) *quicksight.FilterDropDow
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -543,7 +544,7 @@ func expandFilterSelectableValues(tfList []interface{}) *quicksight.FilterSelect
 
 	values := &quicksight.FilterSelectableValues{}
 
-	if v, ok := tfMap["values"].([]interface{}); ok {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok {
 		values.Values = flex.ExpandStringList(v)
 	}
 
@@ -571,7 +572,7 @@ func expandFilterListControl(tfList []interface{}) *quicksight.FilterListControl
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -702,7 +703,7 @@ func expandFilterSliderControl(tfList []interface{}) *quicksight.FilterSliderCon
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["maximum_value"].(float64); ok {
@@ -940,7 +941,7 @@ func expandParameterDropDownControl(tfList []interface{}) *quicksight.ParameterD
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -977,7 +978,7 @@ func expandParameterListControl(tfList []interface{}) *quicksight.ParameterListC
 	if v, ok := tfMap["title"].(string); ok && v != "" {
 		control.Title = aws.String(v)
 	}
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		control.Type = aws.String(v)
 	}
 	if v, ok := tfMap["cascading_control_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1142,7 +1143,7 @@ func flattenFilterDateTimePickerControl(apiObject *quicksight.FilterDateTimePick
 		tfMap["display_options"] = flattenDateTimePickerControlDisplayOptions(apiObject.DisplayOptions)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}
@@ -1228,7 +1229,7 @@ func flattenFontWeight(apiObject *quicksight.FontWeight) []interface{} {
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 
 	return []interface{}{tfMap}
@@ -1254,7 +1255,7 @@ func flattenFilterDropDownControl(apiObject *quicksight.FilterDropDownControl) [
 		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}
@@ -1333,7 +1334,7 @@ func flattenFilterSelectableValues(apiObject *quicksight.FilterSelectableValues)
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flex.FlattenStringList(apiObject.Values)
+		tfMap[names.AttrValues] = flex.FlattenStringList(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1359,7 +1360,7 @@ func flattenFilterListControl(apiObject *quicksight.FilterListControl) []interfa
 		tfMap["selectable_values"] = flattenFilterSelectableValues(apiObject.SelectableValues)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}
@@ -1447,7 +1448,7 @@ func flattenFilterSliderControl(apiObject *quicksight.FilterSliderControl) []int
 		tfMap["display_options"] = flattenSliderControlDisplayOptions(apiObject.DisplayOptions)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap[names.AttrType] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}

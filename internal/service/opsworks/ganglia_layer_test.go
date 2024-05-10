@@ -31,7 +31,7 @@ func TestAccOpsWorksGangliaLayer_basic(t *testing.T) {
 				Config: testAccGangliaLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", "Ganglia"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Ganglia"),
 					resource.TestCheckResourceAttrSet(resourceName, "password"),
 					resource.TestCheckResourceAttr(resourceName, "url", "/ganglia"),
 					resource.TestCheckResourceAttr(resourceName, "username", "opsworks"),

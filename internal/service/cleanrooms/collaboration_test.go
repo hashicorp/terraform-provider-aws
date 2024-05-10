@@ -40,8 +40,8 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 				Config: testAccCollaborationConfig_basic(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "name", TEST_NAME),
-					resource.TestCheckResourceAttr(resourceName, "description", TEST_DESCRIPTION),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "query_log_status", TEST_QUERY_LOG_STATUS),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "data_encryption_metadata.*", map[string]string{
 						"allow_clear_text": "true",
@@ -49,7 +49,7 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 						"allow_joins_on_columns_with_different_names": "true",
 						"preserve_nulls": "false",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cleanrooms", regexache.MustCompile(`collaboration:*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cleanrooms", regexache.MustCompile(`collaboration:*`)),
 					testCheckCreatorMember(ctx, resourceName),
 					testAccCollaborationTags(ctx, resourceName, map[string]string{
 						"Project": TEST_TAG,
@@ -113,8 +113,8 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 				Config: testAccCollaborationConfig_basic(updatedName, "updated Description", "Not Terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationIsTheSame(resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated Description"),
 					testAccCollaborationTags(ctx, resourceName, map[string]string{
 						"Project": "Not Terraform",
 					}),
@@ -428,7 +428,7 @@ func testAccCollaborationTags(ctx context.Context, name string, expectedTags map
 			return fmt.Errorf("Collaboration: %s not found in resources", name)
 		}
 		tagsOut, err := conn.ListTagsForResource(ctx, &cleanrooms.ListTagsForResourceInput{
-			ResourceArn: aws.String(collaboration.Primary.Attributes["arn"]),
+			ResourceArn: aws.String(collaboration.Primary.Attributes[names.AttrARN]),
 		})
 		if err != nil {
 			return err
@@ -440,8 +440,8 @@ func testAccCollaborationTags(ctx context.Context, name string, expectedTags map
 	}
 }
 
-const TEST_NAME = "name"
-const TEST_DESCRIPTION = "description"
+const TEST_NAME = names.AttrName
+const TEST_DESCRIPTION = names.AttrDescription
 const TEST_TAG = "Terraform"
 const TEST_MEMBER_ABILITIES = "[\"CAN_QUERY\", \"CAN_RECEIVE_RESULTS\"]"
 const TEST_CREATOR_DISPLAY_NAME = "creator"

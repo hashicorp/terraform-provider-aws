@@ -39,7 +39,7 @@ func ResourceEgressOnlyInternetGateway() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,7 +55,7 @@ func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.Reso
 	input := &ec2.CreateEgressOnlyInternetGatewayInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeEgressOnlyInternetGateway),
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		VpcId:             aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
 	output, err := conn.CreateEgressOnlyInternetGatewayWithContext(ctx, input)
@@ -90,9 +90,9 @@ func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.Resour
 	ig := outputRaw.(*ec2.EgressOnlyInternetGateway)
 
 	if len(ig.Attachments) == 1 && aws.StringValue(ig.Attachments[0].State) == ec2.AttachmentStatusAttached {
-		d.Set("vpc_id", ig.Attachments[0].VpcId)
+		d.Set(names.AttrVPCID, ig.Attachments[0].VpcId)
 	} else {
-		d.Set("vpc_id", nil)
+		d.Set(names.AttrVPCID, nil)
 	}
 
 	setTagsOut(ctx, ig.Tags)

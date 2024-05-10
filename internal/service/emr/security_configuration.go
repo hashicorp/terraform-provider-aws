@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_emr_security_configuration", name="Security Configuration")
@@ -44,20 +45,20 @@ func resourceSecurityConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 10280),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 10280-id.UniqueIDSuffixLength),
 			},
 		},
@@ -69,8 +70,8 @@ func resourceSecurityConfigurationCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	name := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-emr-sc-"),
 	).Generate()
 	input := &emr.CreateSecurityConfigurationInput{
@@ -107,8 +108,8 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("configuration", output.SecurityConfiguration)
 	d.Set("creation_date", aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
-	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set(names.AttrName, output.Name)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
 
 	return diags
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_docdb_orderable_db_instance")
@@ -22,7 +23,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -32,7 +33,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Optional: true,
 				Default:  engineDocDB,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -77,7 +78,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("engine_version"); ok {
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	}
 
@@ -119,11 +120,11 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(orderableDBInstance.DBInstanceClass))
-	d.Set("availability_zones", tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *docdb.AvailabilityZone) string {
+	d.Set(names.AttrAvailabilityZones, tfslices.ApplyToAll(orderableDBInstance.AvailabilityZones, func(v *docdb.AvailabilityZone) string {
 		return aws.StringValue(v.Name)
 	}))
 	d.Set("engine", orderableDBInstance.Engine)
-	d.Set("engine_version", orderableDBInstance.EngineVersion)
+	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("license_model", orderableDBInstance.LicenseModel)
 	d.Set("vpc", orderableDBInstance.Vpc)

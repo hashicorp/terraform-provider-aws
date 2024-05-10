@@ -48,7 +48,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,7 +120,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -182,12 +182,12 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EKS Identity Provider Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", oidc.IdentityProviderConfigArn)
+	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
 	d.Set("cluster_name", oidc.ClusterName)
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}
-	d.Set("status", oidc.Status)
+	d.Set(names.AttrStatus, oidc.Status)
 
 	setTagsOut(ctx, oidc.Tags)
 

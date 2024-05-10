@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_object_lambda_access_point")
@@ -37,7 +38,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -48,7 +49,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +123,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -135,10 +136,10 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	id := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 	input := &s3control.CreateAccessPointForObjectLambdaInput{
 		AccountId: aws.String(accountID),
@@ -180,7 +181,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3objectlambda.html#amazons3objectlambda-resources-for-iam-policies.
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -189,11 +190,11 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	outputAlias, err := findObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
 

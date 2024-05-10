@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,7 +47,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
@@ -55,7 +56,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					testCheckEngineStuffDefault(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 				),
 			},
@@ -90,10 +91,10 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 					// Even though it is ignored, the API returns `true` in this case
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 			{
@@ -160,7 +161,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "7.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -194,7 +195,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "4.0.10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "4.0.10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "4.0.10"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "4.0.10"),
 				),
 			},
@@ -203,7 +204,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
 					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
@@ -212,7 +213,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v3),
 					testAccCheckReplicationGroupNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
@@ -227,7 +228,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v4),
 					testAccCheckReplicationGroupRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 				),
 			},
@@ -236,7 +237,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v5),
 					testAccCheckReplicationGroupNotRecreated(&v4, &v5),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -245,7 +246,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v6),
 					testAccCheckReplicationGroupRecreated(&v5, &v6),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.0\.[[:digit:]]+$`)),
 				),
 			},
@@ -273,7 +274,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.x"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.x"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
 				),
 			},
@@ -284,7 +285,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
 					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
 				),
 			},
@@ -341,7 +342,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 				),
 			},
 			{
@@ -355,7 +356,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "description", "updated description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "updated description"),
 				),
 			},
 		},
@@ -511,7 +512,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				Config: testAccReplicationGroupConfig_parameterName(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName1, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName1, names.AttrName),
 				),
 			},
 			{
@@ -521,14 +522,14 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
 				Config: testAccReplicationGroupConfig_parameterName(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", parameterGroupResourceName2, names.AttrName),
 				),
 			},
 		},
@@ -882,7 +883,7 @@ func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
@@ -923,7 +924,7 @@ func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "cache.t3.small"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
@@ -967,7 +968,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
-					resource.TestCheckResourceAttr(resourceName, "port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
 					resource.TestCheckResourceAttrSet(resourceName, "configuration_endpoint_address"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
@@ -1023,7 +1024,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -1056,7 +1057,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 4, []kvp{
-						{"key", "value"},
+						{names.AttrKey, names.AttrValue},
 					}),
 					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
@@ -1071,7 +1072,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 6, []kvp{
-						{"key", "value"},
+						{names.AttrKey, names.AttrValue},
 					}),
 					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
 				),
@@ -1305,7 +1306,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -1565,7 +1566,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 				Config: testAccReplicationGroupConfig_useCMKKMSKeyID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 				),
 			},
 		},
@@ -1598,7 +1599,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key", "value"},
+						{names.AttrKey, names.AttrValue},
 					}),
 				),
 			},
@@ -1617,7 +1618,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "4"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "4"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 4, []kvp{
-						{"key", "value"},
+						{names.AttrKey, names.AttrValue},
 					}),
 				),
 			},
@@ -1630,7 +1631,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "2"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key", "value"},
+						{names.AttrKey, names.AttrValue},
 					}),
 				),
 			},
@@ -2102,7 +2103,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.4", "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.4"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1"},
 					}),
@@ -2112,7 +2113,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", "key1", "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{"key1", "value1updated"},
 					}),
@@ -2169,7 +2170,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "false"),
 				),
 			},
 			{
@@ -2182,7 +2183,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, "true"),
 				),
 			},
 		},
@@ -2263,11 +2264,11 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 				Config: testAccReplicationGroupConfig_globalIDBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg, &pg),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg, &pg),
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, primaryGroupResourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_cache_clusters", "2"),
@@ -2316,18 +2317,18 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, initialNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg1, &pg1),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg1, &pg1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_replication_group_id", "aws_elasticache_global_replication_group.test", "global_replication_group_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_type", primaryGroupResourceName, "node_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", primaryGroupResourceName, "engine"),
-					resource.TestCheckResourceAttrPair(resourceName, "engine_version", primaryGroupResourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, primaryGroupResourceName, names.AttrEngineVersion),
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(fmt.Sprintf("^global-datastore-%s-", rName))),
 
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", strconv.Itoa(initialNumCacheClusters)),
 					resource.TestCheckResourceAttrPair(resourceName, "multi_az_enabled", primaryGroupResourceName, "multi_az_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "automatic_failover_enabled", primaryGroupResourceName, "automatic_failover_enabled"),
 
-					resource.TestCheckResourceAttr(resourceName, "port", "16379"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "16379"),
 
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_encryption_enabled", primaryGroupResourceName, "transit_encryption_enabled"),
@@ -2344,7 +2345,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, updatedNumCacheClusters),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg2, &pg2),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg2, &pg2),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", strconv.Itoa(updatedNumCacheClusters)),
 				),
 			},
@@ -2414,7 +2415,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 2, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg1, &pg1),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg1, &pg1),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "1"),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
@@ -2435,7 +2436,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 1, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
-					testAccCheckReplicationGroupParameterGroup(ctx, &rg2, &pg2),
+					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg2, &pg2),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "3"),
 
@@ -2498,7 +2499,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 					testCheckRedisEngineVersionLatest(ctx, &version),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					func(s *terraform.State) error {
-						return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+						return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 					},
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "true"),
 				),
@@ -2552,7 +2553,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
@@ -2609,7 +2610,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -2656,7 +2657,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 			{
@@ -2716,7 +2717,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
 					"auth_token_update_strategy",
-					"engine_version", // because we can't ignore the diff between `6.x` and `6.2`
+					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
 			},
 		},
@@ -2730,17 +2731,15 @@ func testAccCheckReplicationGroupExists(ctx context.Context, n string, v *elasti
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No replication group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("ElastiCache error: %w", err)
+			return err
 		}
 
-		*v = *rg
+		*v = *output
 
 		return nil
 	}
@@ -2754,79 +2753,90 @@ func testAccCheckReplicationGroupDestroy(ctx context.Context) resource.TestCheck
 			if rs.Type != "aws_elasticache_replication_group" {
 				continue
 			}
+
 			_, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
+
 			return fmt.Errorf("ElastiCache Replication Group (%s) still exists", rs.Primary.ID)
 		}
 		return nil
 	}
 }
 
-func testAccCheckReplicationGroupParameterGroup(ctx context.Context, rg *elasticache.ReplicationGroup, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckReplicationGroupParameterGroupExists(ctx context.Context, rg *elasticache.ReplicationGroup, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		cacheCluster := rg.NodeGroups[0].NodeGroupMembers[0]
-		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, aws.StringValue(cacheCluster.CacheClusterId))
+		cacheClusterID := aws.StringValue(rg.NodeGroups[0].NodeGroupMembers[0].CacheClusterId)
+		cluster, err := tfelasticache.FindCacheClusterByID(ctx, conn, cacheClusterID)
+
 		if err != nil {
-			return fmt.Errorf("could not retrieve cache cluster (%s): %w", aws.StringValue(cacheCluster.CacheClusterId), err)
+			return fmt.Errorf("reading ElastiCache Cluster (%s): %w", cacheClusterID, err)
 		}
 
-		paramGroupName := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+		name := aws.StringValue(cluster.CacheParameterGroup.CacheParameterGroupName)
+		output, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
-		group, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
 		if err != nil {
-			return fmt.Errorf("error retrieving parameter group (%s): %w", paramGroupName, err)
+			return fmt.Errorf("reading ElastiCache Parameter Group (%s): %w", name, err)
 		}
 
-		*pg = *group
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, pg *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+func testAccCheckGlobalReplicationGroupMemberParameterGroupDestroy(ctx context.Context, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		paramGroupName := aws.StringValue(pg.CacheParameterGroupName)
+		name := aws.StringValue(v.CacheParameterGroupName)
+		_, err := tfelasticache.FindCacheParameterGroupByName(ctx, conn, name)
 
-		_, err := tfelasticache.FindParameterGroupByName(ctx, conn, paramGroupName)
 		if tfresource.NotFound(err) {
 			return nil
 		}
-		if err != nil {
-			return fmt.Errorf("error finding parameter group (%s): %w", paramGroupName, err)
-		}
-		return fmt.Errorf("Cache Parameter Group (%s) still exists", paramGroupName)
-	}
-}
-
-func testAccCheckReplicationGroupUserGroup(ctx context.Context, resourceName, userGroupID string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
-		rg, err := tfelasticache.FindReplicationGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-		if len(rg.UserGroupIds) < 1 {
-			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any usergroups", resourceName)
+
+		return fmt.Errorf("ElastiCache Parameter Group (%s) still exists", name)
+	}
+}
+
+func testAccCheckReplicationGroupUserGroup(ctx context.Context, n, userGroupID string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if *rg.UserGroupIds[0] != userGroupID {
-			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned usergroup (%s), usergroup was (%s) instead", resourceName, userGroupID, *rg.UserGroupIds[0])
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+
+		id := rs.Primary.ID
+		output, err := tfelasticache.FindReplicationGroupByID(ctx, conn, id)
+
+		if err != nil {
+			return err
 		}
+
+		if len(output.UserGroupIds) < 1 {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned any User Groups", id)
+		}
+
+		if v := aws.StringValue(output.UserGroupIds[0]); v != userGroupID {
+			return fmt.Errorf("ElastiCache Replication Group (%s) was not assigned User Group (%s), User Group was (%s) instead", n, userGroupID, v)
+		}
+
 		return nil
 	}
 }
@@ -2861,7 +2871,7 @@ func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resou
 		testCheckRedisEngineVersionLatest(ctx, &version),
 		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
@@ -2902,15 +2912,21 @@ func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticac
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && !strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}
@@ -2926,7 +2942,7 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName
 		testCheckRedisEngineVersionLatest(ctx, &version),
 		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 		},
 		func(s *terraform.State) error {
 			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
@@ -2943,15 +2959,21 @@ func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, vers
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
 
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
-		)
+		output, err := tfelasticache.FindCacheParameterGroup(ctx, conn, &elasticache.DescribeCacheParameterGroupsInput{}, tfslices.PredicateAnd(
+			func(v *elasticache.CacheParameterGroup) bool {
+				return aws.StringValue(v.CacheParameterGroupFamily) == aws.StringValue(version.CacheParameterGroupFamily)
+			},
+			func(v *elasticache.CacheParameterGroup) bool {
+				name := aws.StringValue(v.CacheParameterGroupName)
+				return strings.HasPrefix(name, "default.") && strings.HasSuffix(name, ".cluster.on")
+			},
+		))
+
 		if err != nil {
 			return err
 		}
 
-		*v = *parameterGroup
+		*v = *output
 
 		return nil
 	}
@@ -4369,7 +4391,10 @@ func resourceReplicationGroupModify(ctx context.Context, conn *elasticache.Elast
 		return fmt.Errorf("error requesting modification: %w", err)
 	}
 
-	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, tfelasticache.ReplicationGroupAvailableModifyDelay)
+	const (
+		delay = 30 * time.Second
+	)
+	_, err = tfelasticache.WaitReplicationGroupAvailable(ctx, conn, aws.StringValue(input.ReplicationGroupId), timeout, delay)
 	if err != nil {
 		return fmt.Errorf("error waiting for modification: %w", err)
 	}

@@ -36,7 +36,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,13 +46,13 @@ func ResourceQueryLogConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validResolverName,
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func ResourceQueryLogConfig() *schema.Resource {
 func resourceQueryLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &route53resolver.CreateResolverQueryLogConfigInput{
 		CreatorRequestId: aws.String(id.PrefixedUniqueId("tf-r53-resolver-query-log-config-")),
 		DestinationArn:   aws.String(d.Get("destination_arn").(string)),
@@ -110,10 +110,10 @@ func resourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := aws.StringValue(queryLogConfig.Arn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("destination_arn", queryLogConfig.DestinationArn)
-	d.Set("name", queryLogConfig.Name)
-	d.Set("owner_id", queryLogConfig.OwnerId)
+	d.Set(names.AttrName, queryLogConfig.Name)
+	d.Set(names.AttrOwnerID, queryLogConfig.OwnerId)
 	d.Set("share_status", queryLogConfig.ShareStatus)
 
 	return nil

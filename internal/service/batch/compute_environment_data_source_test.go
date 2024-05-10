@@ -27,13 +27,13 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_name", resourceName, "compute_environment_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "service_role", resourceName, "service_role"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "0"),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName, 30, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.%", "2"),
 					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.terminate_jobs_on_update", "false"),

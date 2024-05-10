@@ -36,10 +36,10 @@ func testAccType_basic(t *testing.T) {
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName, &typ),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+")),
-					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+")),
+					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "format", "SDL"),
-					resource.TestCheckResourceAttr(resourceName, "name", "Mutation"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Mutation"),
 				),
 			},
 			{

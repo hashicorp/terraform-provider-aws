@@ -66,7 +66,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
@@ -80,13 +80,13 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
@@ -95,7 +95,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				PlanModifiers: []planmodifier.String{
@@ -130,7 +130,7 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
@@ -35,12 +36,12 @@ func resourceIPSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,11 +50,11 @@ func resourceIPSet() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -73,7 +74,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateIPSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(d.Get(names.AttrName).(string)),
 		}
 		return conn.CreateIPSetWithContext(ctx, params)
 	})
@@ -105,7 +106,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("ip_set_descriptor", flattenIPSetDescriptorWR(resp.IPSet.IPSetDescriptors))
-	d.Set("name", resp.IPSet.Name)
+	d.Set(names.AttrName, resp.IPSet.Name)
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -114,7 +115,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("ipset/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	return diags
 }
@@ -124,8 +125,8 @@ func flattenIPSetDescriptorWR(in []*waf.IPSetDescriptor) []interface{} {
 
 	for i, descriptor := range in {
 		d := map[string]interface{}{
-			"type":  *descriptor.Type,
-			"value": *descriptor.Value,
+			names.AttrType:  *descriptor.Type,
+			names.AttrValue: *descriptor.Value,
 		}
 		descriptors[i] = d
 	}
@@ -231,8 +232,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
@@ -248,8 +249,8 @@ func DiffIPSetDescriptors(oldD, newD []interface{}) [][]*waf.IPSetUpdate {
 		updates = append(updates, &waf.IPSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			IPSetDescriptor: &waf.IPSetDescriptor{
-				Type:  aws.String(descriptor["type"].(string)),
-				Value: aws.String(descriptor["value"].(string)),
+				Type:  aws.String(descriptor[names.AttrType].(string)),
+				Value: aws.String(descriptor[names.AttrValue].(string)),
 			},
 		})
 	}
