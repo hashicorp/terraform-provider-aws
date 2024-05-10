@@ -85,7 +85,7 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -949,7 +949,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 		}
 		cacheNodeData = append(cacheNodeData, map[string]interface{}{
 			names.AttrID:               aws.StringValue(node.CacheNodeId),
-			"address":                  aws.StringValue(node.Endpoint.Address),
+			names.AttrAddress:          aws.StringValue(node.Endpoint.Address),
 			names.AttrPort:             aws.Int64Value(node.Endpoint.Port),
 			names.AttrAvailabilityZone: aws.StringValue(node.CustomerAvailabilityZone),
 			"outpost_arn":              aws.StringValue(node.CustomerOutpostArn),
