@@ -130,7 +130,7 @@ func resourceCostCategory() *schema.Resource {
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.CostCategorySplitChargeMethod](),
 							},
-							"parameter": {
+							names.AttrParameter: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
@@ -640,7 +640,7 @@ func expandCostCategorySplitChargeRule(tfMap map[string]interface{}) *awstypes.C
 		Source:  aws.String(tfMap[names.AttrSource].(string)),
 		Targets: flex.ExpandStringValueSet(tfMap["targets"].(*schema.Set)),
 	}
-	if v, ok := tfMap["parameter"]; ok {
+	if v, ok := tfMap[names.AttrParameter]; ok {
 		apiObject.Parameters = expandCostCategorySplitChargeRuleParameters(v.(*schema.Set).List())
 	}
 
@@ -847,7 +847,7 @@ func flattenCostCategorySplitChargeRule(apiObject *awstypes.CostCategorySplitCha
 
 	tfMap := map[string]interface{}{}
 	tfMap["method"] = string(apiObject.Method)
-	tfMap["parameter"] = flattenCostCategorySplitChargeRuleParameters(apiObject.Parameters)
+	tfMap[names.AttrParameter] = flattenCostCategorySplitChargeRuleParameters(apiObject.Parameters)
 	tfMap[names.AttrSource] = aws.ToString(apiObject.Source)
 	tfMap["targets"] = apiObject.Targets
 
