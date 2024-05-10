@@ -9,8 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -435,22 +433,18 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetWebACL(ctx, &wafregional.GetWebACLInput{
-				WebACLId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.WebACL.WebACLId == rs.Primary.ID {
-					return fmt.Errorf("WebACL %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindWebACLByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the WebACL is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional Web ACL %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -464,25 +458,17 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL)
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WebACL ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetWebACL(ctx, &wafregional.GetWebACLInput{
-			WebACLId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindWebACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.WebACL.WebACLId == rs.Primary.ID {
-			*v = *resp.WebACL
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WebACL (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 

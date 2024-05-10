@@ -5,7 +5,6 @@ package wafregional
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,12 +12,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,11 +41,6 @@ func resourceWebACL() *schema.Resource {
 			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			"default_action": {
 				Type:     schema.TypeList,
@@ -101,6 +97,11 @@ func resourceWebACL() *schema.Resource {
 				},
 			},
 			"metric_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -168,63 +169,59 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	wr := NewRetryer(conn, region)
-	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+	name := d.Get(names.AttrName).(string)
+	output, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
+			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
-			Name:          aws.String(d.Get(names.AttrName).(string)),
+			Name:          aws.String(name),
 			Tags:          getTagsIn(ctx),
 		}
 
 		return conn.CreateWebACL(ctx, input)
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Web ACL (%s): %s", d.Get(names.AttrName).(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Regional Web ACL (%s): %s", name, err)
 	}
-	resp := out.(*wafregional.CreateWebACLOutput)
-	d.SetId(aws.ToString(resp.WebACL.WebACLId))
 
-	// The WAF API currently omits this, but use it when it becomes available
-	webACLARN := aws.ToString(resp.WebACL.WebACLArn)
-	if webACLARN == "" {
-		webACLARN = arn.ARN{
-			AccountID: meta.(*conns.AWSClient).AccountID,
+	d.SetId(aws.ToString(output.(*wafregional.CreateWebACLOutput).WebACL.WebACLId))
+
+	if loggingConfiguration := d.Get("logging_configuration").([]interface{}); len(loggingConfiguration) == 1 {
+		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
-			Region:    meta.(*conns.AWSClient).Region,
-			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 			Service:   "waf-regional",
+			Region:    meta.(*conns.AWSClient).Region,
+			AccountID: meta.(*conns.AWSClient).AccountID,
+			Resource:  "webacl/" + d.Id(),
 		}.String()
-	}
 
-	loggingConfiguration := d.Get("logging_configuration").([]interface{})
-
-	if len(loggingConfiguration) == 1 {
 		input := &wafregional.PutLoggingConfigurationInput{
-			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, webACLARN),
+			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
 		}
 
-		log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s)", d.Id())
-		if _, err := conn.PutLoggingConfiguration(ctx, input); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+		_, err := conn.PutLoggingConfiguration(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting WAF Regional Web ACL (%s) logging configuration: %s", d.Id(), err)
 		}
 	}
 
-	rules := d.Get("rule").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &wafregional.UpdateWebACLInput{
+	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
+		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACL(ctx, req)
+
+			return conn.UpdateWebACL(ctx, input)
 		})
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s) rules: %s", d.Id(), err)
 		}
 	}
 
@@ -235,63 +232,49 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 
-	params := &wafregional.GetWebACLInput{
-		WebACLId: aws.String(d.Id()),
-	}
+	webACL, err := findWebACLByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetWebACL(ctx, params)
-	if err != nil {
-		if !d.IsNewResource() && errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-			log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "unable to read WAF Regional ACL (%s): %s", d.Id(), err)
-	}
-
-	if !d.IsNewResource() && (resp == nil || resp.WebACL == nil) {
-		log.Printf("[WARN] WAF Regional ACL (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAF Regional Web ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return diags
+		return nil
 	}
 
-	// The WAF API currently omits this, but use it when it becomes available
-	webACLARN := aws.ToString(resp.WebACL.WebACLArn)
-	if webACLARN == "" {
-		webACLARN = arn.ARN{
-			AccountID: meta.(*conns.AWSClient).AccountID,
-			Partition: meta.(*conns.AWSClient).Partition,
-			Region:    meta.(*conns.AWSClient).Region,
-			Resource:  fmt.Sprintf("webacl/%s", d.Id()),
-			Service:   "waf-regional",
-		}.String()
+	if err != nil {
+		return diag.Errorf("reading WAF Regional Web ACL (%s): %s", d.Id(), err)
 	}
-	d.Set(names.AttrARN, webACLARN)
 
-	if err := d.Set("default_action", FlattenAction(resp.WebACL.DefaultAction)); err != nil {
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "waf-regional",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID,
+		Resource:  "webacl/" + d.Id(),
+	}.String()
+	d.Set(names.AttrARN, arn)
+
+	if err := d.Set("default_action", flattenAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
-	d.Set(names.AttrName, resp.WebACL.Name)
-	d.Set("metric_name", resp.WebACL.MetricName)
-	if err := d.Set("rule", FlattenWebACLRules(resp.WebACL.Rules)); err != nil {
+	d.Set("metric_name", webACL.MetricName)
+	d.Set(names.AttrName, webACL.Name)
+	if err := d.Set("rule", flattenWebACLRules(webACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
-	getLoggingConfigurationInput := &wafregional.GetLoggingConfigurationInput{
-		ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
+	input := &wafregional.GetLoggingConfigurationInput{
+		ResourceArn: aws.String(arn),
 	}
+
+	output, err := conn.GetLoggingConfiguration(ctx, input)
+
 	loggingConfiguration := []interface{}{}
-
-	log.Printf("[DEBUG] Getting WAF Regional Web ACL (%s)", d.Id())
-	getLoggingConfigurationOutput, err := conn.GetLoggingConfiguration(ctx, getLoggingConfigurationInput)
-
-	if err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return sdkdiag.AppendErrorf(diags, "getting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
-	}
-
-	if getLoggingConfigurationOutput != nil {
-		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
+	switch {
+	case err == nil:
+		loggingConfiguration = flattenLoggingConfiguration(output.LoggingConfiguration)
+	case errs.IsA[*awstypes.WAFNonexistentItemException](err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Web ACL (%s) logging configuration: %s", d.Id(), err)
 	}
 
 	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
@@ -310,41 +293,42 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("rule")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		wr := NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &wafregional.UpdateWebACLInput{
+		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACL(ctx, req)
+
+			return conn.UpdateWebACL(ctx, input)
 		})
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("logging_configuration") {
-		loggingConfiguration := d.Get("logging_configuration").([]interface{})
-
-		if len(loggingConfiguration) == 1 {
+		if loggingConfiguration := d.Get("logging_configuration").([]interface{}); len(loggingConfiguration) == 1 {
 			input := &wafregional.PutLoggingConfigurationInput{
 				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}
 
-			log.Printf("[DEBUG] Updating WAF Regional Web ACL (%s)", d.Id())
-			if _, err := conn.PutLoggingConfiguration(ctx, input); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s)", d.Id())
+			_, err := conn.PutLoggingConfiguration(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "putting WAF Regional Web ACL (%s) logging configuration: %s", d.Id(), err)
 			}
 		} else {
 			input := &wafregional.DeleteLoggingConfigurationInput{
 				ResourceArn: aws.String(d.Get(names.AttrARN).(string)),
 			}
 
-			log.Printf("[DEBUG] Deleting WAF Regional Web ACL (%s)", d.Id())
-			if _, err := conn.DeleteLoggingConfiguration(ctx, input); err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+			_, err := conn.DeleteLoggingConfiguration(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL (%s) logging configuration: %s", d.Id(), err)
 			}
 		}
 	}
@@ -356,13 +340,12 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
-	wr := NewRetryer(conn, region)
 
 	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: ExpandAction(d.Get("default_action").([]interface{})),
+				DefaultAction: expandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -370,21 +353,19 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			return conn.UpdateWebACL(ctx, input)
 		})
 
-		if err != nil {
-			if !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
-				return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
-			}
+		if err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s) rules: %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", d.Id())
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &wafregional.DeleteWebACLInput{
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &wafregional.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		return conn.DeleteWebACL(ctx, req)
+		return conn.DeleteWebACL(ctx, input)
 	})
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
@@ -396,6 +377,31 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findWebACLByID(ctx context.Context, conn *wafregional.Client, id string) (*awstypes.WebACL, error) {
+	input := &wafregional.GetWebACLInput{
+		WebACLId: aws.String(id),
+	}
+
+	output, err := conn.GetWebACL(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.WebACL == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.WebACL, nil
 }
 
 func expandLoggingConfiguration(l []interface{}, resourceARN string) *awstypes.LoggingConfiguration {
@@ -497,12 +503,102 @@ func diffWebACLRules(oldR, newR []interface{}) []awstypes.WebACLUpdate {
 			newR = append(newR[:idx], newR[idx+1:]...)
 			continue
 		}
-		updates = append(updates, ExpandWebACLUpdate(string(awstypes.ChangeActionDelete), aclRule))
+		updates = append(updates, expandWebACLUpdate(string(awstypes.ChangeActionDelete), aclRule))
 	}
 
 	for _, nr := range newR {
 		aclRule := nr.(map[string]interface{})
-		updates = append(updates, ExpandWebACLUpdate(string(awstypes.ChangeActionInsert), aclRule))
+		updates = append(updates, expandWebACLUpdate(string(awstypes.ChangeActionInsert), aclRule))
 	}
 	return updates
+}
+
+func expandAction(l []interface{}) *awstypes.WafAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &awstypes.WafAction{
+		Type: awstypes.WafActionType(m[names.AttrType].(string)),
+	}
+}
+
+func expandOverrideAction(l []interface{}) *awstypes.WafOverrideAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &awstypes.WafOverrideAction{
+		Type: awstypes.WafOverrideActionType(m[names.AttrType].(string)),
+	}
+}
+
+func expandWebACLUpdate(updateAction string, aclRule map[string]interface{}) awstypes.WebACLUpdate {
+	var rule *awstypes.ActivatedRule
+
+	switch aclRule[names.AttrType].(string) {
+	case string(awstypes.WafRuleTypeGroup):
+		rule = &awstypes.ActivatedRule{
+			OverrideAction: expandOverrideAction(aclRule["override_action"].([]interface{})),
+			Priority:       aws.Int32(int32(aclRule["priority"].(int))),
+			RuleId:         aws.String(aclRule["rule_id"].(string)),
+			Type:           awstypes.WafRuleType(aclRule[names.AttrType].(string)),
+		}
+	default:
+		rule = &awstypes.ActivatedRule{
+			Action:   expandAction(aclRule["action"].([]interface{})),
+			Priority: aws.Int32(int32(aclRule["priority"].(int))),
+			RuleId:   aws.String(aclRule["rule_id"].(string)),
+			Type:     awstypes.WafRuleType(aclRule[names.AttrType].(string)),
+		}
+	}
+
+	update := awstypes.WebACLUpdate{
+		Action:        awstypes.ChangeAction(updateAction),
+		ActivatedRule: rule,
+	}
+
+	return update
+}
+
+func flattenAction(n *awstypes.WafAction) []map[string]interface{} {
+	if n == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		names.AttrType: string(n.Type),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func flattenWebACLRules(ts []awstypes.ActivatedRule) []map[string]interface{} {
+	out := make([]map[string]interface{}, len(ts))
+	for i, r := range ts {
+		m := make(map[string]interface{})
+
+		switch r.Type {
+		case awstypes.WafRuleTypeGroup:
+			actionMap := map[string]interface{}{
+				names.AttrType: r.OverrideAction.Type,
+			}
+			m["override_action"] = []map[string]interface{}{actionMap}
+		default:
+			actionMap := map[string]interface{}{
+				names.AttrType: r.Action.Type,
+			}
+			m["action"] = []map[string]interface{}{actionMap}
+		}
+
+		m["priority"] = r.Priority
+		m["rule_id"] = aws.ToString(r.RuleId)
+		m[names.AttrType] = string(r.Type)
+		out[i] = m
+	}
+	return out
 }

@@ -20,5 +20,6 @@ var (
 	ResourceXSSMatchSet          = resourceXSSMatchSet
 
 	FindByteMatchSetByID    = findByteMatchSetByID
+	FindWebACLByID          = findWebACLByID
 	FindWebACLByResourceARN = findWebACLByResourceARN
 )
