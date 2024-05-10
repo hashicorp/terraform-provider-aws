@@ -735,7 +735,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -1853,7 +1853,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap["destination"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrDestination] = []interface{}{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.DestinationVpc; v != nil {
