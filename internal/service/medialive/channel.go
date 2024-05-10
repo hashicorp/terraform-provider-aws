@@ -130,7 +130,7 @@ func ResourceChannel() *schema.Resource {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"url": {
+										names.AttrURL: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -2259,7 +2259,7 @@ func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDesti
 		if v, ok := m["stream_name"].(string); ok {
 			s.StreamName = aws.String(v)
 		}
-		if v, ok := m["url"].(string); ok {
+		if v, ok := m[names.AttrURL].(string); ok {
 			s.Url = aws.String(v)
 		}
 		if v, ok := m["username"].(string); ok {
@@ -2332,7 +2332,7 @@ func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSetti
 		m := map[string]interface{}{
 			"password_param": aws.ToString(v.PasswordParam),
 			"stream_name":    aws.ToString(v.StreamName),
-			"url":            aws.ToString(v.Url),
+			names.AttrURL:    aws.ToString(v.Url),
 			"username":       aws.ToString(v.Username),
 		}
 
