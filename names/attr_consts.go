@@ -5,6 +5,7 @@ package names
 
 const (
 	AttrARN                        = "arn"
+	AttrARNs                       = "arns"
 	AttrAccessKey                  = "access_key"
 	AttrAccountID                  = "account_id"
 	AttrAction                     = "action"
