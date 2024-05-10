@@ -6,6 +6,7 @@ package opsworks
 import (
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_opsworks_ganglia_layer", name="Ganglia Layer")
@@ -16,7 +17,7 @@ func ResourceGangliaLayer() *schema.Resource {
 		DefaultLayerName: "Ganglia",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
-			"password": {
+			names.AttrPassword: {
 				AttrName:  opsworks.LayerAttributesKeysGangliaPassword,
 				Type:      schema.TypeString,
 				Required:  true,

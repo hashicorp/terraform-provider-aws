@@ -101,7 +101,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							// If neither the filter block nor the prefix parameter in the rule are specified,
@@ -128,7 +128,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -144,7 +144,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 										Type:     nullable.TypeNullableInt,
 										Optional: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -215,7 +215,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:       schema.TypeString,
 							Optional:   true,
 							Deprecated: "Use filter instead",
@@ -565,11 +565,11 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 			result.Expiration = expandLifecycleExpiration(v)
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			result.Filter = expandLifecycleRuleFilter(ctx, v)
 		}
 
-		if v, ok := tfMap["prefix"].(string); ok && result.Filter == nil {
+		if v, ok := tfMap[names.AttrPrefix].(string); ok && result.Filter == nil {
 			// If neither the filter block nor the prefix are specified,
 			// apply the Default behavior from v3.x of the provider;
 			// otherwise, set the prefix as specified in Terraform.
@@ -688,7 +688,7 @@ func expandLifecycleRuleFilter(ctx context.Context, l []interface{}) types.Lifec
 	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
 	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	// In practice, this also includes ObjectSizeGreaterThan and ObjectSizeLessThan.
-	if v, ok := m["prefix"].(string); ok && result == nil {
+	if v, ok := m[names.AttrPrefix].(string); ok && result == nil {
 		result = &types.LifecycleRuleFilterMemberPrefix{
 			Value: v,
 		}
@@ -714,7 +714,7 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 		result.Value.ObjectSizeLessThan = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["prefix"].(string); ok {
+	if v, ok := m[names.AttrPrefix].(string); ok {
 		result.Value.Prefix = aws.String(v)
 	}
 
@@ -859,7 +859,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenLifecycleRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {
@@ -875,7 +875,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Prefix != nil {
-			m["prefix"] = aws.ToString(rule.Prefix)
+			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
 		}
 
 		if rule.Transitions != nil {
@@ -939,7 +939,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, filter types.LifecycleRuleF
 	case *types.LifecycleRuleFilterMemberObjectSizeLessThan:
 		m["object_size_less_than"] = strconv.FormatInt(v.Value, 10)
 	case *types.LifecycleRuleFilterMemberPrefix:
-		m["prefix"] = v.Value
+		m[names.AttrPrefix] = v.Value
 	case *types.LifecycleRuleFilterMemberTag:
 		m["tag"] = flattenLifecycleRuleFilterMemberTag(v)
 	default:
@@ -960,7 +960,7 @@ func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.Lifec
 	}
 
 	if v := andOp.Value.Prefix; v != nil {
-		m["prefix"] = aws.ToString(v)
+		m[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	if v := andOp.Value.Tags; v != nil {

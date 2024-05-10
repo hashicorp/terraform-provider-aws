@@ -38,7 +38,7 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),

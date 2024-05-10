@@ -352,7 +352,7 @@ func resourceBroker() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -797,7 +797,7 @@ func resourceUserHash(v interface{}) int {
 	if g, ok := m["groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
 	}
-	if p, ok := m["password"]; ok {
+	if p, ok := m[names.AttrPassword]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["username"].(string)))
@@ -884,7 +884,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
 					Groups:          flex.ExpandStringValueList(ng),
 					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
-					Password:        aws.String(newUserMap["password"].(string)),
+					Password:        aws.String(newUserMap[names.AttrPassword].(string)),
 					Username:        aws.String(username),
 				})
 			}
@@ -895,7 +895,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 			cur := &mq.CreateUserInput{
 				BrokerId:        aws.String(bId),
 				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
-				Password:        aws.String(newUserMap["password"].(string)),
+				Password:        aws.String(newUserMap[names.AttrPassword].(string)),
 				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
 				Username:        aws.String(username),
 			}
@@ -978,7 +978,7 @@ func expandUsers(cfg []interface{}) []types.User {
 		u := m.(map[string]interface{})
 		user := types.User{
 			Username: aws.String(u["username"].(string)),
-			Password: aws.String(u["password"].(string)),
+			Password: aws.String(u[names.AttrPassword].(string)),
 		}
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
@@ -1026,7 +1026,7 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
 		username := user["username"].(string)
-		existingPairs[username] = user["password"].(string)
+		existingPairs[username] = user[names.AttrPassword].(string)
 	}
 
 	out := make([]interface{}, 0)
@@ -1039,7 +1039,7 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 			password = p
 		}
 		if password != "" {
-			m["password"] = password
+			m[names.AttrPassword] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.ToBool(u.ConsoleAccess)

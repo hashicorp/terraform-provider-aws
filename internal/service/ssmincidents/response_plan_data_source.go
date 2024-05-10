@@ -20,7 +20,7 @@ func DataSourceResponsePlan() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResponsePlanRead,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{

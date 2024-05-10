@@ -51,7 +51,7 @@ func (d *dataSourceRegions) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"filter": tfec2.CustomFiltersBlock(),
+			names.AttrFilter: tfec2.CustomFiltersBlock(),
 		},
 	}
 }

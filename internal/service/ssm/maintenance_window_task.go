@@ -123,7 +123,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(0),
@@ -715,7 +715,7 @@ func resourceMaintenanceWindowTaskCreate(ctx context.Context, d *schema.Resource
 		params.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		params.Priority = aws.Int64(int64(v.(int)))
 	}
 
@@ -760,7 +760,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("task_type", resp.TaskType)
 	d.Set("service_role_arn", resp.ServiceRoleArn)
 	d.Set("task_arn", resp.TaskArn)
-	d.Set("priority", resp.Priority)
+	d.Set(names.AttrPriority, resp.Priority)
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrDescription, resp.Description)
 	d.Set("cutoff_behavior", resp.CutoffBehavior)
@@ -793,7 +793,7 @@ func resourceMaintenanceWindowTaskUpdate(ctx context.Context, d *schema.Resource
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
-		Priority:     aws.Int64(int64(d.Get("priority").(int))),
+		Priority:     aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 		WindowId:     aws.String(windowID),
 		WindowTaskId: aws.String(d.Id()),
 		TaskArn:      aws.String(d.Get("task_arn").(string)),

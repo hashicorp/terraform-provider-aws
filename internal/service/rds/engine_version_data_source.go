@@ -52,7 +52,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 
 			"has_major_target": {
 				Type:     schema.TypeBool,
@@ -204,7 +204,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.Engine = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 
@@ -226,7 +226,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	// Make sure any optional arguments in the schema are in this list except for "default_only"
 	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
-		"filter",
+		names.AttrFilter,
 		"has_major_target",
 		"has_minor_target",
 		"include_all",

@@ -54,7 +54,7 @@ func ResourceResourceDataSync() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -187,7 +187,7 @@ func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destinatio
 		result[names.AttrKMSKeyARN] = aws.StringValue(dest.AWSKMSKeyARN)
 	}
 	if dest.Prefix != nil {
-		result["prefix"] = aws.StringValue(dest.Prefix)
+		result[names.AttrPrefix] = aws.StringValue(dest.Prefix)
 	}
 	return []interface{}{result}
 }
@@ -202,7 +202,7 @@ func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDa
 	if v, ok := raw[names.AttrKMSKeyARN].(string); ok && v != "" {
 		s3dest.AWSKMSKeyARN = aws.String(v)
 	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
 		s3dest.Prefix = aws.String(v)
 	}
 	return s3dest

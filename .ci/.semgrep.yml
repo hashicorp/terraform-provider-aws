@@ -1325,3 +1325,73 @@ rules:
       - pattern: '"file_system_id"'
     severity: ERROR
     fix: "names.AttrFileSystemID"
+  - id: literal-action-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAction` for the string literal "action"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"action"'
+    severity: ERROR
+    fix: "names.AttrAction"
+  - id: literal-source-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSource` for the string literal "source"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"source"'
+    severity: ERROR
+    fix: "names.AttrSource"
+  - id: literal-password-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPassword` for the string literal "password"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"password"'
+    severity: ERROR
+    fix: "names.AttrPassword"
+  - id: literal-target-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrTarget` for the string literal "target"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"target"'
+    severity: ERROR
+    fix: "names.AttrTarget"
+  - id: literal-filter-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFilter` for the string literal "filter"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"filter"'
+    severity: ERROR
+    fix: "names.AttrFilter"
+  - id: literal-prefix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPrefix` for the string literal "prefix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"prefix"'
+    severity: ERROR
+    fix: "names.AttrPrefix"
+  - id: literal-priority-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPriority` for the string literal "priority"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"priority"'
+    severity: ERROR
+    fix: "names.AttrPriority"

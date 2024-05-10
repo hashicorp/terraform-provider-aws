@@ -36,7 +36,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "5"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
@@ -78,7 +78,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "priority"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPriority),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
@@ -96,7 +96,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, fmt.Sprintf("%d", updatedPriority)),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),

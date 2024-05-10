@@ -32,7 +32,7 @@ func DataSourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -66,7 +66,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	input := &route53resolver.ListResolverQueryLogConfigsInput{}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).Route53resolverFilters()
 	}
 

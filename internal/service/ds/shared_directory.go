@@ -63,7 +63,7 @@ func ResourceSharedDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -97,7 +97,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 	input := directoryservice.ShareDirectoryInput{
 		DirectoryId: aws.String(dirId),
 		ShareMethod: aws.String(d.Get("method").(string)),
-		ShareTarget: expandShareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+		ShareTarget: expandShareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("notes"); ok {
@@ -149,11 +149,11 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("shared_directory_id", output.SharedDirectoryId)
 
 	if output.SharedAccountId != nil {
-		if err := d.Set("target", []interface{}{flattenShareTarget(output)}); err != nil {
+		if err := d.Set(names.AttrTarget, []interface{}{flattenShareTarget(output)}); err != nil {
 			return create.AppendDiagError(diags, names.DS, create.ErrActionSetting, ResNameSharedDirectory, d.Id(), err)
 		}
 	} else {
-		d.Set("target", nil)
+		d.Set(names.AttrTarget, nil)
 	}
 
 	return diags
@@ -169,7 +169,7 @@ func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, 
 
 	input := directoryservice.UnshareDirectoryInput{
 		DirectoryId:   aws.String(dirId),
-		UnshareTarget: expandUnshareTarget(d.Get("target").([]interface{})[0].(map[string]interface{})),
+		UnshareTarget: expandUnshareTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	}
 
 	log.Printf("[DEBUG] Unsharing Directory Service Directory: %s", input)

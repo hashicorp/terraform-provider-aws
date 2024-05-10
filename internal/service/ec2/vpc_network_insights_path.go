@@ -67,7 +67,7 @@ func ResourceNetworkInsightsPath() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.Protocol_Values(), false),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -99,7 +99,7 @@ func resourceNetworkInsightsPathCreate(ctx context.Context, d *schema.ResourceDa
 		ClientToken:       aws.String(id.UniqueId()),
 		Destination:       aws.String(d.Get("destination").(string)),
 		Protocol:          aws.String(d.Get(names.AttrProtocol).(string)),
-		Source:            aws.String(d.Get("source").(string)),
+		Source:            aws.String(d.Get(names.AttrSource).(string)),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkInsightsPath),
 	}
 
@@ -149,7 +149,7 @@ func resourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceData
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set(names.AttrProtocol, nip.Protocol)
-	d.Set("source", nip.Source)
+	d.Set(names.AttrSource, nip.Source)
 	d.Set("source_arn", nip.SourceArn)
 	d.Set("source_ip", nip.SourceIp)
 

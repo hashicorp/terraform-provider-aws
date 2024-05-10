@@ -1298,7 +1298,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"source": {
+							names.AttrSource: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.TimecodeConfigSource](),
@@ -1854,7 +1854,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Computed:         true,
 																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																	Computed: true,
@@ -4876,7 +4876,7 @@ func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.Tim
 	m := tfList[0].(map[string]interface{})
 
 	var config types.TimecodeConfig
-	if v, ok := m["source"].(string); ok && v != "" {
+	if v, ok := m[names.AttrSource].(string); ok && v != "" {
 		config.Source = types.TimecodeConfigSource(v)
 	}
 	if v, ok := m["sync_threshold"].(int); ok && v != 0 {
@@ -5736,7 +5736,7 @@ func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurni
 	if v, ok := m["timecode_burnin_position"].(string); ok && v != "" {
 		out.Position = types.TimecodeBurninPosition(v)
 	}
-	if v, ok := m["prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPrefix].(string); ok && v != "" {
 		out.Prefix = &v
 	}
 
@@ -6639,7 +6639,7 @@ func flattenTimecodeConfig(in *types.TimecodeConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"source":         string(in.Source),
+		names.AttrSource: string(in.Source),
 		"sync_threshold": int(aws.ToInt32(in.SyncThreshold)),
 	}
 
@@ -7107,7 +7107,7 @@ func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []inter
 	m := map[string]interface{}{
 		"timecode_burnin_font_size": string(in.FontSize),
 		"timecode_burnin_position":  string(in.Position),
-		"prefix":                    in.Prefix,
+		names.AttrPrefix:            in.Prefix,
 	}
 
 	return []interface{}{m}

@@ -45,7 +45,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -79,7 +79,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

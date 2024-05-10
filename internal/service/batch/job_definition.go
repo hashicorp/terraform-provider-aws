@@ -367,7 +367,7 @@ func ResourceJobDefinition() *schema.Resource {
 							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"action": {
+									names.AttrAction: {
 										Type:     schema.TypeString,
 										Required: true,
 										StateFunc: func(v interface{}) string {
@@ -1019,7 +1019,7 @@ func expandEvaluateOnExit(tfMap map[string]interface{}) *batch.EvaluateOnExit {
 
 	apiObject := &batch.EvaluateOnExit{}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 		apiObject.Action = aws.String(strings.ToLower(v))
 	}
 
@@ -1090,7 +1090,7 @@ func flattenEvaluateOnExit(apiObject *batch.EvaluateOnExit) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Action; v != nil {
-		tfMap["action"] = aws.StringValue(v)
+		tfMap[names.AttrAction] = aws.StringValue(v)
 	}
 
 	if v := apiObject.OnExitCode; v != nil {

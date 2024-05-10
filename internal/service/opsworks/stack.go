@@ -83,7 +83,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -379,7 +379,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			v := v.([]interface{})[0].(map[string]interface{})
 
-			tfMap["password"] = v["password"]
+			tfMap[names.AttrPassword] = v[names.AttrPassword]
 			tfMap["ssh_key"] = v["ssh_key"]
 		}
 
@@ -605,7 +605,7 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 
 	apiObject := &opsworks.Source{}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
 	}
 
@@ -640,7 +640,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Password; v != nil {
-		tfMap["password"] = aws.StringValue(v)
+		tfMap[names.AttrPassword] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Revision; v != nil {

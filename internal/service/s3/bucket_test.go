@@ -1398,7 +1398,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1407,7 +1407,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1416,7 +1416,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1469,7 +1469,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -1478,7 +1478,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.tags.%":             "1",
@@ -1488,7 +1488,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix3",
@@ -1544,7 +1544,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -1553,7 +1553,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.tags.%":             "1",

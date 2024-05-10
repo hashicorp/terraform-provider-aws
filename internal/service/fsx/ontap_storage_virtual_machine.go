@@ -100,7 +100,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 2000),
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Sensitive:    true,
 										Required:     true,
@@ -413,7 +413,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
-	if v, ok := conf["password"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrPassword].(string); ok && len(v) > 0 {
 		out.Password = aws.String(v)
 	}
 
@@ -469,7 +469,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.OrganizationalUnitDistinguishedName = aws.String(v)
 	}
 
-	if v, ok := conf["password"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrPassword].(string); ok && len(v) > 0 {
 		out.Password = aws.String(v)
 	}
 
@@ -530,7 +530,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 		m["file_system_administrators_group"] = v.(string)
 	}
 	if v, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.password"); ok {
-		m["password"] = v.(string)
+		m[names.AttrPassword] = v.(string)
 	}
 
 	return []interface{}{m}

@@ -1,4 +1,9 @@
 ## 5.50.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_instance: Add `launch_time` attribute ([#37002](https://github.com/hashicorp/terraform-provider-aws/issues/37002))
+
 ## 5.49.0 (May 10, 2024)
 
 FEATURES:

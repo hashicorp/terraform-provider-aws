@@ -355,7 +355,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -1229,7 +1229,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
@@ -1592,7 +1592,7 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
-			m["target"] = flattenDocumentAttributeTarget(v)
+			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
 		inlineConfigurationList = append(inlineConfigurationList, m)

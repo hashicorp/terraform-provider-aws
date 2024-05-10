@@ -50,7 +50,7 @@ func ResourceRuleGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -63,7 +63,7 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},

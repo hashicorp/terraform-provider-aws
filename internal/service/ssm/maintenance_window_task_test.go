@@ -51,7 +51,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
-					resource.TestCheckResourceAttr(resourceName, "priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
 					testAccCheckWindowsTaskNotRecreated(t, &before, &after),

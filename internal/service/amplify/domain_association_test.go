@@ -48,8 +48,8 @@ func testAccDomainAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "false"),
 				),
@@ -121,8 +121,8 @@ func testAccDomainAssociation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
 				),
@@ -142,12 +142,12 @@ func testAccDomainAssociation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": rName,
-						"prefix":      "",
+						"branch_name":    rName,
+						names.AttrPrefix: "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
-						"branch_name": fmt.Sprintf("%s-2", rName),
-						"prefix":      "www",
+						"branch_name":    fmt.Sprintf("%s-2", rName),
+						names.AttrPrefix: "www",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", "true"),
 				),

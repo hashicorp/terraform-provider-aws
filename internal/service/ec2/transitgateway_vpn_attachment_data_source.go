@@ -28,8 +28,8 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter":       customFiltersSchema(),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
 			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -54,7 +54,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {

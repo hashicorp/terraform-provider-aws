@@ -84,7 +84,7 @@ func ResourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
@@ -175,7 +175,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.IdentityInfo = expandIdentityInfo(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("password"); ok {
+	if v, ok := d.GetOk(names.AttrPassword); ok {
 		input.Password = aws.String(v.(string))
 	}
 

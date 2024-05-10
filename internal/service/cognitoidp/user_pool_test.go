@@ -141,8 +141,8 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_email",
-						"priority":     "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -159,12 +159,12 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_email",
-						"priority":     "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_phone_number",
-						"priority":     "2",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "2",
 					}),
 				),
 			},
@@ -176,8 +176,8 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_phone_number",
-						"priority":     "1",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "1",
 					}),
 				),
 			},

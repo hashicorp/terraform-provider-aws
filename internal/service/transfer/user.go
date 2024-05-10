@@ -63,7 +63,7 @@ func ResourceUser() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -371,7 +371,7 @@ func expandHomeDirectoryMappings(in []interface{}) []*transfer.HomeDirectoryMapE
 
 		m := &transfer.HomeDirectoryMapEntry{
 			Entry:  aws.String(config["entry"].(string)),
-			Target: aws.String(config["target"].(string)),
+			Target: aws.String(config[names.AttrTarget].(string)),
 		}
 
 		mappings = append(mappings, m)
@@ -384,8 +384,8 @@ func flattenHomeDirectoryMappings(mappings []*transfer.HomeDirectoryMapEntry) []
 	l := make([]interface{}, len(mappings))
 	for i, m := range mappings {
 		l[i] = map[string]interface{}{
-			"entry":  aws.StringValue(m.Entry),
-			"target": aws.StringValue(m.Target),
+			"entry":          aws.StringValue(m.Entry),
+			names.AttrTarget: aws.StringValue(m.Target),
 		}
 	}
 	return l

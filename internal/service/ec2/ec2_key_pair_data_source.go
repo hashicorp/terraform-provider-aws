@@ -38,7 +38,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,7 +75,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &ec2.DescribeKeyPairsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 

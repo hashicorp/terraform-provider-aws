@@ -233,7 +233,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
