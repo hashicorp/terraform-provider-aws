@@ -82,7 +82,7 @@ const (
 	baseEnvvarEndpoint        = "https://base-envvar.endpoint.test/"
 	serviceConfigFileEndpoint = "https://service-configfile.endpoint.test/"
 	baseConfigFileEndpoint    = "https://base-configfile.endpoint.test/"
-	{{ if ne .TfAwsEnvVar "" -}}
+	{{ if ne .TFAWSEnvVar "" -}}
 	tfAwsEnvvarEndpoint       = "https://service-tf-aws-envvar.endpoint.test/"
 	{{- end }}
 	{{ if ne .DeprecatedEnvVar "" -}}
@@ -98,8 +98,8 @@ const (
 	awsEnvVar   = "{{ .AwsEnvVar }}"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
 	configParam = "{{ .ConfigParameter }}"
-	{{ if ne .TfAwsEnvVar "" -}}
-	tfAwsEnvVar       = "{{ .TfAwsEnvVar }}"
+	{{ if ne .TFAWSEnvVar "" -}}
+	tfAwsEnvVar       = "{{ .TFAWSEnvVar }}"
 	{{- end }}
 	{{ if ne .DeprecatedEnvVar "" -}}
 	deprecatedEnvVar  = "{{ .DeprecatedEnvVar }}"
@@ -145,7 +145,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectPackageNameConfigEndpoint(),
 		},
 
-{{ if ne .TfAwsEnvVar "" }}
+{{ if ne .TFAWSEnvVar "" }}
 		"package name endpoint config overrides TF_AWS envvar": {
 			with: []setupFunc{
 				withPackageNameEndpointInConfig,
@@ -190,7 +190,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 
 {{ $aliases := .Aliases }}
-{{ $tfAwsEnvVar := .TfAwsEnvVar }}
+{{ $tfAwsEnvVar := .TFAWSEnvVar }}
 {{ $deprecatedEnvVar := .DeprecatedEnvVar }}
 {{ range $i, $alias := .Aliases }}
         // Alias name {{ $i }} endpoint on Config
@@ -275,7 +275,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectAwsEnvVarEndpoint(),
 		},
 
-{{ if ne .TfAwsEnvVar "" }}
+{{ if ne .TFAWSEnvVar "" }}
 		"service aws envvar overrides TF_AWS envvar": {
 			with: []setupFunc{
 				withAwsEnvVar,
@@ -319,7 +319,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			expected: expectAwsEnvVarEndpoint(),
 		},
 
-{{ if ne .TfAwsEnvVar "" }}
+{{ if ne .TFAWSEnvVar "" }}
 		// Service endpoint in TF_AWS envvar
 
 		"service TF_AWS envvar": {
@@ -613,7 +613,7 @@ func withAwsEnvVar(setup *caseSetup) {
 	setup.environmentVariables[awsEnvVar] = awsServiceEnvvarEndpoint
 }
 
-{{ if ne .TfAwsEnvVar "" }}
+{{ if ne .TFAWSEnvVar "" }}
 func withTfAwsEnvVar(setup *caseSetup) {
 	setup.environmentVariables[tfAwsEnvVar] = tfAwsEnvvarEndpoint
 }
@@ -669,7 +669,7 @@ func expectBaseEnvVarEndpoint() caseExpectations {
 	}
 }
 
-{{ if ne .TfAwsEnvVar "" }}
+{{ if ne .TFAWSEnvVar "" }}
 func expectTfAwsEnvVarEndpoint() caseExpectations {
 	return caseExpectations{
 		endpoint: tfAwsEnvvarEndpoint,
