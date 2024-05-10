@@ -561,7 +561,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -593,7 +593,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)
 	d.Set("ssl_mode", out.SslMode)
-	d.Set("username", out.Username)
+	d.Set(names.AttrUsername, out.Username)
 
 	if err := resourceEndpointSetState(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
