@@ -1455,3 +1455,13 @@ rules:
       - pattern: '"parameter"'
     severity: ERROR
     fix: "names.AttrParameter"
+  - id: literal-format-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrFormat` for the string literal "format"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"format"'
+    severity: ERROR
+    fix: "names.AttrFormat"
