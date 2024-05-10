@@ -119,7 +119,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -476,7 +476,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -628,7 +628,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set("cpu", taskDefinition.Cpu)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)

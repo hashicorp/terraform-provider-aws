@@ -128,7 +128,7 @@ func ResourceTaskSet() *schema.Resource {
 					},
 				},
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -301,7 +301,7 @@ func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LoadBalancers = expandTaskSetLoadBalancers(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
@@ -425,7 +425,7 @@ func resourceTaskSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer: %s", err)
 	}
 
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(taskSet.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
