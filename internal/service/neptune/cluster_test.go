@@ -71,7 +71,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),

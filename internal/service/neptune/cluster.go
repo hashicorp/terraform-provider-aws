@@ -173,7 +173,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validGlobalCusterIdentifier,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -551,7 +551,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoles []string
 	for _, v := range dbc.AssociatedRoles {
