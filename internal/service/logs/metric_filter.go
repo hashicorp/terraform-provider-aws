@@ -72,7 +72,7 @@ func resourceMetricFilter() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validLogMetricFilterTransformationName,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.StandardUnitNone,
@@ -267,7 +267,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 		apiObject.MetricNamespace = aws.String(v)
 	}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		apiObject.Unit = types.StandardUnit(v)
 	}
 
@@ -306,7 +306,7 @@ func expandMetricTransformations(tfList []interface{}) []types.MetricTransformat
 
 func flattenMetricTransformation(apiObject types.MetricTransformation) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"unit": apiObject.Unit,
+		names.AttrUnit: apiObject.Unit,
 	}
 
 	if v := apiObject.DefaultValue; v != nil {
