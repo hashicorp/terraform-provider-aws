@@ -17,6 +17,7 @@ const (
 	AttrBucketPrefix               = "bucket_prefix"
 	AttrCatalogID                  = "catalog_id"
 	AttrClusterIdentifier          = "cluster_identifier"
+	AttrConfiguration              = "configuration"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
 	AttrDatabaseName               = "database_name"
