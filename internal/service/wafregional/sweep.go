@@ -6,48 +6,109 @@ package wafregional
 import (
 	"fmt"
 	"log"
-	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafregional"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func RegisterSweepers() {
+	resource.AddTestSweepers("aws_wafregional_byte_match_set", &resource.Sweeper{
+		Name: "aws_wafregional_byte_match_set",
+		F:    sweepByteMatchSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_wafregional_geo_match_set", &resource.Sweeper{
+		Name: "aws_wafregional_geo_match_set",
+		F:    sweepGeoMatchSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_wafregional_ipset", &resource.Sweeper{
+		Name: "aws_wafregional_ipset",
+		F:    sweepIPSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
+	})
+
 	resource.AddTestSweepers("aws_wafregional_rate_based_rule", &resource.Sweeper{
 		Name: "aws_wafregional_rate_based_rule",
 		F:    sweepRateBasedRules,
 		Dependencies: []string{
+			"aws_wafregional_rule_group",
 			"aws_wafregional_web_acl",
 		},
 	})
 
 	resource.AddTestSweepers("aws_wafregional_regex_match_set", &resource.Sweeper{
 		Name: "aws_wafregional_regex_match_set",
-		F:    sweepRegexMatchSets,
+		F:    sweepRegexMatchSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
 	})
 
 	resource.AddTestSweepers("aws_wafregional_regex_pattern_set", &resource.Sweeper{
 		Name: "aws_wafregional_regex_pattern_set",
-		F:    sweepRegexPatternSets,
+		F:    sweepRegexPatternSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
 	})
 
 	resource.AddTestSweepers("aws_wafregional_rule_group", &resource.Sweeper{
 		Name: "aws_wafregional_rule_group",
 		F:    sweepRuleGroups,
+		Dependencies: []string{
+			"aws_wafregional_web_acl",
+		},
 	})
 
 	resource.AddTestSweepers("aws_wafregional_rule", &resource.Sweeper{
 		Name: "aws_wafregional_rule",
 		F:    sweepRules,
 		Dependencies: []string{
+			"aws_wafregional_rule_group",
 			"aws_wafregional_web_acl",
+		},
+	})
+
+	resource.AddTestSweepers("aws_wafregional_size_constraint_set", &resource.Sweeper{
+		Name: "aws_wafregional_size_constraint_set",
+		F:    sweepSizeConstraintSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_wafregional_sql_injection_match_set", &resource.Sweeper{
+		Name: "aws_wafregional_sql_injection_match_set",
+		F:    sweepSQLInjectionMatchSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
 		},
 	})
 
@@ -55,6 +116,175 @@ func RegisterSweepers() {
 		Name: "aws_wafregional_web_acl",
 		F:    sweepWebACLs,
 	})
+
+	resource.AddTestSweepers("aws_wafregional_xss_match_set", &resource.Sweeper{
+		Name: "aws_wafregional_xss_match_set",
+		F:    sweepXSSMatchSet,
+		Dependencies: []string{
+			"aws_wafregional_rate_based_rule",
+			"aws_wafregional_rule",
+			"aws_wafregional_rule_group",
+		},
+	})
+}
+
+func sweepByteMatchSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListByteMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listByteMatchSetsPages(ctx, conn, input, func(page *wafregional.ListByteMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ByteMatchSets {
+			id := aws.ToString(v.ByteMatchSetId)
+			r := resourceByteMatchSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Byte Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Byte Match Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Byte Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Byte Match Sets (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepGeoMatchSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListGeoMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listGeoMatchSetsPages(ctx, conn, input, func(page *wafregional.ListGeoMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.GeoMatchSets {
+			id := aws.ToString(v.GeoMatchSetId)
+			r := resourceGeoMatchSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Geo Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Geo Match Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Geo Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Geo Match Sets (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepIPSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListIPSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listIPSetsPages(ctx, conn, input, func(page *wafregional.ListIPSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IPSets {
+			id := aws.ToString(v.IPSetId)
+			r := resourceIPSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional IP Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional IP Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional IP Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional IP Sets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRateBasedRules(region string) error {
@@ -64,94 +294,53 @@ func sweepRateBasedRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
-
 	input := &wafregional.ListRateBasedRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListRateBasedRules(ctx, input)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Rate-Based Rule sweep for %s: %s", region, err)
-			return nil
+	err = listRateBasedRulesPages(ctx, conn, input, func(page *wafregional.ListRateBasedRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error listing WAF Regional Rate-Based Rules: %s", err)
-		}
-
-		for _, rule := range output.Rules {
-			deleteInput := &wafregional.DeleteRateBasedRuleInput{
-				RuleId: rule.RuleId,
+		for _, v := range page.Rules {
+			id := aws.ToString(v.RuleId)
+			r := resourceRateBasedRule()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Rate Based Rule %s: %s", id, err)
+				continue
 			}
-			id := aws.ToString(rule.RuleId)
-			wr := newRetryer(conn, region)
-
-			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-				deleteInput.ChangeToken = token
-				log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
-				return conn.DeleteRateBasedRule(ctx, deleteInput)
-			})
-
-			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
-				getRateBasedRuleInput := &wafregional.GetRateBasedRuleInput{
-					RuleId: rule.RuleId,
-				}
-
-				getRateBasedRuleOutput, getRateBasedRuleErr := conn.GetRateBasedRule(ctx, getRateBasedRuleInput)
-
-				if getRateBasedRuleErr != nil {
-					return fmt.Errorf("error getting WAF Regional Rate-Based Rule (%s): %s", id, getRateBasedRuleErr)
-				}
-
-				var updates []awstypes.RuleUpdate
-				updateRateBasedRuleInput := &wafregional.UpdateRateBasedRuleInput{
-					RateLimit: getRateBasedRuleOutput.Rule.RateLimit,
-					RuleId:    rule.RuleId,
-					Updates:   updates,
-				}
-
-				for _, predicate := range getRateBasedRuleOutput.Rule.MatchPredicates {
-					update := awstypes.RuleUpdate{
-						Action:    awstypes.ChangeActionDelete,
-						Predicate: &predicate,
-					}
-
-					updateRateBasedRuleInput.Updates = append(updateRateBasedRuleInput.Updates, update)
-				}
-
-				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					updateRateBasedRuleInput.ChangeToken = token
-					log.Printf("[INFO] Removing Predicates from WAF Regional Rate-Based Rule: %s", id)
-					return conn.UpdateRateBasedRule(ctx, updateRateBasedRuleInput)
-				})
-
-				if updateWebACLErr != nil {
-					return fmt.Errorf("error removing predicates from WAF Regional Rate-Based Rule (%s): %s", id, updateWebACLErr)
-				}
-
-				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					deleteInput.ChangeToken = token
-					log.Printf("[INFO] Deleting WAF Regional Rate-Based Rule: %s", id)
-					return conn.DeleteRateBasedRule(ctx, deleteInput)
-				})
+			if d.Id() == "" {
+				continue
 			}
 
-			if err != nil {
-				return fmt.Errorf("error deleting WAF Regional Rate-Based Rule (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextMarker) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextMarker = output.NextMarker
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Rate Based Rule sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Rate Based Rules (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Rate Based Rules (%s): %w", region, err)
 	}
 
 	return nil
 }
 
-func sweepRegexMatchSets(region string) error {
+func sweepRegexMatchSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -168,17 +357,17 @@ func sweepRegexMatchSets(region string) error {
 
 		for _, v := range page.RegexMatchSets {
 			id := aws.ToString(v.RegexMatchSetId)
-
-			v, err := findRegexMatchSetByID(ctx, conn, id)
-
-			if err != nil {
-				continue
-			}
-
 			r := resourceRegexMatchSet()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("regex_match_tuple", flattenRegexMatchTuples(v.RegexMatchTuples))
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Regex Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -187,24 +376,24 @@ func sweepRegexMatchSets(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF Regional RegexMatchSet sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping WAF Regional Regex Match Set sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing WAF Regional RegexMatchSets (%s): %w", region, err)
+		return fmt.Errorf("error listing WAF Regional Regex Match Sets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping WAF Regional RegexMatchSets (%s): %w", region, err)
+		return fmt.Errorf("error sweeping WAF Regional Regex Match Sets (%s): %w", region, err)
 	}
 
 	return nil
 }
 
-func sweepRegexPatternSets(region string) error {
+func sweepRegexPatternSet(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -221,17 +410,17 @@ func sweepRegexPatternSets(region string) error {
 
 		for _, v := range page.RegexPatternSets {
 			id := aws.ToString(v.RegexPatternSetId)
-
-			v, err := findRegexPatternSetByID(ctx, conn, id)
-
-			if err != nil {
-				continue
-			}
-
 			r := resourceRegexPatternSet()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("regex_pattern_strings", aws.StringSlice(v.RegexPatternStrings))
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Regex Pattern Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -240,18 +429,18 @@ func sweepRegexPatternSets(region string) error {
 	})
 
 	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAF Regional RegexPatternSet sweep for %s: %s", region, err)
+		log.Printf("[WARN] Skipping WAF Regional Regex Pattern Set sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing WAF Regional RegexPatternSets (%s): %w", region, err)
+		return fmt.Errorf("error listing WAF Regional Regex Pattern Sets (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping WAF Regional RegexPatternSets (%s): %w", region, err)
+		return fmt.Errorf("error sweeping WAF Regional Regex Pattern Sets (%s): %w", region, err)
 	}
 
 	return nil
@@ -264,71 +453,50 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
-
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-	var g multierror.Group
-	var mutex = &sync.Mutex{}
-
 	input := &wafregional.ListRuleGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listRuleGroupsPages(ctx, conn, input, func(page *wafregional.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, ruleGroup := range page.RuleGroups {
+		for _, v := range page.RuleGroups {
+			id := aws.ToString(v.RuleGroupId)
 			r := resourceRuleGroup()
 			d := r.Data(nil)
-
-			id := aws.ToString(ruleGroup.RuleGroupId)
 			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Rule Group %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
-			// read concurrently and gather errors
-			g.Go(func() error {
-				// Need to Read first to fill in activated_rule attribute
-				err := sdk.ReadResource(ctx, r, d, client)
-
-				if err != nil {
-					sweeperErr := fmt.Errorf("error reading WAF Regional Rule Group (%s): %w", id, err)
-					log.Printf("[ERROR] %s", sweeperErr)
-					return sweeperErr
-				}
-
-				// In case it was already deleted
-				if d.Id() == "" {
-					return nil
-				}
-
-				mutex.Lock()
-				defer mutex.Unlock()
-				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-
-				return nil
-			})
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing WAF Regional Rule Group for %s: %w", region, err))
-	}
-
-	if err = g.Wait().ErrorOrNil(); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading WAF Regional Rule Groups: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regional Rule Group for %s: %w", region, err))
-	}
-
-	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, errs)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Rule Group sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Rule Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Rule Groups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRules(region string) error {
@@ -338,87 +506,153 @@ func sweepRules(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
-
 	input := &wafregional.ListRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListRules(ctx, input)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Rule sweep for %s: %s", region, err)
-			return nil
+	err = listRulesPages(ctx, conn, input, func(page *wafregional.ListRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error listing WAF Regional Rules: %s", err)
-		}
-
-		for _, rule := range output.Rules {
-			deleteInput := &wafregional.DeleteRuleInput{
-				RuleId: rule.RuleId,
+		for _, v := range page.Rules {
+			id := aws.ToString(v.RuleId)
+			r := resourceRule()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Rule %s: %s", id, err)
+				continue
 			}
-			id := aws.ToString(rule.RuleId)
-			wr := newRetryer(conn, region)
-
-			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-				deleteInput.ChangeToken = token
-				log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
-				return conn.DeleteRule(ctx, deleteInput)
-			})
-
-			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
-				getRuleInput := &wafregional.GetRuleInput{
-					RuleId: rule.RuleId,
-				}
-
-				getRuleOutput, getRuleErr := conn.GetRule(ctx, getRuleInput)
-
-				if getRuleErr != nil {
-					return fmt.Errorf("error getting WAF Regional Rule (%s): %s", id, getRuleErr)
-				}
-
-				var updates []awstypes.RuleUpdate
-				updateRuleInput := &wafregional.UpdateRuleInput{
-					RuleId:  rule.RuleId,
-					Updates: updates,
-				}
-
-				for _, predicate := range getRuleOutput.Rule.Predicates {
-					update := &awstypes.RuleUpdate{
-						Action:    awstypes.ChangeActionDelete,
-						Predicate: &predicate,
-					}
-
-					updateRuleInput.Updates = append(updateRuleInput.Updates, *update)
-				}
-
-				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					updateRuleInput.ChangeToken = token
-					log.Printf("[INFO] Removing Predicates from WAF Regional Rule: %s", id)
-					return conn.UpdateRule(ctx, updateRuleInput)
-				})
-
-				if updateWebACLErr != nil {
-					return fmt.Errorf("error removing predicates from WAF Regional Rule (%s): %s", id, updateWebACLErr)
-				}
-
-				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					deleteInput.ChangeToken = token
-					log.Printf("[INFO] Deleting WAF Regional Rule: %s", id)
-					return conn.DeleteRule(ctx, deleteInput)
-				})
+			if d.Id() == "" {
+				continue
 			}
 
-			if err != nil {
-				return fmt.Errorf("error deleting WAF Regional Rule (%s): %s", id, err)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Rule sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Rules (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Rules (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepSizeConstraintSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListSizeConstraintSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listSizeConstraintSetsPages(ctx, conn, input, func(page *wafregional.ListSizeConstraintSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.SizeConstraintSets {
+			id := aws.ToString(v.SizeConstraintSetId)
+			r := resourceSizeConstraintSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Size Constraint Set %s: %s", id, err)
+				continue
 			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextMarker) == "" {
-			break
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Size Constraint Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Size Constraint Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional Size Constraint Sets (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepSQLInjectionMatchSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListSqlInjectionMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listSQLInjectionMatchSetsPages(ctx, conn, input, func(page *wafregional.ListSqlInjectionMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		input.NextMarker = output.NextMarker
+		for _, v := range page.SqlInjectionMatchSets {
+			id := aws.ToString(v.SqlInjectionMatchSetId)
+			r := resourceSQLInjectionMatchSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional SQL Injection Match Set %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional SQL Injection Match Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional SQL Injection Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional SQL Injection Match Sets (%s): %w", region, err)
 	}
 
 	return nil
@@ -428,91 +662,103 @@ func sweepWebACLs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListWebACLsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listWebACLsPages(ctx, conn, input, func(page *wafregional.ListWebACLsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.WebACLs {
+			id := aws.ToString(v.WebACLId)
+			r := resourceWebACL()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional Web ACL %s: %s", id, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional Web ACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFWeb ACLs (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepXSSMatchSet(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.WAFRegionalClient(ctx)
+	input := &wafregional.ListXssMatchSetsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &wafregional.ListWebACLsInput{}
-
-	for {
-		output, err := conn.ListWebACLs(ctx, input)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping WAF Regional Web ACL sweep for %s: %s", region, err)
-			return nil
+	err = listXSSMatchSetsPages(ctx, conn, input, func(page *wafregional.ListXssMatchSetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("error listing WAF Regional Web ACLs: %s", err)
-		}
-
-		for _, webACL := range output.WebACLs {
-			deleteInput := &wafregional.DeleteWebACLInput{
-				WebACLId: webACL.WebACLId,
+		for _, v := range page.XssMatchSets {
+			id := aws.ToString(v.XssMatchSetId)
+			r := resourceXSSMatchSet()
+			d := r.Data(nil)
+			d.SetId(id)
+			// Refresh.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping WAF Regional XSS Match Set %s: %s", id, err)
+				continue
 			}
-			id := aws.ToString(webACL.WebACLId)
-			wr := newRetryer(conn, region)
-
-			_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-				deleteInput.ChangeToken = token
-				log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-				return conn.DeleteWebACL(ctx, deleteInput)
-			})
-
-			if errs.IsA[*awstypes.WAFNonEmptyEntityException](err) {
-				getWebACLInput := &wafregional.GetWebACLInput{
-					WebACLId: webACL.WebACLId,
-				}
-
-				getWebACLOutput, getWebACLErr := conn.GetWebACL(ctx, getWebACLInput)
-
-				if getWebACLErr != nil {
-					return fmt.Errorf("error getting WAF Regional Web ACL (%s): %s", id, getWebACLErr)
-				}
-
-				var updates []awstypes.WebACLUpdate
-				updateWebACLInput := &wafregional.UpdateWebACLInput{
-					DefaultAction: getWebACLOutput.WebACL.DefaultAction,
-					Updates:       updates,
-					WebACLId:      webACL.WebACLId,
-				}
-
-				for _, rule := range getWebACLOutput.WebACL.Rules {
-					update := &awstypes.WebACLUpdate{
-						Action:        awstypes.ChangeActionDelete,
-						ActivatedRule: &rule,
-					}
-
-					updateWebACLInput.Updates = append(updateWebACLInput.Updates, *update)
-				}
-
-				_, updateWebACLErr := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					updateWebACLInput.ChangeToken = token
-					log.Printf("[INFO] Removing Rules from WAF Regional Web ACL: %s", id)
-					return conn.UpdateWebACL(ctx, updateWebACLInput)
-				})
-
-				if updateWebACLErr != nil {
-					return fmt.Errorf("error removing rules from WAF Regional Web ACL (%s): %s", id, updateWebACLErr)
-				}
-
-				_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-					deleteInput.ChangeToken = token
-					log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", id)
-					return conn.DeleteWebACL(ctx, deleteInput)
-				})
+			if d.Id() == "" {
+				continue
 			}
 
-			if err != nil {
-				return fmt.Errorf("error deleting WAF Regional Web ACL (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.ToString(output.NextMarker) == "" {
-			break
-		}
+		return !lastPage
+	})
 
-		input.NextMarker = output.NextMarker
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAF Regional XSS Match Set sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing WAF Regional XSS Match Sets (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAF Regional XSS Match Sets (%s): %w", region, err)
 	}
 
 	return nil
