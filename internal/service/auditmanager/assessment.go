@@ -105,7 +105,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"destination": schema.StringAttribute{
+						names.AttrDestination: schema.StringAttribute{
 							Required: true,
 						},
 						"destination_type": schema.StringAttribute{
@@ -399,8 +399,8 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 
 var (
 	assessmentReportsDestinationAttrTypes = map[string]attr.Type{
-		"destination":      types.StringType,
-		"destination_type": types.StringType,
+		names.AttrDestination: types.StringType,
+		"destination_type":    types.StringType,
 	}
 
 	assessmentRolesAttrTypes = map[string]attr.Type{
@@ -566,8 +566,8 @@ func flattenAssessmentReportsDestination(ctx context.Context, apiObject *awstype
 	}
 
 	obj := map[string]attr.Value{
-		"destination":      flex.StringToFramework(ctx, apiObject.Destination),
-		"destination_type": flex.StringValueToFramework(ctx, apiObject.DestinationType),
+		names.AttrDestination: flex.StringToFramework(ctx, apiObject.Destination),
+		"destination_type":    flex.StringValueToFramework(ctx, apiObject.DestinationType),
 	}
 	objVal, d := types.ObjectValue(assessmentReportsDestinationAttrTypes, obj)
 	diags.Append(d...)
