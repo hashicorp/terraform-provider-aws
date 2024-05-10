@@ -175,7 +175,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -280,7 +280,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rsc.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, rsc.PubliclyAccessible)
 	d.Set(names.AttrVPCID, rsc.VpcId)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)
