@@ -336,7 +336,7 @@ func sweepGlobalClusters(region string) error {
 			r := ResourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.GlobalClusterIdentifier))
-			d.Set("force_destroy", true)
+			d.Set(names.AttrForceDestroy, true)
 			d.Set("global_cluster_members", flattenGlobalClusterMembers(v.GlobalClusterMembers))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
