@@ -46,6 +46,7 @@ const (
 	AttrNamePrefix                 = "name_prefix"
 	AttrNetworkInterfaceID         = "network_interface_id"
 	AttrOwnerID                    = "owner_id"
+	AttrParameter                  = "parameter"
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
