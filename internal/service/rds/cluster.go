@@ -257,7 +257,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1207,7 +1207,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoleARNs []string
 	for _, v := range dbc.AssociatedRoles {

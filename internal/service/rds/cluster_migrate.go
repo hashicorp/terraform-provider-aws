@@ -162,7 +162,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

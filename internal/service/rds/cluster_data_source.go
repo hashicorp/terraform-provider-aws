@@ -92,7 +92,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -212,7 +212,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoleARNs []string
 	for _, v := range dbc.AssociatedRoles {

@@ -325,7 +325,7 @@ func ResourceInstance() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -381,7 +381,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1939,7 +1939,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
 			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
-		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
+		d.Set(names.AttrHostedZoneID, v.Endpoint.HostedZoneId)
 		d.Set(names.AttrPort, v.Endpoint.Port)
 	}
 
@@ -3022,7 +3022,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.StringValue(v)
+		tfMap[names.AttrHostedZoneID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Port; v != nil {
