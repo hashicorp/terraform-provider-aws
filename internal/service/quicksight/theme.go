@@ -63,7 +63,7 @@ func ResourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
@@ -372,7 +372,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VersionDescription = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandThemeConfiguration(v.([]interface{}))
 	}
 
@@ -423,7 +423,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
-	if err := d.Set("configuration", flattenThemeConfiguration(out.Version.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
 
@@ -459,7 +459,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			in.Configuration = expandThemeConfiguration(v.([]interface{}))
 		}
 
