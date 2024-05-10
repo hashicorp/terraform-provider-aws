@@ -21,15 +21,21 @@ func DataSourceInstances() *schema.Resource {
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			"instances": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"identity_store_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"identity_store_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -45,16 +51,17 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading SSO Instances: %s", err)
 	}
 
-	var identityStoreIDs, arns []string
+	var instances []map[string]interface{}
 
 	for _, v := range output {
-		identityStoreIDs = append(identityStoreIDs, aws.ToString(v.IdentityStoreId))
-		arns = append(arns, aws.ToString(v.InstanceArn))
+		instances = append(instances, map[string]interface{}{
+			"arn":               aws.ToString(v.InstanceArn),
+			"identity_store_id": aws.ToString(v.IdentityStoreId),
+		})
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("identity_store_ids", identityStoreIDs)
+	d.Set("instances", instances)
 
 	return diags
 }

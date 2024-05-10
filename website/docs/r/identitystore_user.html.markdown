@@ -21,7 +21,7 @@ users using this resource.
 
 ```terraform
 resource "aws_identitystore_user" "example" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.example.instances[0].identity_store_id
 
   display_name = "John Doe"
   user_name    = "johndoe"

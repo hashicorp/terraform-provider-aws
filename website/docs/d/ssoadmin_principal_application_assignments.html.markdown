@@ -16,7 +16,7 @@ Terraform data source for viewing AWS SSO Admin Principal Application Assignment
 
 ```terraform
 data "aws_ssoadmin_principal_application_assignments" "example" {
-  instance_arn   = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn   = data.aws_ssoadmin_instances.test.instances[0].arn
   principal_id   = aws_identitystore_user.test.user_id
   principal_type = "USER"
 }

@@ -231,7 +231,7 @@ func testAccAccessGrantsInstanceConfig_identityCenter() string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_s3control_access_grants_instance" "test" {
-  identity_center_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  identity_center_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `
 }

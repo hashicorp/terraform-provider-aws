@@ -18,7 +18,7 @@ data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_trusted_token_issuer" "example" {
   name                      = "example"
-  instance_arn              = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn              = data.aws_ssoadmin_instances.example.instances[0].arn
   trusted_token_issuer_type = "OIDC_JWT"
 
   trusted_token_issuer_configuration {

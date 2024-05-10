@@ -157,6 +157,10 @@ func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.Resour
 		InstanceArn: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}

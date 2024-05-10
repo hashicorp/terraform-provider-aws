@@ -189,7 +189,7 @@ func testAccInstanceAccessControlAttributesConfig_basic() string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_instance_access_control_attributes" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   attribute {
     key = "name"
     value {
@@ -204,7 +204,7 @@ func testAccInstanceAccessControlAttributesConfig_multiple() string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_instance_access_control_attributes" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   attribute {
     key = "name"
     value {
@@ -226,7 +226,7 @@ func testAccInstanceAccessControlAttributesConfig_update() string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_instance_access_control_attributes" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   attribute {
     key = "name"
     value {

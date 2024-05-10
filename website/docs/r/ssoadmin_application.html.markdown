@@ -23,7 +23,7 @@ data "aws_ssoadmin_instances" "example" {}
 resource "aws_ssoadmin_application" "example" {
   name                     = "example"
   application_provider_arn = "arn:aws:sso::aws:applicationProvider/custom"
-  instance_arn             = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.example.instances[0].arn
 }
 ```
 
@@ -35,7 +35,7 @@ data "aws_ssoadmin_instances" "example" {}
 resource "aws_ssoadmin_application" "example" {
   name                     = "example"
   application_provider_arn = "arn:aws:sso::aws:applicationProvider/custom"
-  instance_arn             = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.example.instances[0].arn
 
   portal_options {
     visibility = "ENABLED"
