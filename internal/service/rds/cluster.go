@@ -415,7 +415,7 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -723,7 +723,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			S3BucketName:        aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
-			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
+			S3Prefix:            aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
 			Tags:                getTagsIn(ctx),

@@ -593,7 +593,7 @@ func ResourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -971,7 +971,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
-			S3Prefix:                aws.String(tfMap["bucket_prefix"].(string)),
+			S3Prefix:                aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
