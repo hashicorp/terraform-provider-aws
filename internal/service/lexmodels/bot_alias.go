@@ -321,7 +321,7 @@ func resourceBotAliasImport(ctx context.Context, d *schema.ResourceData, _ inter
 
 var logSettings = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"destination": {
+		names.AttrDestination: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.Destination_Values(), false),
@@ -379,7 +379,7 @@ func expandConversationLogs(rawObject interface{}) (*lexmodelbuildingservice.Con
 func flattenLogSettings(responses []*lexmodelbuildingservice.LogSettingsResponse) (flattened []map[string]interface{}) {
 	for _, response := range responses {
 		flattened = append(flattened, map[string]interface{}{
-			"destination":         response.Destination,
+			names.AttrDestination: response.Destination,
 			names.AttrKMSKeyARN:   response.KmsKeyArn,
 			"log_type":            response.LogType,
 			names.AttrResourceARN: response.ResourceArn,
@@ -397,7 +397,7 @@ func expandLogSettings(rawValues []interface{}) ([]*lexmodelbuildingservice.LogS
 		if !ok {
 			continue
 		}
-		destination := value["destination"].(string)
+		destination := value[names.AttrDestination].(string)
 		request := &lexmodelbuildingservice.LogSettingsRequest{
 			Destination: aws.String(destination),
 			LogType:     aws.String(value["log_type"].(string)),
