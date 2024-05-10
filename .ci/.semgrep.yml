@@ -1485,3 +1485,13 @@ rules:
       - pattern: '"unit"'
     severity: ERROR
     fix: "names.AttrUnit"
+  - id: literal-address-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrAddress` for the string literal "address"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"address"'
+    severity: ERROR
+    fix: "names.AttrAddress"
