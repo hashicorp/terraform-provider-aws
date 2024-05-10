@@ -70,7 +70,7 @@ func resourceSchedule() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 1440)),
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.FlexibleTimeWindowMode](),
