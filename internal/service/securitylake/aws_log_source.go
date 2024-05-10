@@ -53,7 +53,7 @@ func (r *awsLogSourceResource) Schema(ctx context.Context, request resource.Sche
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[awsLogSourceSourceModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),
