@@ -202,7 +202,7 @@ func resourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -708,7 +708,7 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 		apiObject.Status = aws.String(v)
 	}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -757,7 +757,7 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap["target"] = aws.ToString(v)
+		tfMap[names.AttrTarget] = aws.ToString(v)
 	}
 
 	return tfMap
