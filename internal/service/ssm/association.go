@@ -127,7 +127,7 @@ func ResourceAssociation() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -196,7 +196,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
@@ -279,7 +279,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrInstanceID, association.InstanceId)
 	d.Set(names.AttrName, association.Name)
 	d.Set("association_id", association.AssociationId)
-	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set(names.AttrScheduleExpression, association.ScheduleExpression)
 	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("compliance_severity", association.ComplianceSeverity)
@@ -325,7 +325,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
