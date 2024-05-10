@@ -41,7 +41,7 @@ func resourceSubscriptionFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -87,7 +87,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 	logGroupName := d.Get("log_group_name").(string)
 	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.PutSubscriptionFilterInput{
-		DestinationArn: aws.String(d.Get("destination_arn").(string)),
+		DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 		FilterName:     aws.String(name),
 		FilterPattern:  aws.String(d.Get("filter_pattern").(string)),
 		LogGroupName:   aws.String(logGroupName),
@@ -147,7 +147,7 @@ func resourceSubscriptionFilterRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Subscription Filter (%s): %s", d.Id(), err)
 	}
 
-	d.Set("destination_arn", subscriptionFilter.DestinationArn)
+	d.Set(names.AttrDestinationARN, subscriptionFilter.DestinationArn)
 	d.Set("distribution", subscriptionFilter.Distribution)
 	d.Set("filter_pattern", subscriptionFilter.FilterPattern)
 	d.Set("log_group_name", subscriptionFilter.LogGroupName)

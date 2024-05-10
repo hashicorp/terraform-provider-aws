@@ -37,7 +37,7 @@ func TestAccLogsSubscriptionFilter_basic(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", lambdaFunctionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "distribution", "ByLogStream"),
 					resource.TestCheckResourceAttr(resourceName, "filter_pattern", "logtype test"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
@@ -139,7 +139,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisDataFirehose(t *testing
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisDataFirehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", firehoseResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, firehoseResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccLogsSubscriptionFilter_DestinationARN_kinesisStream(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNKinesisStream(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, resourceName, &filter),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", kinesisStream, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, kinesisStream, names.AttrARN),
 				),
 			},
 			{
