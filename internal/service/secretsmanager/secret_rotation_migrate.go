@@ -42,7 +42,7 @@ func secretRotationResourceV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
