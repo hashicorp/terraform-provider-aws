@@ -23,7 +23,7 @@ func DataSourceDistributedGrants() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDistributedGrantsRead,
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: DataSourceFiltersSchema(),
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -59,7 +59,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", grantARNs)
+	d.Set(names.AttrARNs, grantARNs)
 
 	return diags
 }
