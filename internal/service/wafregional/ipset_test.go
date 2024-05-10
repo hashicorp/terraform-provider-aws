@@ -7,21 +7,18 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -246,117 +243,6 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 	})
 }
 
-func TestDiffIPSetDescriptors(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Old             []interface{}
-		New             []interface{}
-		ExpectedUpdates [][]awstypes.IPSetUpdate
-	}{
-		{
-			// Change
-			Old: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
-			},
-			New: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
-			},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("192.0.7.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("192.0.8.0/24"),
-						},
-					},
-				},
-			},
-		},
-		{
-			// Fresh IPSet
-			Old: []interface{}{},
-			New: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.1.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.2.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "10.0.3.0/24"},
-			},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("10.0.1.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("10.0.2.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionInsert,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("10.0.3.0/24"),
-						},
-					},
-				},
-			},
-		},
-		{
-			// Deletion
-			Old: []interface{}{
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.7.0/24"},
-				map[string]interface{}{names.AttrType: "IPV4", names.AttrValue: "192.0.8.0/24"},
-			},
-			New: []interface{}{},
-			ExpectedUpdates: [][]awstypes.IPSetUpdate{
-				{
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("192.0.7.0/24"),
-						},
-					},
-					{
-						Action: awstypes.ChangeActionDelete,
-						IPSetDescriptor: &awstypes.IPSetDescriptor{
-							Type:  awstypes.IPSetDescriptorType("IPV4"),
-							Value: aws.String("192.0.8.0/24"),
-						},
-					},
-				},
-			},
-		},
-	}
-
-	for i, tc := range testCases {
-		tc := tc
-		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
-			t.Parallel()
-
-			updates := tfwafregional.DiffIPSetDescriptors(tc.Old, tc.New)
-			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
-				t.Fatalf("IPSet updates don't match.\nGiven: %v\nExpected: %v",
-					updates, tc.ExpectedUpdates)
-			}
-		})
-	}
-}
-
 func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -365,21 +251,18 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetIPSet(ctx, &wafregional.GetIPSetInput{
-				IPSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.IPSet.IPSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF IPSet %s still exists", rs.Primary.ID)
-				}
-			}
+			_, err := tfwafregional.FindIPSetByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WAF Regional IPSet %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -393,32 +276,24 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF IPSet ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetIPSet(ctx, &wafregional.GetIPSetInput{
-			IPSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindIPSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.IPSet.IPSetId == rs.Primary.ID {
-			*v = *resp.IPSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF IPSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
 func testAccIPSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -431,7 +306,7 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccIPSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -444,7 +319,7 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccIPSetConfig_changeDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 
   ip_set_descriptor {
     type  = "IPV4"
@@ -457,8 +332,8 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccIPSetConfig_ipSetDescriptors(name, ipSetDescriptors string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
-  %s
+  name = %[1]q
+  %[2]s
 }
 `, name, ipSetDescriptors)
 }
@@ -466,7 +341,7 @@ resource "aws_wafregional_ipset" "ipset" {
 func testAccIPSetConfig_noDescriptors(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }

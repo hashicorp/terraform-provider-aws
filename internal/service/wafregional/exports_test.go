@@ -21,6 +21,7 @@ var (
 
 	FindByteMatchSetByID    = findByteMatchSetByID
 	FindGeoMatchSetByID     = findGeoMatchSetByID
+	FindIPSetByID           = findIPSetByID
 	FindWebACLByID          = findWebACLByID
 	FindWebACLByResourceARN = findWebACLByResourceARN
 )
