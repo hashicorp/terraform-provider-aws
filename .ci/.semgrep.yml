@@ -1435,3 +1435,13 @@ rules:
       - pattern: '"username"'
     severity: ERROR
     fix: "names.AttrUsername"
+  - id: literal-configuration-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrConfiguration` for the string literal "configuration"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"configuration"'
+    severity: ERROR
+    fix: "names.AttrConfiguration"
