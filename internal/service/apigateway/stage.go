@@ -59,7 +59,7 @@ func resourceStage() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -553,7 +553,7 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	result := make([]map[string]interface{}, 0, 1)
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
-			"destination_arn": aws.ToString(accessLogSettings.DestinationArn),
+			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
 			names.AttrFormat:  aws.ToString(accessLogSettings.Format),
 		})
 	}
