@@ -1465,3 +1465,13 @@ rules:
       - pattern: '"format"'
     severity: ERROR
     fix: "names.AttrFormat"
+  - id: literal-mode-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMode` for the string literal "mode"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"mode"'
+    severity: ERROR
+    fix: "names.AttrMode"
