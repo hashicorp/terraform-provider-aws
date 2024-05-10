@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -220,7 +218,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 	})
 }
 
-func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, constraints *awstypes.SizeConstraintSet) resource.TestCheckFunc {
+func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, v *awstypes.SizeConstraintSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -232,20 +230,16 @@ func testAccCheckSizeConstraintSetExists(ctx context.Context, n string, constrai
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetSizeConstraintSet(ctx, &wafregional.GetSizeConstraintSetInput{
-			SizeConstraintSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.SizeConstraintSet.SizeConstraintSetId == rs.Primary.ID {
-			*constraints = *resp.SizeConstraintSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF SizeConstraintSet (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -257,22 +251,18 @@ func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestChec
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetSizeConstraintSet(ctx, &wafregional.GetSizeConstraintSetInput{
-				SizeConstraintSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.SizeConstraintSet.SizeConstraintSetId == rs.Primary.ID {
-					return fmt.Errorf("WAF SizeConstraintSet %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindSizeConstraintSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the SizeConstraintSet is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional Size Constraint Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -282,7 +272,7 @@ func testAccCheckSizeConstraintSetDestroy(ctx context.Context) resource.TestChec
 func testAccSizeConstraintSetConfig_basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
-  name = "%s"
+  name = %[1]q
 
   size_constraints {
     text_transformation = "NONE"
@@ -300,7 +290,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 func testAccSizeConstraintSetConfig_changeName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
-  name = "%s"
+  name = %[1]q
 
   size_constraints {
     text_transformation = "NONE"
@@ -318,7 +308,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 func testAccSizeConstraintSetConfig_changes(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
-  name = "%s"
+  name = %[1]q
 
   size_constraints {
     text_transformation = "NONE"
@@ -336,7 +326,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 func testAccSizeConstraintSetConfig_nos(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
-  name = "%s"
+  name = %[1]q
 }
 `, name)
 }
