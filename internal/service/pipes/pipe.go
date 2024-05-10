@@ -99,7 +99,7 @@ func resourcePipe() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -133,7 +133,7 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		Source:       aws.String(d.Get("source").(string)),
+		Source:       aws.String(d.Get(names.AttrSource).(string)),
 		Tags:         getTagsIn(ctx),
 		Target:       aws.String(d.Get("target").(string)),
 	}
@@ -202,7 +202,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set("source", output.Source)
+	d.Set(names.AttrSource, output.Source)
 	if v := output.SourceParameters; !types.IsZero(v) {
 		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
 			return diag.Errorf("setting source_parameters: %s", err)
