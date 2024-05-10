@@ -55,7 +55,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("modification_time", ruleGroupAssociation.ModificationTime)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
 	d.Set(names.AttrName, ruleGroupAssociation.Name)
-	d.Set("priority", ruleGroupAssociation.Priority)
+	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
 	d.Set(names.AttrStatus, ruleGroupAssociation.Status)
 	d.Set("status_message", ruleGroupAssociation.StatusMessage)
 	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)

@@ -49,7 +49,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.+`)),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -141,8 +141,8 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_email",
-						"priority":     "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -159,12 +159,12 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_email",
-						"priority":     "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_phone_number",
-						"priority":     "2",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "2",
 					}),
 				),
 			},
@@ -176,8 +176,8 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						names.AttrName: "verified_phone_number",
-						"priority":     "1",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "1",
 					}),
 				),
 			},

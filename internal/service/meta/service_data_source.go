@@ -49,7 +49,7 @@ func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaReq
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

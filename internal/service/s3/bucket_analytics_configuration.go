@@ -43,13 +43,13 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							AtLeastOneOf: []string{"filter.0.prefix", "filter.0.tags"},
@@ -114,7 +114,7 @@ func resourceBucketAnalyticsConfiguration() *schema.Resource {
 																Default:          types.AnalyticsS3ExportFileFormatCsv,
 																ValidateDiagFunc: enum.Validate[types.AnalyticsS3ExportFileFormat](),
 															},
-															"prefix": {
+															names.AttrPrefix: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -144,7 +144,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		StorageClassAnalysis: expandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		analyticsConfiguration.Filter = expandAnalyticsFilter(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -204,7 +204,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrBucket, bucket)
-	if err := d.Set("filter", flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
+	if err := d.Set(names.AttrFilter, flattenAnalyticsFilter(ctx, ac.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set(names.AttrName, name)
@@ -261,7 +261,7 @@ func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 
 func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.AnalyticsFilter {
 	var prefix string
-	if v, ok := m["prefix"]; ok {
+	if v, ok := m[names.AttrPrefix]; ok {
 		prefix = v.(string)
 	}
 
@@ -349,7 +349,7 @@ func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3Buc
 			result.BucketAccountId = aws.String(v.(string))
 		}
 
-		if v, ok := bdm["prefix"]; ok && v != "" {
+		if v, ok := bdm[names.AttrPrefix]; ok && v != "" {
 			result.Prefix = aws.String(v.(string))
 		}
 	}
@@ -363,13 +363,13 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 	switch v := analyticsFilter.(type) {
 	case *types.AnalyticsFilterMemberAnd:
 		if v := v.Value.Prefix; v != nil {
-			result["prefix"] = aws.ToString(v)
+			result[names.AttrPrefix] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
 			result[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.AnalyticsFilterMemberPrefix:
-		result["prefix"] = v.Value
+		result[names.AttrPrefix] = v.Value
 	case *types.AnalyticsFilterMemberTag:
 		tags := []types.Tag{
 			v.Value,
@@ -426,7 +426,7 @@ func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3Buc
 		result["bucket_account_id"] = aws.ToString(bucketDestination.BucketAccountId)
 	}
 	if bucketDestination.Prefix != nil {
-		result["prefix"] = aws.ToString(bucketDestination.Prefix)
+		result[names.AttrPrefix] = aws.ToString(bucketDestination.Prefix)
 	}
 
 	return []interface{}{result}

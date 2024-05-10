@@ -81,7 +81,7 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -198,7 +198,7 @@ func resourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resourc
 
 	d.Set("dns_name", accelerator.DnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)

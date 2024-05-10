@@ -92,7 +92,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 										Optional:  true,
 										Sensitive: true,
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
 									},
 									"http_method": schema.StringAttribute{

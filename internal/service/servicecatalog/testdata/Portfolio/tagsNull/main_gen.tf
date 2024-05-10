@@ -11,7 +11,6 @@ resource "aws_servicecatalog_portfolio" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -21,4 +20,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

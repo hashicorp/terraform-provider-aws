@@ -78,8 +78,8 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "example",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "example",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
@@ -98,15 +98,15 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 						"scan_frequency": "CONTINUOUS_SCAN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "example",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "example",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "SCAN_ON_PUSH",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.repository_filter.*", map[string]string{
-						"filter":      "*",
-						"filter_type": "WILDCARD",
+						names.AttrFilter: "*",
+						"filter_type":    "WILDCARD",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "ENHANCED"),
 				),

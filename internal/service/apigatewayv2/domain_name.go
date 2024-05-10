@@ -77,7 +77,7 @@ func resourceDomainName() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -366,7 +366,7 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 	tfMap["endpoint_type"] = string(apiObject.EndpointType)
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	tfMap["security_policy"] = string(apiObject.SecurityPolicy)

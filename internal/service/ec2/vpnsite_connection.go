@@ -111,7 +111,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1441,7 +1441,7 @@ func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{}
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.StringValue(v)
+		tfMap[names.AttrSource] = aws.StringValue(v)
 	}
 
 	if v := apiObject.State; v != nil {

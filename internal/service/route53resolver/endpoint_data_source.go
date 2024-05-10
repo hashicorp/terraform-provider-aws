@@ -28,7 +28,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
@@ -86,7 +86,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	endpointID := d.Get("resolver_endpoint_id").(string)
 	input := &route53resolver.ListResolverEndpointsInput{}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = buildR53ResolverTagFilters(v.(*schema.Set))
 	}
 

@@ -762,7 +762,7 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /pets"),
 					resource.TestCheckResourceAttr(resourceName, "route_selection_expression", "$request.method $request.path"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target", "http://www.example.com/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "http://www.example.com/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, ""),
 				),
 			},
@@ -772,7 +772,7 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"route_key",
-					"target",
+					names.AttrTarget,
 				},
 			},
 		},

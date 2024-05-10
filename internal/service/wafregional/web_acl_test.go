@@ -333,7 +333,7 @@ func TestAccWAFRegionalWebACL_changeRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWebACLRuleIndex(&r.RuleId, 1, "REGULAR", "BLOCK", &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"priority": "1",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -411,11 +411,11 @@ func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, acti
 			names.AttrType: actionType,
 		}
 		m := map[string]interface{}{
-			"rule_id":         **ruleId,
-			names.AttrType:    ruleType,
-			"priority":        priority,
-			"action":          []interface{}{actionMap},
-			"override_action": []interface{}{},
+			"rule_id":          **ruleId,
+			names.AttrType:     ruleType,
+			names.AttrPriority: priority,
+			names.AttrAction:   []interface{}{actionMap},
+			"override_action":  []interface{}{},
 		}
 
 		f := schema.HashResource(ruleResource)

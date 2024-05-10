@@ -96,13 +96,13 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -370,7 +370,7 @@ func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *typ
 		apiObject.Expiration = expandLifecycleExpiration(v)
 	}
 
-	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 		apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 	}
 
@@ -406,7 +406,7 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types
 
 	apiObject := &types.LifecycleRuleFilter{}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -479,7 +479,7 @@ func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) ma
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenLifecycleRuleFilter(ctx, v)
+		tfMap[names.AttrFilter] = flattenLifecycleRuleFilter(ctx, v)
 	}
 
 	if v := apiObject.ID; v != nil {
@@ -498,7 +498,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 
 	if apiObject.And != nil {
 		if v := apiObject.And.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.And.Tags; v != nil {
@@ -506,7 +506,7 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleR
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.ToString(v)
+			tfMap[names.AttrPrefix] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {

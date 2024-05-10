@@ -55,7 +55,7 @@ func ResourceExtension() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ActionPoint](),
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -276,7 +276,7 @@ func expandExtensionActionPoints(actionsPointListRaw []interface{}) map[string][
 	actionsMap := make(map[string][]awstypes.Action)
 	for _, actionPointRaw := range actionsPointListRaw {
 		actionPointMap := actionPointRaw.(map[string]interface{})
-		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap["action"])
+		actionsMap[actionPointMap["point"].(string)] = expandExtensionActions(actionPointMap[names.AttrAction])
 	}
 
 	return actionsMap
@@ -328,8 +328,8 @@ func flattenExtensionActionPoints(actionPointsMap map[string][]awstypes.Action) 
 	var rawActionPoints []interface{}
 	for actionPoint, actions := range actionPointsMap {
 		rawActionPoint := map[string]interface{}{
-			"point":  actionPoint,
-			"action": flattenExtensionActions(actions),
+			"point":          actionPoint,
+			names.AttrAction: flattenExtensionActions(actions),
 		}
 		rawActionPoints = append(rawActionPoints, rawActionPoint)
 	}

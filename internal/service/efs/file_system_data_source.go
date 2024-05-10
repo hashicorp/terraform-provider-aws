@@ -47,11 +47,11 @@ func DataSourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -128,7 +128,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.CreationToken = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok {
+	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
@@ -153,8 +153,8 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
-	d.Set("file_system_id", fsID)
-	d.Set("encrypted", fs.Encrypted)
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrEncrypted, fs.Encrypted)
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
 	d.Set(names.AttrName, fs.Name)
 	d.Set("performance_mode", fs.PerformanceMode)

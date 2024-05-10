@@ -166,7 +166,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.AacInputType](),
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1298,7 +1298,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"source": {
+							names.AttrSource: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.TimecodeConfigSource](),
@@ -1524,7 +1524,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1797,7 +1797,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1854,7 +1854,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Computed:         true,
 																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																	Computed: true,
@@ -3257,7 +3257,7 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	if v, ok := m["input_type"].(string); ok && v != "" {
 		out.InputType = types.AacInputType(v)
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.AacProfile(v)
 	}
 	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
@@ -4876,7 +4876,7 @@ func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.Tim
 	m := tfList[0].(map[string]interface{})
 
 	var config types.TimecodeConfig
-	if v, ok := m["source"].(string); ok && v != "" {
+	if v, ok := m[names.AttrSource].(string); ok && v != "" {
 		config.Source = types.TimecodeConfigSource(v)
 	}
 	if v, ok := m["sync_threshold"].(int); ok && v != 0 {
@@ -5466,7 +5466,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.H264Profile(v)
 	}
 	if v, ok := m["quality_level"].(string); ok && v != "" {
@@ -5613,7 +5613,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.H265Profile(v)
 	}
 	if v, ok := m["qvbr_quality_level"].(int); ok && v != 0 {
@@ -5736,7 +5736,7 @@ func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurni
 	if v, ok := m["timecode_burnin_position"].(string); ok && v != "" {
 		out.Position = types.TimecodeBurninPosition(v)
 	}
-	if v, ok := m["prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPrefix].(string); ok && v != "" {
 		out.Prefix = &v
 	}
 
@@ -6639,7 +6639,7 @@ func flattenTimecodeConfig(in *types.TimecodeConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"source":         string(in.Source),
+		names.AttrSource: string(in.Source),
 		"sync_threshold": int(aws.ToInt32(in.SyncThreshold)),
 	}
 
@@ -6954,7 +6954,7 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
 		"par_control":             string(in.ParControl),
 		"par_denominator":         int(aws.ToInt32(in.ParDenominator)),
 		"par_numerator":           int(aws.ToInt32(in.ParNumerator)),
-		"profile":                 string(in.Profile),
+		names.AttrProfile:         string(in.Profile),
 		"quality_level":           string(in.QualityLevel),
 		"qvbr_quality_level":      int(aws.ToInt32(in.QvbrQualityLevel)),
 		"rate_control_mode":       string(in.RateControlMode),
@@ -7023,7 +7023,7 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"min_i_interval":                int(aws.ToInt32(in.MinIInterval)),
 		"par_denominator":               int(aws.ToInt32(in.ParDenominator)),
 		"par_numerator":                 int(aws.ToInt32(in.ParNumerator)),
-		"profile":                       string(in.Profile),
+		names.AttrProfile:               string(in.Profile),
 		"qvbr_quality_level":            int(aws.ToInt32(in.QvbrQualityLevel)),
 		"rate_control_mode":             string(in.RateControlMode),
 		"scan_type":                     string(in.ScanType),
@@ -7107,7 +7107,7 @@ func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []inter
 	m := map[string]interface{}{
 		"timecode_burnin_font_size": string(in.FontSize),
 		"timecode_burnin_position":  string(in.Position),
-		"prefix":                    in.Prefix,
+		names.AttrPrefix:            in.Prefix,
 	}
 
 	return []interface{}{m}
@@ -7181,7 +7181,7 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
-		"profile":           string(in.Profile),
+		names.AttrProfile:   string(in.Profile),
 		"rate_control_mode": string(in.RateControlMode),
 		"raw_format":        string(in.RawFormat),
 		"sample_rate":       in.SampleRate,

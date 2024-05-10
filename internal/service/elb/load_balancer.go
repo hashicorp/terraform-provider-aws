@@ -77,7 +77,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -151,7 +151,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(5, 300),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: ValidHeathCheckTarget,
@@ -554,7 +554,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
 				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
 				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
-				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
+				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
 		} else if len(logs) == 0 {
 			// disable access logs
@@ -621,7 +621,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				HealthCheck: &elb.HealthCheck{
 					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
 					Interval:           aws.Int64(int64(check["interval"].(int))),
-					Target:             aws.String(check["target"].(string)),
+					Target:             aws.String(check[names.AttrTarget].(string)),
 					Timeout:            aws.Int64(int64(check["timeout"].(int))),
 					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
 				},

@@ -130,7 +130,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"action": {
+												names.AttrAction: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.OverrideAction_Values(), false),
@@ -138,7 +138,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 											},
 										},
 									},
-									"priority": {
+									names.AttrPriority: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -167,7 +167,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"priority": {
+									names.AttrPriority: {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ValidateFunc: validation.IntAtLeast(1),
@@ -430,7 +430,7 @@ func expandStatefulRuleGroupOverride(l []interface{}) *networkfirewall.StatefulR
 	lRaw := l[0].(map[string]interface{})
 	override := &networkfirewall.StatefulRuleGroupOverride{}
 
-	if v, ok := lRaw["action"].(string); ok && v != "" {
+	if v, ok := lRaw[names.AttrAction].(string); ok && v != "" {
 		override.SetAction(v)
 	}
 
@@ -449,7 +449,7 @@ func expandStatefulRuleGroupReferences(l []interface{}) []*networkfirewall.State
 		}
 
 		reference := &networkfirewall.StatefulRuleGroupReference{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
 		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
@@ -477,7 +477,7 @@ func expandStatelessRuleGroupReferences(l []interface{}) []*networkfirewall.Stat
 			continue
 		}
 		reference := &networkfirewall.StatelessRuleGroupReference{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
 			reference.Priority = aws.Int64(int64(v))
 		}
 		if v, ok := tfMap[names.AttrResourceARN].(string); ok && v != "" {
@@ -599,7 +599,7 @@ func flattenStatefulRuleGroupOverride(override *networkfirewall.StatefulRuleGrou
 	}
 
 	m := map[string]interface{}{
-		"action": aws.StringValue(override.Action),
+		names.AttrAction: aws.StringValue(override.Action),
 	}
 
 	return []interface{}{m}
@@ -612,7 +612,7 @@ func flattenPolicyStatefulRuleGroupReference(l []*networkfirewall.StatefulRuleGr
 			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		if ref.Priority != nil {
-			reference["priority"] = int(aws.Int64Value(ref.Priority))
+			reference[names.AttrPriority] = int(aws.Int64Value(ref.Priority))
 		}
 		if ref.Override != nil {
 			reference["override"] = flattenStatefulRuleGroupOverride(ref.Override)
@@ -628,7 +628,7 @@ func flattenPolicyStatelessRuleGroupReference(l []*networkfirewall.StatelessRule
 	references := make([]interface{}, 0, len(l))
 	for _, ref := range l {
 		reference := map[string]interface{}{
-			"priority":            int(aws.Int64Value(ref.Priority)),
+			names.AttrPriority:    int(aws.Int64Value(ref.Priority)),
 			names.AttrResourceARN: aws.StringValue(ref.ResourceArn),
 		}
 		references = append(references, reference)

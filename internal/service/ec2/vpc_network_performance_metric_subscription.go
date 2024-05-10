@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_network_performance_metric_subscription")
@@ -44,7 +45,7 @@ func ResourceNetworkPerformanceMetricSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +66,7 @@ func resourceNetworkPerformanceMetricSubscriptionCreate(ctx context.Context, d *
 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	source := d.Get("source").(string)
+	source := d.Get(names.AttrSource).(string)
 	destination := d.Get("destination").(string)
 	metric := d.Get("metric").(string)
 	statistic := d.Get("statistic").(string)
@@ -114,7 +115,7 @@ func resourceNetworkPerformanceMetricSubscriptionRead(ctx context.Context, d *sc
 	d.Set("destination", subscription.Destination)
 	d.Set("metric", subscription.Metric)
 	d.Set("period", subscription.Period)
-	d.Set("source", subscription.Source)
+	d.Set(names.AttrSource, subscription.Source)
 	d.Set("statistic", subscription.Statistic)
 
 	return diags

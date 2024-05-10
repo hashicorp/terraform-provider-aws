@@ -66,7 +66,7 @@ func (r *applicationLayerAutomaticResponseResource) Metadata(_ context.Context, 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"action": schema.StringAttribute{
+			names.AttrAction: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
 				Required:   true,
 			},

@@ -138,7 +138,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 											},
 										},
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,

@@ -148,7 +148,7 @@ func ResourceRuleGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"action": {
+												names.AttrAction: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(networkfirewall.StatefulAction_Values(), false),
@@ -177,7 +177,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleProtocol_Values(), false),
 															},
-															"source": {
+															names.AttrSource: {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -220,7 +220,7 @@ func ResourceRuleGroup() *schema.Resource {
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"priority": {
+															names.AttrPriority: {
 																Type:     schema.TypeInt,
 																Required: true,
 															},
@@ -275,7 +275,7 @@ func ResourceRuleGroup() *schema.Resource {
 																						Optional: true,
 																						Elem:     &schema.Schema{Type: schema.TypeInt},
 																					},
-																					"source": {
+																					names.AttrSource: {
 																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
@@ -697,7 +697,7 @@ func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		header.Protocol = aws.String(v)
 	}
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		header.Source = aws.String(v)
 	}
 	if v, ok := tfMap["source_port"].(string); ok && v != "" {
@@ -766,7 +766,7 @@ func expandStatefulRules(l []interface{}) []*networkfirewall.StatefulRule {
 			continue
 		}
 		rule := &networkfirewall.StatefulRule{}
-		if v, ok := tfMap["action"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 			rule.Action = aws.String(v)
 		}
 		if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1014,7 +1014,7 @@ func expandMatchAttributes(l []interface{}) *networkfirewall.MatchAttributes {
 	if v, ok := tfMap["protocols"].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Protocols = flex.ExpandInt64Set(v)
 	}
-	if v, ok := tfMap["source"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSource].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Sources = expandAddresses(v.List())
 	}
 	if v, ok := tfMap["source_port"].(*schema.Set); ok && v.Len() > 0 {
@@ -1056,7 +1056,7 @@ func expandStatelessRules(l []interface{}) []*networkfirewall.StatelessRule {
 			continue
 		}
 		statelessRule := &networkfirewall.StatelessRule{}
-		if v, ok := tfMap["priority"].(int); ok && v > 0 {
+		if v, ok := tfMap[names.AttrPriority].(int); ok && v > 0 {
 			statelessRule.Priority = aws.Int64(int64(v))
 		}
 		if v, ok := tfMap["rule_definition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1243,9 +1243,9 @@ func flattenStatefulRules(sr []*networkfirewall.StatefulRule) []interface{} {
 	rules := make([]interface{}, 0, len(sr))
 	for _, s := range sr {
 		m := map[string]interface{}{
-			"action":      aws.StringValue(s.Action),
-			"header":      flattenHeader(s.Header),
-			"rule_option": flattenRuleOptions(s.RuleOptions),
+			names.AttrAction: aws.StringValue(s.Action),
+			"header":         flattenHeader(s.Header),
+			"rule_option":    flattenRuleOptions(s.RuleOptions),
 		}
 		rules = append(rules, m)
 	}
@@ -1262,7 +1262,7 @@ func flattenHeader(h *networkfirewall.Header) []interface{} {
 		"destination_port": aws.StringValue(h.DestinationPort),
 		"direction":        aws.StringValue(h.Direction),
 		names.AttrProtocol: aws.StringValue(h.Protocol),
-		"source":           aws.StringValue(h.Source),
+		names.AttrSource:   aws.StringValue(h.Source),
 		"source_port":      aws.StringValue(h.SourcePort),
 	}
 
@@ -1307,8 +1307,8 @@ func flattenStatelessRules(sr []*networkfirewall.StatelessRule) []interface{} {
 	rules := make([]interface{}, 0, len(sr))
 	for _, s := range sr {
 		rule := map[string]interface{}{
-			"priority":        int(aws.Int64Value(s.Priority)),
-			"rule_definition": flattenRuleDefinition(s.RuleDefinition),
+			names.AttrPriority: int(aws.Int64Value(s.Priority)),
+			"rule_definition":  flattenRuleDefinition(s.RuleDefinition),
 		}
 		rules = append(rules, rule)
 	}
@@ -1338,7 +1338,7 @@ func flattenMatchAttributes(ma *networkfirewall.MatchAttributes) []interface{} {
 		"destination":      flattenAddresses(ma.Destinations),
 		"destination_port": flattenPortRanges(ma.DestinationPorts),
 		"protocols":        flex.FlattenInt64Set(ma.Protocols),
-		"source":           flattenAddresses(ma.Sources),
+		names.AttrSource:   flattenAddresses(ma.Sources),
 		"source_port":      flattenPortRanges(ma.SourcePorts),
 		"tcp_flag":         flattenTCPFlags(ma.TCPFlags),
 	}

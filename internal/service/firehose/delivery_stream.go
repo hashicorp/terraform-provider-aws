@@ -262,7 +262,7 @@ func resourceDeliveryStream() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -656,7 +656,7 @@ func resourceDeliveryStream() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"catalog_id": {
+													names.AttrCatalogID: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
@@ -665,7 +665,7 @@ func resourceDeliveryStream() *schema.Resource {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"region": {
+													names.AttrRegion: {
 														Type:     schema.TypeString,
 														Optional: true,
 														Computed: true,
@@ -709,7 +709,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: verify.ValidARN,
 							},
-							"prefix": {
+							names.AttrPrefix: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -735,7 +735,7 @@ func resourceDeliveryStream() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"access_key": {
+							names.AttrAccessKey: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 4096),
@@ -1197,7 +1197,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"password": {
+							names.AttrPassword: {
 								Type:      schema.TypeString,
 								Required:  true,
 								Sensitive: true,
@@ -2206,10 +2206,10 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 		VersionId:    aws.String(m["version_id"].(string)),
 	}
 
-	if v, ok := m["catalog_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCatalogID].(string); ok && v != "" {
 		config.CatalogId = aws.String(v)
 	}
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
@@ -2360,7 +2360,7 @@ func expandVPCConfiguration(es map[string]interface{}) *types.VpcConfiguration {
 }
 
 func expandPrefix(s3 map[string]interface{}) *string {
-	if v, ok := s3["prefix"]; ok {
+	if v, ok := s3[names.AttrPrefix]; ok {
 		return aws.String(v.(string))
 	}
 
@@ -2372,7 +2372,7 @@ func expandRedshiftDestinationConfiguration(redshift map[string]interface{}) *ty
 	configuration := &types.RedshiftDestinationConfiguration{
 		ClusterJDBCURL:  aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:    expandRedshiftRetryOptions(redshift),
-		Password:        aws.String(redshift["password"].(string)),
+		Password:        aws.String(redshift[names.AttrPassword].(string)),
 		Username:        aws.String(redshift["username"].(string)),
 		RoleARN:         aws.String(roleARN),
 		CopyCommand:     expandCopyCommand(redshift),
@@ -2398,7 +2398,7 @@ func expandRedshiftDestinationUpdate(redshift map[string]interface{}) *types.Red
 	configuration := &types.RedshiftDestinationUpdate{
 		ClusterJDBCURL: aws.String(redshift["cluster_jdbcurl"].(string)),
 		RetryOptions:   expandRedshiftRetryOptions(redshift),
-		Password:       aws.String(redshift["password"].(string)),
+		Password:       aws.String(redshift[names.AttrPassword].(string)),
 		Username:       aws.String(redshift["username"].(string)),
 		RoleARN:        aws.String(roleARN),
 		CopyCommand:    expandCopyCommand(redshift),
@@ -2938,7 +2938,7 @@ func expandHTTPEndpointConfiguration(ep map[string]interface{}) *types.HttpEndpo
 		endpointConfiguration.Name = aws.String(Name.(string))
 	}
 
-	if AccessKey, ok := ep["access_key"]; ok {
+	if AccessKey, ok := ep[names.AttrAccessKey]; ok {
 		endpointConfiguration.AccessKey = aws.String(AccessKey.(string))
 	}
 
@@ -3353,7 +3353,7 @@ func flattenExtendedS3DestinationDescription(description *types.ExtendedS3Destin
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
 		"error_output_prefix":                  aws.ToString(description.ErrorOutputPrefix),
 		"file_extension":                       aws.ToString(description.FileExtension),
-		"prefix":                               aws.ToString(description.Prefix),
+		names.AttrPrefix:                       aws.ToString(description.Prefix),
 		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeExtendedS3, aws.ToString(description.RoleARN)),
 		"dynamic_partitioning_configuration":   flattenDynamicPartitioningConfiguration(description.DynamicPartitioningConfiguration),
 		names.AttrRoleARN:                      aws.ToString(description.RoleARN),
@@ -3381,7 +3381,7 @@ func flattenRedshiftDestinationDescription(description *types.RedshiftDestinatio
 	m := map[string]interface{}{
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"cluster_jdbcurl":            aws.ToString(description.ClusterJDBCURL),
-		"password":                   configuredPassword,
+		names.AttrPassword:           configuredPassword,
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeRedshift, aws.ToString(description.RoleARN)),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 		"s3_backup_configuration":    flattenS3DestinationDescription(description.S3BackupDescription),
@@ -3473,7 +3473,7 @@ func flattenS3DestinationDescription(description *types.S3DestinationDescription
 		"cloudwatch_logging_options": flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":         description.CompressionFormat,
 		"error_output_prefix":        aws.ToString(description.ErrorOutputPrefix),
-		"prefix":                     aws.ToString(description.Prefix),
+		names.AttrPrefix:             aws.ToString(description.Prefix),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),
 	}
 
@@ -3695,9 +3695,9 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 	}
 
 	m := map[string]interface{}{
-		"catalog_id":           aws.ToString(sc.CatalogId),
+		names.AttrCatalogID:    aws.ToString(sc.CatalogId),
 		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
-		"region":               aws.ToString(sc.Region),
+		names.AttrRegion:       aws.ToString(sc.Region),
 		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
 		"table_name":           aws.ToString(sc.TableName),
 		"version_id":           aws.ToString(sc.VersionId),
@@ -3812,7 +3812,7 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 		return []map[string]interface{}{}
 	}
 	m := map[string]interface{}{
-		"access_key":                 configuredAccessKey,
+		names.AttrAccessKey:          configuredAccessKey,
 		"url":                        aws.ToString(description.EndpointConfiguration.Url),
 		names.AttrName:               aws.ToString(description.EndpointConfiguration.Name),
 		names.AttrRoleARN:            aws.ToString(description.RoleARN),

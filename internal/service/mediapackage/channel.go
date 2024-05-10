@@ -63,7 +63,7 @@ func ResourceChannel() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"password": {
+									names.AttrPassword: {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,
@@ -206,9 +206,9 @@ func flattenHLSIngest(h *types.HlsIngest) []map[string]interface{} {
 	var ingestEndpoints []map[string]interface{}
 	for _, e := range h.IngestEndpoints {
 		endpoint := map[string]interface{}{
-			"password": aws.ToString(e.Password),
-			"url":      aws.ToString(e.Url),
-			"username": aws.ToString(e.Username),
+			names.AttrPassword: aws.ToString(e.Password),
+			"url":              aws.ToString(e.Url),
+			"username":         aws.ToString(e.Username),
 		}
 
 		ingestEndpoints = append(ingestEndpoints, endpoint)

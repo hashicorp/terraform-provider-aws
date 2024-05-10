@@ -396,7 +396,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
-																		"target": {
+																		names.AttrTarget: {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
@@ -486,7 +486,7 @@ func ResourceClassificationJob() *schema.Resource {
 																			Computed:     true,
 																			ValidateFunc: validation.StringInSlice(tagScopeTermKey_Values(), false),
 																		},
-																		"target": {
+																		names.AttrTarget: {
 																			Type:         schema.TypeString,
 																			Optional:     true,
 																			Computed:     true,
@@ -558,7 +558,7 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 	//The following will clear the diff for these keys if the object exists already in the state.
 	if diff.Id() != "" {
 		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.excludes") {
-			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
+			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, names.AttrTarget) {
 				err := diff.Clear(key)
 				if err != nil {
 					return err
@@ -566,7 +566,7 @@ func resourceClassificationJobCustomizeDiff(_ context.Context, diff *schema.Reso
 			}
 		}
 		for _, key := range diff.GetChangedKeysPrefix("s3_job_definition.0.scoping.0.includes") {
-			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, "target") {
+			if strings.Contains(key, "tag_scope_term") && strings.Contains(key, names.AttrTarget) {
 				err := diff.Clear(key)
 				if err != nil {
 					return err
@@ -996,7 +996,7 @@ func expandTagScopeTerm(tagScopeTerm []interface{}) *macie2.TagScopeTerm {
 	if v, ok := tagScopeTermMap["comparator"]; ok && v.(string) != "" {
 		tagTerm.Comparator = aws.String(v.(string))
 	}
-	if v, ok := tagScopeTermMap["target"]; ok && v.(string) != "" {
+	if v, ok := tagScopeTermMap[names.AttrTarget]; ok && v.(string) != "" {
 		tagTerm.Target = aws.String(v.(string))
 	}
 
@@ -1273,10 +1273,10 @@ func flattenTagScopeTerm(tagScopeTerm *macie2.TagScopeTerm) []map[string]interfa
 	var tagScopeTermList []map[string]interface{}
 
 	tagScopeTermList = append(tagScopeTermList, map[string]interface{}{
-		names.AttrKey: aws.StringValue(tagScopeTerm.Key),
-		"comparator":  aws.StringValue(tagScopeTerm.Comparator),
-		"target":      aws.StringValue(tagScopeTerm.Target),
-		"tag_values":  flattenTagValues(tagScopeTerm.TagValues),
+		names.AttrKey:    aws.StringValue(tagScopeTerm.Key),
+		"comparator":     aws.StringValue(tagScopeTerm.Comparator),
+		names.AttrTarget: aws.StringValue(tagScopeTerm.Target),
+		"tag_values":     flattenTagValues(tagScopeTerm.TagValues),
 	})
 
 	return tagScopeTermList

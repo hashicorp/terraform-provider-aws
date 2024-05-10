@@ -82,7 +82,7 @@ func resourceMonitor() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"bucket_prefix": {
+									names.AttrBucketPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -455,7 +455,7 @@ func expandS3Config(tfList []interface{}) *types.S3Config {
 		apiObject.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		apiObject.BucketPrefix = aws.String(v)
 	}
 
@@ -502,7 +502,7 @@ func flattenS3Config(apiObject *types.S3Config) []interface{} {
 	}
 
 	if apiObject.BucketPrefix != nil {
-		tfMap["bucket_prefix"] = aws.ToString(apiObject.BucketPrefix)
+		tfMap[names.AttrBucketPrefix] = aws.ToString(apiObject.BucketPrefix)
 	}
 
 	return []interface{}{tfMap}

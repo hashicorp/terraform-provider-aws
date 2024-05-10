@@ -28,7 +28,7 @@ func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
 					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexache.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
 				),
 			},
 		},

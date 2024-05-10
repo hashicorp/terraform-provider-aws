@@ -292,7 +292,7 @@ func ResourceInstance() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -325,7 +325,7 @@ func ResourceInstance() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -381,7 +381,7 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -408,7 +408,7 @@ func ResourceInstance() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{names.AttrPassword},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -485,7 +485,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
@@ -593,7 +593,7 @@ func ResourceInstance() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -937,7 +937,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -971,7 +971,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
 			S3BucketName:            aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:      aws.String(tfMap["ingestion_role"].(string)),
-			S3Prefix:                aws.String(tfMap["bucket_prefix"].(string)),
+			S3Prefix:                aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:            aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion:     aws.String(tfMap["source_engine_version"].(string)),
 			StorageEncrypted:        aws.Bool(d.Get("storage_encrypted").(bool)),
@@ -1046,7 +1046,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
@@ -1284,7 +1284,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -1502,7 +1502,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DBParameterGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
 			requiresModifyDbInstance = true
 		}
@@ -1694,7 +1694,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 
@@ -1937,9 +1937,9 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v.Endpoint != nil {
 		d.Set("address", v.Endpoint.Address)
 		if v.Endpoint.Address != nil && v.Endpoint.Port != nil {
-			d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
+			d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", aws.StringValue(v.Endpoint.Address), aws.Int64Value(v.Endpoint.Port)))
 		}
-		d.Set("hosted_zone_id", v.Endpoint.HostedZoneId)
+		d.Set(names.AttrHostedZoneID, v.Endpoint.HostedZoneId)
 		d.Set(names.AttrPort, v.Endpoint.Port)
 	}
 
@@ -2008,7 +2008,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
 			"deletion_protection",
-			"password",
+			names.AttrPassword,
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
 			defer orchestrator.CleanUp(ctx)
@@ -2354,10 +2354,10 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.OptionGroupName = aws.String(d.Get("option_group_name").(string))
 	}
 
-	if d.HasChange("password") {
+	if d.HasChange(names.AttrPassword) {
 		needsModify = true
 		// With ManageMasterUserPassword set to true, the password is no longer needed, so we omit it from the API call.
-		if v, ok := d.GetOk("password"); ok {
+		if v, ok := d.GetOk(names.AttrPassword); ok {
 			input.MasterUserPassword = aws.String(v.(string))
 		}
 	}
@@ -3022,7 +3022,7 @@ func flattenEndpoint(apiObject *rds.Endpoint) map[string]interface{} {
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.StringValue(v)
+		tfMap[names.AttrHostedZoneID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Port; v != nil {

@@ -56,7 +56,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 		},
 	})
@@ -120,7 +120,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 		},
 	})
@@ -156,7 +156,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateIdFunc:       testAccLocationFSxWindowsImportStateID(resourceName),
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),

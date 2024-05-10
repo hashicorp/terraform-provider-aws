@@ -269,7 +269,7 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -452,7 +452,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
-	d.Set("endpoint", ds.Endpoint)
+	d.Set(names.AttrEndpoint, ds.Endpoint)
 	d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
@@ -496,7 +496,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
+		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
@@ -506,7 +506,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}

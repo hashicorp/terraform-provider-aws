@@ -129,7 +129,7 @@ func ResourcePreset() *schema.Resource {
 								"LittleEndian",
 							}, false),
 						},
-						"profile": {
+						names.AttrProfile: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -468,7 +468,7 @@ func ResourcePreset() *schema.Resource {
 								"ShrinkToFit",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -631,7 +631,7 @@ func expandETAudioCodecOptions(d *schema.ResourceData) *elastictranscoder.AudioC
 		codecOpts.Signed = aws.String(v.(string))
 	}
 
-	if v, ok := codec["profile"]; ok && v.(string) != "" {
+	if v, ok := codec[names.AttrProfile]; ok && v.(string) != "" {
 		codecOpts.Profile = aws.String(v.(string))
 	}
 
@@ -743,7 +743,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 			MaxWidth:         aws.String(p["max_width"].(string)),
 			Opacity:          aws.String(p["opacity"].(string)),
 			SizingPolicy:     aws.String(p["sizing_policy"].(string)),
-			Target:           aws.String(p["target"].(string)),
+			Target:           aws.String(p[names.AttrTarget].(string)),
 			VerticalAlign:    aws.String(p["vertical_align"].(string)),
 			VerticalOffset:   aws.String(p["vertical_offset"].(string)),
 		}
@@ -845,10 +845,10 @@ func flattenETAudioCodecOptions(opts *elastictranscoder.AudioCodecOptions) []map
 	}
 
 	result := map[string]interface{}{
-		"bit_depth": aws.StringValue(opts.BitDepth),
-		"bit_order": aws.StringValue(opts.BitOrder),
-		"profile":   aws.StringValue(opts.Profile),
-		"signed":    aws.StringValue(opts.Signed),
+		"bit_depth":       aws.StringValue(opts.BitDepth),
+		"bit_order":       aws.StringValue(opts.BitOrder),
+		names.AttrProfile: aws.StringValue(opts.Profile),
+		"signed":          aws.StringValue(opts.Signed),
 	}
 
 	return []map[string]interface{}{result}
@@ -909,7 +909,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 			"max_width":         aws.StringValue(w.MaxWidth),
 			"opacity":           aws.StringValue(w.Opacity),
 			"sizing_policy":     aws.StringValue(w.SizingPolicy),
-			"target":            aws.StringValue(w.Target),
+			names.AttrTarget:    aws.StringValue(w.Target),
 			"vertical_align":    aws.StringValue(w.VerticalAlign),
 			"vertical_offset":   aws.StringValue(w.VerticalOffset),
 		}

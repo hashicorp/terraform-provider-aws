@@ -59,7 +59,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -112,7 +112,7 @@ func resourcePhoneNumberCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:              aws.String(targetArn),
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.PhoneNumberPrefix = aws.String(v.(string))
 	}
 

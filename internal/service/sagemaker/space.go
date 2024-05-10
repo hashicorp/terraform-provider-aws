@@ -142,7 +142,7 @@ func ResourceSpace() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -816,7 +816,7 @@ func expandEFSFileSystem(tfMap map[string]interface{}) *sagemaker.EFSFileSystem 
 
 	apiObject := &sagemaker.EFSFileSystem{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -863,7 +863,7 @@ func flattenEFSFileSystem(apiObject *sagemaker.EFSFileSystem) []map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	return []map[string]interface{}{tfMap}

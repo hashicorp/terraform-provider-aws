@@ -98,7 +98,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -130,7 +130,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
-	d.Set("source", snapshot.Source)
+	d.Set(names.AttrSource, snapshot.Source)
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 

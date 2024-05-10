@@ -176,7 +176,7 @@ func ResourceBudgetAction() *schema.Resource {
 										MaxItems: 100,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -545,7 +545,7 @@ func expandBudgetActionActionSSMActionDefinition(l []interface{}) *awstypes.SsmA
 		config.ActionSubType = awstypes.ActionSubType(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		config.Region = aws.String(v)
 	}
 
@@ -659,7 +659,7 @@ func flattenBudgetActionSSMActionDefinition(lt *awstypes.SsmActionDefinition) []
 	attrs := map[string]interface{}{
 		"action_sub_type": string(lt.ActionSubType),
 		"instance_ids":    flex.FlattenStringValueSet(lt.InstanceIds),
-		"region":          aws.ToString(lt.Region),
+		names.AttrRegion:  aws.ToString(lt.Region),
 	}
 
 	return []map[string]interface{}{attrs}

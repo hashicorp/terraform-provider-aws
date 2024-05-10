@@ -79,11 +79,11 @@ func ReadV0BlockDevices(is *terraform.InstanceState) (map[string]map[string]stri
 
 func WriteV1BlockDevice(
 	is *terraform.InstanceState, oldBd map[string]string) {
-	code := create.StringHashcode(oldBd["device_name"])
+	code := create.StringHashcode(oldBd[names.AttrDeviceName])
 	bdType := "ebs_block_device"
 	if vn, ok := oldBd["virtual_name"]; ok && strings.HasPrefix(vn, "ephemeral") {
 		bdType = "ephemeral_block_device"
-	} else if dn, ok := oldBd["device_name"]; ok && dn == "/dev/sda1" {
+	} else if dn, ok := oldBd[names.AttrDeviceName]; ok && dn == "/dev/sda1" {
 		bdType = "root_block_device"
 	}
 
@@ -92,11 +92,11 @@ func WriteV1BlockDevice(
 		delete(oldBd, "virtual_name")
 	case "root_block_device":
 		delete(oldBd, "virtual_name")
-		delete(oldBd, "encrypted")
+		delete(oldBd, names.AttrEncrypted)
 		delete(oldBd, "snapshot_id")
 	case "ephemeral_block_device":
 		delete(oldBd, names.AttrDeleteOnTermination)
-		delete(oldBd, "encrypted")
+		delete(oldBd, names.AttrEncrypted)
 		delete(oldBd, "iops")
 		delete(oldBd, "volume_size")
 		delete(oldBd, "volume_type")

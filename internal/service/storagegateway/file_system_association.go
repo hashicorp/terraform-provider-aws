@@ -77,7 +77,7 @@ func ResourceFileSystemAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -109,7 +109,7 @@ func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.Resource
 		ClientToken: aws.String(id.UniqueId()),
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
-		Password:    aws.String(d.Get("password").(string)),
+		Password:    aws.String(d.Get(names.AttrPassword).(string)),
 		Tags:        getTagsIn(ctx),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
@@ -174,7 +174,7 @@ func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChangesExcept(names.AttrTagsAll) {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
 			AuditDestinationARN:      aws.String(d.Get("audit_destination_arn").(string)),
-			Password:                 aws.String(d.Get("password").(string)),
+			Password:                 aws.String(d.Get(names.AttrPassword).(string)),
 			UserName:                 aws.String(d.Get("username").(string)),
 			FileSystemAssociationARN: aws.String(d.Id()),
 		}

@@ -120,7 +120,7 @@ func DataSourceCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"endpoint": endpointSchema(),
+									names.AttrEndpoint: endpointSchema(),
 									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,

@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -432,7 +432,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
 	}
-	d.Set("endpoint", cluster.Endpoint)
+	d.Set(names.AttrEndpoint, cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
 	}

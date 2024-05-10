@@ -66,12 +66,12 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -133,7 +133,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -241,7 +241,7 @@ func resourceLaunchConfiguration() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -493,7 +493,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 				continue
 			}
 
-			configuredEBSBlockDevices[tfMap["device_name"].(string)] = tfMap
+			configuredEBSBlockDevices[tfMap[names.AttrDeviceName].(string)] = tfMap
 		}
 	}
 
@@ -540,7 +540,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		Ebs: &awstypes.Ebs{},
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -550,7 +550,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -580,7 +580,7 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) aws
 func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
 	apiObject := awstypes.BlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -604,7 +604,7 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) aw
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
@@ -673,7 +673,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.Encrypted; v != nil {
-				tfMap["encrypted"] = aws.ToBool(v)
+				tfMap[names.AttrEncrypted] = aws.ToBool(v)
 			}
 
 			if v := v.Iops; v != nil {
@@ -700,7 +700,7 @@ func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDe
 		}
 
 		if v := apiObject.DeviceName; v != nil {
-			tfMap["device_name"] = aws.ToString(v)
+			tfMap[names.AttrDeviceName] = aws.ToString(v)
 		}
 
 		if v := apiObject.VirtualName; v != nil {

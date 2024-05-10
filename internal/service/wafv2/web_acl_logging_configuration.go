@@ -65,7 +65,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.FilterBehavior](),
 							},
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem: &schema.Resource{
@@ -87,7 +87,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"action": {
+																names.AttrAction: {
 																	Type:             schema.TypeString,
 																	Required:         true,
 																	ValidateDiagFunc: enum.Validate[awstypes.ActionValue](),
@@ -304,7 +304,7 @@ func expandLoggingFilter(l []interface{}) *awstypes.LoggingFilter {
 		loggingFilter.DefaultBehavior = awstypes.FilterBehavior(v)
 	}
 
-	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrFilter].(*schema.Set); ok && v.Len() > 0 {
 		loggingFilter.Filters = expandFilters(v.List())
 	}
 
@@ -385,7 +385,7 @@ func expandActionCondition(l []interface{}) *awstypes.ActionCondition {
 
 	condition := &awstypes.ActionCondition{}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 		condition.Action = awstypes.ActionValue(v)
 	}
 
@@ -454,7 +454,7 @@ func flattenLoggingFilter(filter *awstypes.LoggingFilter) []interface{} {
 
 	m := map[string]interface{}{
 		"default_behavior": string(filter.DefaultBehavior),
-		"filter":           flattenFilters(filter.Filters),
+		names.AttrFilter:   flattenFilters(filter.Filters),
 	}
 
 	return []interface{}{m}
@@ -505,7 +505,7 @@ func flattenActionCondition(a *awstypes.ActionCondition) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"action": string(a.Action),
+		names.AttrAction: string(a.Action),
 	}
 
 	return []interface{}{m}

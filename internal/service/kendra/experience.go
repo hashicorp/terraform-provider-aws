@@ -124,12 +124,12 @@ func ResourceExperience() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -257,7 +257,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrRoleARN, out.RoleArn)
 	d.Set(names.AttrStatus, out.Status)
 
-	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(out.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
@@ -492,7 +492,7 @@ func flattenEndpoints(apiObjects []types.ExperienceEndpoint) []interface{} {
 		m := make(map[string]interface{})
 
 		if v := apiObject.Endpoint; v != nil {
-			m["endpoint"] = aws.ToString(v)
+			m[names.AttrEndpoint] = aws.ToString(v)
 		}
 
 		if v := string(apiObject.EndpointType); v != "" {

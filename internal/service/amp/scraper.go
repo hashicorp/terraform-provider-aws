@@ -121,7 +121,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),

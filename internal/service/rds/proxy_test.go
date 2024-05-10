@@ -53,7 +53,7 @@ func TestAccRDSProxy_basic(t *testing.T) {
 						"iam_auth":                  "DISABLED",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "debug_logging", "false"),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "1800"),
 					resource.TestCheckResourceAttr(resourceName, "require_tls", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),

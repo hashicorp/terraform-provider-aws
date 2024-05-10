@@ -180,12 +180,12 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -582,7 +582,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_username": required field is not set`, d.Get(names.AttrClusterIdentifier).(string))
 		}
 
-		if v, ok := d.GetOk("encrypted"); ok {
+		if v, ok := d.GetOk(names.AttrEncrypted); ok {
 			inputC.Encrypted = aws.Bool(v.(bool))
 		}
 
@@ -689,7 +689,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_version", rsc.ClusterVersion)
 	d.Set(names.AttrDatabaseName, rsc.DBName)
 	d.Set("default_iam_role_arn", rsc.DefaultIamRoleArn)
-	d.Set("encrypted", rsc.Encrypted)
+	d.Set(names.AttrEncrypted, rsc.Encrypted)
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
 	d.Set("iam_roles", tfslices.ApplyToAll(rsc.IamRoles, func(v *redshift.ClusterIamRole) string {
 		return aws.StringValue(v.IamRoleArn)
@@ -720,16 +720,16 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}))
 
 	d.Set("dns_name", nil)
-	d.Set("endpoint", nil)
+	d.Set(names.AttrEndpoint, nil)
 	d.Set(names.AttrPort, nil)
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.StringValue(endpoint.Address); address != "" {
 			d.Set("dns_name", address)
 			if port := aws.Int64Value(endpoint.Port); port != 0 {
-				d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
+				d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 				d.Set(names.AttrPort, port)
 			} else {
-				d.Set("endpoint", address)
+				d.Set(names.AttrEndpoint, address)
 			}
 		}
 	}
@@ -789,15 +789,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ClusterVersion = aws.String(d.Get("cluster_version").(string))
 		}
 
-		if d.HasChange("encrypted") {
-			input.Encrypted = aws.Bool(d.Get("encrypted").(bool))
+		if d.HasChange(names.AttrEncrypted) {
+			input.Encrypted = aws.Bool(d.Get(names.AttrEncrypted).(bool))
 		}
 
 		if d.HasChange("enhanced_vpc_routing") {
 			input.EnhancedVpcRouting = aws.Bool(d.Get("enhanced_vpc_routing").(bool))
 		}
 
-		if d.Get("encrypted").(bool) && d.HasChange(names.AttrKMSKeyID) {
+		if d.Get(names.AttrEncrypted).(bool) && d.HasChange(names.AttrKMSKeyID) {
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 

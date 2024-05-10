@@ -34,7 +34,7 @@ func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "modification_time"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "mutation_protection", resourceName, "mutation_protection"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "priority", resourceName, "priority"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),

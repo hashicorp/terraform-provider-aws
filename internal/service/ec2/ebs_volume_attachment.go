@@ -48,7 +48,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 				volumeID := idParts[1]
 				instanceID := idParts[2]
 				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
-				d.Set("device_name", deviceName)
+				d.Set(names.AttrDeviceName, deviceName)
 				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 
@@ -62,7 +62,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -96,7 +96,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	deviceName := d.Get("device_name").(string)
+	deviceName := d.Get(names.AttrDeviceName).(string)
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 
@@ -137,7 +137,7 @@ func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	deviceName := d.Get("device_name").(string)
+	deviceName := d.Get(names.AttrDeviceName).(string)
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 
@@ -164,7 +164,7 @@ func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	deviceName := d.Get("device_name").(string)
+	deviceName := d.Get(names.AttrDeviceName).(string)
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	volumeID := d.Get("volume_id").(string)
 

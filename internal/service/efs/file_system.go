@@ -68,7 +68,7 @@ func ResourceFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -209,7 +209,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ProvisionedThroughputInMibps = aws.Float64(d.Get("provisioned_throughput_in_mibps").(float64))
 	}
 
-	encrypted, hasEncrypted := d.GetOk("encrypted")
+	encrypted, hasEncrypted := d.GetOk(names.AttrEncrypted)
 	kmsKeyId, hasKmsKeyId := d.GetOk(names.AttrKMSKeyID)
 
 	if hasEncrypted {
@@ -284,7 +284,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
-	d.Set("encrypted", fs.Encrypted)
+	d.Set(names.AttrEncrypted, fs.Encrypted)
 	d.Set(names.AttrKMSKeyID, fs.KmsKeyId)
 	d.Set(names.AttrName, fs.Name)
 	d.Set("number_of_mount_targets", fs.NumberOfMountTargets)
