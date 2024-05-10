@@ -80,7 +80,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 						names.AttrType:  "CanonicalUser",
 						"uri":           "",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", hostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),

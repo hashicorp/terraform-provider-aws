@@ -192,7 +192,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1132,7 +1132,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		log.Printf("[WARN] %s", err)
 	} else {
-		d.Set("hosted_zone_id", hostedZoneID)
+		d.Set(names.AttrHostedZoneID, hostedZoneID)
 	}
 
 	if _, ok := d.GetOk("website"); ok {
