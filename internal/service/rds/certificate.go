@@ -5,6 +5,7 @@ package rds
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -37,16 +38,17 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	certificate_identifier := d.Get("certificate_identifier").(string)
 	input := &rds_sdkv2.ModifyCertificatesInput{
-		CertificateIdentifier: aws.String(d.Get("certificate_identifier").(string)),
+		CertificateIdentifier: aws.String(certificate_identifier),
 	}
 
-	output, err := conn.ModifyCertificates(ctx, input)
+	_, err := conn.ModifyCertificates(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", certificate_identifier, err)
 	}
 
-	d.SetId(aws.ToString(output.Certificate.CertificateIdentifier))
+	d.SetId(meta.(*conns.AWSClient).Region)
 
 	return diags
 }
@@ -55,11 +57,19 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	certificate_identifier := d.Get("certificate_identifier").(string)
 	input := &rds_sdkv2.DescribeCertificatesInput{
-		CertificateIdentifier: aws.String(d.Get("certificate_identifier").(string)),
+		CertificateIdentifier: aws.String(certificate_identifier),
 	}
 
 	output, err := conn.DescribeCertificates(ctx, input)
+
+	if !d.IsNewResource() && output.Certificates == nil {
+		log.Printf("[WARN] RDS certificate %s not found, removing from state", certificate_identifier)
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Reading the system-default SSL/TLS certificate: %s", err)
 	}
@@ -72,13 +82,14 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
+	certificate_identifier := d.Get("certificate_identifier").(string)
 	input := &rds_sdkv2.ModifyCertificatesInput{
-		CertificateIdentifier: aws.String(d.Get("certificate_identifier").(string)),
+		CertificateIdentifier: aws.String(certificate_identifier),
 	}
 
 	_, err := conn.ModifyCertificates(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", certificate_identifier, err)
 	}
 
 	return diags
@@ -94,7 +105,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	_, err := conn.ModifyCertificates(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Removing the custom override to the system-default SSL/TLS with certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Removing the custom override to the system-default SSL/TLS with certificate: %s", err)
 	}
 
 	return diags
