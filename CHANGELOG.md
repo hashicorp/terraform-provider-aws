@@ -1,4 +1,5 @@
-## 5.49.0 (Unreleased)
+## 5.50.0 (Unreleased)
+## 5.49.0 (May 10, 2024)
 
 FEATURES:
 
