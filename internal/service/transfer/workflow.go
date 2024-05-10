@@ -78,7 +78,7 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"file_system_id": {
+															names.AttrFileSystemID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
@@ -205,7 +205,7 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"file_system_id": {
+															names.AttrFileSystemID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
@@ -391,7 +391,7 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"file_system_id": {
+															names.AttrFileSystemID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
@@ -518,7 +518,7 @@ func ResourceWorkflow() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"file_system_id": {
+															names.AttrFileSystemID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ForceNew: true,
@@ -1154,7 +1154,7 @@ func expandEFSFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
 
 	apiObject := &transfer.EfsFileLocation{}
 
-	if v, ok := tfMapRaw["file_system_id"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrFileSystemID].(string); ok && v != "" {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -1173,7 +1173,7 @@ func flattenEFSFileLocation(apiObject *transfer.EfsFileLocation) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FileSystemId; v != nil {
-		tfMap["file_system_id"] = aws.StringValue(v)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Path; v != nil {
