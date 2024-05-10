@@ -127,7 +127,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 				// Setting timeout to its default value will cause
 				// the import to diverge on the initial read.
-				ImportStateVerifyIgnore: []string{"parameter"},
+				ImportStateVerifyIgnore: []string{names.AttrParameter},
 			},
 			{
 				Config: testAccParameterGroupConfig_one(rName, "timeout", "20"),
