@@ -57,7 +57,7 @@ func resourceConfigRule() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -425,7 +425,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 
 		apiObject := types.EvaluationModeConfiguration{}
 
-		if v, ok := tfMap["mode"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 			apiObject.Mode = types.EvaluationMode(v)
 		}
 
@@ -541,7 +541,7 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"mode": apiObject.Mode,
+			names.AttrMode: apiObject.Mode,
 		}
 
 		tfList = append(tfList, tfMap)
