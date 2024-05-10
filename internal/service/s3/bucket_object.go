@@ -86,12 +86,12 @@ func resourceBucketObject() *schema.Resource {
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content_base64"},
+				ConflictsWith: []string{names.AttrSource, "content_base64"},
 			},
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content"},
+				ConflictsWith: []string{names.AttrSource, "content"},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -171,7 +171,7 @@ func resourceBucketObject() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 				Computed:         true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"content", "content_base64"},
@@ -378,7 +378,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 
 	var body io.ReadSeeker
 
-	if v, ok := d.GetOk("source"); ok {
+	if v, ok := d.GetOk(names.AttrSource); ok {
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
@@ -550,7 +550,7 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		names.AttrKMSKeyID,
 		"metadata",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_hash",
 		"storage_class",
 		"website_redirect",

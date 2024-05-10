@@ -138,7 +138,7 @@ func ResourceSnapshot() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validateResourceNamePrefix(snapshotNameMaxLength - id.UniqueIDSuffixLength),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -210,7 +210,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(snapshot.Name)))
-	d.Set("source", snapshot.Source)
+	d.Set(names.AttrSource, snapshot.Source)
 
 	return diags
 }

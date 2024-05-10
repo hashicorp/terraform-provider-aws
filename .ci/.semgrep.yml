@@ -1335,3 +1335,13 @@ rules:
       - pattern: '"action"'
     severity: ERROR
     fix: "names.AttrAction"
+  - id: literal-source-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSource` for the string literal "source"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"source"'
+    severity: ERROR
+    fix: "names.AttrSource"

@@ -315,7 +315,7 @@ func resourceSchedule() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
 									},
-									"source": {
+									names.AttrSource: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),

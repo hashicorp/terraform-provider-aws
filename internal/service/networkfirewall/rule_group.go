@@ -177,7 +177,7 @@ func ResourceRuleGroup() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(networkfirewall.StatefulRuleProtocol_Values(), false),
 															},
-															"source": {
+															names.AttrSource: {
 																Type:     schema.TypeString,
 																Required: true,
 															},
@@ -275,7 +275,7 @@ func ResourceRuleGroup() *schema.Resource {
 																						Optional: true,
 																						Elem:     &schema.Schema{Type: schema.TypeInt},
 																					},
-																					"source": {
+																					names.AttrSource: {
 																						Type:     schema.TypeSet,
 																						Optional: true,
 																						Elem: &schema.Resource{
@@ -697,7 +697,7 @@ func expandStatefulRuleHeader(l []interface{}) *networkfirewall.Header {
 	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		header.Protocol = aws.String(v)
 	}
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		header.Source = aws.String(v)
 	}
 	if v, ok := tfMap["source_port"].(string); ok && v != "" {
@@ -1014,7 +1014,7 @@ func expandMatchAttributes(l []interface{}) *networkfirewall.MatchAttributes {
 	if v, ok := tfMap["protocols"].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Protocols = flex.ExpandInt64Set(v)
 	}
-	if v, ok := tfMap["source"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSource].(*schema.Set); ok && v.Len() > 0 {
 		matchAttributes.Sources = expandAddresses(v.List())
 	}
 	if v, ok := tfMap["source_port"].(*schema.Set); ok && v.Len() > 0 {
@@ -1262,7 +1262,7 @@ func flattenHeader(h *networkfirewall.Header) []interface{} {
 		"destination_port": aws.StringValue(h.DestinationPort),
 		"direction":        aws.StringValue(h.Direction),
 		names.AttrProtocol: aws.StringValue(h.Protocol),
-		"source":           aws.StringValue(h.Source),
+		names.AttrSource:   aws.StringValue(h.Source),
 		"source_port":      aws.StringValue(h.SourcePort),
 	}
 
@@ -1338,7 +1338,7 @@ func flattenMatchAttributes(ma *networkfirewall.MatchAttributes) []interface{} {
 		"destination":      flattenAddresses(ma.Destinations),
 		"destination_port": flattenPortRanges(ma.DestinationPorts),
 		"protocols":        flex.FlattenInt64Set(ma.Protocols),
-		"source":           flattenAddresses(ma.Sources),
+		names.AttrSource:   flattenAddresses(ma.Sources),
 		"source_port":      flattenPortRanges(ma.SourcePorts),
 		"tcp_flag":         flattenTCPFlags(ma.TCPFlags),
 	}

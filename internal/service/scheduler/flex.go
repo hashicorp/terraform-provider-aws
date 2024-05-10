@@ -266,7 +266,7 @@ func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridg
 		a.DetailType = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		a.Source = aws.String(v)
 	}
 
@@ -285,7 +285,7 @@ func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[st
 	}
 
 	if v := apiObject.Source; v != nil {
-		m["source"] = aws.ToString(v)
+		m[names.AttrSource] = aws.ToString(v)
 	}
 
 	return m

@@ -182,7 +182,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validExperimentTemplateStopConditionSource(),
@@ -530,7 +530,7 @@ func expandExperimentTemplateStopConditions(l *schema.Set) []types.CreateExperim
 		raw := m.(map[string]interface{})
 		config := types.CreateExperimentTemplateStopConditionInput{}
 
-		if v, ok := raw["source"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
 			config.Source = aws.String(v)
 		}
 
@@ -607,7 +607,7 @@ func expandExperimentTemplateStopConditionsForUpdate(l *schema.Set) []types.Upda
 		raw := m.(map[string]interface{})
 		config := types.UpdateExperimentTemplateStopConditionInput{}
 
-		if v, ok := raw["source"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
 			config.Source = aws.String(v)
 		}
 
@@ -842,7 +842,7 @@ func flattenExperimentTemplateStopConditions(configured []types.ExperimentTempla
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["source"] = aws.ToString(v.Source)
+		item[names.AttrSource] = aws.ToString(v.Source)
 
 		if aws.ToString(v.Value) != "" {
 			item[names.AttrValue] = aws.ToString(v.Value)
