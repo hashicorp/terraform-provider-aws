@@ -34,7 +34,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 				"identifier":        "my-test-instance",
 				"instance_class":    "db.t2.micro",
 				names.AttrPassword:  "avoid-plaintext-passwords",
-				"username":          "tfacctest",
+				names.AttrUsername:  "tfacctest",
 				names.AttrTags:      map[string]interface{}{"key1": "value1"},
 			},
 			ExpectedState: map[string]interface{}{
@@ -44,7 +44,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 				"identifier":               "my-test-instance",
 				"instance_class":           "db.t2.micro",
 				names.AttrPassword:         "avoid-plaintext-passwords",
-				"username":                 "tfacctest",
+				names.AttrUsername:         "tfacctest",
 				names.AttrTags:             map[string]interface{}{"key1": "value1"},
 			},
 		},
@@ -92,7 +92,7 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 				names.AttrPassword:  "avoid-plaintext-passwords",
 				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
 				names.AttrTags:      map[string]interface{}{"key1": "value1"},
-				"username":          "tfacctest",
+				names.AttrUsername:  "tfacctest",
 			},
 			ExpectedState: map[string]interface{}{
 				"allocated_storage": 10,
@@ -103,7 +103,7 @@ func TestInstanceStateUpgradeV1(t *testing.T) {
 				names.AttrPassword:  "avoid-plaintext-passwords",
 				"resource_id":       "db-cnuap2ilnbmok4eunzklfvwjca",
 				names.AttrTags:      map[string]interface{}{"key1": "value1"},
-				"username":          "tfacctest",
+				names.AttrUsername:  "tfacctest",
 			},
 		},
 	}
