@@ -33,7 +33,7 @@ func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "data", resourceName, "data"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEncrypted, resourceName, names.AttrEncrypted),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "owner", resourceName, "owner"),

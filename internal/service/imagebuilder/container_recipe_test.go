@@ -44,7 +44,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceName, "dockerfile_template_data"),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "true"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
