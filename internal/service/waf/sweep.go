@@ -527,7 +527,7 @@ func sweepRegexPatternSet(region string) error {
 		}
 
 		for _, regexPatternSet := range page.RegexPatternSets {
-			r := ResourceRegexPatternSet()
+			r := resourceRegexPatternSet()
 			d := r.Data(nil)
 
 			id := aws.ToString(regexPatternSet.RegexPatternSetId)

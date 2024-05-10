@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -113,30 +112,6 @@ func FlattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
 		out[i] = m
 	}
 	return out
-}
-
-func DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) []awstypes.RegexPatternSetUpdate {
-	updates := make([]awstypes.RegexPatternSetUpdate, 0)
-
-	for _, op := range oldPatterns {
-		if idx := tfslices.IndexOf(newPatterns, op.(string)); idx > -1 {
-			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
-			continue
-		}
-
-		updates = append(updates, awstypes.RegexPatternSetUpdate{
-			Action:             awstypes.ChangeActionDelete,
-			RegexPatternString: aws.String(op.(string)),
-		})
-	}
-
-	for _, np := range newPatterns {
-		updates = append(updates, awstypes.RegexPatternSetUpdate{
-			Action:             awstypes.ChangeActionInsert,
-			RegexPatternString: aws.String(np.(string)),
-		})
-	}
-	return updates
 }
 
 func DiffRulePredicates(oldP, newP []interface{}) []awstypes.RuleUpdate {

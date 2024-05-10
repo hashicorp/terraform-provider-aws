@@ -79,8 +79,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Regex Match Set",
 		},
 		{
-			Factory:  ResourceRegexPatternSet,
+			Factory:  resourceRegexPatternSet,
 			TypeName: "aws_waf_regex_pattern_set",
+			Name:     "Regex Pattern Set",
 		},
 		{
 			Factory:  ResourceRule,
