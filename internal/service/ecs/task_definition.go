@@ -357,7 +357,7 @@ func ResourceTaskDefinition() *schema.Resource {
 											},
 										},
 									},
-									"file_system_id": {
+									names.AttrFileSystemID: {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Required: true,
@@ -412,7 +412,7 @@ func ResourceTaskDefinition() *schema.Resource {
 											},
 										},
 									},
-									"file_system_id": {
+									names.AttrFileSystemID: {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Required: true,
@@ -704,7 +704,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
 
-		if v, ok := m["file_system_id"]; ok && v.(string) != "" {
+		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 
@@ -732,7 +732,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 	if v, ok := m["fsx_windows_file_server_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
 
-		if v, ok := m["file_system_id"]; ok && v.(string) != "" {
+		if v, ok := m[names.AttrFileSystemID]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 
@@ -975,7 +975,7 @@ func expandVolumesEFSVolume(efsConfig []interface{}) *ecs.EFSVolumeConfiguration
 	config := efsConfig[0].(map[string]interface{})
 	efsVol := &ecs.EFSVolumeConfiguration{}
 
-	if v, ok := config["file_system_id"].(string); ok && v != "" {
+	if v, ok := config[names.AttrFileSystemID].(string); ok && v != "" {
 		efsVol.FileSystemId = aws.String(v)
 	}
 
@@ -1015,7 +1015,7 @@ func expandVolumesFSxWinVolume(fsxWinConfig []interface{}) *ecs.FSxWindowsFileSe
 	config := fsxWinConfig[0].(map[string]interface{})
 	fsxVol := &ecs.FSxWindowsFileServerVolumeConfiguration{}
 
-	if v, ok := config["file_system_id"].(string); ok && v != "" {
+	if v, ok := config[names.AttrFileSystemID].(string); ok && v != "" {
 		fsxVol.FileSystemId = aws.String(v)
 	}
 
@@ -1106,7 +1106,7 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 	m := make(map[string]interface{})
 	if config != nil {
 		if v := config.FileSystemId; v != nil {
-			m["file_system_id"] = aws.StringValue(v)
+			m[names.AttrFileSystemID] = aws.StringValue(v)
 		}
 
 		if v := config.RootDirectory; v != nil {
@@ -1150,7 +1150,7 @@ func flattenFSxWinVolumeConfiguration(config *ecs.FSxWindowsFileServerVolumeConf
 	m := make(map[string]interface{})
 	if config != nil {
 		if v := config.FileSystemId; v != nil {
-			m["file_system_id"] = aws.StringValue(v)
+			m[names.AttrFileSystemID] = aws.StringValue(v)
 		}
 
 		if v := config.RootDirectory; v != nil {
