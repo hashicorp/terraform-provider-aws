@@ -27,7 +27,7 @@ func TestAccWAFRegionalWebACLDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWebACLDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`web ACLs not found`),
+				ExpectError: regexache.MustCompile(`no matching WAF Regional Web ACL found`),
 			},
 			{
 				Config: testAccWebACLDataSourceConfig_name(name),

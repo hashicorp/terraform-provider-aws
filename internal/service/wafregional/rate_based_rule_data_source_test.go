@@ -27,7 +27,7 @@ func TestAccWAFRegionalRateBasedRuleDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRateBasedRuleDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`WAF Rate Based Rules not found`),
+				ExpectError: regexache.MustCompile(`no matching WAF Regional Rate Based Rule found`),
 			},
 			{
 				Config: testAccRateBasedRuleDataSourceConfig_name(name),
