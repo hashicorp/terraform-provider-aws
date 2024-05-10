@@ -72,7 +72,7 @@ func ResourceSigningJob() *schema.Resource {
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -209,7 +209,7 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	profileName := d.Get("profile_name")
 	source := d.Get(names.AttrSource).([]interface{})
-	destination := d.Get("destination").([]interface{})
+	destination := d.Get(names.AttrDestination).([]interface{})
 
 	startSigningJobInput := &signer.StartSigningJobInput{
 		ProfileName: aws.String(profileName.(string)),
