@@ -575,7 +575,7 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h265Settings(t *tes
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.timecode_burnin_settings.*", map[string]string{
 						"timecode_burnin_font_size": "SMALL_16",
 						"timecode_burnin_position":  "BOTTOM_CENTER",
-						"prefix":                    "terraform-test",
+						names.AttrPrefix:            "terraform-test",
 					}),
 				),
 			},

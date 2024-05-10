@@ -1854,7 +1854,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Computed:         true,
 																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																	Computed: true,
@@ -5736,7 +5736,7 @@ func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurni
 	if v, ok := m["timecode_burnin_position"].(string); ok && v != "" {
 		out.Position = types.TimecodeBurninPosition(v)
 	}
-	if v, ok := m["prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPrefix].(string); ok && v != "" {
 		out.Prefix = &v
 	}
 
@@ -7107,7 +7107,7 @@ func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []inter
 	m := map[string]interface{}{
 		"timecode_burnin_font_size": string(in.FontSize),
 		"timecode_burnin_position":  string(in.Position),
-		"prefix":                    in.Prefix,
+		names.AttrPrefix:            in.Prefix,
 	}
 
 	return []interface{}{m}
