@@ -1495,3 +1495,13 @@ rules:
       - pattern: '"address"'
     severity: ERROR
     fix: "names.AttrAddress"
+  - id: literal-destination-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDestination` for the string literal "destination"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"destination"'
+    severity: ERROR
+    fix: "names.AttrDestination"
