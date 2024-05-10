@@ -585,7 +585,7 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
 						"backup_options.%":          "1",
 						"backup_options.WindowsVSS": names.AttrEnabled,
-						"resource_type":             "EC2",
+						names.AttrResourceType:             "EC2",
 					}),
 				),
 			},
@@ -603,7 +603,7 @@ func TestAccBackupPlan_advancedBackupSetting(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_backup_setting.*", map[string]string{
 						"backup_options.%":          "1",
 						"backup_options.WindowsVSS": "disabled",
-						"resource_type":             "EC2",
+						names.AttrResourceType:             "EC2",
 					}),
 				),
 			},

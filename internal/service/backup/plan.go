@@ -52,7 +52,7 @@ func ResourcePlan() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -373,7 +373,7 @@ func expandPlanAdvancedSettings(vAdvancedBackupSettings *schema.Set) []*backup.A
 		if v, ok := mAdvancedBackupSetting["backup_options"].(map[string]interface{}); ok && v != nil {
 			advancedBackupSetting.BackupOptions = flex.ExpandStringMap(v)
 		}
-		if v, ok := mAdvancedBackupSetting["resource_type"].(string); ok && v != "" {
+		if v, ok := mAdvancedBackupSetting[names.AttrResourceType].(string); ok && v != "" {
 			advancedBackupSetting.ResourceType = aws.String(v)
 		}
 
@@ -462,7 +462,7 @@ func flattenPlanAdvancedSettings(advancedBackupSettings []*backup.AdvancedBackup
 	for _, advancedBackupSetting := range advancedBackupSettings {
 		mAdvancedBackupSetting := map[string]interface{}{
 			"backup_options": aws.StringValueMap(advancedBackupSetting.BackupOptions),
-			"resource_type":  aws.StringValue(advancedBackupSetting.ResourceType),
+			names.AttrResourceType:  aws.StringValue(advancedBackupSetting.ResourceType),
 		}
 
 		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)
