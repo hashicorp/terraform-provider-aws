@@ -40,7 +40,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -53,7 +53,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -211,7 +211,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"hibernation_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -795,7 +795,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	input.Filters = append(input.Filters, newTagFilterList(

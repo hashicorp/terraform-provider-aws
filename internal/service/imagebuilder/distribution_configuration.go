@@ -270,7 +270,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 								ValidateFunc: verify.ValidARN,
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -524,7 +524,7 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 		apiObject.LicenseConfigurationArns = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -824,7 +824,7 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap

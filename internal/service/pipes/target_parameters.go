@@ -414,7 +414,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"device_name": {
+													names.AttrDeviceName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -542,7 +542,7 @@ func targetParametersSchema() *schema.Schema {
 									ValidateFunc: verify.ValidARN,
 								},
 							},
-							"source": {
+							names.AttrSource: {
 								Type:     schema.TypeString,
 								Optional: true,
 								ValidateFunc: validation.All(
@@ -1529,7 +1529,7 @@ func expandECSInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.
 
 	apiObject := &types.EcsInferenceAcceleratorOverride{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1673,7 +1673,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 		apiObject.Resources = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
@@ -2398,7 +2398,7 @@ func flattenECSInferenceAcceleratorOverride(apiObject types.EcsInferenceAccelera
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.ToString(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeviceType; v != nil {
@@ -2534,7 +2534,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Time; v != nil {

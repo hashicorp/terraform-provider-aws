@@ -118,7 +118,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Sensitive:     true,
 				Optional:      true,
@@ -130,7 +130,7 @@ func resourceUser() *schema.Resource {
 				Sensitive:     true,
 				Optional:      true,
 				ValidateFunc:  validation.StringLenBetween(6, 256),
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{names.AttrPassword},
 			},
 			"validation_data": {
 				Type: schema.TypeMap,
@@ -210,7 +210,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if v, ok := d.GetOk("password"); ok {
+	if v, ok := d.GetOk(names.AttrPassword); ok {
 		setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
 			Username:   aws.String(d.Get("username").(string)),
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
@@ -346,8 +346,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("password") {
-		password := d.Get("password").(string)
+	if d.HasChange(names.AttrPassword) {
+		password := d.Get(names.AttrPassword).(string)
 
 		if password != "" {
 			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
@@ -362,7 +362,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				return sdkdiag.AppendErrorf(diags, "changing Cognito User's password (%s): %s", d.Id(), err)
 			}
 		} else {
-			d.Set("password", nil)
+			d.Set(names.AttrPassword, nil)
 		}
 	}
 
@@ -559,7 +559,7 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 		"phone_number_verified",
 		"picture",
 		"preferred_username",
-		"profile",
+		names.AttrProfile,
 		"sub",
 		"updated_at",
 		"website",

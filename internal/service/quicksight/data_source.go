@@ -67,7 +67,7 @@ func ResourceDataSource() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"password": {
+										names.AttrPassword: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -868,7 +868,7 @@ func expandDataSourceCredentialPair(tfList []interface{}) *quicksight.Credential
 		credentialPair.Username = aws.String(v)
 	}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		credentialPair.Password = aws.String(v)
 	}
 

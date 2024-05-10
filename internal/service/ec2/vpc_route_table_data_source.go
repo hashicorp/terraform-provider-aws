@@ -51,8 +51,8 @@ func DataSourceRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter":       customFiltersSchema(),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -194,7 +194,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
-	filter, filterOk := d.GetOk("filter")
+	filter, filterOk := d.GetOk(names.AttrFilter)
 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
 		return sdkdiag.AppendErrorf(diags, "one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")

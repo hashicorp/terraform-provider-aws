@@ -206,7 +206,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTopicRuleElasticsearchEndpoint,
@@ -414,7 +414,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"endpoint": {
+									names.AttrEndpoint: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validTopicRuleElasticsearchEndpoint,
@@ -1572,7 +1572,7 @@ func expandElasticsearchAction(tfList []interface{}) *iot.ElasticsearchAction {
 	apiObject := &iot.ElasticsearchAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEndpoint].(string); ok && v != "" {
 		apiObject.Endpoint = aws.String(v)
 	}
 
@@ -2681,7 +2681,7 @@ func flattenElasticsearchAction(apiObject *iot.ElasticsearchAction) []interface{
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Endpoint; v != nil {
-		tfMap["endpoint"] = aws.StringValue(v)
+		tfMap[names.AttrEndpoint] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Id; v != nil {

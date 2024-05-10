@@ -44,7 +44,7 @@ func ResourceBaiduChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"secret_key": {
+			names.AttrSecretKey: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -63,7 +63,7 @@ func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, met
 
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 	params.ApiKey = aws.String(d.Get("api_key").(string))
-	params.SecretKey = aws.String(d.Get("secret_key").(string))
+	params.SecretKey = aws.String(d.Get(names.AttrSecretKey).(string))
 
 	req := pinpoint.UpdateBaiduChannelInput{
 		ApplicationId:       aws.String(applicationId),

@@ -184,7 +184,7 @@ func resourcePatchBaseline() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ssm.PatchAction_Values(), false),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 20,
@@ -266,7 +266,7 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.RejectedPatchesAction = aws.String(v.(string))
 	}
 
-	if _, ok := d.GetOk("source"); ok {
+	if _, ok := d.GetOk(names.AttrSource); ok {
 		input.Sources = expandPatchSource(d)
 	}
 
@@ -327,7 +327,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("operating_system", output.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
-	if err := d.Set("source", flattenPatchSource(output.Sources)); err != nil {
+	if err := d.Set(names.AttrSource, flattenPatchSource(output.Sources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
@@ -379,7 +379,7 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
 		}
 
-		if d.HasChange("source") {
+		if d.HasChange(names.AttrSource) {
 			input.Sources = expandPatchSource(d)
 		}
 
@@ -560,7 +560,7 @@ func flattenPatchRuleGroup(group *ssm.PatchRuleGroup) []map[string]interface{} {
 func expandPatchSource(d *schema.ResourceData) []*ssm.PatchSource {
 	var sources []*ssm.PatchSource
 
-	sourceConfigs := d.Get("source").([]interface{})
+	sourceConfigs := d.Get(names.AttrSource).([]interface{})
 
 	for _, sConfig := range sourceConfigs {
 		config := sConfig.(map[string]interface{})
@@ -614,7 +614,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"approved_patches_compliance_level",
 		"rejected_patches_action",
 		"approved_patches_enable_non_security",
-		"source",
+		names.AttrSource,
 	} {
 		if d.HasChange(key) {
 			return true

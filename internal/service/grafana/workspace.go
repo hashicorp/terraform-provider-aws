@@ -88,7 +88,7 @@ func ResourceWorkspace() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -292,7 +292,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("authentication_providers", workspace.Authentication.Providers)
 	d.Set("data_sources", workspace.DataSources)
 	d.Set(names.AttrDescription, workspace.Description)
-	d.Set("endpoint", workspace.Endpoint)
+	d.Set(names.AttrEndpoint, workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
 	d.Set(names.AttrName, workspace.Name)
 	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {

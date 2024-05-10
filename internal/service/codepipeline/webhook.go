@@ -73,7 +73,7 @@ func resourceWebhook() *schema.Resource {
 					},
 				},
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -136,7 +136,7 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 			Authentication: authType,
 			// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
 			AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
-			Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+			Filters:                     expandWebhookFilterRules(d.Get(names.AttrFilter).(*schema.Set)),
 			Name:                        aws.String(name),
 			TargetAction:                aws.String(d.Get("target_action").(string)),
 			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
@@ -180,7 +180,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("authentication_configuration", flattenWebhookAuthConfiguration(webhookDef.AuthenticationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
 	}
-	if err := d.Set("filter", flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
+	if err := d.Set(names.AttrFilter, flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 	d.Set(names.AttrName, webhookDef.Name)
@@ -204,7 +204,7 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				Authentication: authType,
 				// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
 				AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
-				Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+				Filters:                     expandWebhookFilterRules(d.Get(names.AttrFilter).(*schema.Set)),
 				Name:                        aws.String(d.Get(names.AttrName).(string)),
 				TargetAction:                aws.String(d.Get("target_action").(string)),
 				TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),

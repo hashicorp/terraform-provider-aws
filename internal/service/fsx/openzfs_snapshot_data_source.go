@@ -35,7 +35,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": snapshotFiltersSchema(),
+			names.AttrFilter: snapshotFiltersSchema(),
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -74,7 +74,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	input.Filters = append(input.Filters, newSnapshotFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

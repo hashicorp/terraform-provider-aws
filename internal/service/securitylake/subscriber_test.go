@@ -311,7 +311,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -355,7 +355,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -382,7 +382,7 @@ func testAccSubscriber_multipleSources(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.SetExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{
@@ -445,7 +445,7 @@ func testAccSubscriber_migrate_source(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName,
-						tfjsonpath.New("source"),
+						tfjsonpath.New(names.AttrSource),
 						knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
 								"aws_log_source_resource": knownvalue.ListExact([]knownvalue.Check{

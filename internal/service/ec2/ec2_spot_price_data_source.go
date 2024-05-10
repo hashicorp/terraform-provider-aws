@@ -26,7 +26,7 @@ func DataSourceSpotPrice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -68,7 +68,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.AvailabilityZone = aws.String(availabilityZone)
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 

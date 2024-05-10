@@ -32,7 +32,7 @@ func ResourcePartition() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -247,7 +247,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("table_name", partition.TableName)
-	d.Set("catalog_id", partition.CatalogId)
+	d.Set(names.AttrCatalogID, partition.CatalogId)
 	d.Set(names.AttrDatabaseName, partition.DatabaseName)
 	d.Set("partition_values", flex.FlattenStringList(partition.Values))
 

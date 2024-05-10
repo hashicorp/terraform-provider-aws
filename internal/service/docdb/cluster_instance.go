@@ -91,7 +91,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -274,7 +274,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	// as soon as it is available in the DescribeDBClusters output.
 	//d.Set("enable_performance_insights", db.EnablePerformanceInsights)
 	if db.Endpoint != nil {
-		d.Set("endpoint", db.Endpoint.Address)
+		d.Set(names.AttrEndpoint, db.Endpoint.Address)
 		d.Set(names.AttrPort, db.Endpoint.Port)
 	}
 	d.Set("engine", db.Engine)

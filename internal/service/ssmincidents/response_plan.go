@@ -36,7 +36,7 @@ func ResourceResponsePlan() *schema.Resource {
 		DeleteWithoutTimeout: resourceResponsePlanDelete,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -197,7 +197,7 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
-		Actions:          expandAction(d.Get("action").([]interface{})),
+		Actions:          expandAction(d.Get(names.AttrAction).([]interface{})),
 		ChatChannel:      expandChatChannel(d.Get("chat_channel").(*schema.Set)),
 		DisplayName:      aws.String(d.Get("display_name").(string)),
 		Engagements:      flex.ExpandStringValueSet(d.Get("engagements").(*schema.Set)),
@@ -252,8 +252,8 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChanges("action") {
-			input.Actions = expandAction(d.Get("action").([]interface{}))
+		if d.HasChanges(names.AttrAction) {
+			input.Actions = expandAction(d.Get(names.AttrAction).([]interface{}))
 		}
 
 		if d.HasChanges("chat_channel") {

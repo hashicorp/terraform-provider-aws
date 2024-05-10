@@ -32,7 +32,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"group_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -62,7 +62,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -139,7 +139,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
-	d.Set("region", az.RegionName)
+	d.Set(names.AttrRegion, az.RegionName)
 	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)

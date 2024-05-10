@@ -104,7 +104,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ExactlyOneOf: []string{"dockerfile_template_data", "dockerfile_template_uri"},
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -121,7 +121,7 @@ func ResourceContainerRecipe() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -141,7 +141,7 @@ func ResourceContainerRecipe() *schema.Resource {
 													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
-												"encrypted": {
+												names.AttrEncrypted: {
 													Type:             nullable.TypeNullableBool,
 													Optional:         true,
 													ForceNew:         true,
@@ -391,7 +391,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("date_created", containerRecipe.DateCreated)
 	d.Set(names.AttrDescription, containerRecipe.Description)
 	d.Set("dockerfile_template_data", containerRecipe.DockerfileTemplateData)
-	d.Set("encrypted", containerRecipe.Encrypted)
+	d.Set(names.AttrEncrypted, containerRecipe.Encrypted)
 
 	if containerRecipe.InstanceConfiguration != nil {
 		d.Set("instance_configuration", []interface{}{flattenInstanceConfiguration(containerRecipe.InstanceConfiguration)})

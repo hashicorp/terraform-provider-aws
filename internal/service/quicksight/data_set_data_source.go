@@ -399,7 +399,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{

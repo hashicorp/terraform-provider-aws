@@ -27,7 +27,7 @@ func flattenAccessLog(l *elb.AccessLog) []map[string]interface{} {
 	}
 
 	if l.S3BucketPrefix != nil {
-		r["bucket_prefix"] = aws.StringValue(l.S3BucketPrefix)
+		r[names.AttrBucketPrefix] = aws.StringValue(l.S3BucketPrefix)
 	}
 
 	if l.EmitInterval != nil {
@@ -63,7 +63,7 @@ func FlattenHealthCheck(check *elb.HealthCheck) []map[string]interface{} {
 	chk := make(map[string]interface{})
 	chk["unhealthy_threshold"] = aws.Int64Value(check.UnhealthyThreshold)
 	chk["healthy_threshold"] = aws.Int64Value(check.HealthyThreshold)
-	chk["target"] = aws.StringValue(check.Target)
+	chk[names.AttrTarget] = aws.StringValue(check.Target)
 	chk["timeout"] = aws.Int64Value(check.Timeout)
 	chk["interval"] = aws.Int64Value(check.Interval)
 

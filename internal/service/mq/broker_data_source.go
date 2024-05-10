@@ -107,7 +107,7 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},

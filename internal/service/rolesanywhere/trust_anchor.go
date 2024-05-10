@@ -48,7 +48,7 @@ func ResourceTrustAnchor() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -97,7 +97,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &rolesanywhere.CreateTrustAnchorInput{
 		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		Name:    aws.String(name),
-		Source:  expandSource(d.Get("source").([]interface{})),
+		Source:  expandSource(d.Get(names.AttrSource).([]interface{})),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -132,7 +132,7 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrEnabled, trustAnchor.Enabled)
 	d.Set(names.AttrName, trustAnchor.Name)
 
-	if err := d.Set("source", flattenSource(trustAnchor.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(trustAnchor.Source)); err != nil {
 		return diag.Errorf("setting source: %s", err)
 	}
 
@@ -146,7 +146,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &rolesanywhere.UpdateTrustAnchorInput{
 			TrustAnchorId: aws.String(d.Id()),
 			Name:          aws.String(d.Get(names.AttrName).(string)),
-			Source:        expandSource(d.Get("source").([]interface{})),
+			Source:        expandSource(d.Get(names.AttrSource).([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)

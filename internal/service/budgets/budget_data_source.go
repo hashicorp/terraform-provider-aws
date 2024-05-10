@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -245,6 +246,7 @@ func DataSourceBudget() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"time_period_end": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -271,8 +273,8 @@ const (
 
 func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).BudgetsClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	budgetName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
@@ -329,6 +331,16 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrName, budget.BudgetName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(budget.BudgetName)))
+
+	tags, err := listTags(ctx, conn, arn.String())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for Budget (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
 
 	return diags
 }

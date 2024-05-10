@@ -29,7 +29,7 @@ func DataSourcePermissions() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePermissionsRead,
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -77,7 +77,7 @@ func DataSourcePermissions() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -93,7 +93,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -113,7 +113,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -142,7 +142,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -205,7 +205,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -235,7 +235,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -287,7 +287,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 

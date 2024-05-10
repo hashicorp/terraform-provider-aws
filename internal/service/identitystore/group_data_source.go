@@ -70,7 +70,7 @@ func DataSourceGroup() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"filter", "group_id"},
+				ConflictsWith: []string{names.AttrFilter, "group_id"},
 			},
 			names.AttrDescription: {
 				Type:     schema.TypeString,
@@ -96,12 +96,12 @@ func DataSourceGroup() *schema.Resource {
 					},
 				},
 			},
-			"filter": {
+			names.AttrFilter: {
 				Deprecated:    "Use the alternate_identifier attribute instead.",
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				AtLeastOneOf:  []string{"alternate_identifier", "filter", "group_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "group_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -124,7 +124,7 @@ func DataSourceGroup() *schema.Resource {
 					validation.StringLenBetween(1, 47),
 					validation.StringMatch(regexache.MustCompile(`^([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$`), "must match ([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"),
 				),
-				AtLeastOneOf:  []string{"alternate_identifier", "filter", "group_id"},
+				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "group_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
 			"identity_store_id": {
@@ -150,11 +150,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	identityStoreID := d.Get("identity_store_id").(string)
 
-	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && len(v.([]interface{})) > 0 {
 		// Use ListGroups for backwards compat.
 		input := &identitystore.ListGroupsInput{
 			IdentityStoreId: aws.String(identityStoreID),
-			Filters:         expandFilters(d.Get("filter").([]interface{})),
+			Filters:         expandFilters(d.Get(names.AttrFilter).([]interface{})),
 		}
 		paginator := identitystore.NewListGroupsPaginator(conn, input)
 		var results []types.Group

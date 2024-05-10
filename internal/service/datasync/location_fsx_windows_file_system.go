@@ -74,7 +74,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -123,7 +123,7 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 
 	input := &datasync.CreateLocationFsxWindowsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Password:          aws.String(d.Get("password").(string)),
+		Password:          aws.String(d.Get(names.AttrPassword).(string)),
 		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 		User:              aws.String(d.Get("user").(string)),

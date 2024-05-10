@@ -141,7 +141,7 @@ func resourceConnection() *schema.Resource {
 								},
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"password": {
+										names.AttrPassword: {
 											Type:      schema.TypeString,
 											Required:  true,
 											Sensitive: true,
@@ -524,7 +524,7 @@ func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 		if val, ok := param["username"].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}
@@ -709,7 +709,7 @@ func flattenConnectionBasicAuthParameters(basicAuthParameters *types.ConnectionB
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.basic.0.password"); ok {
-		config["password"] = v.(string)
+		config[names.AttrPassword] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -855,7 +855,7 @@ func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 		if val, ok := param["username"].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}

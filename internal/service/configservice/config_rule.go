@@ -120,7 +120,7 @@ func resourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -230,7 +230,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -291,7 +291,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
 		}
 	}
-	if err := d.Set("source", flattenSource(rule.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 

@@ -174,7 +174,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 
 	grpcRoute := &appmesh.GrpcRoute{}
 
-	if vGrpcRouteAction, ok := mGrpcRoute["action"].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
+	if vGrpcRouteAction, ok := mGrpcRoute[names.AttrAction].([]interface{}); ok && len(vGrpcRouteAction) > 0 && vGrpcRouteAction[0] != nil {
 		mGrpcRouteAction := vGrpcRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mGrpcRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -248,7 +248,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 							grpcRouteMetadata.Match.Exact = aws.String(vExact)
 						}
-						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+						if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 							grpcRouteMetadata.Match.Prefix = aws.String(vPrefix)
 						}
 						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -346,7 +346,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 
 	httpRoute := &appmesh.HttpRoute{}
 
-	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+	if vHttpRouteAction, ok := mHttpRoute[names.AttrAction].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
 		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -388,7 +388,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		if vPort, ok := mHttpRouteMatch[names.AttrPort].(int); ok && vPort > 0 {
 			httpRouteMatch.Port = aws.Int64(int64(vPort))
 		}
-		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+		if vPrefix, ok := mHttpRouteMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 			httpRouteMatch.Prefix = aws.String(vPrefix)
 		}
 		if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
@@ -418,7 +418,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 					if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
 						httpRouteHeader.Match.Exact = aws.String(vExact)
 					}
-					if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+					if vPrefix, ok := mMatch[names.AttrPrefix].(string); ok && vPrefix != "" {
 						httpRouteHeader.Match.Prefix = aws.String(vPrefix)
 					}
 					if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
@@ -598,7 +598,7 @@ func expandRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 		spec.HttpRoute = expandHTTPRoute(vHttpRoute)
 	}
 
-	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+	if vPriority, ok := mSpec[names.AttrPriority].(int); ok && vPriority > 0 {
 		spec.Priority = aws.Int64(int64(vPriority))
 	}
 
@@ -618,7 +618,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 
 	tcpRoute := &appmesh.TcpRoute{}
 
-	if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+	if vTcpRouteAction, ok := mTcpRoute[names.AttrAction].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
 		mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
 
 		if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
@@ -1329,7 +1329,7 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mGrpcRoute["action"] = []interface{}{
+			mGrpcRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1348,10 +1348,10 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 
 			if match := grpcRouteMetadata.Match; match != nil {
 				mMatch := map[string]interface{}{
-					"exact":  aws.StringValue(match.Exact),
-					"prefix": aws.StringValue(match.Prefix),
-					"regex":  aws.StringValue(match.Regex),
-					"suffix": aws.StringValue(match.Suffix),
+					"exact":          aws.StringValue(match.Exact),
+					names.AttrPrefix: aws.StringValue(match.Prefix),
+					"regex":          aws.StringValue(match.Regex),
+					"suffix":         aws.StringValue(match.Suffix),
 				}
 
 				if r := match.Range; r != nil {
@@ -1430,7 +1430,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mHttpRoute["action"] = []interface{}{
+			mHttpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},
@@ -1449,10 +1449,10 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 
 			if match := httpRouteHeader.Match; match != nil {
 				mMatch := map[string]interface{}{
-					"exact":  aws.StringValue(match.Exact),
-					"prefix": aws.StringValue(match.Prefix),
-					"regex":  aws.StringValue(match.Regex),
-					"suffix": aws.StringValue(match.Suffix),
+					"exact":          aws.StringValue(match.Exact),
+					names.AttrPrefix: aws.StringValue(match.Prefix),
+					"regex":          aws.StringValue(match.Regex),
+					"suffix":         aws.StringValue(match.Suffix),
 				}
 
 				if r := match.Range; r != nil {
@@ -1505,7 +1505,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 				"method":          aws.StringValue(httpRouteMatch.Method),
 				"path":            vHttpRoutePath,
 				names.AttrPort:    int(aws.Int64Value(httpRouteMatch.Port)),
-				"prefix":          aws.StringValue(httpRouteMatch.Prefix),
+				names.AttrPrefix:  aws.StringValue(httpRouteMatch.Prefix),
 				"query_parameter": vHttpRouteQueryParameters,
 				"scheme":          aws.StringValue(httpRouteMatch.Scheme),
 			},
@@ -1573,11 +1573,11 @@ func flattenRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	mSpec := map[string]interface{}{
-		"grpc_route":  flattenGRPCRoute(spec.GrpcRoute),
-		"http2_route": flattenHTTPRoute(spec.Http2Route),
-		"http_route":  flattenHTTPRoute(spec.HttpRoute),
-		"priority":    int(aws.Int64Value(spec.Priority)),
-		"tcp_route":   flattenTCPRoute(spec.TcpRoute),
+		"grpc_route":       flattenGRPCRoute(spec.GrpcRoute),
+		"http2_route":      flattenHTTPRoute(spec.Http2Route),
+		"http_route":       flattenHTTPRoute(spec.HttpRoute),
+		names.AttrPriority: int(aws.Int64Value(spec.Priority)),
+		"tcp_route":        flattenTCPRoute(spec.TcpRoute),
 	}
 
 	return []interface{}{mSpec}
@@ -1604,7 +1604,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 			}
 
-			mTcpRoute["action"] = []interface{}{
+			mTcpRoute[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					"weighted_target": vWeightedTargets,
 				},

@@ -149,7 +149,7 @@ func TestAccCloudFrontDistribution_s3Origin(t *testing.T) {
 				Config: testAccDistributionConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, "aws_cloudfront_distribution.s3_distribution", &distribution),
-					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", "hosted_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr("aws_cloudfront_distribution.s3_distribution", names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 				),
 			},
 			{
@@ -699,7 +699,7 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, names.AttrDomainName, regexache.MustCompile(`^[0-9a-z]+\.cloudfront\.net$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^[0-9A-Z]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2FDTNDATAQYW2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrSet(resourceName, "http_version"),
 					resource.TestCheckResourceAttr(resourceName, "is_ipv6_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),

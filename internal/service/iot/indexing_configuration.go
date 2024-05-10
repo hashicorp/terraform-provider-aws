@@ -112,7 +112,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Default:      iot.DeviceDefenderIndexingModeOff,
 							ValidateFunc: validation.StringInSlice(iot.DeviceDefenderIndexingMode_Values(), false),
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -270,7 +270,7 @@ func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
+		tfMap[names.AttrFilter] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	if v := apiObject.ManagedFields; v != nil {
@@ -379,7 +379,7 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 		apiObject.DeviceDefenderIndexingMode = aws.String(v)
 	}
 
-	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := tfMap[names.AttrFilter]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 

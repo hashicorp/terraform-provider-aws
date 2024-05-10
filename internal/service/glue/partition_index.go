@@ -32,7 +32,7 @@ func ResourcePartitionIndex() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -135,7 +135,7 @@ func resourcePartitionIndexRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("table_name", tableName)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 
 	if err := d.Set("partition_index", []map[string]interface{}{flattenPartitionIndex(partition)}); err != nil {

@@ -102,7 +102,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"action": {
+					names.AttrAction: {
 						Type:     schema.TypeList,
 						Required: true,
 						MinItems: 1,
@@ -168,7 +168,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
 														},
-														"prefix": {
+														names.AttrPrefix: {
 															Type:         schema.TypeString,
 															Optional:     true,
 															ValidateFunc: validation.StringLenBetween(1, 255),
@@ -242,7 +242,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 									Optional:     true,
 									ValidateFunc: validation.IsPortNumber,
 								},
-								"prefix": {
+								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
 									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
@@ -396,7 +396,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.http2_route", "spec.0.http_route", "spec.0.tcp_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,
@@ -462,7 +462,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -516,7 +516,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"prefix": {
+										names.AttrPrefix: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(0, 50),
@@ -640,7 +640,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					schema.ConflictsWith = []string{"spec.0.grpc_route", "spec.0.http_route", "spec.0.tcp_route"}
 					return schema
 				}(),
-				"priority": {
+				names.AttrPriority: {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					ValidateFunc: validation.IntBetween(0, 1000),
@@ -653,7 +653,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 					ConflictsWith: []string{"spec.0.grpc_route", "spec.0.http2_route", "spec.0.http_route"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MinItems: 1,

@@ -577,7 +577,7 @@ func logicalTableMapSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -1294,7 +1294,7 @@ func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.Logi
 		if v, ok := vMap["alias"].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
-		if v, ok := vMap["source"].([]interface{}); ok {
+		if v, ok := vMap[names.AttrSource].([]interface{}); ok {
 			logicalTable.Source = expandDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
@@ -2148,7 +2148,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
 		}
 		if table.Source != nil {
-			tfMap["source"] = flattenLogicalTableSource(table.Source)
+			tfMap[names.AttrSource] = flattenLogicalTableSource(table.Source)
 		}
 		tfList = append(tfList, tfMap)
 	}

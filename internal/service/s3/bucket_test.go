@@ -70,7 +70,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
@@ -80,13 +80,13 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 						names.AttrType:  "CanonicalUser",
 						"uri":           "",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", hostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
-					resource.TestCheckResourceAttr(resourceName, "region", region),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, region),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
@@ -131,7 +131,7 @@ func TestAccS3Bucket_Basic_emptyString(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccS3Bucket_Basic_nameGenerated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -187,7 +187,7 @@ func TestAccS3Bucket_Basic_namePrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrBucket, "tf-test-"),
-					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", "tf-test-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, "tf-test-"),
 				),
 			},
 			{
@@ -1398,7 +1398,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1407,7 +1407,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1416,7 +1416,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "",
@@ -1469,7 +1469,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -1478,7 +1478,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.tags.%":             "1",
@@ -1488,7 +1488,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						"priority":                    "3",
+						names.AttrPriority:            "3",
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix3",
@@ -1544,7 +1544,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
-						"priority":                    "1",
+						names.AttrPriority:            "1",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.prefix":             "prefix1",
@@ -1553,7 +1553,7 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule2",
-						"priority":                    "2",
+						names.AttrPriority:            "2",
 						names.AttrStatus:              "Enabled",
 						"filter.#":                    "1",
 						"filter.0.tags.%":             "1",

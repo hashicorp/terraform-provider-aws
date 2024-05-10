@@ -196,7 +196,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -208,7 +208,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"prefix": {
+												names.AttrPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -217,7 +217,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 											},
 										},
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -248,13 +248,13 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 							Deprecated:   "Use filter instead",
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
@@ -509,13 +509,13 @@ func expandReplicationRules(ctx context.Context, l []interface{}) []types.Replic
 		// Support the empty filter block in terraform i.e. 'filter {}',
 		// which implies the replication rule does not require a specific filter,
 		// by expanding the "filter" array even if the first element is nil.
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			// XML schema V2
 			rule.Filter = expandReplicationRuleFilter(ctx, v)
-			rule.Priority = aws.Int32(int32(tfMap["priority"].(int)))
+			rule.Priority = aws.Int32(int32(tfMap[names.AttrPriority].(int)))
 		} else {
 			// XML schema V1
-			rule.Prefix = aws.String(tfMap["prefix"].(string))
+			rule.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 		}
 
 		rules = append(rules, rule)
@@ -800,7 +800,7 @@ func expandReplicationRuleFilter(ctx context.Context, l []interface{}) types.Rep
 	// If a filter is specified as filter { prefix = "" } in Terraform, we should send the prefix value
 	// in the API request even if it is an empty value, else Terraform will report non-empty plans.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23487
-	if v, ok := tfMap["prefix"].(string); ok && result == nil {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && result == nil {
 		result = &types.ReplicationRuleFilterMemberPrefix{
 			Value: v,
 		}
@@ -824,7 +824,7 @@ func expandReplicationRuleFilterMemberAnd(ctx context.Context, l []interface{}) 
 		Value: types.ReplicationRuleAndOperator{},
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Value.Prefix = aws.String(v)
 	}
 
@@ -889,7 +889,7 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Filter != nil {
-			m["filter"] = flattenReplicationRuleFilter(ctx, rule.Filter)
+			m[names.AttrFilter] = flattenReplicationRuleFilter(ctx, rule.Filter)
 		}
 
 		if rule.ID != nil {
@@ -897,11 +897,11 @@ func flattenReplicationRules(ctx context.Context, rules []types.ReplicationRule)
 		}
 
 		if rule.Prefix != nil {
-			m["prefix"] = aws.ToString(rule.Prefix)
+			m[names.AttrPrefix] = aws.ToString(rule.Prefix)
 		}
 
 		if rule.Priority != nil {
-			m["priority"] = aws.ToInt32(rule.Priority)
+			m[names.AttrPriority] = aws.ToInt32(rule.Priority)
 		}
 
 		if rule.SourceSelectionCriteria != nil {
@@ -1055,7 +1055,7 @@ func flattenReplicationRuleFilter(ctx context.Context, filter types.ReplicationR
 	case *types.ReplicationRuleFilterMemberAnd:
 		m["and"] = flattenReplicationRuleFilterMemberAnd(ctx, v)
 	case *types.ReplicationRuleFilterMemberPrefix:
-		m["prefix"] = v.Value
+		m[names.AttrPrefix] = v.Value
 	case *types.ReplicationRuleFilterMemberTag:
 		m["tag"] = flattenReplicationRuleFilterMemberTag(v)
 	default:
@@ -1073,7 +1073,7 @@ func flattenReplicationRuleFilterMemberAnd(ctx context.Context, op *types.Replic
 	m := make(map[string]interface{})
 
 	if v := op.Value.Prefix; v != nil {
-		m["prefix"] = aws.ToString(v)
+		m[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	if v := op.Value.Tags; v != nil {

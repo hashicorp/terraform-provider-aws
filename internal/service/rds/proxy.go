@@ -93,7 +93,7 @@ func resourceProxy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +213,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
 
 	return diags
 }

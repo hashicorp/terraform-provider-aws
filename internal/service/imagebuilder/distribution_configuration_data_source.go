@@ -223,7 +223,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

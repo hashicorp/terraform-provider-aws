@@ -37,7 +37,7 @@ func ResourceSigningJob() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func ResourceSigningJob() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ForceNew: true,
@@ -208,7 +208,7 @@ func resourceSigningJobCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	profileName := d.Get("profile_name")
-	source := d.Get("source").([]interface{})
+	source := d.Get(names.AttrSource).([]interface{})
 	destination := d.Get("destination").([]interface{})
 
 	startSigningJobInput := &signer.StartSigningJobInput{
@@ -320,7 +320,7 @@ func resourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job signed object: %s", err)
 	}
 
-	if err := d.Set("source", flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSigningJobSource(describeSigningJobOutput.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job source: %s", err)
 	}
 
@@ -469,8 +469,8 @@ func expandSigningJobS3Destination(tfList []interface{}) *types.S3Destination {
 		s3Destination.BucketName = aws.String(tfMap[names.AttrBucket].(string))
 	}
 
-	if _, ok := tfMap["prefix"]; ok {
-		s3Destination.Prefix = aws.String(tfMap["prefix"].(string))
+	if _, ok := tfMap[names.AttrPrefix]; ok {
+		s3Destination.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	}
 
 	return s3Destination

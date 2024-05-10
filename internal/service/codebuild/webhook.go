@@ -48,7 +48,7 @@ func resourceWebhook() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -235,7 +235,7 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 			continue
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
@@ -299,7 +299,7 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"filter": flattenWebhookFilters(apiObject),
+			names.AttrFilter: flattenWebhookFilters(apiObject),
 		}
 		tfList = append(tfList, tfMap)
 	}

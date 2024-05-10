@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_chime_voice_connector_termination_credentials")
@@ -45,7 +46,7 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringIsNotEmpty,
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -174,7 +175,7 @@ func expandCredentials(data []interface{}) []awstypes.Credential {
 		item := rItem.(map[string]interface{})
 		credentials = append(credentials, awstypes.Credential{
 			Username: aws.String(item["username"].(string)),
-			Password: aws.String(item["password"].(string)),
+			Password: aws.String(item[names.AttrPassword].(string)),
 		})
 	}
 

@@ -38,7 +38,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -180,7 +180,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set(names.AttrARN, udfArn)
 	d.Set(names.AttrName, udf.FunctionName)
-	d.Set("catalog_id", catalogID)
+	d.Set(names.AttrCatalogID, catalogID)
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set("owner_type", udf.OwnerType)
 	d.Set("owner_name", udf.OwnerName)

@@ -176,7 +176,7 @@ func sweepPolicyAttachments(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
 					d.Set(names.AttrPolicy, policyName)
-					d.Set("target", v)
+					d.Set(names.AttrTarget, v)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}

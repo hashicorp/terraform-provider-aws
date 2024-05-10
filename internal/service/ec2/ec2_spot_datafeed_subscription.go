@@ -34,7 +34,7 @@ func ResourceSpotDataFeedSubscription() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -51,7 +51,7 @@ func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.Resou
 		Bucket: aws.String(d.Get(names.AttrBucket).(string)),
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 
@@ -83,7 +83,7 @@ func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.Set(names.AttrBucket, subscription.Bucket)
-	d.Set("prefix", subscription.Prefix)
+	d.Set(names.AttrPrefix, subscription.Prefix)
 
 	return diags
 }

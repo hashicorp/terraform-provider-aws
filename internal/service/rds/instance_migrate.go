@@ -40,7 +40,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -208,7 +208,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -261,12 +261,12 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -551,7 +551,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(InstanceExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -584,7 +584,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -640,7 +640,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -667,7 +667,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 			"manage_master_user_password": {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				ConflictsWith: []string{"password"},
+				ConflictsWith: []string{names.AttrPassword},
 			},
 			"master_user_secret": {
 				Type:     schema.TypeList,
@@ -744,7 +744,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Sensitive:     true,
@@ -848,7 +848,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,

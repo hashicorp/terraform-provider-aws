@@ -136,7 +136,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 														int64planmodifier.UseStateForUnknown(),
 													},
 												},
-												"priority": schema.Int64Attribute{
+												names.AttrPriority: schema.Int64Attribute{
 													Optional: true,
 													Computed: true,
 													PlanModifiers: []planmodifier.Int64{
@@ -484,9 +484,9 @@ func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexS
 
 var (
 	statmuxAttrs = map[string]attr.Type{
-		"minimum_bitrate": types.Int64Type,
-		"maximum_bitrate": types.Int64Type,
-		"priority":        types.Int64Type,
+		"minimum_bitrate":  types.Int64Type,
+		"maximum_bitrate":  types.Int64Type,
+		names.AttrPriority: types.Int64Type,
 	}
 
 	videoSettingsAttrs = map[string]attr.Type{
@@ -551,7 +551,7 @@ func flattenStatMuxSettings(ctx context.Context, mps *mltypes.MultiplexStatmuxVi
 	attrs := map[string]attr.Value{}
 	attrs["minimum_bitrate"] = flex.Int32ToFramework(ctx, mps.MinimumBitrate)
 	attrs["maximum_bitrate"] = flex.Int32ToFramework(ctx, mps.MaximumBitrate)
-	attrs["priority"] = flex.Int32ToFramework(ctx, mps.Priority)
+	attrs[names.AttrPriority] = flex.Int32ToFramework(ctx, mps.Priority)
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 

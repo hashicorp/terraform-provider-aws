@@ -210,7 +210,7 @@ func ResourceGateway() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -559,7 +559,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 		//    smb_active_directory_settings.0.username: "" => "Administrator"
 		if v, ok := d.GetOk("smb_active_directory_settings"); ok && len(v.([]interface{})) > 0 {
 			configM := v.([]interface{})[0].(map[string]interface{})
-			m["password"] = configM["password"]
+			m[names.AttrPassword] = configM[names.AttrPassword]
 			m["username"] = configM["username"]
 			m["timeout_in_seconds"] = configM["timeout_in_seconds"]
 
@@ -819,7 +819,7 @@ func expandGatewayDomain(l []interface{}, gatewayArn string) *storagegateway.Joi
 	domain := &storagegateway.JoinDomainInput{
 		DomainName:       aws.String(tfMap[names.AttrDomainName].(string)),
 		GatewayARN:       aws.String(gatewayArn),
-		Password:         aws.String(tfMap["password"].(string)),
+		Password:         aws.String(tfMap[names.AttrPassword].(string)),
 		UserName:         aws.String(tfMap["username"].(string)),
 		TimeoutInSeconds: aws.Int64(int64(tfMap["timeout_in_seconds"].(int))),
 	}

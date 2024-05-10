@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_imagebuilder_distribution_configurations")
@@ -25,7 +26,7 @@ func DataSourceDistributionConfigurations() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -41,7 +42,7 @@ func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.Res
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 

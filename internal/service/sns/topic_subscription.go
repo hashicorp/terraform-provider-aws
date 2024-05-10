@@ -56,7 +56,7 @@ var (
 				return json
 			},
 		},
-		"endpoint": {
+		names.AttrEndpoint: {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
@@ -141,7 +141,7 @@ var (
 		names.AttrARN:                    subscriptionAttributeNameSubscriptionARN,
 		"confirmation_was_authenticated": subscriptionAttributeNameConfirmationWasAuthenticated,
 		"delivery_policy":                subscriptionAttributeNameDeliveryPolicy,
-		"endpoint":                       subscriptionAttributeNameEndpoint,
+		names.AttrEndpoint:               subscriptionAttributeNameEndpoint,
 		"filter_policy":                  subscriptionAttributeNameFilterPolicy,
 		"filter_policy_scope":            subscriptionAttributeNameFilterPolicyScope,
 		names.AttrOwnerID:                subscriptionAttributeNameOwner,
@@ -189,7 +189,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	protocol := d.Get(names.AttrProtocol).(string)
 	input := &sns.SubscribeInput{
 		Attributes:            attributes,
-		Endpoint:              aws.String(d.Get("endpoint").(string)),
+		Endpoint:              aws.String(d.Get(names.AttrEndpoint).(string)),
 		Protocol:              aws.String(protocol),
 		ReturnSubscriptionArn: true, // even if not confirmed, will get ARN
 		TopicArn:              aws.String(d.Get("topic_arn").(string)),

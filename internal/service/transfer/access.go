@@ -57,7 +57,7 @@ func ResourceAccess() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),

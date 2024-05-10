@@ -80,7 +80,6 @@ resource "aws_iam_instance_profile" "ecs_instance" {
   role = aws_iam_role_policy_attachment.ecs_instance.role
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -90,7 +89,6 @@ variable "tags" {
   type     = map(string)
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

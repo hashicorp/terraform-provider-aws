@@ -43,7 +43,7 @@ func dataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -93,7 +93,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrDomainName, distribution.DomainName)
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 	d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 	d.Set(names.AttrStatus, distribution.Status)

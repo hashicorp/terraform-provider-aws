@@ -111,7 +111,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -369,7 +369,7 @@ func expandVerifiedAccessLogS3(s3 []interface{}) *types.VerifiedAccessLogS3Desti
 		}
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -440,7 +440,7 @@ func flattenVerifiedAccessLogS3(apiObject *types.VerifiedAccessLogS3Destination)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
