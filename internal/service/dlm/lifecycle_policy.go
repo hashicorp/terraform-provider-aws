@@ -49,7 +49,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 					validation.StringLenBetween(1, 500),
 				),
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -72,7 +72,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										MaxItems: 3,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"encryption_configuration": {
+												names.AttrEncryptionConfiguration: {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
@@ -506,7 +506,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 
 	input := dlm.CreateLifecyclePolicyInput{
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		PolicyDetails:    expandPolicyDetails(d.Get("policy_details").([]interface{})),
 		State:            aws.String(d.Get(names.AttrState).(string)),
 		Tags:             getTagsIn(ctx),
@@ -547,7 +547,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, out.Policy.PolicyArn)
 	d.Set(names.AttrDescription, out.Policy.Description)
-	d.Set("execution_role_arn", out.Policy.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, out.Policy.ExecutionRoleArn)
 	d.Set(names.AttrState, out.Policy.State)
 	if err := d.Set("policy_details", flattenPolicyDetails(out.Policy.PolicyDetails)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy details %s", err)
@@ -570,8 +570,8 @@ func resourceLifecyclePolicyUpdate(ctx context.Context, d *schema.ResourceData, 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
-		if d.HasChange("execution_role_arn") {
-			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 		if d.HasChange(names.AttrState) {
 			input.State = aws.String(d.Get(names.AttrState).(string))
@@ -782,7 +782,7 @@ func expandActionCrossRegionCopyRules(l []interface{}) []*dlm.CrossRegionCopyAct
 		}
 
 		rule := &dlm.CrossRegionCopyAction{}
-		if v, ok := m["encryption_configuration"].([]interface{}); ok {
+		if v, ok := m[names.AttrEncryptionConfiguration].([]interface{}); ok {
 			rule.EncryptionConfiguration = expandActionCrossRegionCopyRuleEncryptionConfiguration(v)
 		}
 		if v, ok := m["retain_rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -811,7 +811,7 @@ func flattenActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []int
 		}
 
 		m := map[string]interface{}{
-			"encryption_configuration": flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
+			names.AttrEncryptionConfiguration: flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
 			"retain_rule":              flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
 			names.AttrTarget:           aws.StringValue(rule.Target),
 		}
