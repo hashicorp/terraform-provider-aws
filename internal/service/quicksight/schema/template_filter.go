@@ -45,7 +45,7 @@ func categoryFilterSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilterConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CategoryFilterConfiguration.html
 					Type:     schema.TypeList,
 					Required: true,
 					MinItems: 1,
@@ -572,7 +572,7 @@ func expandCategoryFilter(tfList []interface{}) *quicksight.CategoryFilter {
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		filter.Column = expandColumnIdentifier(v)
 	}
-	if v, ok := tfMap["configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
 		filter.Configuration = expandCategoryFilterConfiguration(v)
 	}
 
@@ -1311,7 +1311,7 @@ func flattenCategoryFilter(apiObject *quicksight.CategoryFilter) []interface{} {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.Configuration != nil {
-		tfMap["configuration"] = flattenCategoryFilterConfiguration(apiObject.Configuration)
+		tfMap[names.AttrConfiguration] = flattenCategoryFilterConfiguration(apiObject.Configuration)
 	}
 	if apiObject.FilterId != nil {
 		tfMap["filter_id"] = aws.StringValue(apiObject.FilterId)
