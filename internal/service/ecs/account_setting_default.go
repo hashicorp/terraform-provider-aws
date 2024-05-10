@@ -150,8 +150,8 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	settingValue := "disabled"
 
 	//Default value: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-maintenance.html#task-retirement-change
-	if settingName == "fargateTaskRetirementWaitPeriod" {
-		settingValue = "7"
+	if settingName == ecs.SettingNameFargateTaskRetirementWaitPeriod {
+		settingValue = fargateTaskRetirementWaitPeriodValue
 	}
 
 	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
