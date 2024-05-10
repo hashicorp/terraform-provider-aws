@@ -159,7 +159,7 @@ func ResourceModel() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -355,7 +355,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.Containers = expandContainers(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -418,7 +418,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	arn := aws.StringValue(model.ModelArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, model.ModelName)
-	d.Set("execution_role_arn", model.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, model.ExecutionRoleArn)
 	d.Set("enable_network_isolation", model.EnableNetworkIsolation)
 
 	if err := d.Set("primary_container", flattenContainer(model.PrimaryContainer)); err != nil {
