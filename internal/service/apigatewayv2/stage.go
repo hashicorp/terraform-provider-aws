@@ -54,7 +54,7 @@ func resourceStage() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"format": {
+						names.AttrFormat: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -480,7 +480,7 @@ func expandAccessLogSettings(vSettings []interface{}) *awstypes.AccessLogSetting
 	if vDestinationArn, ok := mSettings["destination_arn"].(string); ok && vDestinationArn != "" {
 		settings.DestinationArn = aws.String(vDestinationArn)
 	}
-	if vFormat, ok := mSettings["format"].(string); ok && vFormat != "" {
+	if vFormat, ok := mSettings[names.AttrFormat].(string); ok && vFormat != "" {
 		settings.Format = aws.String(vFormat)
 	}
 
@@ -494,7 +494,7 @@ func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{
 
 	return []interface{}{map[string]interface{}{
 		"destination_arn": aws.ToString(settings.DestinationArn),
-		"format":          aws.ToString(settings.Format),
+		names.AttrFormat:  aws.ToString(settings.Format),
 	}}
 }
 
