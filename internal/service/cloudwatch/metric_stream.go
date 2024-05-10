@@ -54,7 +54,7 @@ func resourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -279,7 +279,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
