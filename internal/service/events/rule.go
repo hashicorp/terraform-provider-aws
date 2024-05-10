@@ -74,7 +74,7 @@ func resourceRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateEventPatternValue(),
-				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
+				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
 				StateFunc: func(v interface{}) string {
 					json, _ := ruleEventPatternJSONDecoder(v.(string))
 					return json
@@ -119,11 +119,11 @@ func resourceRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
-				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
+				AtLeastOneOf: []string{names.AttrScheduleExpression, "event_pattern"},
 			},
 			names.AttrState: {
 				Type:             schema.TypeString,
@@ -241,7 +241,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set("schedule_expression", output.ScheduleExpression)
+	d.Set(names.AttrScheduleExpression, output.ScheduleExpression)
 	d.Set(names.AttrState, output.State)
 
 	return diags
@@ -441,7 +441,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 		apiObject.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		apiObject.ScheduleExpression = aws.String(v.(string))
 	}
 

@@ -162,7 +162,7 @@ func resourceTarget() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.LaunchType](),
 						},
-						"network_configuration": {
+						names.AttrNetworkConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -947,7 +947,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.LaunchType = types.LaunchType(v)
 		}
 
-		if v, ok := tfMap["network_configuration"]; ok {
+		if v, ok := tfMap[names.AttrNetworkConfiguration]; ok {
 			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
@@ -1183,7 +1183,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 
 	config["launch_type"] = ecsParameters.LaunchType
 
-	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	config[names.AttrNetworkConfiguration] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
 		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
 	}
