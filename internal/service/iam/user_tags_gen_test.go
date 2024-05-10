@@ -53,7 +53,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccIAMUser_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccIAMUser_tags_null(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -239,7 +239,7 @@ func TestAccIAMUser_tags_AddOnUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -284,7 +284,7 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -306,7 +306,7 @@ func TestAccIAMUser_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -368,7 +368,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -397,7 +397,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -456,7 +456,7 @@ func TestAccIAMUser_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -503,7 +503,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -538,7 +538,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -570,7 +570,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -595,7 +595,7 @@ func TestAccIAMUser_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -650,7 +650,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -694,7 +694,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -719,7 +719,7 @@ func TestAccIAMUser_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -773,7 +773,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -818,7 +818,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -857,7 +857,7 @@ func TestAccIAMUser_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -921,7 +921,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -985,7 +985,7 @@ func TestAccIAMUser_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1039,7 +1039,7 @@ func TestAccIAMUser_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1088,7 +1088,7 @@ func TestAccIAMUser_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -1137,7 +1137,7 @@ func TestAccIAMUser_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},

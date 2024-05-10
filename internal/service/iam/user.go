@@ -46,7 +46,7 @@ func resourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     false,
@@ -234,7 +234,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// All access keys, MFA devices and login profile for the user must be removed.
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		for _, v := range []struct {
 			f      func(context.Context, *iam.Client, string) error
 			format string

@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -620,7 +621,7 @@ func sweepUsers(region string) error {
 					r := resourceUser()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(user.UserName))
-					d.Set("force_destroy", true)
+					d.Set(names.AttrForceDestroy, true)
 
 					// In general, sweeping should use the resource's Delete function. If Delete
 					// is missing something that affects sweeping, fix Delete. Most of the time,
