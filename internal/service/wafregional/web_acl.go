@@ -439,7 +439,7 @@ func expandRedactedFields(l []interface{}) []awstypes.FieldToMatch {
 			continue
 		}
 
-		redactedFields = append(redactedFields, *ExpandFieldToMatch(fieldToMatch.(map[string]interface{})))
+		redactedFields = append(redactedFields, *expandFieldToMatch(fieldToMatch.(map[string]interface{})))
 	}
 
 	return redactedFields
@@ -482,7 +482,7 @@ func flattenRedactedFields(fieldToMatches []awstypes.FieldToMatch) []interface{}
 	l := make([]interface{}, len(fieldToMatches))
 
 	for i, fieldToMatch := range fieldToMatches {
-		l[i] = FlattenFieldToMatch(&fieldToMatch)[0]
+		l[i] = flattenFieldToMatch(&fieldToMatch)[0]
 	}
 
 	m := map[string]interface{}{

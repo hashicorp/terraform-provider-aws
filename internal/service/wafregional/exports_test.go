@@ -31,5 +31,7 @@ var (
 	FindSQLInjectionMatchSetByID = findSQLInjectionMatchSetByID
 	FindWebACLByID               = findWebACLByID
 	FindWebACLByResourceARN      = findWebACLByResourceARN
+	FindXSSMatchSetByID          = findXSSMatchSetByID
+	FlattenFieldToMatch          = flattenFieldToMatch
 	RegexMatchSetTupleHash       = regexMatchSetTupleHash
 )

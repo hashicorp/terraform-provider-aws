@@ -8,16 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -226,20 +224,16 @@ func testAccCheckXSSMatchSetExists(ctx context.Context, n string, v *awstypes.Xs
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-		resp, err := conn.GetXssMatchSet(ctx, &wafregional.GetXssMatchSetInput{
-			XssMatchSetId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfwafregional.FindXSSMatchSetByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.XssMatchSet.XssMatchSetId == rs.Primary.ID {
-			*v = *resp.XssMatchSet
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("Regional WAF XSS Match Set (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -251,22 +245,18 @@ func testAccCheckXSSMatchSetDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalClient(ctx)
-			resp, err := conn.GetXssMatchSet(ctx, &wafregional.GetXssMatchSetInput{
-				XssMatchSetId: aws.String(rs.Primary.ID),
-			})
 
-			if err == nil {
-				if *resp.XssMatchSet.XssMatchSetId == rs.Primary.ID {
-					return fmt.Errorf("Regional WAF XSS Match Set %s still exists", rs.Primary.ID)
-				}
+			_, err := tfwafregional.FindXSSMatchSetByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			// Return nil if the regional WAF XSS Match Set is already destroyed
-			if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-				return nil
+			if err != nil {
+				return err
 			}
 
-			return err
+			return fmt.Errorf("WAF Regional XSS Match Set %s still exists", rs.Primary.ID)
 		}
 
 		return nil

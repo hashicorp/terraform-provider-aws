@@ -255,7 +255,7 @@ func diffByteMatchSetTuple(oldT, newT []interface{}) []awstypes.ByteMatchSetUpda
 		updates = append(updates, awstypes.ByteMatchSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),
@@ -269,7 +269,7 @@ func diffByteMatchSetTuple(oldT, newT []interface{}) []awstypes.ByteMatchSetUpda
 		updates = append(updates, awstypes.ByteMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			ByteMatchTuple: &awstypes.ByteMatchTuple{
-				FieldToMatch:         ExpandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: awstypes.PositionalConstraint(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   awstypes.TextTransformation(tuple["text_transformation"].(string)),

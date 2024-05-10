@@ -235,7 +235,7 @@ func diffSQLInjectionMatchTuplesWR(oldT, newT []interface{}) []awstypes.SqlInjec
 		updates = append(updates, awstypes.SqlInjectionMatchSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			SqlInjectionMatchTuple: &awstypes.SqlInjectionMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(ftm[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
@@ -248,7 +248,7 @@ func diffSQLInjectionMatchTuplesWR(oldT, newT []interface{}) []awstypes.SqlInjec
 		updates = append(updates, awstypes.SqlInjectionMatchSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			SqlInjectionMatchTuple: &awstypes.SqlInjectionMatchTuple{
-				FieldToMatch:       ExpandFieldToMatch(ftm[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
 				TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 			},
 		})
@@ -278,7 +278,7 @@ func flattenSQLInjectionMatchTuples(ts []awstypes.SqlInjectionMatchTuple) []inte
 	for i, t := range ts {
 		m := make(map[string]interface{})
 		m["text_transformation"] = t.TextTransformation
-		m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+		m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		out[i] = m
 	}
 

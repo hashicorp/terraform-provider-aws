@@ -229,7 +229,7 @@ func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []interface{} {
 		m := make(map[string]interface{})
 
 		if t.FieldToMatch != nil {
-			m["field_to_match"] = FlattenFieldToMatch(t.FieldToMatch)
+			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		}
 		m["regex_pattern_set_id"] = aws.ToString(t.RegexPatternSetId)
 		m["text_transformation"] = string(t.TextTransformation)
@@ -242,7 +242,7 @@ func flattenRegexMatchTuples(tuples []awstypes.RegexMatchTuple) []interface{} {
 func expandRegexMatchTuple(tuple map[string]interface{}) *awstypes.RegexMatchTuple {
 	ftm := tuple["field_to_match"].([]interface{})
 	return &awstypes.RegexMatchTuple{
-		FieldToMatch:       ExpandFieldToMatch(ftm[0].(map[string]interface{})),
+		FieldToMatch:       expandFieldToMatch(ftm[0].(map[string]interface{})),
 		RegexPatternSetId:  aws.String(tuple["regex_pattern_set_id"].(string)),
 		TextTransformation: awstypes.TextTransformation(tuple["text_transformation"].(string)),
 	}

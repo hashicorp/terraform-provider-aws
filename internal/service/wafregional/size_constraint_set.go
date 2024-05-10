@@ -238,7 +238,7 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 		updates = append(updates, awstypes.SizeConstraintSetUpdate{
 			Action: awstypes.ChangeActionDelete,
 			SizeConstraint: &awstypes.SizeConstraint{
-				FieldToMatch:       ExpandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
 				Size:               int64(constraint["size"].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
@@ -252,7 +252,7 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 		updates = append(updates, awstypes.SizeConstraintSetUpdate{
 			Action: awstypes.ChangeActionInsert,
 			SizeConstraint: &awstypes.SizeConstraint{
-				FieldToMatch:       ExpandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
 				Size:               int64(constraint["size"].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
@@ -268,7 +268,7 @@ func flattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
 		m := make(map[string]interface{})
 		m["comparison_operator"] = c.ComparisonOperator
 		if c.FieldToMatch != nil {
-			m["field_to_match"] = FlattenFieldToMatch(c.FieldToMatch)
+			m["field_to_match"] = flattenFieldToMatch(c.FieldToMatch)
 		}
 		m["size"] = c.Size
 		m["text_transformation"] = c.TextTransformation
