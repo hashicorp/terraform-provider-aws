@@ -1087,12 +1087,12 @@ func TestAccIAMPolicy_tags_ComputedTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1133,7 +1133,7 @@ func TestAccIAMPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Policy/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1156,12 +1156,12 @@ func TestAccIAMPolicy_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1204,7 +1204,7 @@ func TestAccIAMPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Policy/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1224,12 +1224,12 @@ func TestAccIAMPolicy_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
