@@ -257,7 +257,7 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	originalGroupAttributeField := "groups"
-	originalUserNameAttributeField := "username"
+	originalUserNameAttributeField := names.AttrUsername
 	updatedGroupAttributeField := "groupings"
 	updatedUserNameAttributeField := "usernames"
 	resourceName := "aws_kendra_index.test"
@@ -269,13 +269,13 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
+				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, names.AttrUsername),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", originalGroupAttributeField),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", originalUserNameAttributeField),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", names.AttrUsername),
 				),
 			},
 			{
@@ -284,13 +284,13 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, originalUserNameAttributeField),
+				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, names.AttrUsername),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
-					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", originalUserNameAttributeField),
+					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", names.AttrUsername),
 				),
 			},
 			{
