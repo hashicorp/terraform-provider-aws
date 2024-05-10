@@ -13,10 +13,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -61,16 +63,19 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"kms_key_id": schema.StringAttribute{
-				Optional: true,
+				Description: "The identifier for your AWS Key Management Service key (AWS KMS key). You can supply the Amazon Resource Name (ARN) of your KMS key, the ID of your KMS key, an alias for your KMS key, or an alias ARN.",
+				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(2048),
 					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]{0,2048}$"),
 				},
 			},
-			"name": schema.StringAttribute{
-				Required: true,
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
+				Description: "An identifier you assign to the stream processor.",
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(128),
 					stringvalidator.RegexMatches(nameRegex, "must conform to: [a-zA-Z0-9_.\\-]+"),
@@ -80,11 +85,55 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"role_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
+				Description: "The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor.",
+				CustomType:  fwtypes.ARNType,
+				Required:    true,
+			},
+			"data_sharing_enabled": schema.BoolAttribute{
+				Description: "Do you want to share data with Rekognition to improve model performance.",
+				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			"input": schema.SingleNestedBlock{
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"kinesis_video_stream_arn": schema.StringAttribute{
+						CustomType: fwtypes.ARNType,
+						Required:   true,
+					},
+				},
+			},
+			"notification_channel": schema.SingleNestedBlock{
+				Attributes: map[string]schema.Attribute{
+					"sns_topic_arn": schema.StringAttribute{
+						CustomType: fwtypes.ARNType,
+						Optional:   true,
+					},
+				},
+			},
+			"output": schema.SingleNestedBlock{
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
+				Attributes: map[string]schema.Attribute{
+					"kinesis_video_stream_arn": schema.StringAttribute{
+						CustomType: fwtypes.ARNType,
+						Required:   true,
+					},
+					"s3_bucket": schema.StringAttribute{
+						Required: true,
+					},
+					"s3_key_prefix": schema.StringAttribute{
+						Required: true,
+					},
+				},
+			},
 		},
 		// Blocks: map[string]schema.Block{
 		// 	"complex_argument": schema.ListNestedBlock{
@@ -126,40 +175,34 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceStreamProcessorData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a create input structure
 	in := &rekognition.CreateStreamProcessorInput{
-		Name: aws.String(plan.Name.ValueString()),
+		Name:     aws.String(plan.Name.ValueString()),
+		KmsKeyId: aws.String(plan.KmsKeyId.ValueString()),
+		RoleArn:  aws.String(plan.RoleARN.ValueString()),
+		DataSharingPreference: &awstypes.StreamProcessorDataSharingPreference{
+			OptIn: plan.DataSharingEnabled.ValueBool(),
+		},
+		Input: &awstypes.StreamProcessorInput{
+			KinesisVideoStream: &awstypes.KinesisVideoStream{
+				Arn: aws.String(plan.Input.KinesisVideoStreamArn.ValueString()),
+			},
+		},
 	}
 
-	// if !plan.Description.IsNull() {
-	// 	// TIP: Optional fields should be set based on whether or not they are
-	// 	// used.
-	// 	in.Description = aws.String(plan.Description.ValueString())
-	// }
-	// if !plan.ComplexArgument.IsNull() {
-	// 	// TIP: Use an expander to assign a complex argument. The elements must be
-	// 	// deserialized into the appropriate struct before being passed to the expander.
-	// 	var tfList []complexArgumentData
-	// 	resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-	// 	if resp.Diagnostics.HasError() {
-	// 		return
-	// 	}
+	if !plan.NotificationChannel.SNSTopicArn.IsNull() {
+		in.NotificationChannel = &awstypes.StreamProcessorNotificationChannel{
+			SNSTopicArn: aws.String(plan.NotificationChannel.SNSTopicArn.ValueString()),
+		}
+	}
 
-	// 	in.ComplexArgument = expandComplexArgument(tfList)
-	// }
-
-	// TIP: -- 4. Call the AWS create function
 	out, err := conn.CreateStreamProcessor(ctx, in)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameStreamProcessor, plan.Name.String(), err),
 			err.Error(),
@@ -174,8 +217,8 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 	plan.ARN = flex.StringToFramework(ctx, out.StreamProcessorArn)
+	plan.ID = plan.ARN
 
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -437,10 +480,23 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 }
 
 type resourceStreamProcessorData struct {
-	ARN      types.String   `tfsdk:"arn"`
-	Name     types.String   `tfsdk:"name"`
-	RoleARN  fwtypes.ARN    `tfsdk:"role_arn"`
-	Tags     types.Map      `tfsdk:"tags"`
-	TagsAll  types.Map      `tfsdk:"tags_all"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	ARN                 types.String         `tfsdk:"arn"`
+	DataSharingEnabled  types.Bool           `tfsdk:"data_sharing_enabled"`
+	ID                  types.String         `tfsdk:"id"`
+	Input               streamProcessorInput `tfsdk:"input"`
+	KmsKeyId            types.String         `tfsdk:"kms_key_id"`
+	NotificationChannel notificationChannel  `tfsdk:"notification_channel"`
+	Name                types.String         `tfsdk:"name"`
+	RoleARN             fwtypes.ARN          `tfsdk:"role_arn"`
+	Tags                types.Map            `tfsdk:"tags"`
+	TagsAll             types.Map            `tfsdk:"tags_all"`
+	Timeouts            timeouts.Value       `tfsdk:"timeouts"`
+}
+
+type streamProcessorInput struct {
+	KinesisVideoStreamArn fwtypes.ARN `tfsdk:"kinesis_video_stream_arn"`
+}
+
+type notificationChannel struct {
+	SNSTopicArn fwtypes.ARN `tfsdk:"sns_topic_arn"`
 }
