@@ -90,7 +90,7 @@ func ResourceAMICopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -132,7 +132,7 @@ func ResourceAMICopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -278,7 +278,7 @@ func resourceAMICopyCreate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ec2.CopyImageInput{
 		ClientToken:   aws.String(id.UniqueId()),
 		Description:   aws.String(d.Get(names.AttrDescription).(string)),
-		Encrypted:     aws.Bool(d.Get("encrypted").(bool)),
+		Encrypted:     aws.Bool(d.Get(names.AttrEncrypted).(bool)),
 		Name:          aws.String(name),
 		SourceImageId: aws.String(sourceImageID),
 		SourceRegion:  aws.String(d.Get("source_ami_region").(string)),

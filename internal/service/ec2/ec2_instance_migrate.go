@@ -92,11 +92,11 @@ func WriteV1BlockDevice(
 		delete(oldBd, "virtual_name")
 	case "root_block_device":
 		delete(oldBd, "virtual_name")
-		delete(oldBd, "encrypted")
+		delete(oldBd, names.AttrEncrypted)
 		delete(oldBd, "snapshot_id")
 	case "ephemeral_block_device":
 		delete(oldBd, names.AttrDeleteOnTermination)
-		delete(oldBd, "encrypted")
+		delete(oldBd, names.AttrEncrypted)
 		delete(oldBd, "iops")
 		delete(oldBd, "volume_size")
 		delete(oldBd, "volume_type")

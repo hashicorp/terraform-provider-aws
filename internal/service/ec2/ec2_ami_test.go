@@ -45,7 +45,7 @@ func TestAccEC2AMI_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sda1",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "0",
 						"throughput":                  "0",
 						"volume_size":                 "8",
@@ -243,7 +243,7 @@ func TestAccEC2AMI_ephemeralBlockDevices(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sda1",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "0",
 						"throughput":                  "0",
 						"volume_size":                 "8",
@@ -307,7 +307,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
 						names.AttrDeviceName:          "/dev/sda1",
-						"encrypted":                   "false",
+						names.AttrEncrypted:           "false",
 						"iops":                        "0",
 						"throughput":                  "0",
 						"volume_size":                 "8",
@@ -318,7 +318,7 @@ func TestAccEC2AMI_gp3BlockDevice(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "false",
 						names.AttrDeviceName:          "/dev/sdb",
-						"encrypted":                   "true",
+						names.AttrEncrypted:           "true",
 						"iops":                        "100",
 						"throughput":                  "500",
 						"volume_size":                 "10",

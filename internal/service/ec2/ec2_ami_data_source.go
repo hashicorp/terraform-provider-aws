@@ -362,7 +362,7 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
 				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				"encrypted":                   fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
 				"iops":                        fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
 				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
 				"volume_size":                 fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
@@ -430,7 +430,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["encrypted"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))

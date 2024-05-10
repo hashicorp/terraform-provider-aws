@@ -148,7 +148,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
@@ -278,7 +278,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Default:  true,
 										ForceNew: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Computed: true,
@@ -1348,7 +1348,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -1401,7 +1401,7 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -1984,7 +1984,7 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.Encrypted != nil {
-				m["encrypted"] = aws.BoolValue(ebs.Encrypted)
+				m[names.AttrEncrypted] = aws.BoolValue(ebs.Encrypted)
 			}
 
 			if ebs.KmsKeyId != nil {
@@ -2045,7 +2045,7 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.Encrypted != nil {
-					m["encrypted"] = aws.BoolValue(val.Ebs.Encrypted)
+					m[names.AttrEncrypted] = aws.BoolValue(val.Ebs.Encrypted)
 				}
 
 				if val.Ebs.KmsKeyId != nil {
