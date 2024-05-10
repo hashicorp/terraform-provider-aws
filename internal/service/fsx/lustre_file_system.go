@@ -161,7 +161,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"destination": {
+						names.AttrDestination: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -624,7 +624,7 @@ func expandLustreLogCreateConfiguration(l []interface{}) *fsx.LustreLogCreateCon
 		Level: aws.String(data["level"].(string)),
 	}
 
-	if v, ok := data["destination"].(string); ok && v != "" {
+	if v, ok := data[names.AttrDestination].(string); ok && v != "" {
 		req.Destination = aws.String(logStateFunc(v))
 	}
 
@@ -641,7 +641,7 @@ func flattenLustreLogConfiguration(adopts *fsx.LustreLogConfiguration) []map[str
 	}
 
 	if adopts.Destination != nil {
-		m["destination"] = aws.StringValue(adopts.Destination)
+		m[names.AttrDestination] = aws.StringValue(adopts.Destination)
 	}
 
 	return []map[string]interface{}{m}
