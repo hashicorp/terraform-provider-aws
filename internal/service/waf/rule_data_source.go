@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,39 +35,52 @@ func dataSourceRule() *schema.Resource {
 func dataSourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFClient(ctx)
-	name := d.Get(names.AttrName).(string)
 
-	rules := make([]awstypes.RuleSummary, 0)
-	// ListRulesInput does not have a name parameter for filtering
+	name := d.Get(names.AttrName).(string)
 	input := &waf.ListRulesInput{}
-	for {
-		output, err := conn.ListRules(ctx, input)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading WAF Rules: %s", err)
+	output, err := findRule(ctx, conn, input, func(v *awstypes.RuleSummary) bool {
+		return aws.ToString(v.Name) == name
+	})
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Rule", err))
+	}
+
+	d.SetId(aws.ToString(output.RuleId))
+
+	return diags
+}
+
+func findRule(ctx context.Context, conn *waf.Client, input *waf.ListRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) (*awstypes.RuleSummary, error) {
+	output, err := findRules(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRules(ctx context.Context, conn *waf.Client, input *waf.ListRulesInput, filter tfslices.Predicate[*awstypes.RuleSummary]) ([]awstypes.RuleSummary, error) {
+	var output []awstypes.RuleSummary
+
+	err := listRulesPages(ctx, conn, input, func(page *waf.ListRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		for _, rule := range output.Rules {
-			if aws.ToString(rule.Name) == name {
-				rules = append(rules, rule)
+
+		for _, v := range page.Rules {
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
-		if output.NextMarker == nil {
-			break
-		}
-		input.NextMarker = output.NextMarker
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	if len(rules) == 0 {
-		return sdkdiag.AppendErrorf(diags, "WAF Rules not found for name: %s", name)
-	}
-
-	if len(rules) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple WAF Rules found for name: %s", name)
-	}
-
-	rule := rules[0]
-
-	d.SetId(aws.ToString(rule.RuleId))
-
-	return diags
+	return output, nil
 }
