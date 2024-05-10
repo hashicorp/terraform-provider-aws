@@ -71,7 +71,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -542,7 +542,7 @@ func flattenDNSEntry(apiObject *ec2.DnsEntry) map[string]interface{} {
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.StringValue(v)
+		tfMap[names.AttrHostedZoneID] = aws.StringValue(v)
 	}
 
 	return tfMap
