@@ -34,6 +34,7 @@ const (
 	AttrEngineVersion              = "engine_version"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
+	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
 	AttrHostedZoneID               = "hosted_zone_id"
 	AttrID                         = "id" // Should be explicitly declared only for Framework resources
