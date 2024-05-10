@@ -1093,12 +1093,12 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags").AtMapKey("computedkey1")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags).AtMapKey("computedkey1")),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1139,7 +1139,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1162,12 +1162,12 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags").AtMapKey("computedkey1")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags).AtMapKey("computedkey1")),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1210,7 +1210,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1230,12 +1230,12 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags").AtMapKey("key1")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags).AtMapKey("key1")),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),

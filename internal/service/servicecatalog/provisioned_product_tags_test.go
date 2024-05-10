@@ -96,7 +96,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName": config.StringVariable(rName),
-			// 		"tags": config.MapVariable(map[string]config.Variable{
+			// 		names.AttrTags: config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
 			// 	},
@@ -110,7 +110,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			// 	ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 			// 	ConfigVariables: config.Variables{
 			// 		"rName": config.StringVariable(rName),
-			// 		"tags": config.MapVariable(map[string]config.Variable{
+			// 		names.AttrTags: config.MapVariable(map[string]config.Variable{
 			// 			"key2": config.StringVariable("value2"),
 			// 		}),
 			// 	},
@@ -1177,12 +1177,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnCreate(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1226,7 +1226,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1249,12 +1249,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Add(t *te
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1300,7 +1300,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					"tags": config.MapVariable(map[string]config.Variable{
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
 						"key1": config.StringVariable("value1"),
 					}),
 				},
@@ -1320,12 +1320,12 @@ func TestAccServiceCatalogProvisionedProduct_tags_ComputedTag_OnUpdate_Replace(t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("tags")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
