@@ -208,6 +208,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"launch_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"maintenance_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -479,6 +483,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("ami", instance.ImageId)
 	d.Set(names.AttrInstanceType, instanceType)
 	d.Set("key_name", instance.KeyName)
+	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
