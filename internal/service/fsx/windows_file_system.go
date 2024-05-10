@@ -152,7 +152,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 350000),
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      fsx.DiskIopsConfigurationModeAutomatic,
@@ -769,7 +769,7 @@ func expandWindowsDiskIopsConfiguration(l []interface{}) *fsx.DiskIopsConfigurat
 		req.Iops = aws.Int64(int64(v))
 	}
 
-	if v, ok := data["mode"].(string); ok && v != "" {
+	if v, ok := data[names.AttrMode].(string); ok && v != "" {
 		req.Mode = aws.String(v)
 	}
 
@@ -787,7 +787,7 @@ func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interf
 		m["iops"] = aws.Int64Value(rs.Iops)
 	}
 	if rs.Mode != nil {
-		m["mode"] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 
 	return []interface{}{m}
