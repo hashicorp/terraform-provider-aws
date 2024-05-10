@@ -15,6 +15,7 @@ const (
 	AttrAccountID                  = "account_id"
 	AttrAction                     = "action"
 	AttrAddress                    = "address"
+	AttrApplyImmediately           = "apply_immediately"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
 	AttrAvailabilityZones          = "availability_zones"
@@ -22,21 +23,28 @@ const (
 	AttrBucketName                 = "bucket_name"
 	AttrBucketPrefix               = "bucket_prefix"
 	AttrCatalogID                  = "catalog_id"
+	AttrCertificateARN             = "certificate_arn"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrConfiguration              = "configuration"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
+	AttrCreationDate               = "creation_date"
+	AttrCreationTime               = "creation_time"
 	AttrDatabaseName               = "database_name"
 	AttrDeleteOnTermination        = "delete_on_termination"
 	AttrDescription                = "description"
 	AttrDestination                = "destination"
+	AttrDestinationARN             = "destination_arn"
 	AttrDeviceName                 = "device_name"
+	AttrDisplayName                = "display_name"
 	AttrDomainName                 = "domain_name"
 	AttrEnabled                    = "enabled"
 	AttrEncrypted                  = "encrypted"
+	AttrEncryptionConfiguration    = "encryption_configuration"
 	AttrEndpoint                   = "endpoint"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
+	AttrExecutionRoleARN           = "execution_role_arn"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
 	AttrForceDestroy               = "force_destroy"
@@ -54,6 +62,7 @@ const (
 	AttrMode                       = "mode"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
+	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
 	AttrOwnerID                    = "owner_id"
 	AttrParameter                  = "parameter"
@@ -67,9 +76,12 @@ const (
 	AttrPriority                   = "priority"
 	AttrProfile                    = "profile"
 	AttrProtocol                   = "protocol"
+	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
 	AttrResourceARN                = "resource_arn"
+	AttrResourceType               = "resource_type"
 	AttrRoleARN                    = "role_arn"
+	AttrScheduleExpression         = "schedule_expression"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
@@ -110,6 +122,7 @@ func ConstOrQuote(constant string) string {
 		"account_id":                    "AttrAccountID",
 		"action":                        "AttrAction",
 		"address":                       "AttrAddress",
+		"apply_immediately":             "AttrApplyImmediately",
 		"auto_minor_version_upgrade":    "AttrAutoMinorVersionUpgrade",
 		"availability_zone":             "AttrAvailabilityZone",
 		"availability_zones":            "AttrAvailabilityZones",
@@ -117,21 +130,28 @@ func ConstOrQuote(constant string) string {
 		"bucket_name":                   "AttrBucketName",
 		"bucket_prefix":                 "AttrBucketPrefix",
 		"catalog_id":                    "AttrCatalogID",
+		"certificate_arn":               "AttrCertificateARN",
 		"cluster_identifier":            "AttrClusterIdentifier",
 		"configuration":                 "AttrConfiguration",
 		"created_at":                    "AttrCreatedAt",
 		"created_date":                  "AttrCreatedDate",
+		"creation_date":                 "AttrCreationDate",
+		"creation_time":                 "AttrCreationTime",
 		"database_name":                 "AttrDatabaseName",
 		"delete_on_termination":         "AttrDeleteOnTermination",
 		"description":                   "AttrDescription",
 		"destination":                   "AttrDestination",
+		"destination_arn":               "AttrDestinationARN",
 		"device_name":                   "AttrDeviceName",
+		"display_name":                  "AttrDisplayName",
 		"domain_name":                   "AttrDomainName",
 		"enabled":                       "AttrEnabled",
 		"encrypted":                     "AttrEncrypted",
+		"encryption_configuration":      "AttrEncryptionConfiguration",
 		"endpoint":                      "AttrEndpoint",
 		"endpoints":                     "AttrEndpoints",
 		"engine_version":                "AttrEngineVersion",
+		"execution_role_arn":            "AttrExecutionRoleARN",
 		"file_system_id":                "AttrFileSystemID",
 		"filter":                        "AttrFilter",
 		"force_destroy":                 "AttrForceDestroy",
@@ -149,6 +169,7 @@ func ConstOrQuote(constant string) string {
 		"mode":                          "AttrMode",
 		"name":                          "AttrName",
 		"name_prefix":                   "AttrNamePrefix",
+		"network_configuration":         "AttrNetworkConfiguration",
 		"network_interface_id":          "AttrNetworkInterfaceID",
 		"owner_id":                      "AttrOwnerID",
 		"parameter":                     "AttrParameter",
@@ -162,9 +183,12 @@ func ConstOrQuote(constant string) string {
 		"priority":                      "AttrPriority",
 		"profile":                       "AttrProfile",
 		"protocol":                      "AttrProtocol",
+		"publicly_accessible":           "AttrPubliclyAccessible",
 		"region":                        "AttrRegion",
 		"resource_arn":                  "AttrResourceARN",
+		"resource_type":                 "AttrResourceType",
 		"role_arn":                      "AttrRoleARN",
+		"schedule_expression":           "AttrScheduleExpression",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
