@@ -217,7 +217,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, oldDisplayName),
 				),
 			},
 			{
@@ -229,7 +229,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, newDisplayName),
 				),
 			},
 			{
