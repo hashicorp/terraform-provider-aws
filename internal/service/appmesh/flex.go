@@ -25,7 +25,7 @@ func expandClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolicy {
 
 		mTls := vTls[0].(map[string]interface{})
 
-		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			certificate := &appmesh.ClientTlsCertificate{}
 
 			mCertificate := vCertificate[0].(map[string]interface{})
@@ -217,7 +217,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 			if vMethodName, ok := mGrpcRouteMatch["method_name"].(string); ok && vMethodName != "" {
 				grpcRouteMatch.MethodName = aws.String(vMethodName)
 			}
-			if vServiceName, ok := mGrpcRouteMatch["service_name"].(string); ok && vServiceName != "" {
+			if vServiceName, ok := mGrpcRouteMatch[names.AttrServiceName].(string); ok && vServiceName != "" {
 				grpcRouteMatch.ServiceName = aws.String(vServiceName)
 			}
 
@@ -902,7 +902,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 					tls.Mode = aws.String(vMode)
 				}
 
-				if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+				if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					certificate := &appmesh.ListenerTlsCertificate{}
 
 					mCertificate := vCertificate[0].(map[string]interface{})
@@ -1095,7 +1095,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
 				awsCloudMap.NamespaceName = aws.String(vNamespaceName)
 			}
-			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+			if vServiceName, ok := mAwsCloudMap[names.AttrServiceName].(string); ok && vServiceName != "" {
 				awsCloudMap.ServiceName = aws.String(vServiceName)
 			}
 
@@ -1236,7 +1236,7 @@ func flattenClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
 				mCertificate["sds"] = []interface{}{mSds}
 			}
 
-			mTls["certificate"] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []interface{}{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {
@@ -1371,10 +1371,10 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 
 		mGrpcRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"metadata":     vGrpcRouteMetadatas,
-				"method_name":  aws.StringValue(grpcRouteMatch.MethodName),
-				"service_name": aws.StringValue(grpcRouteMatch.ServiceName),
-				names.AttrPort: int(aws.Int64Value(grpcRouteMatch.Port)),
+				"metadata":            vGrpcRouteMetadatas,
+				"method_name":         aws.StringValue(grpcRouteMatch.MethodName),
+				names.AttrServiceName: aws.StringValue(grpcRouteMatch.ServiceName),
+				names.AttrPort:        int(aws.Int64Value(grpcRouteMatch.Port)),
 			},
 		}
 	}
@@ -1788,7 +1788,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mTls["certificate"] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []interface{}{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
@@ -1897,9 +1897,9 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 			mServiceDiscovery["aws_cloud_map"] = []interface{}{
 				map[string]interface{}{
-					"attributes":     vAttributes,
-					"namespace_name": aws.StringValue(awsCloudMap.NamespaceName),
-					"service_name":   aws.StringValue(awsCloudMap.ServiceName),
+					"attributes":          vAttributes,
+					"namespace_name":      aws.StringValue(awsCloudMap.NamespaceName),
+					names.AttrServiceName: aws.StringValue(awsCloudMap.ServiceName),
 				},
 			}
 		}

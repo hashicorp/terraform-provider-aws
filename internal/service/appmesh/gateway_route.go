@@ -478,7 +478,7 @@ func resourceGatewayRouteSpecSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.IsPortNumber,
 										},
-										"service_name": {
+										names.AttrServiceName: {
 											Type:     schema.TypeString,
 											Required: true,
 										},
@@ -777,7 +777,7 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 
 		mRouteMatch := vRouteMatch[0].(map[string]interface{})
 
-		if vServiceName, ok := mRouteMatch["service_name"].(string); ok && vServiceName != "" {
+		if vServiceName, ok := mRouteMatch[names.AttrServiceName].(string); ok && vServiceName != "" {
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
@@ -1046,7 +1046,7 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 
 	if routeMatch := grpcRoute.Match; routeMatch != nil {
 		mRouteMatch := map[string]interface{}{
-			"service_name": aws.StringValue(routeMatch.ServiceName),
+			names.AttrServiceName: aws.StringValue(routeMatch.ServiceName),
 		}
 		if routeMatch.Port != nil {
 			mRouteMatch[names.AttrPort] = int(aws.Int64Value(routeMatch.Port))

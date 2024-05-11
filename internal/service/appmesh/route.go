@@ -521,7 +521,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(0, 50),
 										},
-										"service_name": {
+										names.AttrServiceName: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},

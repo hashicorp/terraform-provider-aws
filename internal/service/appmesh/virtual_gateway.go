@@ -115,7 +115,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"certificate": {
+													names.AttrCertificate: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -435,7 +435,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"certificate": {
+										names.AttrCertificate: {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -967,7 +967,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 					tls.Mode = aws.String(vMode)
 				}
 
-				if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+				if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					certificate := &appmesh.VirtualGatewayListenerTlsCertificate{}
 
 					mCertificate := vCertificate[0].(map[string]interface{})
@@ -1152,7 +1152,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.Virt
 
 		mTls := vTls[0].(map[string]interface{})
 
-		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			certificate := &appmesh.VirtualGatewayClientTlsCertificate{}
 
 			mCertificate := vCertificate[0].(map[string]interface{})
@@ -1375,7 +1375,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mTls["certificate"] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []interface{}{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
@@ -1508,7 +1508,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClien
 				mCertificate["sds"] = []interface{}{mSds}
 			}
 
-			mTls["certificate"] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []interface{}{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {
