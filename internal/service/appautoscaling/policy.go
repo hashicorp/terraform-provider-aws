@@ -209,7 +209,7 @@ func resourcePolicy() *schema.Resource {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
-																		"namespace": {
+																		names.AttrNamespace: {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
@@ -236,7 +236,7 @@ func resourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -552,7 +552,7 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 				spec.MetricName = aws.String(v.(string))
 			}
 
-			if v, ok := data["namespace"]; ok {
+			if v, ok := data[names.AttrNamespace]; ok {
 				spec.Namespace = aws.String(v.(string))
 			}
 
@@ -596,7 +596,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
 			metric := &applicationautoscaling.TargetTrackingMetric{
 				MetricName: aws.String(metricSpec["metric_name"].(string)),
-				Namespace:  aws.String(metricSpec["namespace"].(string)),
+				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
 				dims := v.(*schema.Set).List()
@@ -851,7 +851,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 		}
 
 		if v := cfg.Namespace; v != nil {
-			m["namespace"] = aws.StringValue(v)
+			m[names.AttrNamespace] = aws.StringValue(v)
 		}
 
 		if v := cfg.Statistic; v != nil {
@@ -895,7 +895,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 				metricSpec["dimensions"] = dimSpec
 			}
 			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
-			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
+			metricSpec[names.AttrNamespace] = aws.StringValue(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
 			if rawMetricStat.Unit != nil {
