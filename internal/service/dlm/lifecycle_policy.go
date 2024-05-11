@@ -216,7 +216,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 							Default:      dlm.PolicyTypeValuesEbsSnapshotManagement,
 							ValidateFunc: validation.StringInSlice(dlm.PolicyTypeValues_Values(), false),
 						},
-						"schedule": {
+						names.AttrSchedule: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 1,
@@ -251,7 +251,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice(dlm.IntervalUnitValues_Values(), false),
 												},
-												"location": {
+												names.AttrLocation: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
@@ -624,7 +624,7 @@ func expandPolicyDetails(cfg []interface{}) *dlm.PolicyDetails {
 	if v, ok := m["resource_locations"].([]interface{}); ok && len(v) > 0 {
 		policyDetails.ResourceLocations = flex.ExpandStringList(v)
 	}
-	if v, ok := m["schedule"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrSchedule].([]interface{}); ok && len(v) > 0 {
 		policyDetails.Schedules = expandSchedules(v)
 	}
 	if v, ok := m[names.AttrAction].([]interface{}); ok && len(v) > 0 {
@@ -649,7 +649,7 @@ func flattenPolicyDetails(policyDetails *dlm.PolicyDetails) []map[string]interfa
 	result["resource_locations"] = flex.FlattenStringList(policyDetails.ResourceLocations)
 	result[names.AttrAction] = flattenActions(policyDetails.Actions)
 	result["event_source"] = flattenEventSource(policyDetails.EventSource)
-	result["schedule"] = flattenSchedules(policyDetails.Schedules)
+	result[names.AttrSchedule] = flattenSchedules(policyDetails.Schedules)
 	result["target_tags"] = flattenTags(policyDetails.TargetTags)
 	result["policy_type"] = aws.StringValue(policyDetails.PolicyType)
 
@@ -1045,7 +1045,7 @@ func expandCreateRule(cfg []interface{}) *dlm.CreateRule {
 		createRule.Interval = aws.Int64(int64(v))
 	}
 
-	if v, ok := c["location"].(string); ok && v != "" {
+	if v, ok := c[names.AttrLocation].(string); ok && v != "" {
 		createRule.Location = aws.String(v)
 	}
 
@@ -1080,7 +1080,7 @@ func flattenCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	}
 
 	if createRule.Location != nil {
-		result["location"] = aws.StringValue(createRule.Location)
+		result[names.AttrLocation] = aws.StringValue(createRule.Location)
 	}
 
 	if createRule.CronExpression != nil {
