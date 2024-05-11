@@ -121,7 +121,7 @@ var applicationProviderAttrTypes = map[string]attr.Type{
 
 var displayDataAttrTypes = map[string]attr.Type{
 	names.AttrDescription: types.StringType,
-	names.AttrDisplayName:        types.StringType,
+	names.AttrDisplayName: types.StringType,
 	"icon_url":            types.StringType,
 }
 
@@ -165,7 +165,7 @@ func flattenDisplayData(ctx context.Context, apiObject *awstypes.DisplayData) (t
 
 	obj := map[string]attr.Value{
 		names.AttrDescription: flex.StringToFramework(ctx, apiObject.Description),
-		names.AttrDisplayName:        flex.StringToFramework(ctx, apiObject.DisplayName),
+		names.AttrDisplayName: flex.StringToFramework(ctx, apiObject.DisplayName),
 		"icon_url":            flex.StringToFramework(ctx, apiObject.IconUrl),
 	}
 	objVal, d := types.ObjectValue(displayDataAttrTypes, obj)

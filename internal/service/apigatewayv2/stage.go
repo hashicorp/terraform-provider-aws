@@ -494,7 +494,7 @@ func flattenAccessLogSettings(settings *awstypes.AccessLogSettings) []interface{
 
 	return []interface{}{map[string]interface{}{
 		names.AttrDestinationARN: aws.ToString(settings.DestinationArn),
-		names.AttrFormat:  aws.ToString(settings.Format),
+		names.AttrFormat:         aws.ToString(settings.Format),
 	}}
 }
 

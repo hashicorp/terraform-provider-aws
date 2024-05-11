@@ -461,8 +461,8 @@ func flattenPlanAdvancedSettings(advancedBackupSettings []*backup.AdvancedBackup
 
 	for _, advancedBackupSetting := range advancedBackupSettings {
 		mAdvancedBackupSetting := map[string]interface{}{
-			"backup_options": aws.StringValueMap(advancedBackupSetting.BackupOptions),
-			names.AttrResourceType:  aws.StringValue(advancedBackupSetting.ResourceType),
+			"backup_options":       aws.StringValueMap(advancedBackupSetting.BackupOptions),
+			names.AttrResourceType: aws.StringValue(advancedBackupSetting.ResourceType),
 		}
 
 		vAdvancedBackupSettings = append(vAdvancedBackupSettings, mAdvancedBackupSetting)

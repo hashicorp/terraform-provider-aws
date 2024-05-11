@@ -265,7 +265,7 @@ func flattenUserDefinedFunctionResourceURI(uris []*glue.ResourceUri) []map[strin
 	for _, i := range uris {
 		l := map[string]interface{}{
 			names.AttrResourceType: aws.StringValue(i.ResourceType),
-			"uri":           aws.StringValue(i.Uri),
+			"uri":                  aws.StringValue(i.Uri),
 		}
 
 		result = append(result, l)

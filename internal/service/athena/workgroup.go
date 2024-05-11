@@ -555,7 +555,7 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfig
 
 	m := map[string]interface{}{
 		names.AttrEncryptionConfiguration: flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
-		"output_location":          aws.ToString(resultConfiguration.OutputLocation),
+		"output_location":                 aws.ToString(resultConfiguration.OutputLocation),
 	}
 
 	if resultConfiguration.ExpectedBucketOwner != nil {

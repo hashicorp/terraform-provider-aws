@@ -232,9 +232,9 @@ func flattenScheduleConfig(scheduleConfig *awstypes.ScheduleConfiguration) []int
 	}
 
 	values := map[string]interface{}{
-		"first_execution_from": aws.ToString(scheduleConfig.FirstExecutionFrom),
-		"object":               aws.ToString(scheduleConfig.Object),
-		names.AttrScheduleExpression:  aws.ToString(scheduleConfig.ScheduleExpression),
+		"first_execution_from":       aws.ToString(scheduleConfig.FirstExecutionFrom),
+		"object":                     aws.ToString(scheduleConfig.Object),
+		names.AttrScheduleExpression: aws.ToString(scheduleConfig.ScheduleExpression),
 	}
 
 	return []interface{}{values}

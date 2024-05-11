@@ -554,7 +554,7 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
 			names.AttrDestinationARN: aws.ToString(accessLogSettings.DestinationArn),
-			names.AttrFormat:  aws.ToString(accessLogSettings.Format),
+			names.AttrFormat:         aws.ToString(accessLogSettings.Format),
 		})
 	}
 	return result

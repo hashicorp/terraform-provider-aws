@@ -812,8 +812,8 @@ func flattenActionCrossRegionCopyRules(rules []*dlm.CrossRegionCopyAction) []int
 
 		m := map[string]interface{}{
 			names.AttrEncryptionConfiguration: flattenActionCrossRegionCopyRuleEncryptionConfiguration(rule.EncryptionConfiguration),
-			"retain_rule":              flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
-			names.AttrTarget:           aws.StringValue(rule.Target),
+			"retain_rule":                     flattenCrossRegionCopyRuleRetainRule(rule.RetainRule),
+			names.AttrTarget:                  aws.StringValue(rule.Target),
 		}
 
 		result = append(result, m)
