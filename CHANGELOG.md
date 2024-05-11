@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * data-source/aws_instance: Add `launch_time` attribute ([#37002](https://github.com/hashicorp/terraform-provider-aws/issues/37002))
 * resource/aws_budgets_budget: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
 * resource/aws_budgets_budget_action: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* resource/aws_ecs_account_setting_default: Add support for `fargateTaskRetirementWaitPeriod` value in `Name` argument ([#37018](https://github.com/hashicorp/terraform-provider-aws/issues/37018))
 
 BUG FIXES:
 
