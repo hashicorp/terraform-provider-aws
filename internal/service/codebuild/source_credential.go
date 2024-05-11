@@ -55,7 +55,7 @@ func resourceSourceCredential() *schema.Resource {
 				ForceNew:  true,
 				Sensitive: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -75,7 +75,7 @@ func resourceSourceCredentialCreate(ctx context.Context, d *schema.ResourceData,
 		Token:      aws.String(d.Get("token").(string)),
 	}
 
-	if attr, ok := d.GetOk("user_name"); ok && authType == types.AuthTypeBasicAuth {
+	if attr, ok := d.GetOk(names.AttrUserName); ok && authType == types.AuthTypeBasicAuth {
 		input.Username = aws.String(attr.(string))
 	}
 

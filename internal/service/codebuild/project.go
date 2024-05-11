@@ -241,7 +241,7 @@ func resourceProject() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
@@ -319,7 +319,7 @@ func resourceProject() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1195,8 +1195,8 @@ func expandProjectFileSystemLocation(tfMap map[string]interface{}) *types.Projec
 		Type: types.FileSystemType(tfMap[names.AttrType].(string)),
 	}
 
-	if tfMap["identifier"].(string) != "" {
-		apiObject.Identifier = aws.String(tfMap["identifier"].(string))
+	if tfMap[names.AttrIdentifier].(string) != "" {
+		apiObject.Identifier = aws.String(tfMap[names.AttrIdentifier].(string))
 	}
 
 	if tfMap["location"].(string) != "" {
@@ -1322,7 +1322,7 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 		PrivilegedMode: aws.Bool(tfMap["privileged_mode"].(bool)),
 	}
 
-	if v, ok := tfMap["certificate"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCertificate].(string); ok && v != "" {
 		apiObject.Certificate = aws.String(v)
 	}
 
@@ -1625,7 +1625,7 @@ func flattenProjectFileSystemLocation(apiObject types.ProjectFileSystemLocation)
 	}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.ToString(v)
+		tfMap[names.AttrIdentifier] = aws.ToString(v)
 	}
 
 	if v := apiObject.Location; v != nil {
@@ -1798,7 +1798,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 	}
 
 	tfMap["image"] = aws.ToString(apiObject.Image)
-	tfMap["certificate"] = aws.ToString(apiObject.Certificate)
+	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
 	tfMap["privileged_mode"] = aws.ToBool(apiObject.PrivilegedMode)
 	tfMap["registry_credential"] = flattenRegistryCredential(apiObject.RegistryCredential)
 
