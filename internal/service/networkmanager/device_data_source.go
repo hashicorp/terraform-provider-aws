@@ -52,7 +52,7 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -123,11 +123,11 @@ func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, device.Description)
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)

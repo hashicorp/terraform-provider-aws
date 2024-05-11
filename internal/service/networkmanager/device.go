@@ -100,7 +100,7 @@ func ResourceDevice() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -173,7 +173,7 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -242,11 +242,11 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, device.Description)
 	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
@@ -281,7 +281,7 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AWSLocation = expandAWSLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrLocation); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Location = expandLocation(v.([]interface{})[0].(map[string]interface{}))
 		}
 
