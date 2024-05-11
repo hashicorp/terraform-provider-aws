@@ -152,7 +152,7 @@ func ResourcePlan() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
-						"schedule": {
+						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -331,7 +331,7 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
 		}
-		if vSchedule, ok := mRule["schedule"].(string); ok && vSchedule != "" {
+		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
@@ -437,7 +437,7 @@ func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 		mRule := map[string]interface{}{
 			"rule_name":                aws.StringValue(rule.RuleName),
 			"target_vault_name":        aws.StringValue(rule.TargetBackupVaultName),
-			"schedule":                 aws.StringValue(rule.ScheduleExpression),
+			names.AttrSchedule:         aws.StringValue(rule.ScheduleExpression),
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
@@ -522,7 +522,7 @@ func planHash(vRule interface{}) int {
 	if v, ok := mRule["target_vault_name"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if v, ok := mRule["schedule"].(string); ok {
+	if v, ok := mRule[names.AttrSchedule].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {
