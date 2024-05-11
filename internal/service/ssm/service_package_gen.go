@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceAssociation,
+			Factory:  resourceAssociation,
 			TypeName: "aws_ssm_association",
+			Name:     "Association",
 		},
 		{
 			Factory:  resourceDefaultPatchBaseline,

@@ -13,30 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAssociationById(ctx context.Context, conn *ssm.SSM, id string) (*ssm.AssociationDescription, error) {
-	input := &ssm.DescribeAssociationInput{
-		AssociationId: aws.String(id),
-	}
-
-	output, err := conn.DescribeAssociationWithContext(ctx, input)
-	if tfawserr.ErrCodeContains(err, ssm.ErrCodeAssociationDoesNotExist) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AssociationDescription == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.AssociationDescription, nil
-}
-
 // FindPatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
 func FindPatchGroup(ctx context.Context, conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGroupPatchBaselineMapping, error) {
 	input := &ssm.DescribePatchGroupsInput{}

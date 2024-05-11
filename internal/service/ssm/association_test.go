@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -647,13 +646,9 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Assosciation ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
-
-		_, err := tfssm.FindAssociationById(ctx, conn, rs.Primary.ID)
+		_, err := tfssm.FindAssociationByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -661,26 +656,24 @@ func testAccCheckAssociationExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_association" {
 				continue
 			}
 
-			assoc, err := tfssm.FindAssociationById(ctx, conn, rs.Primary.ID)
+			_, err := tfssm.FindAssociationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading SSM Association (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if aws.StringValue(assoc.AssociationId) == rs.Primary.ID {
-				return fmt.Errorf("SSM Association %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SSM Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
