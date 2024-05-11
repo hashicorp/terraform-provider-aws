@@ -93,7 +93,7 @@ func ResourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
@@ -251,7 +251,7 @@ func ResourceService() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -389,7 +389,7 @@ func ResourceService() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"dns_name": {
+												names.AttrDNSName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1250,7 +1250,7 @@ func flattenNetworkConfiguration(nc *ecs.NetworkConfiguration) []interface{} {
 
 	result := make(map[string]interface{})
 	result[names.AttrSecurityGroups] = flex.FlattenStringSet(nc.AwsvpcConfiguration.SecurityGroups)
-	result["subnets"] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
+	result[names.AttrSubnets] = flex.FlattenStringSet(nc.AwsvpcConfiguration.Subnets)
 
 	if nc.AwsvpcConfiguration.AssignPublicIp != nil {
 		result["assign_public_ip"] = aws.StringValue(nc.AwsvpcConfiguration.AssignPublicIp) == ecs.AssignPublicIpEnabled
@@ -1268,7 +1268,7 @@ func expandNetworkConfiguration(nc []interface{}) *ecs.NetworkConfiguration {
 	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = flex.ExpandStringSet(raw["subnets"].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringSet(raw[names.AttrSubnets].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
 		awsVpcConfig.AssignPublicIp = aws.String(ecs.AssignPublicIpDisabled)
 		if val {
@@ -1580,7 +1580,7 @@ func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {
 		if v, ok := raw[names.AttrPort].(int); ok {
 			config.Port = aws.Int64(int64(v))
 		}
-		if v, ok := raw["dns_name"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrDNSName].(string); ok && v != "" {
 			config.DnsName = aws.String(v)
 		}
 
