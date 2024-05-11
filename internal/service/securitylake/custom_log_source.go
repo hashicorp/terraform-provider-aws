@@ -79,8 +79,8 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 				Computed:   true,
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
-						"location":        types.StringType,
-						names.AttrRoleARN: types.StringType,
+						names.AttrLocation: types.StringType,
+						names.AttrRoleARN:  types.StringType,
 					},
 				},
 				PlanModifiers: []planmodifier.List{
@@ -157,7 +157,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"principal": schema.StringAttribute{
+									names.AttrPrincipal: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
