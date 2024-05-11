@@ -195,7 +195,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_id": {
+															names.AttrClientID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -308,7 +308,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -469,7 +469,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -647,7 +647,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_id": {
+															names.AttrClientID: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.All(
@@ -757,7 +757,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -881,7 +881,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1695,7 +1695,7 @@ func expandDynatraceConnectorProfileCredentials(m map[string]interface{}) *types
 
 func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]interface{}) *types.GoogleAnalyticsConnectorProfileCredentials {
 	credentials := &types.GoogleAnalyticsConnectorProfileCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
 
@@ -1741,7 +1741,7 @@ func expandInforNexusConnectorProfileCredentials(m map[string]interface{}) *type
 
 func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.MarketoConnectorProfileCredentials {
 	credentials := &types.MarketoConnectorProfileCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
 
@@ -1822,7 +1822,7 @@ func expandSingularConnectorProfileCredentials(m map[string]interface{}) *types.
 func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.SlackConnectorProfileCredentials {
 	credentials := &types.SlackConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
-		ClientId:     aws.String(m["client_id"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
 
@@ -1862,7 +1862,7 @@ func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.Vee
 func expandZendeskConnectorProfileCredentials(m map[string]interface{}) *types.ZendeskConnectorProfileCredentials {
 	credentials := &types.ZendeskConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
-		ClientId:     aws.String(m["client_id"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
 
@@ -1931,7 +1931,7 @@ func expandCustomAuthCredentials(m map[string]interface{}) *types.CustomAuthCred
 
 func expandOAuthCredentials(m map[string]interface{}) *types.OAuthCredentials {
 	credentials := &types.OAuthCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
 
@@ -1954,7 +1954,7 @@ func expandOAuth2Credentials(m map[string]interface{}) *types.OAuth2Credentials 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["client_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
 		credentials.ClientId = aws.String(v)
 	}
 	if v, ok := m["client_secret"].(string); ok && v != "" {
