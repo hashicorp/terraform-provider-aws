@@ -175,7 +175,7 @@ func ResourceApplication() *schema.Resource {
 				//Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:     schema.TypeString,
 							Required: true,
 							StateFunc: func(v interface{}) string {
@@ -549,7 +549,7 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 			set = true
 		}
 		if v.Certificate != nil {
-			m["certificate"] = aws.StringValue(v.Certificate)
+			m[names.AttrCertificate] = aws.StringValue(v.Certificate)
 			set = true
 		}
 		if v.Chain != nil {
