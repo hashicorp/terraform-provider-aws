@@ -45,6 +45,7 @@ func resourcePrincipalAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.Any(
+					validation.StringIsNotEmpty,
 					verify.ValidAccountID,
 					verify.ValidARN,
 				),
