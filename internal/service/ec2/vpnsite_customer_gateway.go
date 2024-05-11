@@ -60,7 +60,7 @@ func resourceCustomerGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -108,7 +108,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
@@ -155,7 +155,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("bgp_asn", customerGateway.BgpAsn)
 	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
 	d.Set(names.AttrDeviceName, customerGateway.DeviceName)
-	d.Set("ip_address", customerGateway.IpAddress)
+	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
 	d.Set(names.AttrType, customerGateway.Type)
 
 	setTagsOut(ctx, customerGateway.Tags)
