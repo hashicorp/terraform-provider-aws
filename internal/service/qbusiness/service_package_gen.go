@@ -34,6 +34,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceRetriever,
+			Name:    "Retriever",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
