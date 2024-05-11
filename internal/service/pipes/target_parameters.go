@@ -225,7 +225,7 @@ func targetParametersSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
-										"weight": {
+										names.AttrWeight: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(0, 1000),
@@ -280,7 +280,7 @@ func targetParametersSchema() *schema.Schema {
 															),
 														},
 													},
-													"subnets": {
+													names.AttrSubnets: {
 														Type:     schema.TypeSet,
 														Optional: true,
 														MaxItems: 16,
@@ -674,7 +674,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"database": {
+							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1201,7 +1201,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) *types.Cap
 		apiObject.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		apiObject.Weight = int32(v)
 	}
 
@@ -1263,7 +1263,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfigura
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1741,7 +1741,7 @@ func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types
 
 	apiObject := &types.PipeTargetRedshiftDataParameters{}
 
-	if v, ok := tfMap["database"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 		apiObject.Database = aws.String(v)
 	}
 
@@ -2183,8 +2183,8 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 
 func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrategyItem) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"base":   apiObject.Base,
-		"weight": apiObject.Weight,
+		"base":           apiObject.Base,
+		names.AttrWeight: apiObject.Weight,
 	}
 
 	if v := apiObject.CapacityProvider; v != nil {
@@ -2452,7 +2452,7 @@ func flattenVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]in
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap
@@ -2604,7 +2604,7 @@ func flattenPipeTargetRedshiftDataParameters(apiObject *types.PipeTargetRedshift
 	}
 
 	if v := apiObject.Database; v != nil {
-		tfMap["database"] = aws.ToString(v)
+		tfMap[names.AttrDatabase] = aws.ToString(v)
 	}
 
 	if v := apiObject.DbUser; v != nil {
