@@ -34,7 +34,7 @@ func TestAccVPCEndpointServiceDataSource_gateway(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_name", ""),
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "dynamodb"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "dynamodb"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", 0),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
@@ -64,7 +64,7 @@ func TestAccVPCEndpointServiceDataSource_interface(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "manages_vpc_endpoints", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "owner", "amazon"),
 					acctest.CheckResourceAttrRegionalHostnameService(datasourceName, "private_dns_name", "ec2"),
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "supported_ip_address_types.#", 0),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
@@ -180,7 +180,7 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_gateway(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_type("s3", "Gateway"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "s3"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "s3"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Gateway"),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccVPCEndpointServiceDataSource_ServiceType_interface(t *testing.T) {
 			{
 				Config: testAccVPCEndpointServiceDataSourceConfig_type("ec2", "Interface"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, "service_name", "ec2"),
+					testAccCheckResourceAttrRegionalReverseDNSService(datasourceName, names.AttrServiceName, "ec2"),
 					resource.TestCheckResourceAttr(datasourceName, "service_type", "Interface"),
 				),
 			},
