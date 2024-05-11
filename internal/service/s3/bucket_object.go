@@ -83,7 +83,7 @@ func resourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrSource, "content_base64"},
@@ -91,7 +91,7 @@ func resourceBucketObject() *schema.Resource {
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, "content"},
+				ConflictsWith: []string{names.AttrSource, names.AttrContent},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -174,7 +174,7 @@ func resourceBucketObject() *schema.Resource {
 			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
+				ConflictsWith: []string{names.AttrContent, "content_base64"},
 			},
 			"source_hash": {
 				Type:     schema.TypeString,
@@ -396,7 +396,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		content := v.(string)
 		body = bytes.NewReader([]byte(content))
 	} else if v, ok := d.GetOk("content_base64"); ok {
@@ -545,7 +545,7 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_encoding",
 		"content_language",
 		names.AttrContentType,
-		"content",
+		names.AttrContent,
 		"etag",
 		names.AttrKMSKeyID,
 		"metadata",
