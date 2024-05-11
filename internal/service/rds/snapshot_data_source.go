@@ -46,7 +46,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -185,7 +185,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
-	d.Set("encrypted", snapshot.Encrypted)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
 	d.Set("iops", snapshot.Iops)

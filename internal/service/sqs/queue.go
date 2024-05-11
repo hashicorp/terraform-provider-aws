@@ -155,7 +155,7 @@ var (
 		},
 		names.AttrTags:    tftags.TagsSchema(),
 		names.AttrTagsAll: tftags.TagsSchemaComputed(),
-		"url": {
+		names.AttrURL: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -303,7 +303,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
 	}
-	d.Set("url", d.Id())
+	d.Set(names.AttrURL, d.Id())
 
 	return nil
 }

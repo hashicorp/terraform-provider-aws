@@ -138,7 +138,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
 				),
@@ -154,7 +154,7 @@ func TestAccGlueCatalogDatabase_targetDatabase(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", ""),
 				),
@@ -181,7 +181,7 @@ func TestAccGlueCatalogDatabase_targetDatabaseWithRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.catalog_id", "aws_glue_catalog_database.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_database.0.database_name", "aws_glue_catalog_database.test2", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_database.0.region", acctest.AlternateRegion()),
 				),

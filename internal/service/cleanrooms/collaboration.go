@@ -114,7 +114,7 @@ func ResourceCollaboration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"display_name": {
+						names.AttrDisplayName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -381,7 +381,7 @@ func expandMembers(data []interface{}) *[]types.MemberSpecification {
 		member := &types.MemberSpecification{
 			AccountId:       aws.String(memberMap[names.AttrAccountID].(string)),
 			MemberAbilities: expandMemberAbilities(memberMap["member_abilities"].([]interface{})),
-			DisplayName:     aws.String(memberMap["display_name"].(string)),
+			DisplayName:     aws.String(memberMap[names.AttrDisplayName].(string)),
 		}
 		members = append(members, *member)
 	}
@@ -407,7 +407,7 @@ func flattenMembers(members []types.MemberSummary, ownerAccount *string) []inter
 			memberMap := map[string]interface{}{}
 			memberMap[names.AttrStatus] = member.Status
 			memberMap[names.AttrAccountID] = member.AccountId
-			memberMap["display_name"] = member.DisplayName
+			memberMap[names.AttrDisplayName] = member.DisplayName
 			memberMap["member_abilities"] = flattenMemberAbilities(member.Abilities)
 			flattenedMembers = append(flattenedMembers, memberMap)
 		}

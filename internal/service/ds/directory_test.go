@@ -64,7 +64,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -130,7 +130,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{
@@ -195,7 +195,7 @@ func TestAccDSDirectory_microsoft(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -243,7 +243,7 @@ func TestAccDSDirectory_microsoftStandard(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -297,7 +297,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 		},
@@ -350,7 +350,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{
@@ -412,7 +412,7 @@ func TestAccDSDirectory_desiredNumberOfDomainControllers(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"password",
+					names.AttrPassword,
 				},
 			},
 			{

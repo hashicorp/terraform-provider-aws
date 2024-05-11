@@ -198,7 +198,7 @@ func expandScale(l []interface{}) *ecs.Scale {
 
 	result := &ecs.Scale{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		result.Unit = aws.String(v)
 	}
 
@@ -216,7 +216,7 @@ func flattenScale(scale *ecs.Scale) []map[string]interface{} {
 	}
 
 	m := make(map[string]interface{})
-	m["unit"] = aws.StringValue(scale.Unit)
+	m[names.AttrUnit] = aws.StringValue(scale.Unit)
 	m[names.AttrValue] = aws.Float64Value(scale.Value)
 
 	return []map[string]interface{}{m}

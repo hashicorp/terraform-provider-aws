@@ -46,7 +46,7 @@ func ResourceBillingGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"creation_date": {
+						names.AttrCreationDate: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -240,7 +240,7 @@ func flattenBillingGroupMetadata(apiObject *iot.BillingGroupMetadata) map[string
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CreationDate; v != nil {
-		tfMap["creation_date"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap[names.AttrCreationDate] = aws.TimeValue(v).Format(time.RFC3339)
 	}
 
 	return tfMap

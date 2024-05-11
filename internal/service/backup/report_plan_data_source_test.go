@@ -34,7 +34,7 @@ func TestAccBackupReportPlanDataSource_basic(t *testing.T) {
 				Config: testAccReportPlanDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(datasourceName, "deployment_status"), // CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS | COMPLETED
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.#", resourceName, "report_delivery_channel.#"),
@@ -68,7 +68,7 @@ func TestAccBackupReportPlanDataSource_reportSettings(t *testing.T) {
 				Config: testAccReportPlanDataSourceConfig_reportSettings(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_time", resourceName, "creation_time"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(datasourceName, "deployment_status"), // CREATE_IN_PROGRESS | UPDATE_IN_PROGRESS | DELETE_IN_PROGRESS | COMPLETED
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "report_delivery_channel.#", resourceName, "report_delivery_channel.#"),

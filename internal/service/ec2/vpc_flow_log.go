@@ -97,7 +97,7 @@ func ResourceFlowLog() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"log_group_name"},
+				ConflictsWith: []string{names.AttrLogGroupName},
 			},
 			"log_destination_type": {
 				Type:         schema.TypeString,
@@ -112,7 +112,7 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"log_group_name": {
+			names.AttrLogGroupName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -237,7 +237,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogFormat = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("log_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrLogGroupName); ok {
 		input.LogGroupName = aws.String(v.(string))
 	}
 
@@ -298,7 +298,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)
-	d.Set("log_group_name", fl.LogGroupName)
+	d.Set(names.AttrLogGroupName, fl.LogGroupName)
 	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	switch resourceID := aws.StringValue(fl.ResourceId); {
 	case strings.HasPrefix(resourceID, "vpc-"):

@@ -186,7 +186,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -233,7 +233,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}

@@ -72,7 +72,7 @@ func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "operating_system", resourceName, "operating_system"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rejected_patches", resourceName, "rejected_patches"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "rejected_patches_action", resourceName, "rejected_patches_action"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "source", resourceName, "source"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSource, resourceName, names.AttrSource),
 				),
 			},
 		},

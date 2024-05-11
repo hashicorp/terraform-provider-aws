@@ -94,7 +94,7 @@ func ResourceCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -279,7 +279,7 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get(names.AttrName).(string)
 	input := &synthetics.CreateCanaryInput{
 		ArtifactS3Location: aws.String(d.Get("artifact_s3_location").(string)),
-		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn:   aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		Name:               aws.String(name),
 		RuntimeVersion:     aws.String(d.Get("runtime_version").(string)),
 		Tags:               getTagsIn(ctx),
@@ -385,7 +385,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, canaryArn)
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
 	d.Set("engine_arn", canary.EngineArn)
-	d.Set("execution_role_arn", canary.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, canary.ExecutionRoleArn)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
 	d.Set(names.AttrName, canary.Name)
@@ -475,8 +475,8 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.FailureRetentionPeriodInDays = aws.Int32(int32(n.(int)))
 		}
 
-		if d.HasChange("execution_role_arn") {
-			_, n := d.GetChange("execution_role_arn")
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			_, n := d.GetChange(names.AttrExecutionRoleARN)
 			input.ExecutionRoleArn = aws.String(n.(string))
 		}
 

@@ -69,7 +69,7 @@ func resourceParameterGroup() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -114,7 +114,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(name)
 
-	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
+	if v := d.Get(names.AttrParameter).(*schema.Set); v.Len() > 0 {
 		input := &redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
 			Parameters:         expandParameters(v.List()),
@@ -171,7 +171,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", flattenParameters(output.Parameters))
+	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
 
 	return diags
 }
@@ -180,8 +180,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}

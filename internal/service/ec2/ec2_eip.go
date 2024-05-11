@@ -49,7 +49,7 @@ func resourceEIP() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -154,7 +154,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		TagSpecifications: getTagSpecificationsInV2(ctx, types.ResourceTypeElasticIp),
 	}
 
-	if v, ok := d.GetOk("address"); ok {
+	if v, ok := d.GetOk(names.AttrAddress); ok {
 		input.Address = aws.String(v.(string))
 	}
 

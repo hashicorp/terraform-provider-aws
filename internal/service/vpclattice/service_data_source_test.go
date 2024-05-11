@@ -33,7 +33,7 @@ func TestAccVPCLatticeServiceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
@@ -65,7 +65,7 @@ func TestAccVPCLatticeServiceDataSource_byName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
@@ -99,7 +99,7 @@ func TestAccVPCLatticeServiceDataSource_shared(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, "custom_domain_name", dataSourceName, "custom_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "dns_entry.#", dataSourceName, "dns_entry.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),

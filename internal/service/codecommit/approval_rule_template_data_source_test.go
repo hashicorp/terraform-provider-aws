@@ -30,7 +30,7 @@ func TestAccCodeCommitApprovalRuleTemplateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "content", resourceName, "content"),
-					resource.TestCheckResourceAttrPair(datasourceName, "creation_date", resourceName, "creation_date"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreationDate, resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(datasourceName, "last_modified_date", resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrPair(datasourceName, "last_modified_user", resourceName, "last_modified_user"),
 					resource.TestCheckResourceAttrPair(datasourceName, "rule_content_sha256", resourceName, "rule_content_sha256"),

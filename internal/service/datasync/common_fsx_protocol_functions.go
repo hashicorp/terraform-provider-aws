@@ -6,6 +6,7 @@ package datasync
 import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandProtocol(l []interface{}) *awstypes.FsxProtocol {
@@ -70,7 +71,7 @@ func expandSMB(l []interface{}) *awstypes.FsxProtocolSmb {
 	if v, ok := m["domain"].(string); ok && v != "" {
 		protocol.Domain = aws.String(v)
 	}
-	if v, ok := m["password"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPassword].(string); ok && v != "" {
 		protocol.Password = aws.String(v)
 	}
 	if v, ok := m["user"].(string); ok && v != "" {
@@ -105,7 +106,7 @@ func flattenSMB(smb *awstypes.FsxProtocolSmb) []interface{} {
 		m["domain"] = aws.ToString(v)
 	}
 	if v := smb.Password; v != nil {
-		m["password"] = aws.ToString(v)
+		m[names.AttrPassword] = aws.ToString(v)
 	}
 	if v := smb.User; v != nil {
 		m["user"] = aws.ToString(v)

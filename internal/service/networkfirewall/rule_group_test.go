@@ -227,7 +227,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
-						"priority":                                           "1",
+						names.AttrPriority:                                   "1",
 						"rule_definition.#":                                  "1",
 						"rule_definition.0.actions.#":                        "1",
 						"rule_definition.0.match_attributes.#":               "1",
@@ -388,7 +388,7 @@ func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
-						"priority":                                           "1",
+						names.AttrPriority:                                   "1",
 						"rule_definition.#":                                  "1",
 						"rule_definition.0.actions.#":                        "2",
 						"rule_definition.0.match_attributes.#":               "1",
@@ -868,7 +868,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
-						"priority":                                                "10",
+						names.AttrPriority:                                        "10",
 						"rule_definition.#":                                       "1",
 						"rule_definition.0.actions.#":                             "1",
 						"rule_definition.0.match_attributes.#":                    "1",

@@ -134,7 +134,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -143,7 +143,7 @@ func DataSourcePatchBaseline() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"configuration": {
+						names.AttrConfiguration: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -251,7 +251,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("operating_system", baseline.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
 	d.Set("rejected_patches_action", output.RejectedPatchesAction)
-	d.Set("source", flattenPatchSource(output.Sources))
+	d.Set(names.AttrSource, flattenPatchSource(output.Sources))
 
 	return diags
 }

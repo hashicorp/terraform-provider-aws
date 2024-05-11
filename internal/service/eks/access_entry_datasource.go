@@ -52,7 +52,7 @@ func dataSourceAccessEntry() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func dataSourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
 	d.Set(names.AttrType, output.Type)
-	d.Set("user_name", output.Username)
+	d.Set(names.AttrUserName, output.Username)
 
 	setTagsOut(ctx, output.Tags)
 

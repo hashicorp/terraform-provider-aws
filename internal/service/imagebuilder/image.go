@@ -181,7 +181,7 @@ func ResourceImage() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -198,7 +198,7 @@ func ResourceImage() *schema.Resource {
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -237,7 +237,7 @@ func ResourceImage() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -476,7 +476,7 @@ func flattenAMI(apiObject *imagebuilder.Ami) map[string]interface{} {
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -512,7 +512,7 @@ func flattenContainer(apiObject *imagebuilder.Container) map[string]interface{} 
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -30,7 +30,7 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -58,7 +58,7 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -87,7 +87,7 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -115,7 +115,7 @@ func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -146,7 +146,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
@@ -176,7 +176,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(datasourceName, "path", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPath, resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrPolicy, resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),

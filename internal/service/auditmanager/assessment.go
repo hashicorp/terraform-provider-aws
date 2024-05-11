@@ -105,7 +105,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"destination": schema.StringAttribute{
+						names.AttrDestination: schema.StringAttribute{
 							Required: true,
 						},
 						"destination_type": schema.StringAttribute{
@@ -142,7 +142,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -399,8 +399,8 @@ func FindAssessmentByID(ctx context.Context, conn *auditmanager.Client, id strin
 
 var (
 	assessmentReportsDestinationAttrTypes = map[string]attr.Type{
-		"destination":      types.StringType,
-		"destination_type": types.StringType,
+		names.AttrDestination: types.StringType,
+		"destination_type":    types.StringType,
 	}
 
 	assessmentRolesAttrTypes = map[string]attr.Type{
@@ -418,7 +418,7 @@ var (
 	}
 
 	assessmentScopeAWSServicesAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"service_name": types.StringType,
+		names.AttrServiceName: types.StringType,
 	}
 )
 
@@ -566,8 +566,8 @@ func flattenAssessmentReportsDestination(ctx context.Context, apiObject *awstype
 	}
 
 	obj := map[string]attr.Value{
-		"destination":      flex.StringToFramework(ctx, apiObject.Destination),
-		"destination_type": flex.StringValueToFramework(ctx, apiObject.DestinationType),
+		names.AttrDestination: flex.StringToFramework(ctx, apiObject.Destination),
+		"destination_type":    flex.StringValueToFramework(ctx, apiObject.DestinationType),
 	}
 	objVal, d := types.ObjectValue(assessmentReportsDestinationAttrTypes, obj)
 	diags.Append(d...)
@@ -664,7 +664,7 @@ func flattenAssessmentScopeAWSServices(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, service := range apiObject {
 		obj := map[string]attr.Value{
-			"service_name": flex.StringToFramework(ctx, service.ServiceName),
+			names.AttrServiceName: flex.StringToFramework(ctx, service.ServiceName),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSServicesAttrTypes, obj)
 		diags.Append(d...)

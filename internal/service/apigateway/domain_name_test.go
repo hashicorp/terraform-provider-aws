@@ -42,7 +42,7 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNEdgeDomainName(resourceName, names.AttrARN, "apigateway", domain),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_domain_name", regexache.MustCompile(`[0-9a-z]+.cloudfront.net`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),

@@ -69,7 +69,7 @@ func ResourceConnectPeer() *schema.Resource {
 					},
 				},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -287,7 +287,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	bgpOptions := map[string]interface{}{}
 	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
 	d.Set("bgp_options", []interface{}{bgpOptions})
-	d.Set("configuration", []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
+	d.Set(names.AttrConfiguration, []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
 	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {

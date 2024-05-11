@@ -40,7 +40,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 				),
 			},
@@ -69,7 +69,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Config: testAccRoleConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
 				),
 			},
@@ -82,7 +82,7 @@ func TestAccIAMRole_description(t *testing.T) {
 				Config: testAccRoleConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
 				),
 			},
@@ -533,7 +533,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			// Test removal

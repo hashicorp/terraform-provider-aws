@@ -64,7 +64,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -101,7 +101,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -134,7 +134,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -169,7 +169,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -221,7 +221,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_engineVersion(rName, "5.0.6"),
@@ -349,7 +349,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedDescription(rName),
@@ -390,7 +390,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedMaintenanceWindow(rName),
@@ -433,7 +433,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_user(rName, userGroup, 1),
@@ -475,7 +475,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_updatedNodeSize(rName),
@@ -520,7 +520,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -564,7 +564,7 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				// When adding an auth_token to a previously passwordless replication
@@ -670,7 +670,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -708,7 +708,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -748,7 +748,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -793,7 +793,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -838,7 +838,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -897,7 +897,7 @@ func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -939,7 +939,7 @@ func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -981,7 +981,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -1022,7 +1022,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -1304,7 +1304,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -1358,7 +1358,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_enableSnapshotting(rName),
@@ -1401,7 +1401,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testin
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 		},
 	})
@@ -1435,7 +1435,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption5x(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 			{
 				// With Redis engine versions < 7.0.5, transit_encryption_enabled can only be set
@@ -1479,7 +1479,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token", "auth_token_update_strategy", "preferred_cache_cluster_azs"},
 			},
 			{
 				// With Redis engine versions >= 7.0.5, transit_encryption_mode can be modified in-place.
@@ -1541,7 +1541,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -1607,7 +1607,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 4),
@@ -1672,7 +1672,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				PreConfig: func() {
@@ -2057,7 +2057,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -2177,7 +2177,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_autoMinorVersionUpgrade(rName, true),
@@ -2279,7 +2279,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -2339,7 +2339,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_globalIDFull(rName, updatedNumCacheClusters),
@@ -2430,7 +2430,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
 				Config: testAccReplicationGroupConfig_globalIDClusterMode(rName, 1, 3),
@@ -2508,7 +2508,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "auth_token_update_strategy"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 		},
 	})
@@ -2551,7 +2551,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -2608,7 +2608,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -2655,7 +2655,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},
@@ -2715,7 +2715,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"auth_token_update_strategy",
 					names.AttrEngineVersion, // because we can't ignore the diff between `6.x` and `6.2`
 				},

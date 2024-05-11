@@ -77,7 +77,7 @@ func ResourceDistribution() *schema.Resource {
 							Description:  "The cache behavior for the specified path.",
 							ValidateFunc: validation.StringInSlice(flattenBehaviorEnumValues(types.BehaviorEnum("").Values()), false),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:        schema.TypeString,
 							Required:    true,
 							Description: "The path to a directory or file to cached, or not cache. Use an asterisk symbol to specify wildcard directories (path/to/assets/*), and file types (*.html, *jpg, *js). Directories and file paths are case-sensitive.",
@@ -286,7 +286,7 @@ func ResourceDistribution() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							Description:  "The AWS Region name of the origin resource.",
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The resource type of the origin resource (e.g., Instance).",
@@ -299,7 +299,7 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The public DNS of the origin.",
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Lightsail resource type (e.g., Distribution).",
@@ -445,7 +445,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set(names.AttrName, out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
-	d.Set("resource_type", out.ResourceType)
+	d.Set(names.AttrResourceType, out.ResourceType)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
 
@@ -713,7 +713,7 @@ func flattenCacheBehaviorPerPath(apiObject types.CacheBehaviorPerPath) map[strin
 	}
 
 	if v := apiObject.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	return m
@@ -771,7 +771,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		m["resource_type"] = v
+		m[names.AttrResourceType] = v
 	}
 
 	return m
@@ -810,7 +810,7 @@ func expandCacheBehaviorPerPath(tfMap map[string]interface{}) types.CacheBehavio
 		a.Behavior = types.BehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		a.Path = aws.String(v)
 	}
 

@@ -65,7 +65,7 @@ func resourceReportDefinition() *schema.Resource {
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.ReportFormat](),
@@ -122,7 +122,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 	reportName := d.Get("report_name").(string)
 	additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
 	compression := types.CompressionFormat(d.Get("compression").(string))
-	format := types.ReportFormat(d.Get("format").(string))
+	format := types.ReportFormat(d.Get(names.AttrFormat).(string))
 	prefix := d.Get("s3_prefix").(string)
 	reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
 
@@ -192,7 +192,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("compression", reportDefinition.Compression)
-	d.Set("format", reportDefinition.Format)
+	d.Set(names.AttrFormat, reportDefinition.Format)
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_name", reportName)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
@@ -210,7 +210,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 
 	additionalArtifacts := flex.ExpandStringyValueSet[types.AdditionalArtifact](d.Get("additional_artifacts").(*schema.Set))
 	compression := types.CompressionFormat(d.Get("compression").(string))
-	format := types.ReportFormat(d.Get("format").(string))
+	format := types.ReportFormat(d.Get(names.AttrFormat).(string))
 	prefix := d.Get("s3_prefix").(string)
 	reportVersioning := types.ReportVersioning(d.Get("report_versioning").(string))
 

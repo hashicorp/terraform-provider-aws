@@ -313,7 +313,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -351,7 +351,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -363,7 +363,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -377,7 +377,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -656,7 +656,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -667,7 +667,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			blockDevices = append(blockDevices, &opsworks.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			})
 		}
@@ -1003,7 +1003,7 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 			blockDevices["root"] = bd
 		} else {
 			if bdm.DeviceName != nil {
-				bd["device_name"] = aws.StringValue(bdm.DeviceName)
+				bd[names.AttrDeviceName] = aws.StringValue(bdm.DeviceName)
 			}
 			if bdm.VirtualName != nil {
 				bd["virtual_name"] = aws.StringValue(bdm.VirtualName)

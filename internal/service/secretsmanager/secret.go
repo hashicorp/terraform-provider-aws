@@ -113,7 +113,7 @@ func resourceSecret() *schema.Resource {
 						buf.WriteString(fmt.Sprintf("%s-", v))
 					}
 
-					if v, ok := m["region"].(string); ok {
+					if v, ok := m[names.AttrRegion].(string); ok {
 						buf.WriteString(fmt.Sprintf("%s-", v))
 					}
 
@@ -130,7 +130,7 @@ func resourceSecret() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -517,7 +517,7 @@ func expandReplicaRegionType(tfMap map[string]interface{}) *types.ReplicaRegionT
 		apiObject.KmsKeyId = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -568,7 +568,7 @@ func flattenReplicationStatusType(apiObject types.ReplicationStatusType) map[str
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.StatusMessage; v != nil {

@@ -83,7 +83,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -126,7 +126,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -1256,7 +1256,7 @@ func expandLoadBalancerAccessLogsAttributes(tfMap map[string]interface{}, update
 				})
 			}
 
-			if v, ok := tfMap["prefix"].(string); ok && (update || v != "") {
+			if v, ok := tfMap[names.AttrPrefix].(string); ok && (update || v != "") {
 				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String(loadBalancerAttributeAccessLogsS3Prefix),
 					Value: aws.String(v),
@@ -1289,7 +1289,7 @@ func expandLoadBalancerConnectionLogsAttributes(tfMap map[string]interface{}, up
 				})
 			}
 
-			if v, ok := tfMap["prefix"].(string); ok && (update || v != "") {
+			if v, ok := tfMap[names.AttrPrefix].(string); ok && (update || v != "") {
 				apiObjects = append(apiObjects, &elbv2.LoadBalancerAttribute{
 					Key:   aws.String(loadBalancerAttributeConnectionLogsS3Prefix),
 					Value: aws.String(v),
@@ -1315,7 +1315,7 @@ func flattenLoadBalancerAccessLogsAttributes(apiObjects []*elbv2.LoadBalancerAtt
 		case loadBalancerAttributeAccessLogsS3Bucket:
 			tfMap[names.AttrBucket] = aws.StringValue(v)
 		case loadBalancerAttributeAccessLogsS3Prefix:
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap[names.AttrPrefix] = aws.StringValue(v)
 		}
 	}
 
@@ -1336,7 +1336,7 @@ func flattenLoadBalancerConnectionLogsAttributes(apiObjects []*elbv2.LoadBalance
 		case loadBalancerAttributeConnectionLogsS3Bucket:
 			tfMap[names.AttrBucket] = aws.StringValue(v)
 		case loadBalancerAttributeConnectionLogsS3Prefix:
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap[names.AttrPrefix] = aws.StringValue(v)
 		}
 	}
 

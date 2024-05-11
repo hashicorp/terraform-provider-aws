@@ -141,7 +141,7 @@ func ResourceDirectory() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: domainValidator,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Required:  true,
 				ForceNew:  true,
@@ -399,7 +399,7 @@ func (c adConnectorCreator) TypeName() string {
 func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
 	input := &directoryservice.ConnectDirectoryInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get("password").(string)),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -442,7 +442,7 @@ func (c microsoftADCreator) TypeName() string {
 func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
 	input := &directoryservice.CreateMicrosoftADInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get("password").(string)),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -482,7 +482,7 @@ func (c simpleADCreator) TypeName() string {
 func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.DirectoryService, name string, d *schema.ResourceData) error {
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String(name),
-		Password: aws.String(d.Get("password").(string)),
+		Password: aws.String(d.Get(names.AttrPassword).(string)),
 		Tags:     getTagsIn(ctx),
 	}
 

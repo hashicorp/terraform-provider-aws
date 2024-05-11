@@ -33,7 +33,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -46,7 +46,7 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
@@ -97,7 +97,7 @@ func DataSourceImageRecipe() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem: &schema.Resource{

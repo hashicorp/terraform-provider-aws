@@ -23,6 +23,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -47,7 +48,7 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +62,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	streamARN := d.Get("stream_arn").(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	id := errs.Must(flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false))
 	input := &dynamodb.EnableKinesisStreamingDestinationInput{
 		StreamArn: aws.String(streamARN),
@@ -106,7 +107,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	}
 
 	d.Set("stream_arn", output.StreamArn)
-	d.Set("table_name", tableName)
+	d.Set(names.AttrTableName, tableName)
 
 	return diags
 }

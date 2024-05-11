@@ -55,7 +55,7 @@ func ResourceApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(pinpoint.Mode_Values(), false),
@@ -325,7 +325,7 @@ func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {
 		ch.LambdaFunctionName = aws.String(v.(string))
 	}
 
-	if v, ok := m["mode"]; ok {
+	if v, ok := m[names.AttrMode]; ok {
 		ch.Mode = aws.String(v.(string))
 	}
 
@@ -342,7 +342,7 @@ func flattenCampaignHook(ch *pinpoint.CampaignHook) []interface{} {
 	m := map[string]interface{}{}
 
 	m["lambda_function_name"] = aws.StringValue(ch.LambdaFunctionName)
-	m["mode"] = aws.StringValue(ch.Mode)
+	m[names.AttrMode] = aws.StringValue(ch.Mode)
 	m["web_url"] = aws.StringValue(ch.WebUrl)
 
 	l = append(l, m)

@@ -351,7 +351,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -935,7 +935,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.SecretManagerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		result.URL = aws.String(v)
 	}
 
@@ -1142,7 +1142,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.URL; v != nil {
-		values["url"] = aws.ToString(v)
+		values[names.AttrURL] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.UserNameAttributeField; v != nil {

@@ -70,7 +70,7 @@ func resourceInstanceProfile() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validResourceName(instanceProfileNamePrefixMaxLen),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -99,7 +99,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.CreateInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
-		Path:                aws.String(d.Get("path").(string)),
+		Path:                aws.String(d.Get(names.AttrPath).(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
@@ -189,7 +189,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("create_date", instanceProfile.CreateDate.Format(time.RFC3339))
 	d.Set(names.AttrName, instanceProfile.InstanceProfileName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(instanceProfile.InstanceProfileName)))
-	d.Set("path", instanceProfile.Path)
+	d.Set(names.AttrPath, instanceProfile.Path)
 
 	if d.Get("role") != "" {
 		d.Set("role", nil)

@@ -15,7 +15,6 @@ resource "aws_accessanalyzer_analyzer" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

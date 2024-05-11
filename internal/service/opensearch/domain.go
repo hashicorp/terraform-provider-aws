@@ -195,7 +195,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
@@ -454,7 +454,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -903,7 +903,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		d.Set("endpoint", endpoints["vpc"])
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -911,7 +911,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
@@ -1176,11 +1176,11 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getDashboardEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_dashboards"
+	return d.Get(names.AttrEndpoint).(string) + "/_dashboards"
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
 func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {

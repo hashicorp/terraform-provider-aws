@@ -31,7 +31,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func dataSourceCertificateAuthority() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -169,10 +169,10 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
-	d.Set("certificate", "")
+	d.Set(names.AttrCertificate, "")
 	d.Set("certificate_chain", "")
 	if outputGCACert != nil {
-		d.Set("certificate", outputGCACert.Certificate)
+		d.Set(names.AttrCertificate, outputGCACert.Certificate)
 		d.Set("certificate_chain", outputGCACert.CertificateChain)
 	}
 

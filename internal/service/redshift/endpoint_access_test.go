@@ -42,7 +42,7 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_group_name", "aws_redshift_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttrSet(resourceName, "address"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAddress),
 				),
 			},
 			{

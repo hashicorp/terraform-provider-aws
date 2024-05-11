@@ -79,7 +79,7 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -195,7 +195,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 		ClientToken:           aws.String(id.UniqueId()),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
-		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
+		EndpointType:          types.VerifiedAccessEndpointType(d.Get(names.AttrEndpointType).(string)),
 		TagSpecifications:     getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessEndpoint),
 		VerifiedAccessGroupId: aws.String(d.Get("verified_access_group_id").(string)),
 	}
@@ -262,7 +262,7 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("device_validation_domain", ep.DeviceValidationDomain)
 	d.Set("domain_certificate_arn", ep.DomainCertificateArn)
 	d.Set("endpoint_domain", ep.EndpointDomain)
-	d.Set("endpoint_type", ep.EndpointType)
+	d.Set(names.AttrEndpointType, ep.EndpointType)
 	if err := d.Set("load_balancer_options", flattenVerifiedAccessEndpointLoadBalancerOptions(ep.LoadBalancerOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancer_options: %s", err)
 	}

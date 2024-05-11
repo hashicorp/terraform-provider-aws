@@ -64,6 +64,10 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"minified_json": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
 				"override_json": {
 					Type:         schema.TypeString,
@@ -309,6 +313,16 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	jsonString := string(jsonDoc)
 
 	d.Set("json", jsonString)
+
+	jsonMinDoc, err := json.Marshal(mergedDoc)
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
+	}
+	jsonMinString := string(jsonMinDoc)
+
+	d.Set("minified_json", jsonMinString)
+
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags

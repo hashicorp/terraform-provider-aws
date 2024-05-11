@@ -35,7 +35,7 @@ func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "stream_arn", "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 				),
 			},
 			{
@@ -130,7 +130,7 @@ func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
+		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes[names.AttrTableName])
 
 		return err
 	}
@@ -145,7 +145,7 @@ func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
+			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes[names.AttrTableName])
 
 			if tfresource.NotFound(err) {
 				continue

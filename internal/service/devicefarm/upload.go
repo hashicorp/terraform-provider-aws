@@ -40,7 +40,7 @@ func ResourceUpload() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
@@ -66,7 +66,7 @@ func ResourceUpload() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(devicefarm.UploadType_Values(), false),
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -84,7 +84,7 @@ func resourceUploadCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Type:       aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
@@ -119,8 +119,8 @@ func resourceUploadRead(ctx context.Context, d *schema.ResourceData, meta interf
 	arn := aws.StringValue(upload.Arn)
 	d.Set(names.AttrName, upload.Name)
 	d.Set(names.AttrType, upload.Type)
-	d.Set("content_type", upload.ContentType)
-	d.Set("url", upload.Url)
+	d.Set(names.AttrContentType, upload.ContentType)
+	d.Set(names.AttrURL, upload.Url)
 	d.Set("category", upload.Category)
 	d.Set("metadata", upload.Metadata)
 	d.Set(names.AttrARN, arn)
@@ -147,8 +147,8 @@ func resourceUploadUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("content_type") {
-		input.ContentType = aws.String(d.Get("content_type").(string))
+	if d.HasChange(names.AttrContentType) {
+		input.ContentType = aws.String(d.Get(names.AttrContentType).(string))
 	}
 
 	log.Printf("[DEBUG] Updating DeviceFarm Upload: %s", d.Id())

@@ -61,7 +61,7 @@ func ResourceEBSVolume() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -135,7 +135,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVolume),
 	}
 
-	if value, ok := d.GetOk("encrypted"); ok {
+	if value, ok := d.GetOk(names.AttrEncrypted); ok {
 		input.Encrypted = aws.Bool(value.(bool))
 	}
 
@@ -211,7 +211,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set("encrypted", volume.Encrypted)
+	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)

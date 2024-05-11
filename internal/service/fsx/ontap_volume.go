@@ -101,7 +101,7 @@ func resourceONTAPVolume() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -448,7 +448,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrARN, volume.ResourceARN)
 	d.Set("copy_tags_to_backups", ontapConfig.CopyTagsToBackups)
-	d.Set("file_system_id", volume.FileSystemId)
+	d.Set(names.AttrFileSystemID, volume.FileSystemId)
 	d.Set("junction_path", ontapConfig.JunctionPath)
 	d.Set(names.AttrName, volume.Name)
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)

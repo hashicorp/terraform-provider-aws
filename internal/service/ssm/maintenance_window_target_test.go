@@ -45,7 +45,7 @@ func TestAccSSMMaintenanceWindowTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, ssm.MaintenanceWindowResourceTypeInstance),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func TestAccSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "resource-group-name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This resource is for test purpose only"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeResourceGroup),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, ssm.MaintenanceWindowResourceTypeResourceGroup),
 				),
 			},
 			{

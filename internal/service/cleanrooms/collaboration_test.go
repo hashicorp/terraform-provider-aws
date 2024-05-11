@@ -60,7 +60,7 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -124,7 +124,7 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -159,7 +159,7 @@ func TestAccCleanRoomsCollaboration_updateCreatorDisplayName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -193,7 +193,7 @@ func TestAccCleanRoomsCollaboration_updateQueryLogStatus(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -239,7 +239,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -279,7 +279,7 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})

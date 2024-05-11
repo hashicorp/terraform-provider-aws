@@ -41,7 +41,7 @@ func (d *dataSourceRegion) Schema(ctx context.Context, req datasource.SchemaRequ
 			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"endpoint": schema.StringAttribute{
+			names.AttrEndpoint: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

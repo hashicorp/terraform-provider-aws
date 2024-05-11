@@ -127,7 +127,7 @@ func resourcePolicy() *schema.Resource {
 				Optional: true,
 			},
 			"resource_tags": tftags.TagsSchema(),
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -142,7 +142,7 @@ func resourcePolicy() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:/=+\-@]*)$`), "must match a supported resource type, such as AWS::EC2::VPC, see also: https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_Policy.html"),
 				},
-				ConflictsWith: []string{"resource_type"},
+				ConflictsWith: []string{names.AttrResourceType},
 			},
 			"security_service_policy_data": {
 				Type:     schema.TypeList,
@@ -273,7 +273,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("resource_tags", flattenResourceTags(policy.ResourceTags)); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
-	d.Set("resource_type", policy.ResourceType)
+	d.Set(names.AttrResourceType, policy.ResourceType)
 	d.Set("resource_type_list", policy.ResourceTypeList)
 	securityServicePolicy := []map[string]interface{}{{
 		names.AttrType:         string(policy.SecurityServicePolicyData.Type),
@@ -362,7 +362,7 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 
 func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	resourceType := aws.String("ResourceTypeList")
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		resourceType = aws.String(v.(string))
 	}
 

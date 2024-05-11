@@ -20,6 +20,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -201,18 +202,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
-				switch attr {
-				case "arn":
-					d.TagsIdentifierAttribute = "names.AttrARN"
-				case "bucket":
-					d.TagsIdentifierAttribute = "names.AttrBucket"
-				case "id":
-					d.TagsIdentifierAttribute = "names.AttrID"
-				case "name":
-					d.TagsIdentifierAttribute = "names.AttrName"
-				default:
-					d.TagsIdentifierAttribute = fmt.Sprintf("\"%s\"", attr)
-				}
+				d.TagsIdentifierAttribute = names.ConstOrQuote(attr)
 			}
 
 			if attr, ok := args.Keyword["resourceType"]; ok {

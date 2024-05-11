@@ -86,7 +86,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"namespace": schema.StringAttribute{
+			names.AttrNamespace: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

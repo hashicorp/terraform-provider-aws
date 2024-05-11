@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecr_registry_scanning_configuration", name="Registry Scanning Configuration")
@@ -50,7 +51,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"filter": {
+									names.AttrFilter: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
@@ -204,7 +205,7 @@ func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []types.Scanni
 		}
 		m := f.(map[string]interface{})
 		filters = append(filters, types.ScanningRepositoryFilter{
-			Filter:     aws.String(m["filter"].(string)),
+			Filter:     aws.String(m[names.AttrFilter].(string)),
 			FilterType: types.ScanningRepositoryFilterType((m["filter_type"].(string))),
 		})
 	}
@@ -231,8 +232,8 @@ func flattenScanningConfigurationFilters(l []types.ScanningRepositoryFilter) []i
 	out := make([]interface{}, len(l))
 	for i, filter := range l {
 		out[i] = map[string]interface{}{
-			"filter":      aws.ToString(filter.Filter),
-			"filter_type": filter.FilterType,
+			names.AttrFilter: aws.ToString(filter.Filter),
+			"filter_type":    filter.FilterType,
 		}
 	}
 

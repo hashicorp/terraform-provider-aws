@@ -21,7 +21,7 @@ func DataSourceEndpoint() *schema.Resource {
 		ReadWithoutTimeout: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -233,7 +233,7 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -561,7 +561,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -587,13 +587,13 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("endpoint_id", out.EndpointIdentifier)
 	arn := aws.StringValue(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
-	d.Set("endpoint_type", out.EndpointType)
+	d.Set(names.AttrEndpointType, out.EndpointType)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
 	d.Set(names.AttrPort, out.Port)
 	d.Set("server_name", out.ServerName)
 	d.Set("ssl_mode", out.SslMode)
-	d.Set("username", out.Username)
+	d.Set(names.AttrUsername, out.Username)
 
 	if err := resourceEndpointSetState(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

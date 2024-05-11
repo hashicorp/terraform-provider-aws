@@ -38,7 +38,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -55,7 +55,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -115,7 +115,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 				Config: testAccUserPoolUICustomizationConfig_allClientsImage(rName, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -132,7 +132,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 				Config: testAccUserPoolUICustomizationConfig_allClientsImage(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -169,7 +169,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 				Config: testAccUserPoolUICustomizationConfig_allClientsCSSAndImage(rName, css, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
@@ -189,7 +189,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -200,7 +200,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 				Config: testAccUserPoolUICustomizationConfig_allClientsImage(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "client_id", "ALL"),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -238,7 +238,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_CSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", css),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -255,7 +255,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_CSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "css", cssUpdated),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "css_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -316,7 +316,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 				Config: testAccUserPoolUICustomizationConfig_clientImage(rName, filename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -333,7 +333,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 				Config: testAccUserPoolUICustomizationConfig_clientImage(rName, updatedFilename),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(resourceName, "client_id", clientResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "image_url"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
@@ -374,12 +374,12 @@ func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					testAccCheckUserPoolUICustomizationExists(ctx, clientUIResourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "css", allCSS),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(clientUIResourceName, "client_id", clientResourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(clientUIResourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(clientUIResourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(clientUIResourceName, "css", allCSS),
 					resource.TestCheckResourceAttrSet(clientUIResourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrPair(clientUIResourceName, "user_pool_id", userPoolResourceName, names.AttrID),
@@ -401,12 +401,12 @@ func TestAccCognitoIDPUserPoolUICustomization_ClientAndAll_cSS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
 					testAccCheckUserPoolUICustomizationExists(ctx, clientUIResourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "css", allCSS),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(clientUIResourceName, "client_id", clientResourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(clientUIResourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(clientUIResourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(clientUIResourceName, "css", clientCSS),
 					resource.TestCheckResourceAttrSet(clientUIResourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrPair(clientUIResourceName, "user_pool_id", userPoolResourceName, names.AttrID),

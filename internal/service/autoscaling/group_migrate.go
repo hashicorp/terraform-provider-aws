@@ -670,7 +670,7 @@ func resourceGroupV0() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Required: true,
 						},

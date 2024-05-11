@@ -51,7 +51,7 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),

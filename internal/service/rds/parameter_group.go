@@ -74,7 +74,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -155,7 +155,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
-	configParams := d.Get("parameter").(*schema.Set)
+	configParams := d.Get(names.AttrParameter).(*schema.Set)
 	if configParams.Len() < 1 {
 		// if we don't have any params in the ResourceData already, two possibilities
 		// first, we don't have a config available to us. Second, we do, but it has
@@ -219,7 +219,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if err := d.Set("parameter", flattenParameters(userParams)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(userParams)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -233,8 +233,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		if o == nil {
 			o = new(schema.Set)
 		}

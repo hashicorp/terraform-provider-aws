@@ -448,7 +448,7 @@ func testResponsePlan_displayName(t *testing.T) {
 				Config: testAccResponsePlanConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, oldDisplayName),
 				),
 			},
 			{
@@ -461,7 +461,7 @@ func testResponsePlan_displayName(t *testing.T) {
 				Config: testAccResponsePlanConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, newDisplayName),
 				),
 			},
 			{

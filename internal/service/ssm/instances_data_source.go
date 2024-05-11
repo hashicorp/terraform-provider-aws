@@ -21,7 +21,7 @@ func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 		Schema: map[string]*schema.Schema{
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -54,7 +54,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &ssm.DescribeInstanceInformationInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = expandInstanceInformationStringFilters(v.(*schema.Set).List())
 	}
 

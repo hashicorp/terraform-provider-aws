@@ -139,7 +139,7 @@ func ResourceDomain() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"address": {
+									names.AttrAddress: {
 										Type:     schema.TypeList,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -240,7 +240,7 @@ func exportingConfigSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"s3_bucket_name": {
+							names.AttrS3BucketName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -545,7 +545,7 @@ func expandS3ExportingConfig(tfMap []interface{}) *types.S3ExportingConfig {
 
 	apiObject := &types.S3ExportingConfig{}
 
-	if v, ok := tfList["s3_bucket_name"]; ok {
+	if v, ok := tfList[names.AttrS3BucketName]; ok {
 		apiObject.S3BucketName = aws.String(v.(string))
 	}
 
@@ -638,7 +638,7 @@ func expandAttributesTypesSelector(tfMap []interface{}) *types.AttributeTypesSel
 		apiObject.AttributeMatchingModel = types.AttributeMatchingModel(v.(string))
 	}
 
-	if v, ok := tfList["address"]; ok {
+	if v, ok := tfList[names.AttrAddress]; ok {
 		apiObject.Address = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -840,7 +840,7 @@ func flattenS3Exporting(apiObject *types.S3ExportingConfig) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3BucketName; v != nil {
-		tfMap["s3_bucket_name"] = aws.ToString(v)
+		tfMap[names.AttrS3BucketName] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3KeyName; v != nil {
@@ -874,7 +874,7 @@ func flattenAttributeTypesSelector(apiObject *types.AttributeTypesSelector) []in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = flex.FlattenStringValueList(v)
+		tfMap[names.AttrAddress] = flex.FlattenStringValueList(v)
 	}
 
 	tfMap["attribute_matching_model"] = apiObject.AttributeMatchingModel

@@ -93,7 +93,7 @@ func filledMapVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
-													"format": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
+													names.AttrFormat: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShapeConditionalFormat.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
@@ -322,7 +322,7 @@ func expandFilledMapShapeConditionalFormatting(tfList []interface{}) *quicksight
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["format"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrFormat].([]interface{}); ok && len(v) > 0 {
 		options.Format = expandShapeConditionalFormat(v)
 	}
 
@@ -493,7 +493,7 @@ func flattenFilledMapShapeConditionalFormatting(apiObject *quicksight.FilledMapS
 		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = flattenShapeConditionalFormat(apiObject.Format)
+		tfMap[names.AttrFormat] = flattenShapeConditionalFormat(apiObject.Format)
 	}
 
 	return []interface{}{tfMap}

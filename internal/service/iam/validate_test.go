@@ -96,7 +96,7 @@ func TestValidOpenIDURL(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validOpenIDURL(tc.Value, "url")
+		_, errors := validOpenIDURL(tc.Value, names.AttrURL)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d of OpenID URL validation errors, got %d", tc.ErrCount, len(errors))

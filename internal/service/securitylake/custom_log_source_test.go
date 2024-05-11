@@ -63,7 +63,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -96,7 +96,7 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "2.5"),
@@ -109,7 +109,7 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -148,7 +148,7 @@ func testAccCustomLogSource_multiple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 		},
 	})
@@ -182,7 +182,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY", "FILE_ACTIVITY"),
@@ -197,7 +197,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 			{
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY"),
@@ -211,7 +211,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
+				ImportStateVerifyIgnore: []string{names.AttrConfiguration, "event_classes"},
 			},
 		},
 	})

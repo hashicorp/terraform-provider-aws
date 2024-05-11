@@ -118,7 +118,7 @@ func resourceInsight() *schema.Resource {
 						"resource_partition":                                 stringFilterSchema(),
 						"resource_region":                                    stringFilterSchema(),
 						"resource_tags":                                      mapFilterSchema(),
-						"resource_type":                                      stringFilterSchema(),
+						names.AttrResourceType:                               stringFilterSchema(),
 						"severity_label":                                     stringFilterSchema(),
 						"source_url":                                         stringFilterSchema(),
 						"threat_intel_indicator_category":                    stringFilterSchema(),
@@ -299,7 +299,7 @@ func dateFilterSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"unit": {
+							names.AttrUnit: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.DateRangeUnit](),
@@ -450,7 +450,7 @@ func expandDateFilterDateRange(l []interface{}) *types.DateRange {
 
 	dr := &types.DateRange{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		dr.Unit = types.DateRangeUnit(v)
 	}
 
@@ -798,7 +798,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceTags = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_type"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceType].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceType = expandStringFilters(v.List())
 	}
 
@@ -1021,7 +1021,7 @@ func flattenDateFilterDateRange(dateRange *types.DateRange) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"unit":          string(dateRange.Unit),
+		names.AttrUnit:  string(dateRange.Unit),
 		names.AttrValue: aws.ToInt32((dateRange.Value)),
 	}
 
@@ -1211,7 +1211,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
 		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
-		"resource_type":                                      flattenStringFilters(filters.ResourceType),
+		names.AttrResourceType:                               flattenStringFilters(filters.ResourceType),
 		"severity_label":                                     flattenStringFilters(filters.SeverityLabel),
 		"source_url":                                         flattenStringFilters(filters.ThreatIntelIndicatorSourceUrl),
 		"threat_intel_indicator_category":                    flattenStringFilters(filters.ThreatIntelIndicatorCategory),

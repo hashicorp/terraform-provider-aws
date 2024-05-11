@@ -28,7 +28,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 				Config: testAccTaskDefinitionDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_ecs_task_definition.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", "aws_iam_role.execution", names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrExecutionRoleARN, "aws_iam_role.execution", names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "family", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "bridge"),
 					resource.TestMatchResourceAttr(dataSourceName, "revision", regexache.MustCompile("^[1-9][0-9]*$")),
