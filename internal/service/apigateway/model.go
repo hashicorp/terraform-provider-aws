@@ -59,7 +59,7 @@ func resourceModel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -98,7 +98,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	name := d.Get(names.AttrName).(string)
 	input := &apigateway.CreateModelInput{
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Name:        aws.String(name),
 		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
 	}
@@ -138,7 +138,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Model (%s): %s", d.Id(), err)
 	}
 
-	d.Set("content_type", model.ContentType)
+	d.Set(names.AttrContentType, model.ContentType)
 	d.Set(names.AttrDescription, model.Description)
 	d.Set("schema", model.Schema)
 
