@@ -156,6 +156,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
@@ -166,6 +169,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
@@ -177,6 +183,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags/"),
@@ -185,6 +194,9 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 					"resource_tags": nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 		},
 	})
@@ -548,6 +560,9 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -560,6 +575,9 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"resource_tags": nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -573,6 +591,9 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -582,6 +603,9 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					"resource_tags": nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 		},
 	})
@@ -679,6 +703,9 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -688,6 +715,9 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"resource_tags": nil,
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
+				{{ if .NoRemoveTags -}}
+				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
+				{{ end }}
 			},
 		},
 	})
@@ -1227,3 +1257,11 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 		},
 	})
 }
+{{ if .NoRemoveTags }}
+func testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t *testing.T) func() (bool, error) {
+	return func() (bool, error) {
+		t.Log("Skipping step: Resource {{ .Name }} does not support removing tags")
+		return true, nil
+	}
+}
+{{ end }}
