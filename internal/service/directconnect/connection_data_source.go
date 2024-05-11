@@ -36,7 +36,7 @@ func DataSourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", connection.AwsDeviceV2)
 	d.Set("bandwidth", connection.Bandwidth)
-	d.Set("location", connection.Location)
+	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)

@@ -63,7 +63,7 @@ func ResourceLag() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -98,7 +98,7 @@ func resourceLagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := &directconnect.CreateLagInput{
 		ConnectionsBandwidth: aws.String(d.Get("connections_bandwidth").(string)),
 		LagName:              aws.String(name),
-		Location:             aws.String(d.Get("location").(string)),
+		Location:             aws.String(d.Get(names.AttrLocation).(string)),
 		Tags:                 getTagsIn(ctx),
 	}
 
@@ -161,7 +161,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("connections_bandwidth", lag.ConnectionsBandwidth)
 	d.Set("has_logical_redundancy", lag.HasLogicalRedundancy)
 	d.Set("jumbo_frame_capable", lag.JumboFrameCapable)
-	d.Set("location", lag.Location)
+	d.Set(names.AttrLocation, lag.Location)
 	d.Set(names.AttrName, lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)

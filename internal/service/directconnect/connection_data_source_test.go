@@ -31,7 +31,7 @@ func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "aws_device", resourceName, "aws_device"),
 					resource.TestCheckResourceAttrPair(datasourceName, "bandwidth", resourceName, "bandwidth"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, "location", resourceName, "location"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrLocation, resourceName, names.AttrLocation),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "owner_account_id", resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "partner_name", resourceName, "partner_name"),

@@ -59,7 +59,7 @@ func ResourceHostedConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -149,7 +149,7 @@ func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("jumbo_frame_capable", connection.JumboFrameCapable)
 	d.Set("lag_id", connection.LagId)
 	d.Set("loa_issue_time", aws.TimeValue(connection.LoaIssueTime).Format(time.RFC3339))
-	d.Set("location", connection.Location)
+	d.Set(names.AttrLocation, connection.Location)
 	d.Set(names.AttrName, connection.ConnectionName)
 	d.Set("owner_account_id", connection.OwnerAccount)
 	d.Set("partner_name", connection.PartnerName)
