@@ -95,7 +95,7 @@ func ResourceContainerService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
@@ -335,7 +335,7 @@ func expandContainerServicePublicDomainNames(rawPublicDomainNames []interface{})
 	for _, rpdn := range rawPublicDomainNames {
 		rpdnMap := rpdn.(map[string]interface{})
 
-		rawCertificates := rpdnMap["certificate"].(*schema.Set).List()
+		rawCertificates := rpdnMap[names.AttrCertificate].(*schema.Set).List()
 
 		for _, rc := range rawCertificates {
 			rcMap := rc.(map[string]interface{})
@@ -432,7 +432,7 @@ func flattenContainerServicePublicDomainNames(domainNames map[string][]string) [
 
 	return []interface{}{
 		map[string]interface{}{
-			"certificate": rawCertificates,
+			names.AttrCertificate: rawCertificates,
 		},
 	}
 }
