@@ -48,7 +48,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAddress),
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_neptune_orderable_db_instance.test", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
@@ -121,7 +121,7 @@ func TestAccNeptuneClusterInstance_identifierGenerated(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "identifier", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrIdentifier, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-"),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccNeptuneClusterInstance_identifierPrefix(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
