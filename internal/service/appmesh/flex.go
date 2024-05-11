@@ -38,7 +38,7 @@ func expandClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolicy {
 				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
 				}
-				if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+				if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 					file.PrivateKey = aws.String(vPrivateKey)
 				}
 
@@ -927,7 +927,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 						if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
 						}
-						if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+						if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 							file.PrivateKey = aws.String(vPrivateKey)
 						}
 
@@ -1221,8 +1221,8 @@ func flattenClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
 
 			if file := certificate.File; file != nil {
 				mFile := map[string]interface{}{
-					"certificate_chain": aws.StringValue(file.CertificateChain),
-					"private_key":       aws.StringValue(file.PrivateKey),
+					"certificate_chain":  aws.StringValue(file.CertificateChain),
+					names.AttrPrivateKey: aws.StringValue(file.PrivateKey),
 				}
 
 				mCertificate["file"] = []interface{}{mFile}
@@ -1773,8 +1773,8 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 					if file := certificate.File; file != nil {
 						mFile := map[string]interface{}{
-							"certificate_chain": aws.StringValue(file.CertificateChain),
-							"private_key":       aws.StringValue(file.PrivateKey),
+							"certificate_chain":  aws.StringValue(file.CertificateChain),
+							names.AttrPrivateKey: aws.StringValue(file.PrivateKey),
 						}
 
 						mCertificate["file"] = []interface{}{mFile}
