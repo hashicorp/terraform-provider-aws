@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func customContentVisualSchema() *schema.Schema {
@@ -30,9 +31,9 @@ func customContentVisualSchema() *schema.Schema {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"content_type":  stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
-							"content_url":   stringSchema(false, validation.StringLenBetween(1, 2048)),
-							"image_scaling": stringSchema(false, validation.StringInSlice(quicksight.CustomContentImageScalingConfiguration_Values(), false)),
+							names.AttrContentType: stringSchema(false, validation.StringInSlice(quicksight.CustomContentType_Values(), false)),
+							"content_url":         stringSchema(false, validation.StringLenBetween(1, 2048)),
+							"image_scaling":       stringSchema(false, validation.StringInSlice(quicksight.CustomContentImageScalingConfiguration_Values(), false)),
 						},
 					},
 				},
@@ -89,7 +90,7 @@ func expandCustomContentConfiguration(tfList []interface{}) *quicksight.CustomCo
 
 	config := &quicksight.CustomContentConfiguration{}
 
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		config.ContentType = aws.String(v)
 	}
 	if v, ok := tfMap["content_url"].(string); ok && v != "" {
@@ -134,7 +135,7 @@ func flattenCustomContentConfiguration(apiObject *quicksight.CustomContentConfig
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ContentType != nil {
-		tfMap["content_type"] = aws.StringValue(apiObject.ContentType)
+		tfMap[names.AttrContentType] = aws.StringValue(apiObject.ContentType)
 	}
 	if apiObject.ContentUrl != nil {
 		tfMap["content_url"] = aws.StringValue(apiObject.ContentUrl)

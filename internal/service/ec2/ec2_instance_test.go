@@ -416,7 +416,7 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"encrypted": "true",
+						names.AttrEncrypted: "true",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
@@ -789,47 +789,47 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdb",
-						"volume_size": "9",
-						"volume_type": "gp2",
+						names.AttrDeviceName: "/dev/sdb",
+						"volume_size":        "9",
+						"volume_type":        "gp2",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdc",
-						"volume_size": "10",
-						"volume_type": "io1",
-						"iops":        "100",
+						names.AttrDeviceName: "/dev/sdc",
+						"volume_size":        "10",
+						"volume_type":        "io1",
+						"iops":               "100",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdf",
-						"volume_size": "10",
-						"volume_type": "gp3",
-						"throughput":  "300",
+						names.AttrDeviceName: "/dev/sdf",
+						"volume_size":        "10",
+						"volume_type":        "gp3",
+						"throughput":         "300",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdg",
-						"volume_size": "10",
-						"volume_type": "gp3",
-						"throughput":  "300",
-						"iops":        "4000",
+						names.AttrDeviceName: "/dev/sdg",
+						"volume_size":        "10",
+						"volume_type":        "gp3",
+						"throughput":         "300",
+						"iops":               "4000",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdd",
-						"encrypted":   "true",
-						"volume_size": "12",
+						names.AttrDeviceName: "/dev/sdd",
+						names.AttrEncrypted:  "true",
+						"volume_size":        "12",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name":  "/dev/sde",
-						"virtual_name": "ephemeral0",
+						names.AttrDeviceName: "/dev/sde",
+						"virtual_name":       "ephemeral0",
 					}),
 					testCheck(),
 				),
@@ -924,12 +924,12 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name": "/dev/sdb",
-						"no_device":   "true",
+						names.AttrDeviceName: "/dev/sdb",
+						"no_device":          "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name": "/dev/sdc",
-						"no_device":   "true",
+						names.AttrDeviceName: "/dev/sdc",
+						"no_device":          "true",
 					}),
 					testCheck(),
 				),
@@ -2868,24 +2868,24 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sdd",
-						"encrypted":                   "false",
+						names.AttrDeviceName:          "/dev/sdd",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sdc",
-						"encrypted":                   "false",
+						names.AttrDeviceName:          "/dev/sdc",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeleteOnTermination: "true",
-						"device_name":                 "/dev/sdb",
-						"encrypted":                   "false",
+						names.AttrDeviceName:          "/dev/sdb",
+						names.AttrEncrypted:           "false",
 						"iops":                        "100",
 						"volume_size":                 "10",
 						"volume_type":                 "gp2",
@@ -5709,7 +5709,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
-				d.Set("device_name", deviceName)
+				d.Set(names.AttrDeviceName, deviceName)
 				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 

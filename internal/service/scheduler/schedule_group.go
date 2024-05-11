@@ -50,7 +50,7 @@ func ResourceScheduleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +138,7 @@ func resourceScheduleGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("creation_date", aws.ToTime(out.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.ToTime(out.CreationDate).Format(time.RFC3339))
 	d.Set("last_modification_date", aws.ToTime(out.LastModificationDate).Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))

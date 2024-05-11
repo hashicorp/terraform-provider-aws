@@ -40,7 +40,7 @@ func ResourceFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(guardduty.FilterAction_Values(), false),
@@ -140,7 +140,7 @@ func resourceFilterCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
 	input := guardduty.CreateFilterInput{
-		Action:      aws.String(d.Get("action").(string)),
+		Action:      aws.String(d.Get(names.AttrAction).(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		DetectorId:  aws.String(d.Get("detector_id").(string)),
 		Name:        aws.String(d.Get(names.AttrName).(string)),
@@ -214,7 +214,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "Setting GuardDuty Filter FindingCriteria failed: %s", err)
 	}
 
-	d.Set("action", filter.Action)
+	d.Set(names.AttrAction, filter.Action)
 	d.Set(names.AttrDescription, filter.Description)
 	d.Set(names.AttrName, filter.Name)
 	d.Set("detector_id", detectorID)
@@ -231,9 +231,9 @@ func resourceFilterUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GuardDutyConn(ctx)
 
-	if d.HasChanges("action", names.AttrDescription, "finding_criteria", "rank") {
+	if d.HasChanges(names.AttrAction, names.AttrDescription, "finding_criteria", "rank") {
 		input := guardduty.UpdateFilterInput{
-			Action:      aws.String(d.Get("action").(string)),
+			Action:      aws.String(d.Get(names.AttrAction).(string)),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
 			DetectorId:  aws.String(d.Get("detector_id").(string)),
 			FilterName:  aws.String(d.Get(names.AttrName).(string)),

@@ -71,7 +71,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -151,7 +151,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -196,7 +196,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(names.AttrServiceName).(string)
 	input := &ec2.CreateVpcEndpointInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
@@ -326,7 +326,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set("service_name", serviceName)
+	d.Set(names.AttrServiceName, serviceName)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
@@ -372,7 +372,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get(names.AttrState).(string) == vpcEndpointStatePendingAcceptance {
-		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get(names.AttrServiceName).(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -388,7 +388,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
 				// that support both gateway and interface endpoints, i.e. S3.
-				if isAmazonS3VPCEndpoint(d.Get("service_name").(string)) {
+				if isAmazonS3VPCEndpoint(d.Get(names.AttrServiceName).(string)) {
 					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
 				} else {
 					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
@@ -542,7 +542,7 @@ func flattenDNSEntry(apiObject *ec2.DnsEntry) map[string]interface{} {
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.StringValue(v)
+		tfMap[names.AttrHostedZoneID] = aws.StringValue(v)
 	}
 
 	return tfMap

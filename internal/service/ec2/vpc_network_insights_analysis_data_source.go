@@ -44,8 +44,8 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"explanations": networkInsightsAnalysisExplanationsSchema,
-			"filter":       customFiltersSchema(),
+			"explanations":   networkInsightsAnalysisExplanationsSchema,
+			names.AttrFilter: customFiltersSchema(),
 			"filter_in_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -100,7 +100,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

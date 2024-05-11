@@ -70,6 +70,9 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	ctx, logger := logging.NewTfLogger(ctx)
 
+	const (
+		maxBackoff = 300 * time.Second // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
+	)
 	awsbaseConfig := awsbase.Config{
 		AccessKey:         c.AccessKey,
 		AllowedAccountIds: c.AllowedAccountIds,
@@ -81,6 +84,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 			},
 		},
 		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
+		Backoff:                        &v1CompatibleBackoff{maxRetryDelay: maxBackoff},
 		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                     "Terraform AWS Provider",
 		EC2MetadataServiceEnableState:  c.EC2MetadataServiceEnableState,
@@ -92,7 +96,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		HTTPSProxy:                     c.HTTPSProxy,
 		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
 		Logger:                         logger,
-		MaxBackoff:                     300 * time.Second, // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
+		MaxBackoff:                     maxBackoff,
 		MaxRetries:                     c.MaxRetries,
 		NoProxy:                        c.NoProxy,
 		Profile:                        c.Profile,
@@ -145,7 +149,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  d.Summary(),
 			Detail:   d.Detail(),
 		})
@@ -169,7 +173,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("creating AWS SDK v1 session: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -183,7 +187,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
-			Severity: baseSeverityToSdkSeverity(d.Severity()),
+			Severity: baseSeverityToSDKSeverity(d.Severity()),
 			Summary:  fmt.Sprintf("Retrieving AWS account details: %s", d.Summary()),
 			Detail:   d.Detail(),
 		})
@@ -227,7 +231,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	return client, diags
 }
 
-func baseSeverityToSdkSeverity(s basediag.Severity) diag.Severity {
+func baseSeverityToSDKSeverity(s basediag.Severity) diag.Severity {
 	switch s {
 	case basediag.SeverityWarning:
 		return diag.Warning

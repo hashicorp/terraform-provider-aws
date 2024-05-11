@@ -43,7 +43,7 @@ func testAccResourceLFTags_basic(t *testing.T) {
 						names.AttrKey:   rName,
 						names.AttrValue: "copse",
 					}),
-					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 				),
 			},
 		},
@@ -324,7 +324,7 @@ func testAccCheckDatabaseLFTagsDestroy(ctx context.Context) resource.TestCheckFu
 				ShowAssignedLFTags: aws.Bool(true),
 			}
 
-			if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
+			if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
 				input.CatalogId = aws.String(v)
 			}
 
@@ -431,7 +431,7 @@ func testAccCheckDatabaseLFTagsExists(ctx context.Context, resourceName string) 
 			ShowAssignedLFTags: aws.Bool(true),
 		}
 
-		if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
+		if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok {
 			input.CatalogId = aws.String(v)
 		}
 

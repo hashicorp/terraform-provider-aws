@@ -44,10 +44,10 @@ func testAccNetworkPerformanceMetricSubscription_basic(t *testing.T) {
 				Config: testAccVPCNetworkPerformanceMetricSubscription_basic(src, dst),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkPerformanceMetricSubscriptionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination", dst),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, dst),
 					resource.TestCheckResourceAttr(resourceName, "metric", "aggregate-latency"),
 					resource.TestCheckResourceAttr(resourceName, "period", "five-minutes"),
-					resource.TestCheckResourceAttr(resourceName, "source", src),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSource, src),
 					resource.TestCheckResourceAttr(resourceName, "statistic", "p50"),
 				),
 			},

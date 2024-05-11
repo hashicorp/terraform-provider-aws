@@ -36,7 +36,7 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "approval_rule_template_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_user"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_content_sha256"),

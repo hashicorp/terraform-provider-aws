@@ -47,7 +47,7 @@ func TestAccDocDBElasticCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
@@ -175,7 +175,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),
@@ -191,7 +191,7 @@ func TestAccDocDBElasticCluster_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "shard_capacity", "4"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_user_name", "testuser"),

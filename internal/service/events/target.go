@@ -162,7 +162,7 @@ func resourceTarget() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.LaunchType](),
 						},
-						"network_configuration": {
+						names.AttrNetworkConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -255,7 +255,7 @@ func resourceTarget() *schema.Resource {
 				ValidateFunc: validBusNameOrARN,
 				Default:      DefaultEventBusName,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -430,7 +430,7 @@ func resourceTarget() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -547,7 +547,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, target.Arn)
 	d.Set("event_bus_name", eventBusName)
-	d.Set("force_destroy", d.Get("force_destroy").(bool))
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
 	d.Set(names.AttrRoleARN, target.RoleArn)
@@ -628,7 +628,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	if d.HasChangesExcept("force_destroy") {
+	if d.HasChangesExcept(names.AttrForceDestroy) {
 		input := expandPutTargetsInput(ctx, d)
 
 		output, err := conn.PutTargets(ctx, input)
@@ -658,7 +658,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		input.Force = v.(bool)
 	}
 
@@ -889,7 +889,7 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 		param := c.(map[string]interface{})
 		command := types.RunCommandTarget{
 			Key:    aws.String(param[names.AttrKey].(string)),
-			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(param[names.AttrValues].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
@@ -947,7 +947,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.LaunchType = types.LaunchType(v)
 		}
 
-		if v, ok := tfMap["network_configuration"]; ok {
+		if v, ok := tfMap[names.AttrNetworkConfiguration]; ok {
 			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
@@ -1167,7 +1167,7 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 		config := make(map[string]interface{})
 
 		config[names.AttrKey] = aws.ToString(x.Key)
-		config["values"] = x.Values
+		config[names.AttrValues] = x.Values
 
 		result = append(result, config)
 	}
@@ -1183,7 +1183,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 
 	config["launch_type"] = ecsParameters.LaunchType
 
-	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	config[names.AttrNetworkConfiguration] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
 		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
 	}

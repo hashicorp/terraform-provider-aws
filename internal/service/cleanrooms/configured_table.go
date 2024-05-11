@@ -87,7 +87,7 @@ func ResourceConfiguredTable() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -260,7 +260,7 @@ func expandTableReference(data []interface{}) types.TableReference {
 	return &types.TableReferenceMemberGlue{
 		Value: types.GlueTableReference{
 			DatabaseName: aws.String(tableReference[names.AttrDatabaseName].(string)),
-			TableName:    aws.String(tableReference["table_name"].(string)),
+			TableName:    aws.String(tableReference[names.AttrTableName].(string)),
 		},
 	}
 }
@@ -270,7 +270,7 @@ func flattenTableReference(tableReference types.TableReference) []interface{} {
 	case *types.TableReferenceMemberGlue:
 		m := map[string]interface{}{
 			names.AttrDatabaseName: v.Value.DatabaseName,
-			"table_name":           v.Value.TableName,
+			names.AttrTableName:    v.Value.TableName,
 		}
 		return []interface{}{m}
 	default:

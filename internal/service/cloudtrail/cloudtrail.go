@@ -173,7 +173,7 @@ func resourceTrail() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
@@ -244,7 +244,7 @@ func resourceTrail() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
-			"s3_bucket_name": {
+			names.AttrS3BucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -273,7 +273,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &cloudtrail.CreateTrailInput{
 		IncludeGlobalServiceEvents: aws.Bool(d.Get("include_global_service_events").(bool)),
 		Name:                       aws.String(name),
-		S3BucketName:               aws.String(d.Get("s3_bucket_name").(string)),
+		S3BucketName:               aws.String(d.Get(names.AttrS3BucketName).(string)),
 		TagsList:                   getTagsIn(ctx),
 	}
 
@@ -387,7 +387,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
 	d.Set(names.AttrKMSKeyID, trail.KmsKeyId)
 	d.Set(names.AttrName, trail.Name)
-	d.Set("s3_bucket_name", trail.S3BucketName)
+	d.Set(names.AttrS3BucketName, trail.S3BucketName)
 	d.Set("s3_key_prefix", trail.S3KeyPrefix)
 	d.Set("sns_topic_name", trail.SnsTopicName)
 
@@ -473,8 +473,8 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
-		if d.HasChange("s3_bucket_name") {
-			input.S3BucketName = aws.String(d.Get("s3_bucket_name").(string))
+		if d.HasChange(names.AttrS3BucketName) {
+			input.S3BucketName = aws.String(d.Get(names.AttrS3BucketName).(string))
 		}
 
 		if d.HasChange("s3_key_prefix") {
@@ -694,7 +694,7 @@ func expandEventSelectorDataResource(configured []interface{}) []types.DataResou
 
 		dataResource := types.DataResource{
 			Type:   aws.String(data[names.AttrType].(string)),
-			Values: flex.ExpandStringValueList(data["values"].([]interface{})),
+			Values: flex.ExpandStringValueList(data[names.AttrValues].([]interface{})),
 		}
 
 		dataResources = append(dataResources, dataResource)
@@ -730,7 +730,7 @@ func flattenEventSelectorDataResource(configured []types.DataResource) []map[str
 	for _, raw := range configured {
 		item := make(map[string]interface{})
 		item[names.AttrType] = aws.ToString(raw.Type)
-		item["values"] = raw.Values
+		item[names.AttrValues] = raw.Values
 
 		dataResources = append(dataResources, item)
 	}
@@ -1010,7 +1010,7 @@ func resourceTrailV0() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
@@ -1077,7 +1077,7 @@ func resourceTrailV0() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"s3_bucket_name": {
+			names.AttrS3BucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},

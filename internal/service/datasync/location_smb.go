@@ -73,7 +73,7 @@ func resourceLocationSMB() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
@@ -125,7 +125,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		MountOptions:   expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-		Password:       aws.String(d.Get("password").(string)),
+		Password:       aws.String(d.Get(names.AttrPassword).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
@@ -196,7 +196,7 @@ func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta
 			LocationArn:  aws.String(d.Id()),
 			AgentArns:    flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 			MountOptions: expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-			Password:     aws.String(d.Get("password").(string)),
+			Password:     aws.String(d.Get(names.AttrPassword).(string)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 			User:         aws.String(d.Get("user").(string)),
 		}

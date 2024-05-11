@@ -33,7 +33,7 @@ func ResourceMap() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -87,7 +87,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -139,9 +139,9 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	if output.Configuration != nil {
-		d.Set("configuration", []interface{}{flattenConfiguration(output.Configuration)})
+		d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(output.Configuration)})
 	} else {
-		d.Set("configuration", nil)
+		d.Set(names.AttrConfiguration, nil)
 	}
 
 	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))

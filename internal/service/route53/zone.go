@@ -69,7 +69,7 @@ func ResourceZone() *schema.Resource {
 				ConflictsWith: []string{"vpc"},
 				ValidateFunc:  validation.StringLenBetween(0, 32),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -303,7 +303,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		if err := deleteAllResourceRecordsFromHostedZone(ctx, conn, d.Id(), d.Get(names.AttrName).(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

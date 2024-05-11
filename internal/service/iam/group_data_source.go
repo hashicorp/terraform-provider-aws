@@ -26,7 +26,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,11 +51,11 @@ func dataSourceGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"user_name": {
+						names.AttrUserName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -98,7 +98,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.ToString(group.GroupId))
 	d.Set(names.AttrARN, group.Arn)
-	d.Set("path", group.Path)
+	d.Set(names.AttrPath, group.Path)
 	d.Set("group_id", group.GroupId)
 	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting users: %s", err)
@@ -113,8 +113,8 @@ func dataSourceGroupUsersRead(iamUsers []awstypes.User) []map[string]interface{}
 		u := make(map[string]interface{})
 		u[names.AttrARN] = aws.ToString(i.Arn)
 		u["user_id"] = aws.ToString(i.UserId)
-		u["user_name"] = aws.ToString(i.UserName)
-		u["path"] = aws.ToString(i.Path)
+		u[names.AttrUserName] = aws.ToString(i.UserName)
+		u[names.AttrPath] = aws.ToString(i.Path)
 		users = append(users, u)
 	}
 	return users

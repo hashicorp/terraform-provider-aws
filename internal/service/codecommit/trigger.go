@@ -58,7 +58,7 @@ func resourceTrigger() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -203,7 +203,7 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 			apiObject.CustomData = aws.String(v)
 		}
 
-		if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrDestinationARN].(string); ok && v != "" {
 			apiObject.DestinationArn = aws.String(v)
 		}
 
@@ -240,7 +240,7 @@ func flattenRepositoryTriggers(apiObjects []types.RepositoryTrigger) []interface
 		}
 
 		if v := apiObject.DestinationArn; v != nil {
-			tfMap["destination_arn"] = aws.ToString(v)
+			tfMap[names.AttrDestinationARN] = aws.ToString(v)
 		}
 
 		if v := apiObject.Events; v != nil {

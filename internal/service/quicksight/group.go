@@ -62,7 +62,7 @@ func ResourceGroup() *schema.Resource {
 					ForceNew: true,
 				},
 
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -82,7 +82,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
-	namespace := d.Get("namespace").(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
@@ -137,7 +137,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("group_name", resp.Group.GroupName)
 	d.Set(names.AttrDescription, resp.Group.Description)
-	d.Set("namespace", namespace)
+	d.Set(names.AttrNamespace, namespace)
 
 	return diags
 }

@@ -82,7 +82,7 @@ func resourcePipeline() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -126,7 +126,7 @@ func resourcePipeline() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
@@ -136,7 +136,7 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionCategory](),
 									},
-									"configuration": {
+									names.AttrConfiguration: {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ValidateDiagFunc: validation.AllDiag(
@@ -159,7 +159,7 @@ func resourcePipeline() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 										),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -182,7 +182,7 @@ func resourcePipeline() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: pipelineValidateActionProvider,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -750,7 +750,7 @@ func expandArtifactStores(tfList []interface{}) map[string]types.ArtifactStore {
 
 		var region string
 
-		if v, ok := tfMap["region"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 			region = v
 		}
 
@@ -785,7 +785,7 @@ func expandStageDeclaration(tfMap map[string]interface{}) *types.StageDeclaratio
 
 	apiObject := &types.StageDeclaration{}
 
-	if v, ok := tfMap["action"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrAction].([]interface{}); ok && len(v) > 0 {
 		apiObject.Actions = expandActionDeclarations(v)
 	}
 
@@ -835,7 +835,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Category = types.ActionCategory(v)
 	}
 
-	if v, ok := tfMap["configuration"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
@@ -847,7 +847,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["namespace"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
 
@@ -863,7 +863,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.ActionTypeId.Provider = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -1245,7 +1245,7 @@ func flattenArtifactStores(apiObjects map[string]types.ArtifactStore) []interfac
 
 	for region, apiObject := range apiObjects {
 		tfMap := flattenArtifactStore(&apiObject)
-		tfMap["region"] = region
+		tfMap[names.AttrRegion] = region
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1273,7 +1273,7 @@ func flattenStageDeclaration(d *schema.ResourceData, i int, apiObject types.Stag
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["action"] = flattenActionDeclarations(d, i, v)
+		tfMap[names.AttrAction] = flattenActionDeclarations(d, i, v)
 	}
 
 	if v := apiObject.Name; v != nil {
@@ -1324,7 +1324,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 			}
 		}
 
-		tfMap["configuration"] = v
+		tfMap[names.AttrConfiguration] = v
 	}
 
 	if v := apiObject.InputArtifacts; len(v) > 0 {
@@ -1336,7 +1336,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.Namespace; v != nil {
-		tfMap["namespace"] = aws.ToString(v)
+		tfMap[names.AttrNamespace] = aws.ToString(v)
 	}
 
 	if v := apiObject.OutputArtifacts; len(v) > 0 {
@@ -1344,7 +1344,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {

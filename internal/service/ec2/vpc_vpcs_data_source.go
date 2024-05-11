@@ -27,7 +27,7 @@ func DataSourceVPCs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -50,7 +50,7 @@ func dataSourceVPCsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
 			newCustomFilterList(filters.(*schema.Set))...)
 	}

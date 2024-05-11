@@ -128,7 +128,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_basic(t *testin
 					resource.TestCheckResourceAttr(resourceName, "container.0.command.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "service_name", "aws_lightsail_container_service.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceName, "aws_lightsail_container_service.test", names.AttrName),
 				),
 			},
 			{

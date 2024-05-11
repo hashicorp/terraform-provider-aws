@@ -58,7 +58,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validResolverName,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -83,7 +83,7 @@ func resourceFirewallRuleGroupAssociationCreate(ctx context.Context, d *schema.R
 		CreatorRequestId:    aws.String(id.PrefixedUniqueId("tf-r53-rslvr-frgassoc-")),
 		FirewallRuleGroupId: aws.String(d.Get("firewall_rule_group_id").(string)),
 		Name:                aws.String(name),
-		Priority:            aws.Int64(int64(d.Get("priority").(int))),
+		Priority:            aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 		Tags:                getTagsIn(ctx),
 		VpcId:               aws.String(d.Get(names.AttrVPCID).(string)),
 	}
@@ -127,7 +127,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	d.Set(names.AttrName, ruleGroupAssociation.Name)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("mutation_protection", ruleGroupAssociation.MutationProtection)
-	d.Set("priority", ruleGroupAssociation.Priority)
+	d.Set(names.AttrPriority, ruleGroupAssociation.Priority)
 	d.Set(names.AttrVPCID, ruleGroupAssociation.VpcId)
 
 	return nil
@@ -136,11 +136,11 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).Route53ResolverConn(ctx)
 
-	if d.HasChanges(names.AttrName, "mutation_protection", "priority") {
+	if d.HasChanges(names.AttrName, "mutation_protection", names.AttrPriority) {
 		input := &route53resolver.UpdateFirewallRuleGroupAssociationInput{
 			FirewallRuleGroupAssociationId: aws.String(d.Id()),
 			Name:                           aws.String(d.Get(names.AttrName).(string)),
-			Priority:                       aws.Int64(int64(d.Get("priority").(int))),
+			Priority:                       aws.Int64(int64(d.Get(names.AttrPriority).(int))),
 		}
 
 		if v, ok := d.GetOk("mutation_protection"); ok {

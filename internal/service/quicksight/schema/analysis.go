@@ -77,7 +77,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
-							"content_type": {
+							names.AttrContentType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,

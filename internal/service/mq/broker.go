@@ -58,7 +58,7 @@ func resourceBroker() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -84,7 +84,7 @@ func resourceBroker() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: ValidateBrokerName,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -180,7 +180,7 @@ func resourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -295,7 +295,7 @@ func resourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -352,7 +352,7 @@ func resourceBroker() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(2, 100),
 							},
 						},
-						"password": {
+						names.AttrPassword: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -363,7 +363,7 @@ func resourceBroker() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(2, 100),
@@ -404,7 +404,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
@@ -412,7 +412,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = types.AuthenticationStrategy(v.(string))
 	}
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandConfigurationId(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("deployment_mode"); ok {
@@ -490,12 +490,12 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
-	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
-	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
@@ -555,10 +555,10 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("configuration", "logs", names.AttrEngineVersion) {
+	if d.HasChanges(names.AttrConfiguration, "logs", names.AttrEngineVersion) {
 		input := &mq.UpdateBrokerInput{
 			BrokerId:      aws.String(d.Id()),
-			Configuration: expandConfigurationId(d.Get("configuration").([]interface{})),
+			Configuration: expandConfigurationId(d.Get(names.AttrConfiguration).([]interface{})),
 			EngineVersion: aws.String(d.Get(names.AttrEngineVersion).(string)),
 			Logs:          expandLogs(d.Get("engine_type").(string), d.Get("logs").([]interface{})),
 		}
@@ -649,7 +649,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.Get("apply_immediately").(bool) && requiresReboot {
+	if d.Get(names.AttrApplyImmediately).(bool) && requiresReboot {
 		_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})
@@ -797,10 +797,10 @@ func resourceUserHash(v interface{}) int {
 	if g, ok := m["groups"]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
 	}
-	if p, ok := m["password"]; ok {
+	if p, ok := m[names.AttrPassword]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
 	}
-	buf.WriteString(fmt.Sprintf("%s-", m["username"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrUsername].(string)))
 
 	return create.StringHashcode(buf.String())
 }
@@ -843,7 +843,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 	existingUsers := make(map[string]interface{})
 	for _, ou := range oldUsers {
 		u := ou.(map[string]interface{})
-		username := u["username"].(string)
+		username := u[names.AttrUsername].(string)
 		// Convert Set to slice to allow easier comparison
 		if g, ok := u["groups"]; ok {
 			groups := g.(*schema.Set).List()
@@ -866,7 +866,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 		}
 
 		newUserMap := newUser.(map[string]interface{})
-		username := newUserMap["username"].(string)
+		username := newUserMap[names.AttrUsername].(string)
 
 		// Convert Set to slice to allow easier comparison
 		var ng []interface{}
@@ -884,7 +884,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 					ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
 					Groups:          flex.ExpandStringValueList(ng),
 					ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
-					Password:        aws.String(newUserMap["password"].(string)),
+					Password:        aws.String(newUserMap[names.AttrPassword].(string)),
 					Username:        aws.String(username),
 				})
 			}
@@ -895,7 +895,7 @@ func DiffBrokerUsers(bId string, oldUsers, newUsers []interface{}) (cr []*mq.Cre
 			cur := &mq.CreateUserInput{
 				BrokerId:        aws.String(bId),
 				ConsoleAccess:   aws.Bool(newUserMap["console_access"].(bool)),
-				Password:        aws.String(newUserMap["password"].(string)),
+				Password:        aws.String(newUserMap[names.AttrPassword].(string)),
 				ReplicationUser: aws.Bool(newUserMap["replication_user"].(bool)),
 				Username:        aws.String(username),
 			}
@@ -977,8 +977,8 @@ func expandUsers(cfg []interface{}) []types.User {
 	for i, m := range cfg {
 		u := m.(map[string]interface{})
 		user := types.User{
-			Username: aws.String(u["username"].(string)),
-			Password: aws.String(u["password"].(string)),
+			Username: aws.String(u[names.AttrUsername].(string)),
+			Password: aws.String(u[names.AttrPassword].(string)),
 		}
 		if v, ok := u["console_access"]; ok {
 			user.ConsoleAccess = aws.Bool(v.(bool))
@@ -1025,21 +1025,21 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 	existingPairs := make(map[string]string)
 	for _, u := range cfgUsers {
 		user := u.(map[string]interface{})
-		username := user["username"].(string)
-		existingPairs[username] = user["password"].(string)
+		username := user[names.AttrUsername].(string)
+		existingPairs[username] = user[names.AttrPassword].(string)
 	}
 
 	out := make([]interface{}, 0)
 	for _, u := range users {
 		m := map[string]interface{}{
-			"username": aws.ToString(u.Username),
+			names.AttrUsername: aws.ToString(u.Username),
 		}
 		password := ""
 		if p, ok := existingPairs[aws.ToString(u.Username)]; ok {
 			password = p
 		}
 		if password != "" {
-			m["password"] = password
+			m[names.AttrPassword] = password
 		}
 		if u.ConsoleAccess != nil {
 			m["console_access"] = aws.ToBool(u.ConsoleAccess)
@@ -1125,7 +1125,7 @@ func flattenBrokerInstances(instances []types.BrokerInstance) []interface{} {
 			m["console_url"] = aws.ToString(instance.ConsoleURL)
 		}
 		if len(instance.Endpoints) > 0 {
-			m["endpoints"] = instance.Endpoints
+			m[names.AttrEndpoints] = instance.Endpoints
 		}
 		if instance.IpAddress != nil {
 			m["ip_address"] = aws.ToString(instance.IpAddress)

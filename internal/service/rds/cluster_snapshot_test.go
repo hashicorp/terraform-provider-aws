@@ -86,7 +86,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"cluster_identifier_prefix",
 					"master_password",
 					"skip_final_snapshot",

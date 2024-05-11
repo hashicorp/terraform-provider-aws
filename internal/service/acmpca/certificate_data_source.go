@@ -25,7 +25,7 @@ func dataSourceCertificate() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(certificateARN)
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set("certificate_chain", output.CertificateChain)
 
 	return diags

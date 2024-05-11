@@ -239,7 +239,7 @@ func ResourceRecord() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -479,7 +479,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if record.Region != nil {
 		v := []map[string]interface{}{{
-			"region": aws.StringValue(record.Region),
+			names.AttrRegion: aws.StringValue(record.Region),
 		}}
 		if err := d.Set("latency_routing_policy", v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting latency_routing_policy: %s", err)
@@ -603,7 +603,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if o, ok := v.([]interface{}); ok {
 			if len(o) == 1 {
 				if v, ok := o[0].(map[string]interface{}); ok {
-					oldRec.Region = aws.String(v["region"].(string))
+					oldRec.Region = aws.String(v[names.AttrRegion].(string))
 				}
 			}
 		}
@@ -953,7 +953,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		records := v.([]interface{})
 		latency := records[0].(map[string]interface{})
 
-		rec.Region = aws.String(latency["region"].(string))
+		rec.Region = aws.String(latency[names.AttrRegion].(string))
 	}
 
 	if v, ok := d.GetOk("multivalue_answer_routing_policy"); ok {

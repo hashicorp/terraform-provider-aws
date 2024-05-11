@@ -27,7 +27,6 @@ resource "aws_iam_role" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -37,7 +36,6 @@ variable "tags" {
   type     = map(string)
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

@@ -62,7 +62,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 			names.AttrEnabled: schema.BoolAttribute{
 				Computed: true,
 			},
-			"hosted_zone_id": schema.StringAttribute{
+			names.AttrHostedZoneID: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{

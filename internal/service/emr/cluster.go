@@ -288,7 +288,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"path": {
+							names.AttrPath: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -1854,7 +1854,7 @@ func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} 
 	for _, b := range actions {
 		attrs := make(map[string]interface{})
 		attrs[names.AttrName] = aws.StringValue(b.Name)
-		attrs["path"] = aws.StringValue(b.ScriptPath)
+		attrs[names.AttrPath] = aws.StringValue(b.ScriptPath)
 		attrs["args"] = flex.FlattenStringList(b.Args)
 		result = append(result, attrs)
 	}
@@ -1877,7 +1877,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	for _, raw := range bootstrapActions {
 		actionAttributes := raw.(map[string]interface{})
 		actionName := actionAttributes[names.AttrName].(string)
-		actionPath := actionAttributes["path"].(string)
+		actionPath := actionAttributes[names.AttrPath].(string)
 		actionArgs := actionAttributes["args"].([]interface{})
 
 		action := &emr.BootstrapActionConfig{

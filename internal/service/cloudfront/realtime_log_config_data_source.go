@@ -26,7 +26,7 @@ func dataSourceRealtimeLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -85,7 +85,7 @@ func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData
 	arn := aws.ToString(logConfig.ARN)
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
-	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
+	if err := d.Set(names.AttrEndpoint, flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("fields", logConfig.Fields)

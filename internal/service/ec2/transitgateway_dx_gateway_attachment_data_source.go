@@ -32,8 +32,8 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter":       customFiltersSchema(),
-			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
 			names.AttrTransitGatewayID: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -54,7 +54,7 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk(names.AttrTags); ok {

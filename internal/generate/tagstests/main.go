@@ -22,6 +22,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -125,6 +126,8 @@ func main() {
 			generateTestConfig(g, testDirPath, "tags0", true, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", false, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tagsNull", true, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl)
 		}
 	}
 
@@ -166,6 +169,7 @@ type goImport struct {
 type ConfigDatum struct {
 	Tags            string
 	WithDefaultTags bool
+	ComputedTag     bool
 }
 
 //go:embed test.go.gtpl
@@ -295,6 +299,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
+
+					for i, val := range d.ImportIgnore {
+						d.ImportIgnore[i] = names.ConstOrQuote(val)
+					}
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
@@ -388,6 +396,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	configData := ConfigDatum{
 		Tags:            test,
 		WithDefaultTags: withDefaults,
+		ComputedTag:     (test == "tagsComputed"),
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

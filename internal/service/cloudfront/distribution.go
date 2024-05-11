@@ -287,7 +287,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -325,7 +325,7 @@ func resourceDistribution() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  "",
@@ -923,7 +923,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrEnabled, distributionConfig.Enabled)
 	d.Set("etag", output.ETag)
 	d.Set("http_version", distributionConfig.HttpVersion)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
@@ -2482,7 +2482,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 		apiObject.Bucket = aws.String(tfMap[names.AttrBucket].(string))
 		apiObject.Enabled = aws.Bool(true)
 		apiObject.IncludeCookies = aws.Bool(tfMap["include_cookies"].(bool))
-		apiObject.Prefix = aws.String(tfMap["prefix"].(string))
+		apiObject.Prefix = aws.String(tfMap[names.AttrPrefix].(string))
 	} else {
 		apiObject.Bucket = aws.String("")
 		apiObject.Enabled = aws.Bool(false)
@@ -2501,7 +2501,7 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) []interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrBucket:  aws.ToString(apiObject.Bucket),
 		"include_cookies": aws.ToBool(apiObject.IncludeCookies),
-		"prefix":          aws.ToString(apiObject.Prefix),
+		names.AttrPrefix:  aws.ToString(apiObject.Prefix),
 	}
 
 	return []interface{}{tfMap}

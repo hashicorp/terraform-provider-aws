@@ -137,7 +137,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -196,7 +196,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

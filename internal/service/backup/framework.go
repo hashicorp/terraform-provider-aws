@@ -107,7 +107,7 @@ func ResourceFramework() *schema.Resource {
 					},
 				},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -192,7 +192,7 @@ func resourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrName, resp.FrameworkName)
 	d.Set(names.AttrStatus, resp.FrameworkStatus)
 
-	if err := d.Set("creation_time", resp.CreationTime.Format(time.RFC3339)); err != nil {
+	if err := d.Set(names.AttrCreationTime, resp.CreationTime.Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 

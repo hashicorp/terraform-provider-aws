@@ -54,7 +54,7 @@ func DataSourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -174,7 +174,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("quota_code", defaultQuota.QuotaCode)
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)
-	d.Set("service_name", defaultQuota.ServiceName)
+	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
 	d.Set(names.AttrValue, defaultQuota.Value)
 
 	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {

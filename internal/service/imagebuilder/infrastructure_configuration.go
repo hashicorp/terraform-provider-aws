@@ -101,7 +101,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -130,7 +130,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -199,7 +199,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("sns_topic_arn"); ok {
+	if v, ok := d.GetOk(names.AttrSNSTopicARN); ok {
 		input.SnsTopicArn = aws.String(v.(string))
 	}
 
@@ -291,7 +291,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrName, infrastructureConfiguration.Name)
 	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
 	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
-	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
+	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
 	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
 
 	setTagsOut(ctx, infrastructureConfiguration.Tags)
@@ -314,7 +314,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		"logging",
 		"resource_tags",
 		names.AttrSecurityGroupIDs,
-		"sns_topic_arn",
+		names.AttrSNSTopicARN,
 		names.AttrSubnetID,
 		"terminate_instance_on_failure",
 	) {
@@ -355,7 +355,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 			input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		if v, ok := d.GetOk("sns_topic_arn"); ok {
+		if v, ok := d.GetOk(names.AttrSNSTopicARN); ok {
 			input.SnsTopicArn = aws.String(v.(string))
 		}
 
@@ -449,7 +449,7 @@ func expandS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
 
 	apiObject := &imagebuilder.S3Logs{}
 
-	if v, ok := tfMap["s3_bucket_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3BucketName].(string); ok && v != "" {
 		apiObject.S3BucketName = aws.String(v)
 	}
 
@@ -500,7 +500,7 @@ func flattenS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3BucketName; v != nil {
-		tfMap["s3_bucket_name"] = aws.StringValue(v)
+		tfMap[names.AttrS3BucketName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.S3KeyPrefix; v != nil {

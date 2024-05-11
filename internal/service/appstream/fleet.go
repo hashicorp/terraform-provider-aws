@@ -101,7 +101,7 @@ func ResourceFleet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(60, 360000),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -241,7 +241,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -372,7 +372,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("created_time", aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, fleet.Description)
-	d.Set("display_name", fleet.DisplayName)
+	d.Set(names.AttrDisplayName, fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
 
 	if fleet.DomainJoinInfo != nil {
@@ -457,8 +457,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(d.Get("idle_disconnect_timeout_in_seconds").(int)))
 	}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
+	if d.HasChange(names.AttrDisplayName) {
+		input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 	}
 
 	if d.HasChange("image_name") {

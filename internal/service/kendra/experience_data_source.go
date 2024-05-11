@@ -28,7 +28,7 @@ func DataSourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -82,16 +82,16 @@ func DataSourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint": {
+						names.AttrEndpoint: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -173,11 +173,11 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenEndpoints(resp.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 

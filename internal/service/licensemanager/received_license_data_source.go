@@ -97,7 +97,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"unit": {
+						names.AttrUnit: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -357,7 +357,7 @@ func flattenEntitlement(apiObject *licensemanager.Entitlement) map[string]interf
 	}
 
 	if v := apiObject.Unit; v != nil {
-		tfMap["unit"] = v
+		tfMap[names.AttrUnit] = v
 	}
 
 	if v := apiObject.Value; v != nil {

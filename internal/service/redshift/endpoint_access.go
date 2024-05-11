@@ -34,7 +34,7 @@ func resourceEndpointAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,7 +175,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("resource_owner", endpoint.ResourceOwner)
 	d.Set(names.AttrClusterIdentifier, endpoint.ClusterIdentifier)
 	d.Set(names.AttrPort, endpoint.Port)
-	d.Set("address", endpoint.Address)
+	d.Set(names.AttrAddress, endpoint.Address)
 
 	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)

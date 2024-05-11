@@ -55,7 +55,7 @@ func testAccWorkspace_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.WorkspaceStateAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "Administrator"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "volume_encryption_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),

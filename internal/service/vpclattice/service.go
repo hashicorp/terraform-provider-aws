@@ -57,7 +57,7 @@ func resourceService() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AuthType](),
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -77,7 +77,7 @@ func resourceService() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -119,7 +119,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.AuthType = types.AuthType(v.(string))
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		in.CertificateArn = aws.String(v.(string))
 	}
 
@@ -159,7 +159,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("auth_type", out.AuthType)
-	d.Set("certificate_arn", out.CertificateArn)
+	d.Set(names.AttrCertificateARN, out.CertificateArn)
 	d.Set("custom_domain_name", out.CustomDomainName)
 	if out.DnsEntry != nil {
 		if err := d.Set("dns_entry", []interface{}{flattenDNSEntry(out.DnsEntry)}); err != nil {
@@ -186,8 +186,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			in.AuthType = types.AuthType(d.Get("auth_type").(string))
 		}
 
-		if d.HasChanges("certificate_arn") {
-			in.CertificateArn = aws.String(d.Get("certificate_arn").(string))
+		if d.HasChanges(names.AttrCertificateARN) {
+			in.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 		}
 
 		_, err := conn.UpdateService(ctx, in)
@@ -343,7 +343,7 @@ func flattenDNSEntry(apiObject *types.DnsEntry) map[string]interface{} {
 	}
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	return tfMap

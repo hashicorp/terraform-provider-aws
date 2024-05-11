@@ -186,7 +186,7 @@ func TestAccGlueDataQualityRuleset_targetTableFull(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityRulesetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_database.test", names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.table_name", "aws_glue_catalog_table.test", names.AttrName),
 				),

@@ -67,7 +67,7 @@ func resourceUserSSHKey() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"username": {
+			names.AttrUsername: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +80,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	username := d.Get("username").(string)
+	username := d.Get(names.AttrUsername).(string)
 	input := &iam.UploadSSHPublicKeyInput{
 		SSHPublicKeyBody: aws.String(d.Get("public_key").(string)),
 		UserName:         aws.String(username),
@@ -124,7 +124,7 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	encoding := d.Get("encoding").(string)
-	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get("username").(string))
+	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get(names.AttrUsername).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM User SSH Key (%s) not found, removing from state", d.Id())
@@ -155,7 +155,7 @@ func resourceUserSSHKeyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &iam.UpdateSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
 		Status:         awstypes.StatusType(d.Get(names.AttrStatus).(string)),
-		UserName:       aws.String(d.Get("username").(string)),
+		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
 	}
 
 	_, err := conn.UpdateSSHPublicKey(ctx, input)
@@ -174,7 +174,7 @@ func resourceUserSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting IAM User SSH Key: %s", d.Id())
 	_, err := conn.DeleteSSHPublicKey(ctx, &iam.DeleteSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
-		UserName:       aws.String(d.Get("username").(string)),
+		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
 	})
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
@@ -199,7 +199,7 @@ func resourceUserSSHKeyImport(ctx context.Context, d *schema.ResourceData, meta 
 	sshPublicKeyId := idParts[1]
 	encoding := idParts[2]
 
-	d.Set("username", username)
+	d.Set(names.AttrUsername, username)
 	d.Set("ssh_public_key_id", sshPublicKeyId)
 	d.Set("encoding", encoding)
 	d.SetId(sshPublicKeyId)

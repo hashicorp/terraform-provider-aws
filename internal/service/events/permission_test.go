@@ -64,7 +64,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal1, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
@@ -109,7 +109,7 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 				Config: testAccPermissionConfig_eventBusName(principal1, busName, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
@@ -157,7 +157,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 				Config: testAccPermissionConfig_action("events:PutEvents", principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 				),
 			},
 			{

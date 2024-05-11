@@ -49,7 +49,7 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy},
 			},
 		},
 	})
@@ -80,7 +80,7 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy},
 			},
 		},
 	})
@@ -111,7 +111,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "acl_configuration", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, "acl_configuration", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -142,7 +142,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy", "encryption_configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy, names.AttrEncryptionConfiguration},
 			},
 		},
 	})
@@ -171,7 +171,7 @@ func TestAccAthenaDatabase_nameStartsWithUnderscore(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy},
 			},
 		},
 	})
@@ -268,7 +268,7 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy},
 			},
 		},
 	})
@@ -298,7 +298,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy},
 			},
 		},
 	})

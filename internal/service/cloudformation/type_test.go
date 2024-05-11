@@ -48,7 +48,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deprecated_status", string(awstypes.DeprecatedStatusLive)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
-					resource.TestCheckResourceAttr(resourceName, "execution_role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExecutionRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "is_default_version", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
@@ -111,7 +111,7 @@ func TestAccCloudFormationType_executionRoleARN(t *testing.T) {
 				Config: testAccTypeConfig_executionRoleARN(rName, zipPath, typeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},

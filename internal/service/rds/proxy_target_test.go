@@ -39,7 +39,7 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_db_instance.test", "address"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, "aws_db_instance.test", names.AttrAddress),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_db_instance.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),
@@ -76,7 +76,7 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 				Config: testAccProxyTargetConfig_cluster(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					resource.TestCheckResourceAttr(resourceName, "endpoint", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrPort, "aws_rds_cluster.test", names.AttrPort),
 					resource.TestCheckResourceAttr(resourceName, "rds_resource_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_arn", ""),

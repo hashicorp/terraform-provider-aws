@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
@@ -23,6 +24,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":          testAccDataCellsFilter_basic,
 			"columnWildcard": testAccDataCellsFilter_columnWildcard,
 			"disappears":     testAccDataCellsFilter_disappears,
+			"rowFilter":      testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			"basic":          testAccDataLakeSettingsDataSource_basic,
@@ -72,7 +74,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":           testAccLFTag_basic,
 			"disappears":      testAccLFTag_disappears,
 			"tagKeyComplex":   testAccLFTag_TagKey_complex,
-			"values":          testAccLFTag_Values,
+			names.AttrValues:  testAccLFTag_Values,
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTag": {

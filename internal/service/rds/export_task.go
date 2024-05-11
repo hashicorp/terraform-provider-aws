@@ -94,7 +94,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 			"percent_progress": schema.Int64Attribute{
 				Computed: true,
 			},
-			"s3_bucket_name": schema.StringAttribute{
+			names.AttrS3BucketName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),

@@ -31,10 +31,10 @@ func expandRules(l []interface{}) []awstypes.Rule {
 
 func expandRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -320,7 +320,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
 			Content:     aws.String(vm["content"].(string)),
-			ContentType: awstypes.ResponseContentType(vm["content_type"].(string)),
+			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
 
@@ -769,7 +769,7 @@ func expandTextTransformations(l []interface{}) []awstypes.TextTransformation {
 
 func expandTextTransformation(m map[string]interface{}) awstypes.TextTransformation {
 	return awstypes.TextTransformation{
-		Priority: int32(m["priority"].(int)),
+		Priority: int32(m[names.AttrPriority].(int)),
 		Type:     awstypes.TextTransformationType(m[names.AttrType].(string)),
 	}
 }
@@ -993,11 +993,11 @@ func expandWebACLRules(l []interface{}) []awstypes.Rule {
 
 func expandWebACLRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
-		Action:           expandRuleAction(m["action"].([]interface{})),
+		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
-		Priority:         int32(m["priority"].(int)),
+		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
 	}
@@ -1219,7 +1219,7 @@ func expandEmailField(tfList []interface{}) *awstypes.EmailField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.EmailField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1232,7 +1232,7 @@ func expandPasswordField(tfList []interface{}) *awstypes.PasswordField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.PasswordField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1263,7 +1263,7 @@ func expandUsernameField(tfList []interface{}) *awstypes.UsernameField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.UsernameField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1423,7 +1423,7 @@ func expandResponseInspectionJSON(tfList []interface{}) *awstypes.ResponseInspec
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.ResponseInspectionJson{
 		FailureValues: flex.ExpandStringValueSet(m["failure_values"].(*schema.Set)),
-		Identifier:    aws.String(m["identifier"].(string)),
+		Identifier:    aws.String(m[names.AttrIdentifier].(string)),
 		SuccessValues: flex.ExpandStringValueSet(m["success_values"].(*schema.Set)),
 	}
 
@@ -1474,7 +1474,7 @@ func expandRateLimitLabelNamespace(l []interface{}) *awstypes.RateLimitLabelName
 	}
 	m := l[0].(map[string]interface{})
 	return &awstypes.RateLimitLabelNamespace{
-		Namespace: aws.String(m["namespace"].(string)),
+		Namespace: aws.String(m[names.AttrNamespace].(string)),
 	}
 }
 
@@ -1638,10 +1638,10 @@ func flattenRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -1813,9 +1813,9 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	i := 0
 	for key, body := range b {
 		out[i] = map[string]interface{}{
-			names.AttrKey:  key,
-			"content":      aws.ToString(body.Content),
-			"content_type": string(body.ContentType),
+			names.AttrKey:         key,
+			"content":             aws.ToString(body.Content),
+			names.AttrContentType: string(body.ContentType),
 		}
 		i += 1
 	}
@@ -2194,7 +2194,7 @@ func flattenTextTransformations(l []awstypes.TextTransformation) []interface{} {
 	out := make([]interface{}, len(l))
 	for i, t := range l {
 		m := make(map[string]interface{})
-		m["priority"] = t.Priority
+		m[names.AttrPriority] = t.Priority
 		m[names.AttrType] = string(t.Type)
 		out[i] = m
 	}
@@ -2485,11 +2485,11 @@ func flattenWebACLRules(r []awstypes.Rule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["action"] = flattenRuleAction(rule.Action)
+		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		m["override_action"] = flattenOverrideAction(rule.OverrideAction)
 		m[names.AttrName] = aws.ToString(rule.Name)
-		m["priority"] = rule.Priority
+		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
@@ -2629,7 +2629,7 @@ func flattenEmailField(apiObject *awstypes.EmailField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2641,7 +2641,7 @@ func flattenPasswordField(apiObject *awstypes.PasswordField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2670,7 +2670,7 @@ func flattenUsernameField(apiObject *awstypes.UsernameField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2812,9 +2812,9 @@ func flattenResponseInspectionJSON(apiObject *awstypes.ResponseInspectionJson) [
 	}
 
 	m := map[string]interface{}{
-		"failure_values": flex.FlattenStringValueSet(apiObject.FailureValues),
-		"identifier":     aws.ToString(apiObject.Identifier),
-		"success_values": flex.FlattenStringValueSet(apiObject.SuccessValues),
+		"failure_values":     flex.FlattenStringValueSet(apiObject.FailureValues),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
+		"success_values":     flex.FlattenStringValueSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}
@@ -2863,7 +2863,7 @@ func flattenRateLimitLabelNamespace(apiObject *awstypes.RateLimitLabelNamespace)
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"namespace": aws.ToString(apiObject.Namespace),
+			names.AttrNamespace: aws.ToString(apiObject.Namespace),
 		},
 	}
 }

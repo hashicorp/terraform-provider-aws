@@ -50,7 +50,7 @@ func DataSourceInternetGateway() *schema.Resource {
 					},
 				},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"internet_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -72,7 +72,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
-	filter, filterOk := d.GetOk("filter")
+	filter, filterOk := d.GetOk(names.AttrFilter)
 
 	if !internetGatewayIdOk && !filterOk && !tagsOk {
 		return sdkdiag.AppendErrorf(diags, "One of internet_gateway_id or filter or tags must be assigned")

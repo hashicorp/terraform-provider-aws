@@ -41,7 +41,7 @@ func ResourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -89,7 +89,7 @@ func ResourceAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -134,7 +134,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	fsId := d.Get("file_system_id").(string)
+	fsId := d.Get(names.AttrFileSystemID).(string)
 	input := efs.CreateAccessPointInput{
 		FileSystemId: aws.String(fsId),
 		Tags:         getTagsIn(ctx),
@@ -204,7 +204,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Service:   "elasticfilesystem",
 	}.String()
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", fsID)
+	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
@@ -280,7 +280,7 @@ func expandAccessPointRootDirectory(rDir []interface{}) *efs.RootDirectory {
 
 	rootDir := &efs.RootDirectory{}
 
-	if v, ok := m["path"]; ok {
+	if v, ok := m[names.AttrPath]; ok {
 		rootDir.Path = aws.String(v.(string))
 	}
 
@@ -327,7 +327,7 @@ func flattenAccessPointRootDirectory(rDir *efs.RootDirectory) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"path":          aws.StringValue(rDir.Path),
+		names.AttrPath:  aws.StringValue(rDir.Path),
 		"creation_info": flattenAccessPointRootDirectoryCreationInfo(rDir.CreationInfo),
 	}
 

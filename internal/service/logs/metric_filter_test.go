@@ -36,7 +36,7 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 				Config: testAccMetricFilterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
@@ -143,7 +143,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 				Config: testAccMetricFilterConfig_allAttributes1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", "2.5"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "0"),
@@ -165,7 +165,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 				Config: testAccMetricFilterConfig_allAttributes2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", ""),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", "3"),
@@ -191,7 +191,7 @@ func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportSt
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["log_group_name"] + ":" + rs.Primary.Attributes[names.AttrName], nil
+		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 
@@ -204,7 +204,7 @@ func testAccCheckMetricFilterExists(ctx context.Context, n string, v *types.Metr
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -225,7 +225,7 @@ func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
+			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

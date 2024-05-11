@@ -56,7 +56,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,7 +127,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrARN, accelerator.AcceleratorArn)
 	d.Set("dns_name", accelerator.DnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)

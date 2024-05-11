@@ -20,7 +20,7 @@ func expandTargets(in []interface{}) []*ssm.Target {
 
 		target := &ssm.Target{
 			Key:    aws.String(config[names.AttrKey].(string)),
-			Values: flex.ExpandStringList(config["values"].([]interface{})),
+			Values: flex.ExpandStringList(config[names.AttrValues].([]interface{})),
 		}
 
 		targets = append(targets, target)
@@ -52,7 +52,7 @@ func flattenTargets(targets []*ssm.Target) []map[string]interface{} {
 	for _, target := range targets {
 		t := make(map[string]interface{}, 1)
 		t[names.AttrKey] = aws.StringValue(target.Key)
-		t["values"] = flex.FlattenStringList(target.Values)
+		t[names.AttrValues] = flex.FlattenStringList(target.Values)
 
 		result = append(result, t)
 	}

@@ -22,7 +22,7 @@ func dataSourceResource() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceRead,
 
 		Schema: map[string]*schema.Schema{
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -52,7 +52,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).CloudControlClient(ctx)
 
-	identifier := d.Get("identifier").(string)
+	identifier := d.Get(names.AttrIdentifier).(string)
 	typeName := d.Get("type_name").(string)
 	resourceDescription, err := findResource(ctx, conn,
 		identifier,

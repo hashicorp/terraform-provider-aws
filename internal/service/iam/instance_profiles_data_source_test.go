@@ -31,7 +31,7 @@ func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "paths.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "names.#", "1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, "path"),
+					resource.TestCheckResourceAttrPair(datasourceName, "paths.0", resourceName, names.AttrPath),
 					resource.TestCheckResourceAttrPair(datasourceName, "names.0", resourceName, names.AttrName),
 				),
 			},

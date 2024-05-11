@@ -82,7 +82,7 @@ func resourceServerCertificate() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -124,7 +124,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		input.CertificateChain = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("path"); ok {
+	if v, ok := d.GetOk(names.AttrPath); ok {
 		input.Path = aws.String(v.(string))
 	}
 
@@ -190,7 +190,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrName, metadata.ServerCertificateName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(metadata.ServerCertificateName)))
-	d.Set("path", metadata.Path)
+	d.Set(names.AttrPath, metadata.Path)
 	if metadata.UploadDate != nil {
 		d.Set("upload_date", aws.ToTime(metadata.UploadDate).Format(time.RFC3339))
 	} else {

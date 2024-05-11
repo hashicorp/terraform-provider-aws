@@ -41,7 +41,7 @@ func TestAccLightsailDomainEntry_basic(t *testing.T) {
 					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
 				),
 			},
@@ -81,7 +81,7 @@ func TestAccLightsailDomainEntry_underscore(t *testing.T) {
 					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccLightsailDomainEntry_apex(t *testing.T) {
 					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, "target", "127.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "127.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
 				),
 			},
@@ -185,7 +185,7 @@ func TestAccLightsailDomainEntry_typeAAAA(t *testing.T) {
 					testAccCheckDomainEntryExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, domainEntryName),
-					resource.TestCheckResourceAttr(resourceName, "target", "::1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, "::1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AAAA"),
 				),
 			},
@@ -298,6 +298,6 @@ func testAccDomainEntryStateLegacyIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes["target"]), nil
+		return fmt.Sprintf("%s_%s_%s_%s", rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes[names.AttrType], rs.Primary.Attributes[names.AttrTarget]), nil
 	}
 }

@@ -89,7 +89,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"format": schema.StringAttribute{
+				names.AttrFormat: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
 					PlanModifiers: []planmodifier.String{

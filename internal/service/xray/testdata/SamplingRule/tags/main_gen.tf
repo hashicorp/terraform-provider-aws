@@ -21,7 +21,6 @@ resource "aws_xray_sampling_rule" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

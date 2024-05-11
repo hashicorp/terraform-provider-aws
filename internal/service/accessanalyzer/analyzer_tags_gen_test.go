@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -30,6 +32,9 @@ func testAccAccessAnalyzerAnalyzer_tagsSerial(t *testing.T) {
 	t.Run("DefaultTags_emptyResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_emptyResourceTag)
 	t.Run("DefaultTags_nullOverlappingResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullOverlappingResourceTag)
 	t.Run("DefaultTags_nullNonOverlappingResourceTag", testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTag)
+	t.Run("ComputedTag_OnCreate", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate)
+	t.Run("ComputedTag_OnUpdate_Add", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add)
+	t.Run("ComputedTag_OnUpdate_Replace", testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace)
 }
 
 func testAccAccessAnalyzerAnalyzer_tags(t *testing.T) {
@@ -1074,6 +1079,194 @@ func testAccAccessAnalyzerAnalyzer_tags_DefaultTags_nullNonOverlappingResourceTa
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
 					"tagKey1": config.StringVariable("resourcekey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.AnalyzerSummary
+	resourceName := "aws_accessanalyzer_analyzer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		CheckDestroy: testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.AnalyzerSummary
+	resourceName := "aws_accessanalyzer_analyzer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		CheckDestroy: testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccessAnalyzerAnalyzer_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.AnalyzerSummary
+	resourceName := "aws_accessanalyzer_analyzer.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
+		CheckDestroy: testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/Analyzer/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

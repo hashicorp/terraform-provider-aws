@@ -14,7 +14,6 @@ resource "aws_batch_job_definition" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

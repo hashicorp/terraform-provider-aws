@@ -50,7 +50,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"manages_vpc_endpoints": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -66,13 +66,13 @@ func DataSourceVPCEndpointService() *schema.Resource {
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"service_name"},
+				ConflictsWith: []string{names.AttrServiceName},
 			},
 			"service_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -113,7 +113,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	var serviceName string
 
-	if v, ok := d.GetOk("service_name"); ok {
+	if v, ok := d.GetOk(names.AttrServiceName); ok {
 		serviceName = v.(string)
 	} else if v, ok := d.GetOk("service"); ok {
 		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
@@ -130,7 +130,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -155,7 +155,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		for _, name := range serviceNames {
 			if name == serviceName {
 				d.SetId(strconv.Itoa(create.StringHashcode(name)))
-				d.Set("service_name", name)
+				d.Set(names.AttrServiceName, name)
 				return diags
 			}
 		}
@@ -189,7 +189,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("owner", sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
 	d.Set("service_id", serviceID)
-	d.Set("service_name", serviceName)
+	d.Set(names.AttrServiceName, serviceName)
 	if len(sd.ServiceType) > 0 {
 		d.Set("service_type", sd.ServiceType[0].ServiceType)
 	} else {

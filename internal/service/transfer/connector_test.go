@@ -41,7 +41,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "http://www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.com"),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "http://www.example.net"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "http://www.example.net"),
 				),
 			},
 		},
@@ -84,7 +84,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "url", "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, "sftp://s-fakeserver.server.transfer.test.amazonaws.com"),
 				),
 			},
 			{

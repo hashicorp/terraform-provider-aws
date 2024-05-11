@@ -66,7 +66,7 @@ func TestAccElastiCacheCluster_Engine_memcached(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -110,7 +110,7 @@ func TestAccElastiCacheCluster_Engine_redis(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -176,7 +176,7 @@ func TestAccElastiCacheCluster_Engine_redis_v5(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -261,7 +261,7 @@ func TestAccElastiCacheCluster_ParameterGroupName_default(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -297,7 +297,7 @@ func TestAccElastiCacheCluster_ipDiscovery(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -337,7 +337,7 @@ func TestAccElastiCacheCluster_port(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -1028,7 +1028,7 @@ func TestAccElastiCacheCluster_Redis_autoMinorVersionUpgrade(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 			{
@@ -1077,7 +1077,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
@@ -1098,7 +1098,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, elasticache.DestinationTypeCloudwatchLogs, elasticache.LogFormatText, true, elasticache.DestinationTypeKinesisFirehose, elasticache.LogFormatJson),
@@ -1164,7 +1164,7 @@ func TestAccElastiCacheCluster_Engine_Redis_LogDeliveryConfigurations(t *testing
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -1200,7 +1200,7 @@ func TestAccElastiCacheCluster_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"}, //not in the API
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately}, //not in the API
 			},
 			{
 				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1339,7 +1339,7 @@ func TestAccElastiCacheCluster_outpost_memcached(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},
@@ -1379,7 +1379,7 @@ func TestAccElastiCacheCluster_outpost_redis(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 				},
 			},
 		},

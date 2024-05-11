@@ -33,7 +33,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "destination_arn", resourceName, "destination_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
@@ -66,7 +66,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "destination_arn", resourceName, "destination_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
