@@ -50,7 +50,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -93,7 +93,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -118,7 +118,7 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Computed: true,
 				ForceNew: true,
@@ -127,7 +127,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -160,7 +160,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -203,7 +203,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -287,7 +287,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -340,7 +340,7 @@ func ResourcePermissions() *schema.Resource {
 				ExactlyOneOf: []string{
 					"catalog_resource",
 					"data_location",
-					"database",
+					names.AttrDatabase,
 					"lf_tag",
 					"lf_tag_policy",
 					"table",
@@ -448,7 +448,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -538,7 +538,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -620,7 +620,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[WARN] No Lake Formation permissions (%s) found", d.Id())
 		d.Set("catalog_resource", false)
 		d.Set("data_location", nil)
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 		d.Set("lf_tag", nil)
 		d.Set("lf_tag_policy", nil)
 		d.Set("table_with_columns", nil)
@@ -651,11 +651,11 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 	}
 
 	if cleanPermissions[0].Resource.DataCellsFilter != nil {
@@ -760,7 +760,7 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
