@@ -2872,7 +2872,7 @@ func m2tsSettingsSchema() *schema.Schema {
 								Type:     schema.TypeInt,
 								Optional: true,
 							},
-							"service_name": {
+							names.AttrServiceName: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -4859,7 +4859,7 @@ func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
 	if v, ok := m["rep_interval"].(int); ok && v != 0 {
 		s.RepInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["service_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrServiceName].(string); ok && v != "" {
 		s.ServiceName = aws.String(v)
 	}
 	if v, ok := m["service_provider_name"].(string); ok && v != "" {
@@ -6225,7 +6225,7 @@ func flattenDvbSdtSettings(in *types.DvbSdtSettings) []interface{} {
 	m := map[string]interface{}{
 		"output_sdt":            string(in.OutputSdt),
 		"rep_interval":          int(aws.ToInt32(in.RepInterval)),
-		"service_name":          aws.ToString(in.ServiceName),
+		names.AttrServiceName:   aws.ToString(in.ServiceName),
 		"service_provider_name": aws.ToString(in.ServiceProviderName),
 	}
 
