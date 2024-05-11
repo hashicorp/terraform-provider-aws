@@ -64,7 +64,7 @@ func ResourceWebACL() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -189,7 +189,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 	}.String()
 
-	loggingConfiguration := d.Get("logging_configuration").([]interface{})
+	loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{})
 	if len(loggingConfiguration) == 1 {
 		input := &waf.PutLoggingConfigurationInput{
 			LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, arn),
@@ -277,7 +277,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		loggingConfiguration = flattenLoggingConfiguration(getLoggingConfigurationOutput.LoggingConfiguration)
 	}
 
-	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
+	if err := d.Set(names.AttrLoggingConfiguration, loggingConfiguration); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 
@@ -307,8 +307,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("logging_configuration") {
-		loggingConfiguration := d.Get("logging_configuration").([]interface{})
+	if d.HasChange(names.AttrLoggingConfiguration) {
+		loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{})
 
 		if len(loggingConfiguration) == 1 {
 			input := &waf.PutLoggingConfigurationInput{
