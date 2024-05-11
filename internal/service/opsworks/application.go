@@ -187,7 +187,7 @@ func ResourceApplication() *schema.Resource {
 								}
 							},
 						},
-						"private_key": {
+						names.AttrPrivateKey: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -545,7 +545,7 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m["private_key"] = aws.StringValue(v.PrivateKey)
+			m[names.AttrPrivateKey] = aws.StringValue(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {

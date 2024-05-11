@@ -43,7 +43,7 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * TUE *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -185,7 +185,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "duration", "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * TUE *)"),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "duration", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * WED *)"),
 				),
 			},
 		},
@@ -368,7 +368,7 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_schedule(rName, "cron(0 16 ? * TUE *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * TUE *)"),
 				),
 			},
 			{
@@ -380,7 +380,7 @@ func TestAccSSMMaintenanceWindow_schedule(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_schedule(rName, "cron(0 16 ? * WED *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * WED *)"),
 				),
 			},
 		},

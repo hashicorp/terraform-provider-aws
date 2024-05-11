@@ -211,7 +211,7 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"expression": {
+									names.AttrExpression: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -1358,7 +1358,7 @@ func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementCon
 
 		apiObject := types.PlacementConstraint{}
 
-		if v, ok := tfMap["expression"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 			apiObject.Expression = aws.String(v)
 		}
 
@@ -1445,7 +1445,7 @@ func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[st
 		c := make(map[string]interface{})
 		c[names.AttrType] = pc.Type
 		if pc.Expression != nil {
-			c["expression"] = aws.ToString(pc.Expression)
+			c[names.AttrExpression] = aws.ToString(pc.Expression)
 		}
 
 		results = append(results, c)

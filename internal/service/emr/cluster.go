@@ -86,7 +86,7 @@ func resourceCluster() *schema.Resource {
 													Optional: true,
 													ForceNew: true,
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													ForceNew: true,
@@ -725,7 +725,7 @@ func resourceCluster() *schema.Resource {
 											Optional: true,
 											ForceNew: true,
 										},
-										"properties": {
+										names.AttrProperties: {
 											Type:     schema.TypeMap,
 											Optional: true,
 											ForceNew: true,
@@ -1783,10 +1783,10 @@ func flattenHadoopStepConfig(config *emr.HadoopStepConfig) map[string]interface{
 	}
 
 	m := map[string]interface{}{
-		"args":       aws.StringValueSlice(config.Args),
-		"jar":        aws.StringValue(config.Jar),
-		"main_class": aws.StringValue(config.MainClass),
-		"properties": aws.StringValueMap(config.Properties),
+		"args":               aws.StringValueSlice(config.Args),
+		"jar":                aws.StringValue(config.Jar),
+		"main_class":         aws.StringValue(config.MainClass),
+		names.AttrProperties: aws.StringValueMap(config.Properties),
 	}
 
 	return m
@@ -1906,7 +1906,7 @@ func expandHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfi
 		hadoopJarStepConfig.MainClass = aws.String(v.(string))
 	}
 
-	if v, ok := m["properties"]; ok {
+	if v, ok := m[names.AttrProperties]; ok {
 		hadoopJarStepConfig.Properties = expandKeyValues(v.(map[string]interface{}))
 	}
 
@@ -2362,7 +2362,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 			config.Configurations = expandConfigurations(v)
 		}
 
-		if v, ok := configAttributes["properties"].(map[string]interface{}); ok {
+		if v, ok := configAttributes[names.AttrProperties].(map[string]interface{}); ok {
 			properties := make(map[string]string)
 			for k, pv := range v {
 				properties[k] = pv.(string)

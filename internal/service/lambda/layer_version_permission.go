@@ -67,7 +67,7 @@ func resourceLayerVersionPermission() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,7 +106,7 @@ func resourceLayerVersionPermissionCreate(ctx context.Context, d *schema.Resourc
 	input := &lambda.AddLayerVersionPermissionInput{
 		Action:        aws.String(d.Get(names.AttrAction).(string)),
 		LayerName:     aws.String(layerName),
-		Principal:     aws.String(d.Get("principal").(string)),
+		Principal:     aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:   aws.String(d.Get("statement_id").(string)),
 		VersionNumber: aws.Int64(int64(versionNumber)),
 	}
@@ -200,7 +200,7 @@ func resourceLayerVersionPermissionRead(ctx context.Context, d *schema.ResourceD
 					principal = policyPrincipalARN.AccountID
 				}
 
-				d.Set("principal", principal)
+				d.Set(names.AttrPrincipal, principal)
 			}
 		}
 	}

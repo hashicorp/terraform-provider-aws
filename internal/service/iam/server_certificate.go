@@ -88,7 +88,7 @@ func resourceServerCertificate() *schema.Resource {
 				Default:  "/",
 				ForceNew: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -115,7 +115,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
-		PrivateKey:            aws.String(d.Get("private_key").(string)),
+		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
 		ServerCertificateName: aws.String(sslCertName),
 		Tags:                  getTagsIn(ctx),
 	}

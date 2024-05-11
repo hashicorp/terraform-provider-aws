@@ -65,7 +65,7 @@ func ResourceMountTarget() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -124,7 +124,7 @@ func resourceMountTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		SubnetId:     aws.String(subnetID),
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
@@ -176,7 +176,7 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
 	d.Set("file_system_arn", fsARN)
 	d.Set(names.AttrFileSystemID, fsID)
-	d.Set("ip_address", mt.IpAddress)
+	d.Set(names.AttrIPAddress, mt.IpAddress)
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)
 	d.Set(names.AttrOwnerID, mt.OwnerId)

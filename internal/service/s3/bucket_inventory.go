@@ -154,7 +154,7 @@ func resourceBucketInventory() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.InventoryOptionalField](),
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -202,7 +202,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		inventoryConfiguration.OptionalFields = flex.ExpandStringyValueSet[types.InventoryOptionalField](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Schedule = &types.InventorySchedule{
 			Frequency: types.InventoryFrequency(tfMap["frequency"].(string)),
@@ -280,7 +280,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("included_object_versions", ic.IncludedObjectVersions)
 	d.Set(names.AttrName, name)
 	d.Set("optional_fields", ic.OptionalFields)
-	if err := d.Set("schedule", flattenInventorySchedule(ic.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenInventorySchedule(ic.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 

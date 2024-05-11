@@ -54,7 +54,7 @@ func resourcePool() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validIdentityProvidersClientID,

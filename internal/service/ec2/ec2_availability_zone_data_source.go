@@ -33,7 +33,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrFilter: customFiltersSchema(),
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -132,7 +132,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	nameSuffix = strings.TrimLeft(nameSuffix, "-")
 
 	d.SetId(aws.StringValue(az.ZoneName))
-	d.Set("group_name", az.GroupName)
+	d.Set(names.AttrGroupName, az.GroupName)
 	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)

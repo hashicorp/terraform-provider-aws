@@ -173,7 +173,7 @@ func ResourceCanary() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"zip_file"},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -183,7 +183,7 @@ func ResourceCanary() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							Required: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -238,7 +238,7 @@ func ResourceCanary() *schema.Resource {
 					},
 				},
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -299,11 +299,11 @@ func resourceCanaryCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ArtifactConfig = expandCanaryArtifactConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = expandCanarySchedule(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandCanaryVPCConfig(v.([]interface{}))
 	}
 
@@ -394,7 +394,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrStatus, canary.Status.State)
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 
-	if err := d.Set("vpc_config", flattenCanaryVPCConfig(canary.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenCanaryVPCConfig(canary.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc config: %s", err)
 	}
 
@@ -407,7 +407,7 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting run config: %s", err)
 	}
 
-	if err := d.Set("schedule", flattenCanarySchedule(canary.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenCanarySchedule(canary.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 
@@ -433,8 +433,8 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Name: aws.String(d.Id()),
 		}
 
-		if d.HasChange("vpc_config") {
-			input.VpcConfig = expandCanaryVPCConfig(d.Get("vpc_config").([]interface{}))
+		if d.HasChange(names.AttrVPCConfig) {
+			input.VpcConfig = expandCanaryVPCConfig(d.Get(names.AttrVPCConfig).([]interface{}))
 		}
 
 		if d.HasChange("artifact_config") {
@@ -461,8 +461,8 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.ArtifactS3Location = aws.String(d.Get("artifact_s3_location").(string))
 		}
 
-		if d.HasChange("schedule") {
-			input.Schedule = expandCanarySchedule(d.Get("schedule").([]interface{}))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = expandCanarySchedule(d.Get(names.AttrSchedule).([]interface{}))
 		}
 
 		if d.HasChange("success_retention_period") {
@@ -664,7 +664,7 @@ func expandCanarySchedule(l []interface{}) *awstypes.CanaryScheduleInput {
 	m := l[0].(map[string]interface{})
 
 	codeConfig := &awstypes.CanaryScheduleInput{
-		Expression: aws.String(m["expression"].(string)),
+		Expression: aws.String(m[names.AttrExpression].(string)),
 	}
 
 	if v, ok := m["duration_in_seconds"]; ok {
@@ -680,7 +680,7 @@ func flattenCanarySchedule(canarySchedule *awstypes.CanaryScheduleOutput) []inte
 	}
 
 	m := map[string]interface{}{
-		"expression":          aws.ToString(canarySchedule.Expression),
+		names.AttrExpression:  aws.ToString(canarySchedule.Expression),
 		"duration_in_seconds": aws.ToInt64(canarySchedule.DurationInSeconds),
 	}
 

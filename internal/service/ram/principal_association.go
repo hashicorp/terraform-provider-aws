@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ram_principal_association", name="Principal Association")
@@ -39,7 +40,7 @@ func resourcePrincipalAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,7 +67,7 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	resourceShareARN, principal := d.Get("resource_share_arn").(string), d.Get("principal").(string)
+	resourceShareARN, principal := d.Get("resource_share_arn").(string), d.Get(names.AttrPrincipal).(string)
 	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false))
 	_, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
@@ -127,7 +128,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("principal", principalAssociation.AssociatedEntity)
+	d.Set(names.AttrPrincipal, principalAssociation.AssociatedEntity)
 	d.Set("resource_share_arn", principalAssociation.ResourceShareArn)
 
 	return diags

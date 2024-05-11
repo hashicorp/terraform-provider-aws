@@ -555,7 +555,7 @@ func ResourceDataSource() *schema.Resource {
 								MinItems: 1,
 								MaxItems: 16,
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: verify.ValidARN,

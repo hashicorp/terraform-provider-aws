@@ -415,7 +415,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementCons
 
 	a := types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		a.Expression = aws.String(v)
 	}
 
@@ -430,7 +430,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	m := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		m["expression"] = aws.ToString(v)
+		m[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {

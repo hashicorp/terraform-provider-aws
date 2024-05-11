@@ -218,7 +218,7 @@ func ResourcePermissions() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -272,7 +272,7 @@ func ResourcePermissions() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 				},
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -423,7 +423,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
@@ -517,7 +517,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
@@ -632,7 +632,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
-	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
 	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
@@ -743,7 +743,7 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
 		PermissionsWithGrantOption: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions_with_grant_option").([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
@@ -984,7 +984,7 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *awstypes.LFTagPoli
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["expression"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrExpression].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Expression = ExpandLFTagExpression(v.List())
 	}
 
@@ -1023,7 +1023,7 @@ func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[str
 	}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = flattenLFTagExpression(v)
+		tfMap[names.AttrExpression] = flattenLFTagExpression(v)
 	}
 
 	if v := apiObject.ResourceType; v != "" {

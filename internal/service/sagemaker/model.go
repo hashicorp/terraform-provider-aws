@@ -303,7 +303,7 @@ func ResourceModel() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -359,7 +359,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
@@ -429,7 +429,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting container: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 

@@ -34,7 +34,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -70,7 +70,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 
 	req := &iam.GetGroupInput{
 		GroupName: aws.String(groupName),

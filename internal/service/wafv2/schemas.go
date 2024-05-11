@@ -503,7 +503,7 @@ func visibilityConfigSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Required: true,
 				},
-				"metric_name": {
+				names.AttrMetricName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
