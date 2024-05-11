@@ -302,7 +302,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary", "delete_lambda"},
+				ImportStateVerifyIgnore: []string{names.AttrS3Bucket, "s3_key", "s3_version", "start_canary", "delete_lambda"},
 			},
 		},
 	})
