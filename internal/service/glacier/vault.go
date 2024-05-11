@@ -56,7 +56,7 @@ func resourceVault() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -179,7 +179,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("access_policy", nil)
 	d.Set(names.AttrARN, output.VaultARN)
-	d.Set("location", fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID, d.Id()))
+	d.Set(names.AttrLocation, fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID, d.Id()))
 	d.Set(names.AttrName, output.VaultName)
 	d.Set("notification", nil)
 
