@@ -54,7 +54,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 4,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appstream.AccessEndpointType_Values(), false),
@@ -478,7 +478,7 @@ func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoin
 	}
 
 	apiObject := &appstream.AccessEndpoint{
-		EndpointType: aws.String(tfMap["endpoint_type"].(string)),
+		EndpointType: aws.String(tfMap[names.AttrEndpointType].(string)),
 	}
 	if v, ok := tfMap["vpce_id"]; ok {
 		apiObject.VpceId = aws.String(v.(string))
@@ -515,7 +515,7 @@ func flattenAccessEndpoint(apiObject *appstream.AccessEndpoint) map[string]inter
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["endpoint_type"] = aws.StringValue(apiObject.EndpointType)
+	tfMap[names.AttrEndpointType] = aws.StringValue(apiObject.EndpointType)
 	tfMap["vpce_id"] = aws.StringValue(apiObject.VpceId)
 
 	return tfMap

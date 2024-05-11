@@ -69,7 +69,7 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -84,7 +84,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	authType := d.Get("authentication_type").(string)
 
 	input := &appstream.CreateUserInput{
@@ -161,7 +161,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("first_name", user.FirstName)
 
 	d.Set("last_name", user.LastName)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	return diags
 }
