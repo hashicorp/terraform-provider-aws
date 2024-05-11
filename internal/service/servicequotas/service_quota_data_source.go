@@ -87,7 +87,7 @@ func DataSourceServiceQuota() *schema.Resource {
 								},
 							},
 						},
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,7 +130,7 @@ func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
 	}
 
 	usageMetrics = append(usageMetrics, map[string]interface{}{
-		"metric_name":                     usageMetric.MetricName,
+		names.AttrMetricName:              usageMetric.MetricName,
 		"metric_namespace":                usageMetric.MetricNamespace,
 		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
 		"metric_dimensions":               metricDimensions,
