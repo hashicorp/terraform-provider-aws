@@ -44,7 +44,7 @@ func TestAccWAFRegionalWebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccWAFRegionalWebACL_createRateBased(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -155,7 +155,7 @@ func TestAccWAFRegionalWebACL_createGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -188,7 +188,7 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccWAFRegionalWebACL_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
 			{
@@ -232,7 +232,7 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclName),
 				),
 			},
 			{
@@ -243,7 +243,7 @@ func TestAccWAFRegionalWebACL_changeDefaultAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafAclNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafAclNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafAclNewName),
 				),
 			},
 			{
