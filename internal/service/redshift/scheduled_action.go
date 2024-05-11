@@ -58,7 +58,7 @@ func resourceScheduledAction() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -159,7 +159,7 @@ func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &redshift.CreateScheduledActionInput{
 		Enable:              aws.Bool(d.Get("enable").(bool)),
 		IamRole:             aws.String(d.Get("iam_role").(string)),
-		Schedule:            aws.String(d.Get("schedule").(string)),
+		Schedule:            aws.String(d.Get(names.AttrSchedule).(string)),
 		ScheduledActionName: aws.String(name),
 		TargetAction:        expandScheduledActionType(d.Get("target_action").([]interface{})[0].(map[string]interface{})),
 	}
@@ -232,7 +232,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("iam_role", scheduledAction.IamRole)
 	d.Set(names.AttrName, scheduledAction.ScheduledActionName)
-	d.Set("schedule", scheduledAction.Schedule)
+	d.Set(names.AttrSchedule, scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
 		d.Set("start_time", aws.TimeValue(scheduledAction.StartTime).Format(time.RFC3339))
 	} else {
@@ -276,8 +276,8 @@ func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, 
 		input.IamRole = aws.String(d.Get("iam_role").(string))
 	}
 
-	if d.HasChange("schedule") {
-		input.Schedule = aws.String(d.Get("schedule").(string))
+	if d.HasChange(names.AttrSchedule) {
+		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 	}
 
 	if hasChange, v := d.HasChange("start_time"), d.Get("start_time").(string); hasChange && v != "" {

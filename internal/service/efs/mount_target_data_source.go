@@ -43,12 +43,12 @@ func DataSourceMountTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 		input.AccessPointId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("file_system_id"); ok {
+	if v, ok := d.GetOk(names.AttrFileSystemID); ok {
 		input.FileSystemId = aws.String(v.(string))
 	}
 
@@ -119,8 +119,8 @@ func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", fsID)
-	d.Set("ip_address", mt.IpAddress)
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrIPAddress, mt.IpAddress)
 	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set("mount_target_id", mt.MountTargetId)
 	d.Set(names.AttrNetworkInterfaceID, mt.NetworkInterfaceId)

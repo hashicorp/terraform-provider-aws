@@ -28,8 +28,8 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 				Config: testAccMountTargetDataSourceConfig_byID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
@@ -59,8 +59,8 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 				Config: testAccMountTargetDataSourceConfig_byAccessPointID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
@@ -90,8 +90,8 @@ func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
 				Config: testAccMountTargetDataSourceConfig_byFileSystemID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_arn", resourceName, "file_system_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address", resourceName, "ip_address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrIPAddress, resourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrNetworkInterfaceID, resourceName, names.AttrNetworkInterfaceID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),

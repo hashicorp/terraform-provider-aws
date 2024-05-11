@@ -115,7 +115,7 @@ func ResourceFindingsFilter() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(macie2.FindingsFilterAction_Values(), false),
@@ -143,7 +143,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 	input := &macie2.CreateFindingsFilterInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))),
-		Action:      aws.String(d.Get("action").(string)),
+		Action:      aws.String(d.Get(names.AttrAction).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -216,7 +216,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set(names.AttrDescription, resp.Description)
-	d.Set("action", resp.Action)
+	d.Set(names.AttrAction, resp.Action)
 	d.Set("position", resp.Position)
 
 	setTagsOut(ctx, resp.Tags)
@@ -251,8 +251,8 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange(names.AttrDescription) {
 		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
-	if d.HasChange("action") {
-		input.Action = aws.String(d.Get("action").(string))
+	if d.HasChange(names.AttrAction) {
+		input.Action = aws.String(d.Get(names.AttrAction).(string))
 	}
 	if d.HasChange("position") {
 		input.Position = aws.Int64(int64(d.Get("position").(int)))

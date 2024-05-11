@@ -162,6 +162,7 @@ import (
 	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
@@ -186,7 +187,6 @@ import (
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	dlm_sdkv1 "github.com/aws/aws-sdk-go/service/dlm"
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
@@ -249,7 +249,6 @@ import (
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
 	wafregional_sdkv1 "github.com/aws/aws-sdk-go/service/wafregional"
-	wafv2_sdkv1 "github.com/aws/aws-sdk-go/service/wafv2"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -573,10 +572,6 @@ func (c *AWSClient) DocDBConn(ctx context.Context) *docdb_sdkv1.DocDB {
 
 func (c *AWSClient) DocDBElasticClient(ctx context.Context) *docdbelastic_sdkv2.Client {
 	return errs.Must(client[*docdbelastic_sdkv2.Client](ctx, c, names.DocDBElastic, make(map[string]any)))
-}
-
-func (c *AWSClient) DynamoDBConn(ctx context.Context) *dynamodb_sdkv1.DynamoDB {
-	return errs.Must(conn[*dynamodb_sdkv1.DynamoDB](ctx, c, names.DynamoDB, make(map[string]any)))
 }
 
 func (c *AWSClient) DynamoDBClient(ctx context.Context) *dynamodb_sdkv2.Client {
@@ -1219,8 +1214,8 @@ func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFR
 	return errs.Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional, make(map[string]any)))
 }
 
-func (c *AWSClient) WAFV2Conn(ctx context.Context) *wafv2_sdkv1.WAFV2 {
-	return errs.Must(conn[*wafv2_sdkv1.WAFV2](ctx, c, names.WAFV2, make(map[string]any)))
+func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2_sdkv2.Client {
+	return errs.Must(client[*wafv2_sdkv2.Client](ctx, c, names.WAFV2, make(map[string]any)))
 }
 
 func (c *AWSClient) WellArchitectedClient(ctx context.Context) *wellarchitected_sdkv2.Client {

@@ -138,7 +138,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"s3_bucket_name": schema.StringAttribute{
+									names.AttrS3BucketName: schema.StringAttribute{
 										Optional: true,
 									},
 									"s3_object_key": schema.StringAttribute{

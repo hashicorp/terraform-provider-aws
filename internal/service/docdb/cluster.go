@@ -59,7 +59,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -132,7 +132,7 @@ func ResourceCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +171,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validGlobalCusterIdentifier,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -510,10 +510,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set("endpoint", dbc.Endpoint)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 	d.Set("master_username", dbc.MasterUsername)
 	d.Set(names.AttrPort, dbc.Port)
@@ -537,7 +537,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "global_cluster_identifier", "skip_final_snapshot") {
 		input := &docdb.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 

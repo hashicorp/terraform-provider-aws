@@ -39,7 +39,7 @@ func ResourceRuleGroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -50,7 +50,7 @@ func ResourceRuleGroup() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -63,7 +63,7 @@ func ResourceRuleGroup() *schema.Resource {
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -99,7 +99,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:        aws.String(d.Get(names.AttrName).(string)),
 			Tags:        getTagsIn(ctx),
 		}
@@ -160,7 +160,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, arn)
 	d.Set("activated_rule", FlattenActivatedRules(rResp.ActivatedRules))
 	d.Set(names.AttrName, resp.RuleGroup.Name)
-	d.Set("metric_name", resp.RuleGroup.MetricName)
+	d.Set(names.AttrMetricName, resp.RuleGroup.MetricName)
 
 	return diags
 }

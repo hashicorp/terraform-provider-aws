@@ -15,7 +15,7 @@ func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontact
 	d.Set(names.AttrARN, getContactOutput.ContactArn)
 	d.Set("alias", getContactOutput.Alias)
 	d.Set(names.AttrType, getContactOutput.Type)
-	d.Set("display_name", getContactOutput.DisplayName)
+	d.Set(names.AttrDisplayName, getContactOutput.DisplayName)
 
 	return nil
 }

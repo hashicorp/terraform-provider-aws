@@ -101,7 +101,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.region_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin.0.resource_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "origin_public_dns"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
@@ -183,7 +183,7 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path1,
+						names.AttrPath: path1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,
@@ -201,13 +201,13 @@ func testAccDistribution_cacheBehavior(t *testing.T) {
 					testAccCheckDistributionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cache_behavior.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path1,
+						names.AttrPath: path1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
-						"path": path2,
+						names.AttrPath: path2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_behavior.*", map[string]string{
 						"behavior": behaviorCache,

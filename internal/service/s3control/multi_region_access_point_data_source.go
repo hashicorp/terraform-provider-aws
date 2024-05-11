@@ -86,7 +86,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

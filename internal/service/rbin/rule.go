@@ -81,7 +81,7 @@ func ResourceRule() *schema.Resource {
 					},
 				},
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -162,7 +162,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).RBinClient(ctx)
 
 	in := &rbin.CreateRuleInput{
-		ResourceType:    types.ResourceType(d.Get("resource_type").(string)),
+		ResourceType:    types.ResourceType(d.Get(names.AttrResourceType).(string)),
 		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -177,11 +177,11 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateRule(ctx, in)
 	if err != nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), err)
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), err)
 	}
 
 	if out == nil || out.Identifier == nil {
-		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get("resource_type").(string), errors.New("empty output"))
+		return create.DiagError(names.RBin, create.ErrActionCreating, ResNameRule, d.Get(names.AttrResourceType).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Identifier))
@@ -218,7 +218,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrARN, ruleArn)
 
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("resource_type", string(out.ResourceType))
+	d.Set(names.AttrResourceType, string(out.ResourceType))
 	d.Set(names.AttrStatus, string(out.Status))
 
 	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {

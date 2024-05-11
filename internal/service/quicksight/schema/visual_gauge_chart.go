@@ -36,8 +36,8 @@ func gaugeChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"target_values": measureFieldSchema(measureFieldsMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
-										"values":        measureFieldSchema(measureFieldsMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+										"target_values":  measureFieldSchema(measureFieldsMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+										names.AttrValues: measureFieldSchema(measureFieldsMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 									},
 								},
 							},
@@ -236,7 +236,7 @@ func expandGaugeChartFieldWells(tfList []interface{}) *quicksight.GaugeChartFiel
 	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
 		config.TargetValues = expandMeasureFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -502,7 +502,7 @@ func flattenGaugeChartFieldWells(apiObject *quicksight.GaugeChartFieldWells) []i
 		tfMap["target_values"] = flattenMeasureFields(apiObject.TargetValues)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

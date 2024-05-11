@@ -47,7 +47,7 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
-					resource.TestCheckResourceAttrWith(resourceName, "creation_date", func(actual string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrCreationDate, func(actual string) error {
 						expect := scheduleGroup.CreationDate.Format(time.RFC3339)
 						if actual != expect {
 							return fmt.Errorf("expected value to be a formatted date")

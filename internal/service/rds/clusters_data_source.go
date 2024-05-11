@@ -32,7 +32,7 @@ func DataSourceClusters() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			names.AttrFilter: namevaluesfilters.Schema(),
 		},
 	}
 }
@@ -46,7 +46,7 @@ func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &rds.DescribeDBClustersInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).RDSFilters()
 	}
 

@@ -176,7 +176,7 @@ func sweepPolicyAttachments(region string) error {
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
 					d.Set(names.AttrPolicy, policyName)
-					d.Set("target", v)
+					d.Set(names.AttrTarget, v)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -333,7 +333,7 @@ func sweepThingPrincipalAttachments(region string) error {
 					r := ResourceThingPrincipalAttachment()
 					d := r.Data(nil)
 					d.SetId(fmt.Sprintf("%s|%s", thingName, aws.StringValue(v)))
-					d.Set("principal", v)
+					d.Set(names.AttrPrincipal, v)
 					d.Set("thing", thingName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

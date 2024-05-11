@@ -47,11 +47,11 @@ func ResourceClusterInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -80,7 +80,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -109,7 +109,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {
@@ -160,7 +160,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  0,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -195,7 +195,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	instanceID := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -206,7 +206,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		DBInstanceIdentifier:    aws.String(instanceID),
 		Engine:                  aws.String(d.Get("engine").(string)),
 		PromotionTier:           aws.Int64(int64(d.Get("promotion_tier").(int))),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
 	}
 
@@ -275,7 +275,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set(names.AttrEngineVersion, db.EngineVersion)
 	d.Set("engine", db.Engine)
-	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set(names.AttrKMSKeyARN, db.KmsKeyId)
@@ -288,7 +288,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("preferred_backup_window", db.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, db.PreferredMaintenanceWindow)
 	d.Set("promotion_tier", db.PromotionTier)
-	d.Set("publicly_accessible", db.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
 	d.Set("storage_type", db.StorageType)
 
@@ -296,8 +296,8 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 		address := aws.StringValue(db.Endpoint.Address)
 		port := int(aws.Int64Value(db.Endpoint.Port))
 
-		d.Set("address", address)
-		d.Set("endpoint", fmt.Sprintf("%s:%d", address, port))
+		d.Set(names.AttrAddress, address)
+		d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 		d.Set(names.AttrPort, port)
 	}
 
@@ -318,7 +318,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &neptune.ModifyDBInstanceInput{
-			ApplyImmediately:     aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
 		}
 

@@ -53,7 +53,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -146,7 +146,7 @@ func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.Resour
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -191,7 +191,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
+	if err := d.Set(names.AttrConfiguration, []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
 	d.Set(names.AttrName, name)
@@ -220,7 +220,7 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 

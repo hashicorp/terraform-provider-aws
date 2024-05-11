@@ -48,7 +48,7 @@ func ResourceProtectionGroup() *schema.Resource {
 				Optional:      true,
 				MinItems:      0,
 				MaxItems:      10000,
-				ConflictsWith: []string{"resource_type"},
+				ConflictsWith: []string{names.AttrResourceType},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(verify.ValidARN,
@@ -71,7 +71,7 @@ func ResourceProtectionGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ConflictsWith:    []string{"members"},
@@ -100,7 +100,7 @@ func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Members = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("resource_type"); ok {
+	if v, ok := d.GetOk(names.AttrResourceType); ok {
 		input.ResourceType = awstypes.ProtectedResourceType(v.(string))
 	}
 
@@ -137,7 +137,7 @@ func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("protection_group_id", resp.ProtectionGroupId)
 	d.Set("pattern", resp.Pattern)
 	d.Set("members", resp.Members)
-	d.Set("resource_type", resp.ResourceType)
+	d.Set(names.AttrResourceType, resp.ResourceType)
 
 	return diags
 }
@@ -157,7 +157,7 @@ func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			input.Members = flex.ExpandStringValueList(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("resource_type"); ok {
+		if v, ok := d.GetOk(names.AttrResourceType); ok {
 			input.ResourceType = awstypes.ProtectedResourceType(v.(string))
 		}
 

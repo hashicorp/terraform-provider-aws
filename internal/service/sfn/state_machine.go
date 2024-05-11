@@ -50,7 +50,7 @@ func ResourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -221,9 +221,9 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, output.StateMachineArn)
 	if output.CreationDate != nil {
-		d.Set("creation_date", aws.TimeValue(output.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrDescription, output.Description)

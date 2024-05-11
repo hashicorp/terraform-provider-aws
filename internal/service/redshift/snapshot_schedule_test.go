@@ -41,7 +41,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "definitions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "rate(12 hours)"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -51,7 +51,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -107,7 +107,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccRedshiftSnapshotSchedule_identifierGenerated(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "identifier"),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", id.UniqueIdPrefix),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccRedshiftSnapshotSchedule_identifierGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -177,7 +177,7 @@ func TestAccRedshiftSnapshotSchedule_identifierPrefix(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_identifierPrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -186,7 +186,7 @@ func TestAccRedshiftSnapshotSchedule_identifierPrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -219,7 +219,7 @@ func TestAccRedshiftSnapshotSchedule_update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -267,7 +267,7 @@ func TestAccRedshiftSnapshotSchedule_withDescription(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -301,7 +301,7 @@ func TestAccRedshiftSnapshotSchedule_withForceDestroy(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_destroy",
+					names.AttrForceDestroy,
 				},
 			},
 		},

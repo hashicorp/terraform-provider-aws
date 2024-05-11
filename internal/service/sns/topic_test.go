@@ -55,7 +55,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "beginning_archive_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 					resource.TestCheckResourceAttr(resourceName, "fifo_topic", "false"),
 					resource.TestCheckResourceAttr(resourceName, "firehose_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_role_arn", ""),

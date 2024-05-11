@@ -54,7 +54,7 @@ func DataSourceServiceQuota() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func DataSourceServiceQuota() *schema.Resource {
 								},
 							},
 						},
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,7 +130,7 @@ func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
 	}
 
 	usageMetrics = append(usageMetrics, map[string]interface{}{
-		"metric_name":                     usageMetric.MetricName,
+		names.AttrMetricName:              usageMetric.MetricName,
 		"metric_namespace":                usageMetric.MetricNamespace,
 		"metric_statistic_recommendation": usageMetric.MetricStatisticRecommendation,
 		"metric_dimensions":               metricDimensions,
@@ -174,7 +174,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("quota_code", defaultQuota.QuotaCode)
 	d.Set("quota_name", defaultQuota.QuotaName)
 	d.Set("service_code", defaultQuota.ServiceCode)
-	d.Set("service_name", defaultQuota.ServiceName)
+	d.Set(names.AttrServiceName, defaultQuota.ServiceName)
 	d.Set(names.AttrValue, defaultQuota.Value)
 
 	if err := d.Set("usage_metric", flattenUsageMetric(defaultQuota.UsageMetric)); err != nil {

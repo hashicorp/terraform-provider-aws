@@ -103,7 +103,7 @@ func ResourceAssociation() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(3, 63),
@@ -127,7 +127,7 @@ func ResourceAssociation() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -149,7 +149,7 @@ func ResourceAssociation() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 163),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -196,7 +196,7 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
@@ -279,7 +279,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrInstanceID, association.InstanceId)
 	d.Set(names.AttrName, association.Name)
 	d.Set("association_id", association.AssociationId)
-	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set(names.AttrScheduleExpression, association.ScheduleExpression)
 	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("compliance_severity", association.ComplianceSeverity)
@@ -325,7 +325,7 @@ func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule_expression"); ok {
+	if v, ok := d.GetOk(names.AttrScheduleExpression); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
@@ -411,7 +411,7 @@ func expandAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociat
 	locationConfig := config[0].(map[string]interface{})
 
 	S3OutputLocation := &ssm.S3OutputLocation{
-		OutputS3BucketName: aws.String(locationConfig["s3_bucket_name"].(string)),
+		OutputS3BucketName: aws.String(locationConfig[names.AttrS3BucketName].(string)),
 	}
 
 	if v, ok := locationConfig["s3_key_prefix"]; ok {
@@ -435,7 +435,7 @@ func flattenAssociationOutputLocation(location *ssm.InstanceAssociationOutputLoc
 	result := make([]map[string]interface{}, 0)
 	item := make(map[string]interface{})
 
-	item["s3_bucket_name"] = aws.StringValue(location.S3Location.OutputS3BucketName)
+	item[names.AttrS3BucketName] = aws.StringValue(location.S3Location.OutputS3BucketName)
 
 	if location.S3Location.OutputS3KeyPrefix != nil {
 		item["s3_key_prefix"] = aws.StringValue(location.S3Location.OutputS3KeyPrefix)

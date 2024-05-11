@@ -83,7 +83,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"schedule": schema.ListNestedBlock{
+			names.AttrSchedule: schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 					listvalidator.IsRequired(),
@@ -422,7 +422,7 @@ func (r *resourceRefreshSchedule) ValidateConfig(ctx context.Context, req resour
 		return
 	}
 
-	basePath := path.Root("schedule").AtName("schedule_frequency").AtName("refresh_on_day")
+	basePath := path.Root(names.AttrSchedule).AtName("schedule_frequency").AtName("refresh_on_day")
 
 	switch *apiObj.ScheduleFrequency.Interval {
 	case quicksight.RefreshIntervalWeekly:

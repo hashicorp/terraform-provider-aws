@@ -527,7 +527,7 @@ func FindCOIPPool(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCoipPoo
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func FindEBSVolumes(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolumesInput) ([]*ec2.Volume, error) {
+func findEBSVolumes(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolumesInput) ([]*ec2.Volume, error) {
 	var output []*ec2.Volume
 
 	err := conn.DescribeVolumesPagesWithContext(ctx, input, func(page *ec2.DescribeVolumesOutput, lastPage bool) bool {
@@ -558,30 +558,20 @@ func FindEBSVolumes(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolum
 	return output, nil
 }
 
-func FindEBSVolume(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolumesInput) (*ec2.Volume, error) {
-	output, err := FindEBSVolumes(ctx, conn, input)
+func FindEBSVolumeByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Volume, error) {
+	input := &ec2_sdkv2.DescribeVolumesInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := FindEBSVolumeV2(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func FindEBSVolumeByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Volume, error) {
-	input := &ec2.DescribeVolumesInput{
-		VolumeIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := FindEBSVolume(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if state := aws.StringValue(output.State); state == ec2.VolumeStateDeleted {
+	if state := output.State; state == awstypes.VolumeStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -596,46 +586,42 @@ func FindEBSVolumeByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Volu
 	return output, nil
 }
 
-func FindEBSVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
-	input := &ec2.DescribeVolumesInput{
-		Filters: newAttributeFilterList(map[string]string{
-			"attachment.device":      deviceName,
-			"attachment.instance-id": instanceID,
-		}),
-		VolumeIds: aws.StringSlice([]string{volumeID}),
-	}
-
-	output, err := FindEBSVolume(ctx, conn, input)
+func FindEBSVolumeV1(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVolumesInput) (*ec2.Volume, error) {
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == ec2.VolumeStateAvailable || state == ec2.VolumeStateDeleted {
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func FindEBSVolumeByIDV1(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Volume, error) {
+	input := &ec2_sdkv2.DescribeVolumesInput{
+		VolumeIds: []string{id},
+	}
+
+	output, err := FindEBSVolumeV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VolumeStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.VolumeId) != volumeID {
+	if aws.StringValue(output.VolumeId) != id {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}
 
-	for _, v := range output.Attachments {
-		if aws.StringValue(v.State) == ec2.VolumeAttachmentStateDetached {
-			continue
-		}
-
-		if aws.StringValue(v.Device) == deviceName && aws.StringValue(v.InstanceId) == instanceID {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
+	return output, nil
 }
 
 func findEIPs(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesInput) ([]awstypes.Address, error) {
@@ -995,6 +981,31 @@ func FindInstances(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstan
 	return output, nil
 }
 
+func FindInstancesV2(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstancesInput) ([]awstypes.Instance, error) {
+	var output []awstypes.Instance
+
+	pages := ec2_sdkv2.NewDescribeInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		for _, v := range page.Reservations {
+			output = append(output, v.Instances...)
+		}
+	}
+
+	return output, nil
+}
+
 func FindInstance(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstancesInput) (*ec2.Instance, error) {
 	output, err := FindInstances(ctx, conn, input)
 
@@ -1003,6 +1014,16 @@ func FindInstance(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanc
 	}
 
 	return tfresource.AssertSinglePtrResult(output, func(v *ec2.Instance) bool { return v.State != nil })
+}
+
+func FindInstanceV2(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstancesInput) (*awstypes.Instance, error) {
+	output, err := FindInstancesV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.Instance) bool { return v.State != nil })
 }
 
 func FindInstanceByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Instance, error) {
@@ -1019,6 +1040,76 @@ func FindInstanceByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Insta
 	if state := aws.StringValue(output.State.Name); state == ec2.InstanceStateNameTerminated {
 		return nil, &retry.NotFoundError{
 			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.InstanceId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
+	input := &ec2.DescribeVolumesInput{
+		Filters: newAttributeFilterList(map[string]string{
+			"attachment.device":      deviceName,
+			"attachment.instance-id": instanceID,
+		}),
+		VolumeIds: aws.StringSlice([]string{volumeID}),
+	}
+
+	output, err := FindEBSVolumeV1(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == aws.String(ec2.VolumeStateAvailable) || state == aws.String(ec2.VolumeStateDeleted) {
+		return nil, &retry.NotFoundError{
+			Message:     aws.StringValue(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.VolumeId) != volumeID {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	for _, v := range output.Attachments {
+		if v.State == aws.String(ec2.VolumeAttachmentStateDetached) {
+			continue
+		}
+
+		if aws.StringValue(v.Device) == deviceName && aws.StringValue(v.InstanceId) == instanceID {
+			return v, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findVolumeAttachmentInstanceByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Instance, error) {
+	input := &ec2_sdkv2.DescribeInstancesInput{
+		InstanceIds: []string{id},
+	}
+
+	output, err := FindInstanceV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State.Name; state == awstypes.InstanceStateNameTerminated {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
@@ -6124,50 +6215,42 @@ func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, c
 	return output, nil
 }
 
-func FindImportSnapshotTasks(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImportSnapshotTasksInput) ([]*ec2.ImportSnapshotTask, error) {
-	var output []*ec2.ImportSnapshotTask
+func FindImportSnapshotTasks(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeImportSnapshotTasksInput) ([]awstypes.ImportSnapshotTask, error) {
+	var output []awstypes.ImportSnapshotTask
 
-	err := conn.DescribeImportSnapshotTasksPagesWithContext(ctx, input, func(page *ec2.DescribeImportSnapshotTasksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := ec2_sdkv2.NewDescribeImportSnapshotTasksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.ImportSnapshotTasks {
-			if v != nil {
-				output = append(output, v)
+		if err != nil {
+			if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidConversionTaskIdMalformed, "not found") {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
 			}
+			return nil, err
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, errCodeInvalidConversionTaskIdMalformed, "not found") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.ImportSnapshotTasks...)
 	}
 
 	return output, nil
 }
 
-func FindImportSnapshotTask(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeImportSnapshotTasksInput) (*ec2.ImportSnapshotTask, error) {
+func FindImportSnapshotTask(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeImportSnapshotTasksInput) (*awstypes.ImportSnapshotTask, error) {
 	output, err := FindImportSnapshotTasks(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output, func(v *ec2.ImportSnapshotTask) bool { return v.SnapshotTaskDetail != nil })
+	return tfresource.AssertSingleValueResult(output, func(v *awstypes.ImportSnapshotTask) bool { return v.SnapshotTaskDetail != nil })
 }
 
-func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.ImportSnapshotTask, error) {
-	input := &ec2.DescribeImportSnapshotTasksInput{
-		ImportTaskIds: aws.StringSlice([]string{id}),
+func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.ImportSnapshotTask, error) {
+	input := &ec2_sdkv2.DescribeImportSnapshotTasksInput{
+		ImportTaskIds: []string{id},
 	}
 
 	output, err := FindImportSnapshotTask(ctx, conn, input)
@@ -6186,50 +6269,42 @@ func FindImportSnapshotTaskByID(ctx context.Context, conn *ec2.EC2, id string) (
 	return output, nil
 }
 
-func FindSnapshots(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotsInput) ([]*ec2.Snapshot, error) {
-	var output []*ec2.Snapshot
+func FindSnapshots(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotsInput) ([]awstypes.Snapshot, error) {
+	var output []awstypes.Snapshot
 
-	err := conn.DescribeSnapshotsPagesWithContext(ctx, input, func(page *ec2.DescribeSnapshotsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := ec2_sdkv2.NewDescribeSnapshotsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.Snapshots {
-			if v != nil {
-				output = append(output, v)
+		if err != nil {
+			if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
 			}
+			return nil, err
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.Snapshots...)
 	}
 
 	return output, nil
 }
 
-func FindSnapshot(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotsInput) (*ec2.Snapshot, error) {
+func FindSnapshot(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotsInput) (*awstypes.Snapshot, error) {
 	output, err := FindSnapshots(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindSnapshotByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Snapshot, error) {
-	input := &ec2.DescribeSnapshotsInput{
-		SnapshotIds: aws.StringSlice([]string{id}),
+func FindSnapshotByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.Snapshot, error) {
+	input := &ec2_sdkv2.DescribeSnapshotsInput{
+		SnapshotIds: []string{id},
 	}
 
 	output, err := FindSnapshot(ctx, conn, input)
@@ -6248,10 +6323,10 @@ func FindSnapshotByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Snaps
 	return output, nil
 }
 
-func FindSnapshotAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotAttributeInput) (*ec2.DescribeSnapshotAttributeOutput, error) {
-	output, err := conn.DescribeSnapshotAttributeWithContext(ctx, input)
+func FindSnapshotAttribute(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotAttributeInput) (*ec2_sdkv2.DescribeSnapshotAttributeOutput, error) {
+	output, err := conn.DescribeSnapshotAttribute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidSnapshotNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -6269,16 +6344,16 @@ func FindSnapshotAttribute(ctx context.Context, conn *ec2.EC2, input *ec2.Descri
 	return output, nil
 }
 
-func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, conn *ec2.EC2, snapshotID, accountID string) (*ec2.CreateVolumePermission, error) {
-	input := &ec2.DescribeSnapshotAttributeInput{
-		Attribute:  aws.String(ec2.SnapshotAttributeNameCreateVolumePermission),
+func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, conn *ec2_sdkv2.Client, snapshotID, accountID string) (awstypes.CreateVolumePermission, error) {
+	input := &ec2_sdkv2.DescribeSnapshotAttributeInput{
+		Attribute:  awstypes.SnapshotAttributeNameCreateVolumePermission,
 		SnapshotId: aws.String(snapshotID),
 	}
 
 	output, err := FindSnapshotAttribute(ctx, conn, input)
 
 	if err != nil {
-		return nil, err
+		return awstypes.CreateVolumePermission{}, err
 	}
 
 	for _, v := range output.CreateVolumePermissions {
@@ -6287,46 +6362,39 @@ func FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx context.Context, c
 		}
 	}
 
-	return nil, &retry.NotFoundError{LastRequest: input}
+	return awstypes.CreateVolumePermission{}, &retry.NotFoundError{LastRequest: input}
 }
 
-func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) ([]*ec2.SnapshotTierStatus, error) {
-	var output []*ec2.SnapshotTierStatus
+func FindFindSnapshotTierStatuses(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotTierStatusInput) ([]awstypes.SnapshotTierStatus, error) {
+	var output []awstypes.SnapshotTierStatus
 
-	err := conn.DescribeSnapshotTierStatusPagesWithContext(ctx, input, func(page *ec2.DescribeSnapshotTierStatusOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ec2_sdkv2.NewDescribeSnapshotTierStatusPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.SnapshotTierStatuses {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.SnapshotTierStatuses...)
 	}
 
 	return output, nil
 }
 
-func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeSnapshotTierStatusInput) (*ec2.SnapshotTierStatus, error) {
+func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeSnapshotTierStatusInput) (*awstypes.SnapshotTierStatus, error) {
 	output, err := FindFindSnapshotTierStatuses(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
-	input := &ec2.DescribeSnapshotTierStatusInput{
-		Filters: newAttributeFilterList(map[string]string{
+func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.SnapshotTierStatus, error) {
+	input := &ec2_sdkv2.DescribeSnapshotTierStatusInput{
+		Filters: newAttributeFilterListV2(map[string]string{
 			"snapshot-id": id,
 		}),
 	}

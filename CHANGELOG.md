@@ -1,4 +1,19 @@
-## 5.49.0 (Unreleased)
+## 5.50.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_budgets_budget: Add `tags` attribute ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* data-source/aws_instance: Add `launch_time` attribute ([#37002](https://github.com/hashicorp/terraform-provider-aws/issues/37002))
+* resource/aws_budgets_budget: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* resource/aws_budgets_budget_action: Add `tags` argument ([#37361](https://github.com/hashicorp/terraform-provider-aws/issues/37361))
+* resource/aws_ecs_account_setting_default: Add support for `fargateTaskRetirementWaitPeriod` value in `Name` argument ([#37018](https://github.com/hashicorp/terraform-provider-aws/issues/37018))
+
+BUG FIXES:
+
+* resource/aws_glue_job: Fix `interface conversion: interface {} is nil, not map[string]interface {}` panic when `notify_delay_after` is empty (`null`) ([#37347](https://github.com/hashicorp/terraform-provider-aws/issues/37347))
+* resource/aws_lakeformation_data_cells_filter: Fix inconsistent `state` error when using `row_filter.all_rows_wildcard` ([#37433](https://github.com/hashicorp/terraform-provider-aws/issues/37433))
+
+## 5.49.0 (May 10, 2024)
 
 FEATURES:
 
@@ -9,6 +24,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_iam_policy_document: Add `minified_json` attribute ([#35677](https://github.com/hashicorp/terraform-provider-aws/issues/35677))
+* resource/aws_dynamodb_table_export: Add plan-time validation of `table_arn` ([#37288](https://github.com/hashicorp/terraform-provider-aws/issues/37288))
 * resource/aws_kms_key: Add `rotation_period_in_days` argument ([#37140](https://github.com/hashicorp/terraform-provider-aws/issues/37140))
 * resource/aws_securitylake_subscriber_notification: Better handles importing resource ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
 * resource/aws_securitylake_subscriber_notification: Deprecates `endpoint_id` in favor of `subscriber_endpoint` ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
@@ -21,9 +38,13 @@ BUG FIXES:
 * data-source/aws_resourceexplorer2_search: Fix 401 unauthorized error due to missing `view_arn` in the AWS API request ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
 * data-source/aws_resourceexplorer2_search: Fix panic caused by bad mappping between Terraform and AWS schemas ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
 * data-source/aws_resourceexplorer2_search: Fix state persistence and data types ([#36778](https://github.com/hashicorp/terraform-provider-aws/issues/36778))
+* resource/aws_bedrockagent_agent: Fix to use the configured `prepare_agent` value (or default value of `true` when omitted) for all create and update operations ([#37405](https://github.com/hashicorp/terraform-provider-aws/issues/37405))
+* resource/aws_elasticsearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
 * resource/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
 * resource/aws_fsx_openzfs_file_system: Correctly set `tags` and `tags_all` on resource Read ([#37353](https://github.com/hashicorp/terraform-provider-aws/issues/37353))
 * resource/aws_kms_custom_key_store: Change `trust_anchor_certificate` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#37092](https://github.com/hashicorp/terraform-provider-aws/issues/37092))
+* resource/aws_opensearch_domain: Fix handling of unset `auto_tune_options.rollback_on_disable` argument ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
+* resource/aws_opensearch_domain: Wait for `auto_tune_options` to be applied during creation ([#37394](https://github.com/hashicorp/terraform-provider-aws/issues/37394))
 * resource/aws_securitylake_aws_log_source: Correctly handles unspecified `source_version` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
 * resource/aws_securitylake_aws_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
 * resource/aws_securitylake_custom_log_source: Prevents errors when creating multiple log sources concurrently ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
@@ -34,6 +55,7 @@ BUG FIXES:
 * resource/aws_securitylake_subscriber: Correctly requires `source_name` parameter for `aws_log_source_resource` and `custom_log_source_resource` ([#36268](https://github.com/hashicorp/terraform-provider-aws/issues/36268))
 * resource/aws_securitylake_subscriber_notification: No longer recreates resource when not needed ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
 * resource/aws_securitylake_subscriber_notification: Requires value for `configuration.https_notification_configuration.endpoint` ([#37332](https://github.com/hashicorp/terraform-provider-aws/issues/37332))
+* resource/provider: Change the AWS SDK for Go v2 API client [`BackoffDelayer`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2@v1.26.1/aws/retry#BackoffDelayer) to maintain behavioral compatibility with AWS SDK for Go v1 ([#37404](https://github.com/hashicorp/terraform-provider-aws/issues/37404))
 
 ## 5.48.0 (May  2, 2024)
 

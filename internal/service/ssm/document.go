@@ -73,7 +73,7 @@ func ResourceDocument() *schema.Resource {
 								validation.StringLenBetween(3, 128),
 							),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							MinItems: 1,
 							Required: true,
@@ -141,7 +141,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -239,7 +239,7 @@ func ResourceDocument() *schema.Resource {
 					if err := d.SetNewComputed("latest_version"); err != nil {
 						return err
 					}
-					if err := d.SetNewComputed("parameter"); err != nil {
+					if err := d.SetNewComputed(names.AttrParameter); err != nil {
 						return err
 					}
 				}
@@ -347,7 +347,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("latest_version", doc.LatestVersion)
 	d.Set(names.AttrName, doc.Name)
 	d.Set("owner", doc.Owner)
-	if err := d.Set("parameter", flattenDocumentParameters(doc.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 	d.Set("platform_types", aws.StringValueSlice(doc.PlatformTypes))
@@ -652,7 +652,7 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSourc
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringList(v)
 	}
 

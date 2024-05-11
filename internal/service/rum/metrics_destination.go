@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_rum_metrics_destination")
@@ -36,12 +37,12 @@ func ResourceMetricsDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(cloudwatchrum.MetricDestination_Values(), false),
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -61,10 +62,10 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 	name := d.Get("app_monitor_name").(string)
 	input := &cloudwatchrum.PutRumMetricsDestinationInput{
 		AppMonitorName: aws.String(name),
-		Destination:    aws.String(d.Get("destination").(string)),
+		Destination:    aws.String(d.Get(names.AttrDestination).(string)),
 	}
 
-	if v, ok := d.GetOk("destination_arn"); ok {
+	if v, ok := d.GetOk(names.AttrDestinationARN); ok {
 		input.DestinationArn = aws.String(v.(string))
 	}
 
@@ -101,8 +102,8 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("app_monitor_name", d.Id())
-	d.Set("destination", dest.Destination)
-	d.Set("destination_arn", dest.DestinationArn)
+	d.Set(names.AttrDestination, dest.Destination)
+	d.Set(names.AttrDestinationARN, dest.DestinationArn)
 	d.Set("iam_role_arn", dest.IamRoleArn)
 
 	return nil
@@ -113,10 +114,10 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 
 	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),
-		Destination:    aws.String(d.Get("destination").(string)),
+		Destination:    aws.String(d.Get(names.AttrDestination).(string)),
 	}
 
-	if v, ok := d.GetOk("destination_arn"); ok {
+	if v, ok := d.GetOk(names.AttrDestinationARN); ok {
 		input.DestinationArn = aws.String(v.(string))
 	}
 

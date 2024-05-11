@@ -56,7 +56,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -178,7 +178,7 @@ func flattenHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content stri
 
 	m := map[string]interface{}{
 		"content_sha256": aws.StringValue(config.ContentSha256),
-		"url":            aws.StringValue(config.Url),
+		names.AttrURL:    aws.StringValue(config.Url),
 		"content":        content,
 	}
 

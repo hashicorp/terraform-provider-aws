@@ -393,7 +393,7 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
@@ -405,7 +405,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -566,11 +566,11 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
-			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &awstypes.VpcConfig{
 			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
@@ -707,12 +707,12 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if err := d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
-			"mode": string(tracingConfigMode),
+			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
 	}
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -894,13 +894,13 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("tracing_config") {
 			if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.TracingConfig = &awstypes.TracingConfig{
-					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 				}
 			}
 		}
 
 		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
-			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &awstypes.VpcConfig{
 					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),

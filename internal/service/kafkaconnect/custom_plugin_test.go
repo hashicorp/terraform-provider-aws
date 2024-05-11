@@ -35,7 +35,7 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomPluginExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "ZIP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),

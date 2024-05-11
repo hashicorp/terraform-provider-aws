@@ -39,7 +39,7 @@ func DataSourceLocalGateway() *schema.Resource {
 				Computed: true,
 			},
 
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -81,7 +81,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	req.Filters = append(req.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.

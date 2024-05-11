@@ -104,7 +104,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      fsx.DiskIopsConfigurationModeAutomatic,
@@ -665,7 +665,7 @@ func expandDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
 
 	out := fsx.DiskIopsConfiguration{}
 
-	if v, ok := conf["mode"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
 		out.Mode = aws.String(v)
 	}
 
@@ -751,7 +751,7 @@ func flattenDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.Mode != nil {
-		m["mode"] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 	if rs.Iops != nil {
 		m["iops"] = aws.Int64Value(rs.Iops)

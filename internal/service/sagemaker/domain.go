@@ -403,7 +403,7 @@ func ResourceDomain() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"file_system_id": {
+												names.AttrFileSystemID: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -987,7 +987,7 @@ func ResourceDomain() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1078,7 +1078,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("security_group_id_for_domain_boundary", domain.SecurityGroupIdForDomainBoundary)
 	d.Set("single_sign_on_managed_application_instance_id", domain.SingleSignOnManagedApplicationInstanceId)
 	d.Set("single_sign_on_application_arn", domain.SingleSignOnApplicationArn)
-	d.Set("url", domain.Url)
+	d.Set(names.AttrURL, domain.Url)
 	d.Set(names.AttrVPCID, domain.VpcId)
 
 	if err := d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(domain.SubnetIds)); err != nil {
@@ -2401,7 +2401,7 @@ func expandEFSFileSystemConfig(tfMap map[string]interface{}) *sagemaker.EFSFileS
 
 	apiObject := &sagemaker.EFSFileSystemConfig{}
 
-	if v, ok := tfMap["file_system_id"].(string); ok {
+	if v, ok := tfMap[names.AttrFileSystemID].(string); ok {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
@@ -2452,7 +2452,7 @@ func flattenEFSFileSystemConfig(apiObject *sagemaker.EFSFileSystemConfig) []map[
 	tfMap := map[string]interface{}{}
 
 	if apiObject.FileSystemId != nil {
-		tfMap["file_system_id"] = aws.StringValue(apiObject.FileSystemId)
+		tfMap[names.AttrFileSystemID] = aws.StringValue(apiObject.FileSystemId)
 	}
 
 	if apiObject.FileSystemPath != nil {

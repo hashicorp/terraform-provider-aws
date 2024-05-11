@@ -97,7 +97,7 @@ func resourceFileCache() *schema.Resource {
 								validation.StringLenBetween(1, 4096),
 							),
 						},
-						"file_system_id": {
+						names.AttrFileSystemID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -201,7 +201,7 @@ func resourceFileCache() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

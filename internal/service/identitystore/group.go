@@ -43,7 +43,7 @@ func ResourceGroup() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -138,7 +138,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("display_name", out.DisplayName)
+	d.Set(names.AttrDisplayName, out.DisplayName)
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
 	}
@@ -166,10 +166,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 
-	if d.HasChange("display_name") {
+	if d.HasChange(names.AttrDisplayName) {
 		in.Operations = append(in.Operations, types.AttributeOperation{
 			AttributePath:  aws.String("displayName"),
-			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
+			AttributeValue: document.NewLazyDocument(d.Get(names.AttrDisplayName).(string)),
 		})
 	}
 

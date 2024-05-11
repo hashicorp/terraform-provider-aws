@@ -162,7 +162,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -183,7 +183,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	databaseName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(databaseName),
@@ -245,7 +245,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("schema", nil)
 	}
-	d.Set("table_name", table.TableName)
+	d.Set(names.AttrTableName, table.TableName)
 
 	return nil
 }

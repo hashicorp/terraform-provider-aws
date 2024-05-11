@@ -39,21 +39,21 @@ func dataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -74,7 +74,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
@@ -109,9 +109,9 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("bgp_asn", nil)
 	}
-	d.Set("certificate_arn", cgw.CertificateArn)
-	d.Set("device_name", cgw.DeviceName)
-	d.Set("ip_address", cgw.IpAddress)
+	d.Set(names.AttrCertificateARN, cgw.CertificateArn)
+	d.Set(names.AttrDeviceName, cgw.DeviceName)
+	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

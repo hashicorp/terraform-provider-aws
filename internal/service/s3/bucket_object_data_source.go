@@ -67,7 +67,7 @@ func dataSourceBucketObject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,7 +186,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("content_encoding", out.ContentEncoding)
 	d.Set("content_language", out.ContentLanguage)
 	d.Set("content_length", out.ContentLength)
-	d.Set("content_type", out.ContentType)
+	d.Set(names.AttrContentType, out.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(out.ETag), `"`))
 	d.Set("expiration", out.Expiration)

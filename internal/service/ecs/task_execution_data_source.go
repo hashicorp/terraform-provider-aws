@@ -78,7 +78,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -176,7 +176,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -185,7 +185,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"device_name": {
+									names.AttrDeviceName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -213,7 +213,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -317,7 +317,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("network_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("overrides"); ok {
@@ -381,7 +381,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	if v, ok := tfMap["memory"]; ok {
 		apiObject.Memory = aws.String(v.(string))
 	}
-	if v, ok := tfMap["execution_role_arn"]; ok {
+	if v, ok := tfMap[names.AttrExecutionRoleARN]; ok {
 		apiObject.ExecutionRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["task_role_arn"]; ok {
@@ -406,7 +406,7 @@ func expandInferenceAcceleratorOverrides(tfSet *schema.Set) []*ecs.InferenceAcce
 	for _, item := range tfSet.List() {
 		tfMap := item.(map[string]interface{})
 		iao := &ecs.InferenceAcceleratorOverride{
-			DeviceName: aws.String(tfMap["device_name"].(string)),
+			DeviceName: aws.String(tfMap[names.AttrDeviceName].(string)),
 			DeviceType: aws.String(tfMap["device_type"].(string)),
 		}
 		apiObject = append(apiObject, iao)

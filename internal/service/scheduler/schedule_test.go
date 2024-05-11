@@ -207,11 +207,11 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -476,7 +476,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 				Config: testAccScheduleConfig_groupName(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, "aws_scheduler_schedule_group.test", names.AttrName),
 				),
 			},
 			{
@@ -644,7 +644,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 hour)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 				),
 			},
 			{
@@ -656,7 +656,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 day)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 day)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 day)"),
 				),
 			},
 			{
@@ -1026,8 +1026,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						names.AttrType: "memberOf",
-						"expression":   "attribute:ecs.os-family in [LINUX]",
+						names.AttrType:       "memberOf",
+						names.AttrExpression: "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
 						names.AttrType: "binpack",
@@ -1219,7 +1219,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 				Config: testAccScheduleConfig_targetInput(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", "url", func(value string) error {
+					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", names.AttrURL, func(value string) error {
 						queueUrl = value
 						return nil
 					}),

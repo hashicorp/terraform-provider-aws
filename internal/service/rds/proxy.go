@@ -81,19 +81,19 @@ func resourceProxy() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
-				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", "username"),
+				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", names.AttrDescription, "iam_auth", "secret_arn", names.AttrUsername),
 			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -213,7 +213,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrRoleARN, dbProxy.RoleArn)
 	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 	d.Set(names.AttrVPCSecurityGroupIDs, dbProxy.VpcSecurityGroupIds)
-	d.Set("endpoint", dbProxy.Endpoint)
+	d.Set(names.AttrEndpoint, dbProxy.Endpoint)
 
 	return diags
 }
@@ -443,7 +443,7 @@ func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 			apiObject.SecretArn = aws.String(v)
 		}
 
-		if v, ok := tfMap["username"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 			apiObject.UserName = aws.String(v)
 		}
 
@@ -469,7 +469,7 @@ func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]in
 	}
 
 	if v := apiObject.UserName; v != nil {
-		tfMap["username"] = aws.ToString(v)
+		tfMap[names.AttrUsername] = aws.ToString(v)
 	}
 
 	return tfMap

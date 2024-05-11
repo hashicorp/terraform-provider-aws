@@ -35,7 +35,7 @@ func dataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func dataSourceKey() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -127,7 +127,7 @@ func dataSourceKey() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"region": {
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -188,7 +188,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, output.Arn)
 	d.Set("aws_account_id", output.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
-	d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
 	d.Set("custom_key_store_id", output.CustomKeyStoreId)
 	if output.DeletionDate != nil {
@@ -257,7 +257,7 @@ func flattenMultiRegionKey(apiObject *awstypes.MultiRegionKey) map[string]interf
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.ToString(v)
+		tfMap[names.AttrRegion] = aws.ToString(v)
 	}
 
 	return tfMap

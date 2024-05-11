@@ -36,7 +36,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
 			"allow_major_version_upgrade",
-			"apply_immediately",
+			names.AttrApplyImmediately,
 			"cluster_members",
 			"db_instance_parameter_group_name",
 			"enable_global_write_forwarding",
@@ -90,7 +90,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
@@ -407,7 +407,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"cluster_identifier_prefix",
 					"cluster_members",
 					"db_instance_parameter_group_name",

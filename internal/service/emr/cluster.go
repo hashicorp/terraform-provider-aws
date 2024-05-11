@@ -86,7 +86,7 @@ func resourceCluster() *schema.Resource {
 													Optional: true,
 													ForceNew: true,
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													ForceNew: true,
@@ -288,7 +288,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"path": {
+							names.AttrPath: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -725,7 +725,7 @@ func resourceCluster() *schema.Resource {
 											Optional: true,
 											ForceNew: true,
 										},
-										"properties": {
+										names.AttrProperties: {
 											Type:     schema.TypeMap,
 											Optional: true,
 											ForceNew: true,
@@ -1783,10 +1783,10 @@ func flattenHadoopStepConfig(config *emr.HadoopStepConfig) map[string]interface{
 	}
 
 	m := map[string]interface{}{
-		"args":       aws.StringValueSlice(config.Args),
-		"jar":        aws.StringValue(config.Jar),
-		"main_class": aws.StringValue(config.MainClass),
-		"properties": aws.StringValueMap(config.Properties),
+		"args":               aws.StringValueSlice(config.Args),
+		"jar":                aws.StringValue(config.Jar),
+		"main_class":         aws.StringValue(config.MainClass),
+		names.AttrProperties: aws.StringValueMap(config.Properties),
 	}
 
 	return m
@@ -1854,7 +1854,7 @@ func flattenBootstrapArguments(actions []*emr.Command) []map[string]interface{} 
 	for _, b := range actions {
 		attrs := make(map[string]interface{})
 		attrs[names.AttrName] = aws.StringValue(b.Name)
-		attrs["path"] = aws.StringValue(b.ScriptPath)
+		attrs[names.AttrPath] = aws.StringValue(b.ScriptPath)
 		attrs["args"] = flex.FlattenStringList(b.Args)
 		result = append(result, attrs)
 	}
@@ -1877,7 +1877,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 	for _, raw := range bootstrapActions {
 		actionAttributes := raw.(map[string]interface{})
 		actionName := actionAttributes[names.AttrName].(string)
-		actionPath := actionAttributes["path"].(string)
+		actionPath := actionAttributes[names.AttrPath].(string)
 		actionArgs := actionAttributes["args"].([]interface{})
 
 		action := &emr.BootstrapActionConfig{
@@ -1906,7 +1906,7 @@ func expandHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfi
 		hadoopJarStepConfig.MainClass = aws.String(v.(string))
 	}
 
-	if v, ok := m["properties"]; ok {
+	if v, ok := m[names.AttrProperties]; ok {
 		hadoopJarStepConfig.Properties = expandKeyValues(v.(map[string]interface{}))
 	}
 
@@ -2362,7 +2362,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 			config.Configurations = expandConfigurations(v)
 		}
 
-		if v, ok := configAttributes["properties"].(map[string]interface{}); ok {
+		if v, ok := configAttributes[names.AttrProperties].(map[string]interface{}); ok {
 			properties := make(map[string]string)
 			for k, pv := range v {
 				properties[k] = pv.(string)

@@ -50,7 +50,7 @@ func dataSourceBroker() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"broker_id"},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -107,12 +107,12 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"ip_address": {
+						names.AttrIPAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -208,7 +208,7 @@ func dataSourceBroker() *schema.Resource {
 					},
 				},
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -245,7 +245,7 @@ func dataSourceBroker() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -297,12 +297,12 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
-	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
 
-	if err := d.Set("configuration", flattenConfiguration(output.Configurations)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenConfiguration(output.Configurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 

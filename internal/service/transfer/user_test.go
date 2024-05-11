@@ -196,7 +196,7 @@ func testAccUser_modifyWithOptions(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/home/tftestuser2"),
 					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "tftestuser2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "tftestuser2"),
 				),
 			},
 		},

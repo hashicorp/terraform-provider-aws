@@ -50,7 +50,7 @@ func ResourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -109,7 +109,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateReplicationSetInput{
-		Regions: expandRegions(d.Get("region").(*schema.Set).List()),
+		Regions: expandRegions(d.Get(names.AttrRegion).(*schema.Set).List()),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -154,7 +154,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("created_by", replicationSet.CreatedBy)
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
+	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 	d.Set(names.AttrStatus, replicationSet.Status)
@@ -165,7 +165,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
-	if d.HasChanges("region") {
+	if d.HasChanges(names.AttrRegion) {
 		input := &ssmincidents.UpdateReplicationSetInput{
 			Arn: aws.String(d.Id()),
 		}
@@ -235,7 +235,7 @@ func regionListToRegionMap(list []interface{}) map[string]string {
 // updates UpdateReplicationSetInput to include any required actions
 // invalid updates return errors from AWS Api
 func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplicationSetInput) error {
-	old, new := d.GetChange("region")
+	old, new := d.GetChange(names.AttrRegion)
 	oldRegions := regionListToRegionMap(old.(*schema.Set).List())
 	newRegions := regionListToRegionMap(new.(*schema.Set).List())
 

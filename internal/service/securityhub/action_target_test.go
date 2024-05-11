@@ -33,7 +33,7 @@ func testAccActionTarget_basic(t *testing.T) {
 					testAccCheckActionTargetExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "securityhub", "action/custom/testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test custom action"),
-					resource.TestCheckResourceAttr(resourceName, "identifier", "testaction"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, "testaction"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Test action"),
 				),
 			},

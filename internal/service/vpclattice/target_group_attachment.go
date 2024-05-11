@@ -38,7 +38,7 @@ func resourceTargetGroupAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -75,7 +75,7 @@ func resourceTargetGroupAttachmentCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 	id := strings.Join([]string{targetGroupID, targetID, strconv.Itoa(targetPort)}, "/")
@@ -103,7 +103,7 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 
@@ -119,7 +119,7 @@ func resourceTargetGroupAttachmentRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("reading VPC Lattice Target Group Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("target", []interface{}{flattenTargetSummary(output)}); err != nil {
+	if err := d.Set(names.AttrTarget, []interface{}{flattenTargetSummary(output)}); err != nil {
 		return diag.Errorf("setting target: %s", err)
 	}
 	d.Set("target_group_identifier", targetGroupID)
@@ -131,7 +131,7 @@ func resourceTargetGroupAttachmentDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	targetGroupID := d.Get("target_group_identifier").(string)
-	target := expandTarget(d.Get("target").([]interface{})[0].(map[string]interface{}))
+	target := expandTarget(d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{}))
 	targetID := aws.ToString(target.Id)
 	targetPort := int(aws.ToInt32(target.Port))
 

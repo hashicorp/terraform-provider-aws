@@ -46,7 +46,7 @@ func dataSourcePolicy() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrARN},
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set(names.AttrDescription, policy.Description)
 	d.Set(names.AttrName, policy.PolicyName)
-	d.Set("path", policy.Path)
+	d.Set(names.AttrPath, policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

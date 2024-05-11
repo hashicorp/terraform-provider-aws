@@ -42,7 +42,7 @@ func ResourceRateBasedRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -98,7 +98,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 
 	name := d.Get(names.AttrName).(string)
 	input := &waf.CreateRateBasedRuleInput{
-		MetricName: aws.String(d.Get("metric_name").(string)),
+		MetricName: aws.String(d.Get(names.AttrMetricName).(string)),
 		Name:       aws.String(name),
 		RateKey:    aws.String(d.Get("rate_key").(string)),
 		RateLimit:  aws.Int64(int64(d.Get("rate_limit").(int))),
@@ -156,7 +156,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrName, rule.Name)
-	d.Set("metric_name", rule.MetricName)
+	d.Set(names.AttrMetricName, rule.MetricName)
 	d.Set("rate_key", rule.RateKey)
 	d.Set("rate_limit", rule.RateLimit)
 

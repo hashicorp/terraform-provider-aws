@@ -52,7 +52,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -75,7 +75,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -102,7 +102,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(0, 64),
 							},
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1, //API will accept more, but return only 1
@@ -162,7 +162,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -182,7 +182,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validExperimentTemplateStopConditionSource(),
@@ -195,22 +195,22 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Set:      schema.HashString,
@@ -261,7 +261,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
@@ -289,7 +289,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).FISClient(ctx)
 
 	input := &fis.CreateExperimentTemplateInput{
-		Actions:          expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
+		Actions:          expandExperimentTemplateActions(d.Get(names.AttrAction).(*schema.Set)),
 		ClientToken:      aws.String(id.UniqueId()),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
 		LogConfiguration: expandExperimentTemplateLogConfiguration(d.Get("log_configuration").([]interface{})),
@@ -298,7 +298,7 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:             getTagsIn(ctx),
 	}
 
-	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
+	targets, err := expandExperimentTemplateTargets(d.Get(names.AttrTarget).(*schema.Set))
 	if err != nil {
 		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get(names.AttrDescription).(string), err)
 	}
@@ -348,8 +348,8 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrRoleARN, experimentTemplate.RoleArn)
 	d.Set(names.AttrDescription, experimentTemplate.Description)
 
-	if err := d.Set("action", flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "action", err)
+	if err := d.Set(names.AttrAction, flattenExperimentTemplateActions(experimentTemplate.Actions)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrAction, err)
 	}
 
 	if err := d.Set("log_configuration", flattenExperimentTemplateLogConfiguration(experimentTemplate.LogConfiguration)); err != nil {
@@ -360,8 +360,8 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
 
-	if err := d.Set("target", flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
-		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
+	if err := d.Set(names.AttrTarget, flattenExperimentTemplateTargets(experimentTemplate.Targets)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), names.AttrTarget, err)
 	}
 
 	setTagsOut(ctx, experimentTemplate.Tags)
@@ -379,8 +379,8 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			Id: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get("action").(*schema.Set))
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandExperimentTemplateActionsForUpdate(d.Get(names.AttrAction).(*schema.Set))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -400,8 +400,8 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 			input.StopConditions = expandExperimentTemplateStopConditionsForUpdate(d.Get("stop_condition").(*schema.Set))
 		}
 
-		if d.HasChange("target") {
-			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get("target").(*schema.Set))
+		if d.HasChange(names.AttrTarget) {
+			targets, err := expandExperimentTemplateTargetsForUpdate(d.Get(names.AttrTarget).(*schema.Set))
 			if err != nil {
 				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 			}
@@ -460,7 +460,7 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -468,7 +468,7 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
@@ -499,7 +499,7 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -507,7 +507,7 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.StartAfter = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := raw["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			config.Targets = expandExperimentTemplateActionTargets(v)
 		}
 
@@ -530,7 +530,7 @@ func expandExperimentTemplateStopConditions(l *schema.Set) []types.CreateExperim
 		raw := m.(map[string]interface{})
 		config := types.CreateExperimentTemplateStopConditionInput{}
 
-		if v, ok := raw["source"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
 			config.Source = aws.String(v)
 		}
 
@@ -589,7 +589,7 @@ func expandExperimentTemplateS3Configuration(l []interface{}) *types.ExperimentT
 	config := types.ExperimentTemplateS3LogConfigurationInput{
 		BucketName: aws.String(raw[names.AttrBucketName].(string)),
 	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
 		config.Prefix = aws.String(v)
 	}
 
@@ -607,7 +607,7 @@ func expandExperimentTemplateStopConditionsForUpdate(l *schema.Set) []types.Upda
 		raw := m.(map[string]interface{})
 		config := types.UpdateExperimentTemplateStopConditionInput{}
 
-		if v, ok := raw["source"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrSource].(string); ok && v != "" {
 			config.Source = aws.String(v)
 		}
 
@@ -634,7 +634,7 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 		config := types.CreateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
 
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
@@ -652,7 +652,7 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -684,7 +684,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 		config := types.UpdateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
 
-		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
 		}
 
@@ -702,7 +702,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -787,11 +787,11 @@ func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTe
 		raw := m.(map[string]interface{})
 		config := types.ExperimentTemplateTargetInputFilter{}
 
-		if v, ok := raw["path"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrPath].(string); ok && v != "" {
 			config.Path = aws.String(v)
 		}
 
-		if v, ok := raw["values"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 			config.Values = flex.ExpandStringValueSet(v)
 		}
 
@@ -825,9 +825,9 @@ func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemp
 		item := make(map[string]interface{})
 		item["action_id"] = aws.ToString(v.ActionId)
 		item[names.AttrDescription] = aws.ToString(v.Description)
-		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
+		item[names.AttrParameter] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = v.StartAfter
-		item["target"] = flattenExperimentTemplateActionTargets(v.Targets)
+		item[names.AttrTarget] = flattenExperimentTemplateActionTargets(v.Targets)
 
 		item[names.AttrName] = k
 
@@ -842,7 +842,7 @@ func flattenExperimentTemplateStopConditions(configured []types.ExperimentTempla
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["source"] = aws.ToString(v.Source)
+		item[names.AttrSource] = aws.ToString(v.Source)
 
 		if aws.ToString(v.Value) != "" {
 			item[names.AttrValue] = aws.ToString(v.Value)
@@ -859,10 +859,10 @@ func flattenExperimentTemplateTargets(configured map[string]types.ExperimentTemp
 
 	for k, v := range configured {
 		item := make(map[string]interface{})
-		item["filter"] = flattenExperimentTemplateTargetFilters(v.Filters)
+		item[names.AttrFilter] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = v.ResourceArns
 		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
-		item["resource_type"] = aws.ToString(v.ResourceType)
+		item[names.AttrResourceType] = aws.ToString(v.ResourceType)
 		item["selection_mode"] = aws.ToString(v.SelectionMode)
 		item[names.AttrParameters] = v.Parameters
 
@@ -909,7 +909,7 @@ func flattenS3Configuration(configured *types.ExperimentTemplateS3LogConfigurati
 	dataResources[0] = make(map[string]interface{})
 	dataResources[0][names.AttrBucketName] = configured.BucketName
 	if aws.ToString(configured.Prefix) != "" {
-		dataResources[0]["prefix"] = configured.Prefix
+		dataResources[0][names.AttrPrefix] = configured.Prefix
 	}
 
 	return dataResources
@@ -947,8 +947,8 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["path"] = aws.ToString(v.Path)
-		item["values"] = v.Values
+		item[names.AttrPath] = aws.ToString(v.Path)
+		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)
 	}

@@ -142,7 +142,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -222,7 +222,7 @@ func resourceCluster() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"group_name": {
+									names.AttrGroupName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -262,7 +262,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MinItems: 1,
 				MaxItems: 1,
@@ -324,7 +324,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		ResourcesVpcConfig: expandVpcConfigRequest(d.Get("vpc_config").([]interface{})),
+		ResourcesVpcConfig: expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
 		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -432,7 +432,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
 	}
-	d.Set("endpoint", cluster.Endpoint)
+	d.Set(names.AttrEndpoint, cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
 	}
@@ -447,7 +447,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
 	d.Set(names.AttrVersion, cluster.Version)
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -929,7 +929,7 @@ func expandControlPlanePlacementRequest(tfList []interface{}) *types.ControlPlan
 
 	apiObject := &types.ControlPlanePlacementRequest{}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -1153,7 +1153,7 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 	}
 
 	tfMap := map[string]interface{}{
-		"group_name": aws.ToString(apiObject.GroupName),
+		names.AttrGroupName: aws.ToString(apiObject.GroupName),
 	}
 
 	return []interface{}{tfMap}

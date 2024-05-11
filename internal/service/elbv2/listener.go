@@ -64,7 +64,7 @@ func ResourceListener() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -139,7 +139,7 @@ func ResourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -191,7 +191,7 @@ func ResourceListener() *schema.Resource {
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -286,7 +286,7 @@ func ResourceListener() *schema.Resource {
 										Default:      "#{host}",
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
@@ -353,7 +353,7 @@ func ResourceListener() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
@@ -426,7 +426,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AlpnPolicy = []string{v.(string)}
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.Certificates = []awstypes.Certificate{{
 			CertificateArn: aws.String(v.(string)),
 		}}
@@ -527,7 +527,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
-		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
@@ -559,7 +559,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.AlpnPolicy = []string{v.(string)}
 		}
 
-		if v, ok := d.GetOk("certificate_arn"); ok {
+		if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 			input.Certificates = []awstypes.Certificate{{
 				CertificateArn: aws.String(v.(string)),
 			}}
@@ -798,7 +798,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 	config := &awstypes.AuthenticateOidcActionConfig{
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
-		ClientId:                         aws.String(tfMap["client_id"].(string)),
+		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
 		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
 		Issuer:                           aws.String(tfMap["issuer"].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
@@ -836,7 +836,7 @@ func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedRespons
 	}
 
 	return &awstypes.FixedResponseActionConfig{
-		ContentType: aws.String(tfMap["content_type"].(string)),
+		ContentType: aws.String(tfMap[names.AttrContentType].(string)),
 		MessageBody: aws.String(tfMap["message_body"].(string)),
 		StatusCode:  aws.String(tfMap["status_code"].(string)),
 	}
@@ -855,7 +855,7 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectAct
 
 	return &awstypes.RedirectActionConfig{
 		Host:       aws.String(tfMap["host"].(string)),
-		Path:       aws.String(tfMap["path"].(string)),
+		Path:       aws.String(tfMap[names.AttrPath].(string)),
 		Port:       aws.String(tfMap[names.AttrPort].(string)),
 		Protocol:   aws.String(tfMap[names.AttrProtocol].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
@@ -896,7 +896,7 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 		return nil
 	}
 
-	switch mode := tfMap["mode"].(string); mode {
+	switch mode := tfMap[names.AttrMode].(string); mode {
 	case mutualAuthenticationOff:
 		return &awstypes.MutualAuthenticationAttributes{
 			Mode: aws.String(mode),
@@ -1057,13 +1057,13 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 	if mode == mutualAuthenticationOff {
 		return []interface{}{
 			map[string]interface{}{
-				"mode": mode,
+				names.AttrMode: mode,
 			},
 		}
 	}
 
 	m := map[string]interface{}{
-		"mode":                             aws.ToString(description.Mode),
+		names.AttrMode:                     aws.ToString(description.Mode),
 		"trust_store_arn":                  aws.ToString(description.TrustStoreArn),
 		"ignore_client_certificate_expiry": aws.ToBool(description.IgnoreClientCertificateExpiry),
 	}
@@ -1079,7 +1079,7 @@ func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcAction
 	m := map[string]interface{}{
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
-		"client_id":                           aws.ToString(config.ClientId),
+		names.AttrClientID:                    aws.ToString(config.ClientId),
 		"client_secret":                       clientSecret,
 		"issuer":                              aws.ToString(config.Issuer),
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
@@ -1118,9 +1118,9 @@ func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseAc
 	}
 
 	m := map[string]interface{}{
-		"content_type": aws.ToString(config.ContentType),
-		"message_body": aws.ToString(config.MessageBody),
-		"status_code":  aws.ToString(config.StatusCode),
+		names.AttrContentType: aws.ToString(config.ContentType),
+		"message_body":        aws.ToString(config.MessageBody),
+		"status_code":         aws.ToString(config.StatusCode),
 	}
 
 	return []interface{}{m}
@@ -1178,7 +1178,7 @@ func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig
 
 	m := map[string]interface{}{
 		"host":             aws.ToString(config.Host),
-		"path":             aws.ToString(config.Path),
+		names.AttrPath:     aws.ToString(config.Path),
 		names.AttrPort:     aws.ToString(config.Port),
 		names.AttrProtocol: aws.ToString(config.Protocol),
 		"query":            aws.ToString(config.Query),

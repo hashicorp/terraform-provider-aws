@@ -26,7 +26,7 @@ func resourceClusterResourceV0() *schema.Resource {
 			},
 			// apply_immediately is used to determine when the update modifications take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -130,7 +130,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -162,7 +162,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -295,7 +295,7 @@ func resourceClusterResourceV0() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,

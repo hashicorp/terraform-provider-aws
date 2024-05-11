@@ -101,7 +101,7 @@ func ResourceRepository() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -203,10 +203,10 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
 
-	if v, ok := d.GetOk("force_destroy"); ok {
-		d.Set("force_destroy", v.(bool))
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
+		d.Set(names.AttrForceDestroy, v.(bool))
 	} else {
-		d.Set("force_destroy", false)
+		d.Set(names.AttrForceDestroy, false)
 	}
 
 	var catalogOut *ecrpublic.GetRepositoryCatalogDataOutput
@@ -246,7 +246,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 	}
 
-	if v, ok := d.GetOk("force_destroy"); ok {
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
 		force := v.(bool)
 		deleteInput.Force = aws.ToBool(&force)
 	}

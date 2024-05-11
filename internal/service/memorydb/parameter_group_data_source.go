@@ -38,7 +38,7 @@ func DataSourceParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -88,7 +88,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set parameter: %s", err)
 	}
 

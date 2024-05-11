@@ -449,7 +449,7 @@ func ResourceFleet() *schema.Resource {
 									// 		},
 									// 	},
 									// },
-									"priority": {
+									names.AttrPriority: {
 										Type:     schema.TypeFloat,
 										Optional: true,
 									},
@@ -1086,7 +1086,7 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 	if v, ok := tfMap["placement"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Placement = expandPlacement(v.([]interface{})[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["priority"].(float64); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPriority].(float64); ok && v != 0 {
 		apiObject.Priority = aws.Float64(v)
 	}
 
@@ -1183,7 +1183,7 @@ func expandPlacement(tfMap map[string]interface{}) *ec2.Placement {
 		apiObject.GroupId = aws.String(v)
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -1457,7 +1457,7 @@ func flattenFleetLaunchTemplateOverrides(apiObject *ec2.FleetLaunchTemplateOverr
 	}
 
 	if v := apiObject.Priority; v != nil {
-		tfMap["priority"] = aws.Float64Value(v)
+		tfMap[names.AttrPriority] = aws.Float64Value(v)
 	}
 
 	if v := apiObject.SubnetId; v != nil {
@@ -1513,7 +1513,7 @@ func flattenPlacement(apiObject *ec2.PlacementResponse) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	return tfMap

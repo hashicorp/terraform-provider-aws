@@ -157,7 +157,7 @@ func ResourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -169,7 +169,7 @@ func ResourceImagePipeline() *schema.Resource {
 							Default:      imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
 							ValidateFunc: validation.StringInSlice(imagebuilder.PipelineExecutionStartCondition_Values(), false),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -241,7 +241,7 @@ func resourceImagePipelineCreate(ctx context.Context, d *schema.ResourceData, me
 		input.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -314,9 +314,9 @@ func resourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
-		d.Set("schedule", nil)
+		d.Set(names.AttrSchedule, nil)
 	}
 	d.Set(names.AttrStatus, imagePipeline.Status)
 
@@ -336,7 +336,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 		"image_scanning_configuration",
 		"image_tests_configuration",
 		"infrastructure_configuration_arn",
-		"schedule",
+		names.AttrSchedule,
 		names.AttrStatus,
 	) {
 		input := &imagebuilder.UpdateImagePipelineInput{
@@ -373,7 +373,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.InfrastructureConfigurationArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Schedule = expandPipelineSchedule(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -477,7 +477,7 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.PipelineExecutionStartCondition = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
@@ -554,7 +554,7 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 	}
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap["schedule_expression"] = aws.StringValue(v)
+		tfMap[names.AttrScheduleExpression] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {

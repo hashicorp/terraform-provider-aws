@@ -30,7 +30,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -207,10 +207,10 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 	if output != nil {
-		d.Set("certificate", output.Certificate)
+		d.Set(names.AttrCertificate, output.Certificate)
 		d.Set("certificate_chain", output.CertificateChain)
 	} else {
-		d.Set("certificate", nil)
+		d.Set(names.AttrCertificate, nil)
 		d.Set("certificate_chain", nil)
 	}
 

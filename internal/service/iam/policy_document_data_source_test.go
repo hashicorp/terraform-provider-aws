@@ -29,6 +29,9 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "json",
 						testAccPolicyDocumentExpectedJSON(),
 					),
+					resource.TestCheckResourceAttr("data.aws_iam_policy_document.test", "minified_json",
+						testAccPolicyDocumentExpectedJSONMinified(),
+					),
 				),
 			},
 		},
@@ -587,6 +590,10 @@ func testAccPolicyDocumentExpectedJSON() string {
     }
   ]
 }`, acctest.Partition())
+}
+
+func testAccPolicyDocumentExpectedJSONMinified() string {
+	return fmt.Sprintf(`{"Version":"2012-10-17","Id":"policy_id","Statement":[{"Sid":"1","Effect":"Allow","Action":["s3:ListAllMyBuckets","s3:GetBucketLocation"],"Resource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:%[1]s:s3:::foo","NotPrincipal":{"AWS":"arn:blahblah:example"},"Condition":{"StringLike":{"s3:prefix":["home/","","home/${aws:username}/"]}}},{"Effect":"Allow","Action":"s3:*","Resource":["arn:%[1]s:s3:::foo/home/${aws:username}/*","arn:%[1]s:s3:::foo/home/${aws:username}"],"Principal":{"AWS":"arn:blahblah:example"}},{"Effect":"Deny","NotAction":"s3:*","NotResource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"kinesis:*","Principal":{"AWS":"*"}},{"Effect":"Allow","Action":"firehose:*","Principal":"*"}]}`, acctest.Partition())
 }
 
 const testAccPolicyDocumentDataSourceConfig_singleConditionValue = `

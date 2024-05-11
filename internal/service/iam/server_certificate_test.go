@@ -45,7 +45,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", strings.TrimSpace(certificate)),
 				),
 			},
@@ -54,7 +54,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})
@@ -163,7 +163,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
@@ -211,7 +211,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_file(rName, winFile),
@@ -241,7 +241,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test/"),
 				),
 			},
 			{
@@ -249,7 +249,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})

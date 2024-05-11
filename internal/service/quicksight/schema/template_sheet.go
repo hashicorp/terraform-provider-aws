@@ -180,7 +180,7 @@ func sheetControlLayoutsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayoutConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayoutConfiguration.html
 					Type:     schema.TypeList,
 					MinItems: 1,
 					MaxItems: 1,
@@ -205,7 +205,7 @@ func layoutSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LayoutConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LayoutConfiguration.html
 					Type:     schema.TypeList,
 					Required: true,
 					MinItems: 1,
@@ -508,7 +508,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 									},
 								},
 							},
-							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
 						},
 					},
 				},
@@ -892,7 +892,7 @@ func expandSheetDefinition(tfMap map[string]interface{}) *quicksight.SheetDefini
 	if v, ok := tfMap["sheet_id"].(string); ok && v != "" {
 		sheet.SheetId = aws.String(v)
 	}
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		sheet.ContentType = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
@@ -979,7 +979,7 @@ func expandLayout(tfMap map[string]interface{}) *quicksight.Layout {
 
 	layout := &quicksight.Layout{}
 
-	if v, ok := tfMap["configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
 		layout.Configuration = expandLayoutConfiguration(v)
 	}
 
@@ -1193,7 +1193,7 @@ func expandSheetElementRenderingRule(tfMap map[string]interface{}) *quicksight.S
 
 	layout := &quicksight.SheetElementRenderingRule{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		layout.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["configuration_overrides"].([]interface{}); ok && len(v) > 0 {
@@ -1587,7 +1587,7 @@ func expandSheetControlLayout(tfMap map[string]interface{}) *quicksight.SheetCon
 
 	layout := &quicksight.SheetControlLayout{}
 
-	if v, ok := tfMap["configuration"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrConfiguration].([]interface{}); ok && len(v) > 0 {
 		layout.Configuration = expandSheetControlLayoutConfiguration(v)
 	}
 
@@ -1897,7 +1897,7 @@ func flattenLayouts(apiObject []*quicksight.Layout) []interface{} {
 		}
 
 		tfMap := map[string]interface{}{
-			"configuration": flattenLayoutConfiguration(config.Configuration),
+			names.AttrConfiguration: flattenLayoutConfiguration(config.Configuration),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -2046,7 +2046,7 @@ func flattenSheetElementRenderingRule(apiObject []*quicksight.SheetElementRender
 			tfMap["configuration_overrides"] = flattenSheetElementConfigurationOverrides(config.ConfigurationOverrides)
 		}
 		if config.Expression != nil {
-			tfMap["expression"] = aws.StringValue(config.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(config.Expression)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2283,7 +2283,7 @@ func flattenSheetControlLayouts(apiObject []*quicksight.SheetControlLayout) []in
 		}
 
 		tfMap := map[string]interface{}{
-			"configuration": flattenSheetControlLayoutConfiguration(config.Configuration),
+			names.AttrConfiguration: flattenSheetControlLayoutConfiguration(config.Configuration),
 		}
 		tfList = append(tfList, tfMap)
 	}

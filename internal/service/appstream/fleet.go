@@ -101,7 +101,7 @@ func ResourceFleet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(60, 360000),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -190,7 +190,7 @@ func ResourceFleet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -241,7 +241,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -281,7 +281,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.StreamView = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
@@ -372,7 +372,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("created_time", aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, fleet.Description)
-	d.Set("display_name", fleet.DisplayName)
+	d.Set(names.AttrDisplayName, fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
 
 	if fleet.DomainJoinInfo != nil {
@@ -397,11 +397,11 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("stream_view", fleet.StreamView)
 
 	if fleet.VpcConfig != nil {
-		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
-			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "vpc_config", err)
+		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), names.AttrVPCConfig, err)
 		}
 	} else {
-		d.Set("vpc_config", nil)
+		d.Set(names.AttrVPCConfig, nil)
 	}
 
 	return diags
@@ -416,7 +416,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", "iam_role_arn", names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", "iam_role_arn", names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
 		shouldStop = true
 	}
 
@@ -457,8 +457,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int64(int64(d.Get("idle_disconnect_timeout_in_seconds").(int)))
 	}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
+	if d.HasChange(names.AttrDisplayName) {
+		input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 	}
 
 	if d.HasChange("image_name") {
@@ -489,8 +489,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.MaxUserDurationInSeconds = aws.Int64(int64(d.Get("max_user_duration_in_seconds").(int)))
 	}
 
-	if d.HasChange("vpc_config") {
-		input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
+	if d.HasChange(names.AttrVPCConfig) {
+		input.VpcConfig = expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{}))
 	}
 
 	_, err := conn.UpdateFleetWithContext(ctx, input)

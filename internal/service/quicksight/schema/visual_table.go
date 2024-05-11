@@ -125,7 +125,7 @@ func tableVisualSchema() *schema.Schema {
 																					},
 																				},
 																			},
-																			"target": stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
+																			names.AttrTarget: stringSchema(false, validation.StringInSlice(quicksight.URLTargetConfiguration_Values(), false)),
 																		},
 																	},
 																},
@@ -157,8 +157,8 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"group_by": dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"values":   measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"group_by":       dimensionFieldSchema(dimensionsFieldMaxItems200), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrValues: measureFieldSchema(measureFieldsMaxItems200),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -169,7 +169,7 @@ func tableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UnaggregatedField.html
+													names.AttrValues: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UnaggregatedField.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
@@ -444,7 +444,7 @@ func expandTableAggregatedFieldWells(tfList []interface{}) *quicksight.TableAggr
 	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
 		config.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandMeasureFields(v)
 	}
 
@@ -463,7 +463,7 @@ func expandTableUnaggregatedFieldWells(tfList []interface{}) *quicksight.TableUn
 
 	config := &quicksight.TableUnaggregatedFieldWells{}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		config.Values = expandUnaggregatedFields(v)
 	}
 
@@ -678,7 +678,7 @@ func expandTableFieldLinkConfiguration(tfList []interface{}) *quicksight.TableFi
 
 	options := &quicksight.TableFieldLinkConfiguration{}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		options.Target = aws.String(v)
 	}
 	if v, ok := tfMap["content"].([]interface{}); ok && len(v) > 0 {
@@ -1156,7 +1156,7 @@ func flattenTableFieldLinkConfiguration(apiObject *quicksight.TableFieldLinkConf
 		tfMap["content"] = flattenTableFieldLinkContentConfiguration(apiObject.Content)
 	}
 	if apiObject.Target != nil {
-		tfMap["target"] = aws.StringValue(apiObject.Target)
+		tfMap[names.AttrTarget] = aws.StringValue(apiObject.Target)
 	}
 
 	return []interface{}{tfMap}
@@ -1233,7 +1233,7 @@ func flattenTableAggregatedFieldWells(apiObject *quicksight.TableAggregatedField
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenMeasureFields(apiObject.Values)
+		tfMap[names.AttrValues] = flattenMeasureFields(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}
@@ -1246,7 +1246,7 @@ func flattenTableUnaggregatedFieldWells(apiObject *quicksight.TableUnaggregatedF
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Values != nil {
-		tfMap["values"] = flattenUnaggregatedField(apiObject.Values)
+		tfMap[names.AttrValues] = flattenUnaggregatedField(apiObject.Values)
 	}
 
 	return []interface{}{tfMap}

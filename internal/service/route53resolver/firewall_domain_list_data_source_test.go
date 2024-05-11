@@ -28,7 +28,7 @@ func TestAccRoute53ResolverFirewallDomainListDataSource_basic(t *testing.T) {
 				Config: testAccFirewallDomainListDataSourceConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creator_request_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_domain_list_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "domain_count", resourceName, "domains.#"),

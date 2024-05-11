@@ -35,7 +35,7 @@ func resourceEndpointAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -177,7 +177,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("address", endpointAccess.Address)
+	d.Set(names.AttrAddress, endpointAccess.Address)
 	d.Set(names.AttrARN, endpointAccess.EndpointArn)
 	d.Set("endpoint_name", endpointAccess.EndpointName)
 	d.Set("owner_account", d.Get("owner_account"))

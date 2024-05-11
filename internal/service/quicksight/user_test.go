@@ -41,7 +41,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName1, &user),
-					resource.TestCheckResourceAttr(resourceName1, "user_name", rName1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrUserName, rName1),
 					acctest.CheckResourceAttrRegionalARN(resourceName1, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName1)),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccQuickSightUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName2, &user),
-					resource.TestCheckResourceAttr(resourceName2, "user_name", rName2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrUserName, rName2),
 					acctest.CheckResourceAttrRegionalARN(resourceName2, names.AttrARN, "quicksight", fmt.Sprintf("user/default/%s", rName2)),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccQuickSightUser_withNamespace(t *testing.T) {
 				Config: testAccUserConfig_namespace(rName, namespace),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "namespace", namespace),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
 				),
 			},
 		},

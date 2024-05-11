@@ -38,7 +38,7 @@ func ResourceCertificate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -143,7 +143,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Deleting DMS Certificate: %s", d.Id())
 	_, err := conn.DeleteCertificateWithContext(ctx, &dms.DeleteCertificateInput{
-		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
+		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
@@ -161,7 +161,7 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	d.SetId(aws.StringValue(cert.CertificateIdentifier))
 
 	d.Set("certificate_id", cert.CertificateIdentifier)
-	d.Set("certificate_arn", cert.CertificateArn)
+	d.Set(names.AttrCertificateARN, cert.CertificateArn)
 
 	if aws.StringValue(cert.CertificatePem) != "" {
 		d.Set("certificate_pem", cert.CertificatePem)

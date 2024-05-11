@@ -68,7 +68,7 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -134,7 +134,7 @@ func ResourceCluster() *schema.Resource {
 					}, false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -173,7 +173,7 @@ func ResourceCluster() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validGlobalCusterIdentifier,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -548,10 +548,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
-	d.Set("endpoint", dbc.Endpoint)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set(names.AttrEngineVersion, dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoles []string
 	for _, v := range dbc.AssociatedRoles {
@@ -588,7 +588,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
 		input := &neptune.ModifyDBClusterInput{
 			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
-			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:         aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier:      aws.String(d.Id()),
 		}
 

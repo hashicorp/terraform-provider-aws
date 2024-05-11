@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ssm_parameters_by_path")
@@ -20,7 +21,7 @@ func DataSourceParametersByPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -30,7 +31,7 @@ func DataSourceParametersByPath() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -44,7 +45,7 @@ func DataSourceParametersByPath() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"values": {
+			names.AttrValues: {
 				Type:      schema.TypeList,
 				Computed:  true,
 				Sensitive: true,
@@ -63,7 +64,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	path := d.Get("path").(string)
+	path := d.Get(names.AttrPath).(string)
 	input := &ssm.GetParametersByPathInput{
 		Path:           aws.String(path),
 		Recursive:      aws.Bool(d.Get("recursive").(bool)),
@@ -71,7 +72,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	}
 
 	arns := make([]string, 0)
-	names := make([]string, 0)
+	n := make([]string, 0)
 	types := make([]string, 0)
 	values := make([]string, 0)
 
@@ -82,7 +83,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 
 		for _, param := range page.Parameters {
 			arns = append(arns, aws.StringValue(param.ARN))
-			names = append(names, aws.StringValue(param.Name))
+			n = append(n, aws.StringValue(param.Name))
 			types = append(types, aws.StringValue(param.Type))
 			values = append(values, aws.StringValue(param.Value))
 		}
@@ -95,10 +96,10 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(path)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set("names", n)
 	d.Set("types", types)
-	d.Set("values", values)
+	d.Set(names.AttrValues, values)
 
 	return diags
 }

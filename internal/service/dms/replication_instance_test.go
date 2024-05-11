@@ -43,7 +43,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_instance_arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_id", rName),
@@ -58,7 +58,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -111,7 +111,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 6),
@@ -146,7 +146,7 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, false),
@@ -189,7 +189,7 @@ func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -217,7 +217,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", "apply_immediately"},
+				ImportStateVerifyIgnore: []string{"allow_major_version_upgrade", names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_engineVersion(rName, "3.5.1"),
@@ -253,7 +253,7 @@ func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -281,7 +281,7 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, false),
@@ -323,7 +323,7 @@ func TestAccDMSReplicationInstance_networkType(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_networkType(rName, "DUAL"),
@@ -358,7 +358,7 @@ func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, "mon:00:30-mon:02:30"),
@@ -386,7 +386,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				Config: testAccReplicationInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
 				),
 			},
@@ -394,7 +394,7 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})
@@ -425,7 +425,7 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_replicationInstanceClass(rName, replicationInstanceClass2),
@@ -461,7 +461,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 			{
 				Config: testAccReplicationInstanceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -506,7 +506,7 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately},
 			},
 		},
 	})

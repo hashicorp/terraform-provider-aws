@@ -55,7 +55,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_access", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "url"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttr(resourceName, "volume_size", "5"),
 				),
 			},

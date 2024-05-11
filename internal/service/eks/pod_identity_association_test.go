@@ -42,7 +42,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "namespace"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

@@ -34,7 +34,7 @@ func testAccWorkspaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "data_sources.#", dataSourceName, "data_sources.#"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(resourceName, "endpoint", dataSourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEndpoint, dataSourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(resourceName, "grafana_version", dataSourceName, "grafana_version"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),

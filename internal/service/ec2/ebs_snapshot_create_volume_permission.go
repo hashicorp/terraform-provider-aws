@@ -10,9 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,23 +53,22 @@ func ResourceSnapshotCreateVolumePermission() *schema.Resource {
 
 func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	snapshotID := d.Get("snapshot_id").(string)
 	accountID := d.Get(names.AttrAccountID).(string)
 	id := EBSSnapshotCreateVolumePermissionCreateResourceID(snapshotID, accountID)
 	input := &ec2.ModifySnapshotAttributeInput{
-		Attribute: aws.String(ec2.SnapshotAttributeNameCreateVolumePermission),
-		CreateVolumePermission: &ec2.CreateVolumePermissionModifications{
-			Add: []*ec2.CreateVolumePermission{
+		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
+		CreateVolumePermission: &awstypes.CreateVolumePermissionModifications{
+			Add: []awstypes.CreateVolumePermission{
 				{UserId: aws.String(accountID)},
 			},
 		},
 		SnapshotId: aws.String(snapshotID),
 	}
 
-	log.Printf("[DEBUG] Creating EBS Snapshot CreateVolumePermission: %s", input)
-	_, err := conn.ModifySnapshotAttributeWithContext(ctx, input)
+	_, err := conn.ModifySnapshotAttribute(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot CreateVolumePermission (%s): %s", id, err)
@@ -89,7 +89,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 
 func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -114,7 +114,7 @@ func resourceSnapshotCreateVolumePermissionRead(ctx context.Context, d *schema.R
 
 func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
@@ -123,10 +123,10 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Snapshot CreateVolumePermission: %s", d.Id())
-	_, err = conn.ModifySnapshotAttributeWithContext(ctx, &ec2.ModifySnapshotAttributeInput{
-		Attribute: aws.String(ec2.SnapshotAttributeNameCreateVolumePermission),
-		CreateVolumePermission: &ec2.CreateVolumePermissionModifications{
-			Remove: []*ec2.CreateVolumePermission{
+	_, err = conn.ModifySnapshotAttribute(ctx, &ec2.ModifySnapshotAttributeInput{
+		Attribute: awstypes.SnapshotAttributeNameCreateVolumePermission,
+		CreateVolumePermission: &awstypes.CreateVolumePermissionModifications{
+			Remove: []awstypes.CreateVolumePermission{
 				{UserId: aws.String(accountID)},
 			},
 		},
@@ -155,7 +155,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		if snapshotID := diff.Get("snapshot_id").(string); snapshotID != "" {
-			conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+			conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 			snapshot, err := FindSnapshotByID(ctx, conn, snapshotID)
 
@@ -163,7 +163,7 @@ func resourceSnapshotCreateVolumePermissionCustomizeDiff(ctx context.Context, di
 				return fmt.Errorf("reading EBS Snapshot (%s): %w", snapshotID, err)
 			}
 
-			if accountID := diff.Get(names.AttrAccountID).(string); aws.StringValue(snapshot.OwnerId) == accountID {
+			if accountID := diff.Get(names.AttrAccountID).(string); aws.ToString(snapshot.OwnerId) == accountID {
 				return fmt.Errorf("AWS Account (%s) owns EBS Snapshot (%s)", accountID, snapshotID)
 			}
 		}

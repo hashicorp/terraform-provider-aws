@@ -15,7 +15,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return costandusagereportservice.NewFromConfig(cfg, func(o *costandusagereportservice.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws.String(endpoint)
 		} else if config["partition"].(string) == names.StandardPartitionID {
 			// AWS Cost and Usage Reports is only available in AWS Commercial us-east-1 Region.

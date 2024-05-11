@@ -63,7 +63,7 @@ func resourceAnalyzer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -115,7 +115,7 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Type:         types.Type(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -155,11 +155,11 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set(names.AttrARN, analyzer.Arn)
 	if analyzer.Configuration != nil {
-		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+		if err := d.Set(names.AttrConfiguration, []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	} else {
-		d.Set("configuration", nil)
+		d.Set(names.AttrConfiguration, nil)
 	}
 	d.Set(names.AttrType, analyzer.Type)
 

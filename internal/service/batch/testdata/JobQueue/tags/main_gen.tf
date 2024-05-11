@@ -74,7 +74,6 @@ resource "aws_iam_instance_profile" "ecs_instance" {
   role = aws_iam_role_policy_attachment.ecs_instance.role
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

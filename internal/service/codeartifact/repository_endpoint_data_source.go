@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codeartifact_repository_endpoint", name="Repository Endpoint")
@@ -34,7 +35,7 @@ func dataSourceRepositoryEndpoint() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"format": {
+			names.AttrFormat: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[types.PackageFormat](),
@@ -62,7 +63,7 @@ func dataSourceRepositoryEndpointRead(ctx context.Context, d *schema.ResourceDat
 	} else {
 		domainOwner = meta.(*conns.AWSClient).AccountID
 	}
-	format := types.PackageFormat(d.Get("format").(string))
+	format := types.PackageFormat(d.Get(names.AttrFormat).(string))
 	repositoryName := d.Get("repository").(string)
 	input := &codeartifact.GetRepositoryEndpointInput{
 		Domain:      aws.String(domainName),

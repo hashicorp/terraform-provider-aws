@@ -22,7 +22,7 @@ func DataSourceLoadBalancers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancersRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -79,7 +79,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", loadBalancerARNs)
+	d.Set(names.AttrARNs, loadBalancerARNs)
 
 	return diags
 }

@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -55,7 +55,7 @@ func TestAccEC2EBSSnapshot_basic(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -79,7 +79,7 @@ func TestAccEC2EBSSnapshot_disappears(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -107,7 +107,7 @@ func TestAccEC2EBSSnapshot_storageTier(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_ebs_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,7 +136,7 @@ func TestAccEC2EBSSnapshot_outpost(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -182,7 +182,7 @@ func TestAccEC2EBSSnapshot_tags(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot.test"
 
@@ -210,7 +210,7 @@ func TestAccEC2EBSSnapshot_withDescription(t *testing.T) {
 
 func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_ebs_snapshot.test"
@@ -237,7 +237,7 @@ func TestAccEC2EBSSnapshot_withKMS(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotExists(ctx context.Context, n string, v *ec2.Snapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotExists(ctx context.Context, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -248,7 +248,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string, v *ec2.Snapshot) 
 			return fmt.Errorf("No EBS Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -264,7 +264,7 @@ func testAccCheckSnapshotExists(ctx context.Context, n string, v *ec2.Snapshot) 
 
 func testAccCheckEBSSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ebs_snapshot" {

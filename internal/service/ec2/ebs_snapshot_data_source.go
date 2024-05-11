@@ -9,9 +9,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,11 +43,11 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,25 +111,25 @@ func DataSourceEBSSnapshot() *schema.Resource {
 
 func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSnapshotsInput{}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {
-		input.OwnerIds = flex.ExpandStringList(v.([]interface{}))
+		input.OwnerIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("restorable_by_user_ids"); ok && len(v.([]interface{})) > 0 {
-		input.RestorableByUserIds = flex.ExpandStringList(v.([]interface{}))
+		input.RestorableByUserIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("snapshot_ids"); ok && len(v.([]interface{})) > 0 {
-		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
+		input.SnapshotIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterListV2(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -153,23 +153,23 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.TimeValue(snapshots[i].StartTime).Unix() > aws.TimeValue(snapshots[j].StartTime).Unix()
+			return aws.ToTime(snapshots[i].StartTime).Unix() > aws.ToTime(snapshots[j].StartTime).Unix()
 		})
 	}
 
 	snapshot := snapshots[0]
 
-	d.SetId(aws.StringValue(snapshot.SnapshotId))
+	d.SetId(aws.ToString(snapshot.SnapshotId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
 	d.Set(names.AttrDescription, snapshot.Description)
-	d.Set("encrypted", snapshot.Encrypted)
+	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("outpost_arn", snapshot.OutpostArn)
 	d.Set("owner_alias", snapshot.OwnerAlias)
@@ -180,7 +180,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
