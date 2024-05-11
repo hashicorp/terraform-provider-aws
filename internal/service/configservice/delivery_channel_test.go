@@ -36,7 +36,7 @@ func testAccDeliveryChannel_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryChannelExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3BucketName, rName),
 				),
 			},
 			{
@@ -89,10 +89,10 @@ func testAccDeliveryChannel_allParams(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryChannelExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "s3_bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3BucketName, rName),
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "one/two/three"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_kms_key_arn", "aws_kms_key.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_delivery_properties.0.delivery_frequency", "Six_Hours"),
 				),
 			},
