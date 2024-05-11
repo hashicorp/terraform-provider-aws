@@ -212,7 +212,7 @@ func TestAccRoute53HealthCheck_ip(t *testing.T) {
 				Config: testAccHealthCheckConfig_ip("1.2.3.4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "1.2.3.4"),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccRoute53HealthCheck_ip(t *testing.T) {
 				Config: testAccHealthCheckConfig_ip("1.2.3.5"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "1.2.3.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "1.2.3.5"),
 				),
 			},
 		},
@@ -246,7 +246,7 @@ func TestAccRoute53HealthCheck_ipv6(t *testing.T) {
 				Config: testAccHealthCheckConfig_ip("1234:5678:9abc:6811:0:0:0:4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "1234:5678:9abc:6811:0:0:0:4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "1234:5678:9abc:6811:0:0:0:4"),
 				),
 			},
 			{

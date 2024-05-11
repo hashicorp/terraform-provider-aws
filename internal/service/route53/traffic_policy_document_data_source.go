@@ -117,7 +117,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -359,7 +359,7 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 	if v, ok := tfMap["secondary"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.Secondary = expandDataTrafficPolicyFailOverDoc(v.([]interface{}))
 	}
-	if v, ok := tfMap["location"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap[names.AttrLocation]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Locations = expandDataTrafficPolicyLocationsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["geo_proximity_location"]; ok && len(v.(*schema.Set).List()) > 0 {
