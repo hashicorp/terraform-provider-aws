@@ -349,7 +349,7 @@ func checkConfiguredTableIsTheSame(name string, configuredTable *cleanrooms.GetC
 
 const TEST_ALLOWED_COLUMNS = "[\"my_column_1\",\"my_column_2\"]"
 const TEST_ANALYSIS_METHOD = "DIRECT_QUERY"
-const TEST_DATABASE_NAME = "database"
+const TEST_DATABASE_NAME = names.AttrDatabase
 const TEST_TABLE_NAME = "table"
 
 func testAccConfiguredTableConfig_basic(name string, description string, tagValue string, rName string) string {
