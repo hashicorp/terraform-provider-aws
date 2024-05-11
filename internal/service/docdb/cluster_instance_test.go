@@ -49,7 +49,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -125,7 +125,7 @@ func TestAccDocDBClusterInstance_identifierGenerated(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "identifier", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrIdentifier, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-"),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccDocDBClusterInstance_identifierPrefix(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},

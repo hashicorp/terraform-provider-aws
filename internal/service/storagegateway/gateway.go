@@ -80,7 +80,7 @@ func ResourceGateway() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -592,7 +592,7 @@ func resourceGatewayRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 	d.Set("smb_file_share_visibility", smbSettingsOutput.FileSharesVisible)
 	d.Set("ec2_instance_id", output.Ec2InstanceId)
-	d.Set("endpoint_type", output.EndpointType)
+	d.Set(names.AttrEndpointType, output.EndpointType)
 	d.Set("host_environment", output.HostEnvironment)
 
 	if err := d.Set("gateway_network_interface", flattenGatewayNetworkInterfaces(output.GatewayNetworkInterfaces)); err != nil {

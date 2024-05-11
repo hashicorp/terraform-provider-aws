@@ -123,7 +123,7 @@ func ResourceUser() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -140,7 +140,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID := d.Get("server_id").(string)
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.CreateUserInput{
 		Role:     aws.String(d.Get("role").(string)),
@@ -225,7 +225,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("role", user.Role)
 	d.Set("server_id", serverID)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	setTagsOut(ctx, user.Tags)
 

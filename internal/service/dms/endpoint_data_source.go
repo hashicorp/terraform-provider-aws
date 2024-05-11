@@ -61,7 +61,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -587,7 +587,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("endpoint_id", out.EndpointIdentifier)
 	arn := aws.StringValue(out.EndpointArn)
 	d.Set("endpoint_arn", arn)
-	d.Set("endpoint_type", out.EndpointType)
+	d.Set(names.AttrEndpointType, out.EndpointType)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set("engine_name", out.EngineName)
 	d.Set(names.AttrPort, out.Port)

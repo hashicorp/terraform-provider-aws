@@ -102,7 +102,7 @@ func resourceObjectCopy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -373,7 +373,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	d.Set("customer_algorithm", output.SSECustomerAlgorithm)
 	d.Set("customer_key_md5", output.SSECustomerKeyMD5)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -426,7 +426,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
+		names.AttrContentType,
 		"customer_algorithm",
 		"customer_key",
 		"customer_key_md5",
@@ -535,7 +535,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 

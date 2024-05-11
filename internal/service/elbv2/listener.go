@@ -191,7 +191,7 @@ func ResourceListener() *schema.Resource {
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -836,7 +836,7 @@ func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedRespons
 	}
 
 	return &awstypes.FixedResponseActionConfig{
-		ContentType: aws.String(tfMap["content_type"].(string)),
+		ContentType: aws.String(tfMap[names.AttrContentType].(string)),
 		MessageBody: aws.String(tfMap["message_body"].(string)),
 		StatusCode:  aws.String(tfMap["status_code"].(string)),
 	}
@@ -1118,9 +1118,9 @@ func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseAc
 	}
 
 	m := map[string]interface{}{
-		"content_type": aws.ToString(config.ContentType),
-		"message_body": aws.ToString(config.MessageBody),
-		"status_code":  aws.ToString(config.StatusCode),
+		names.AttrContentType: aws.ToString(config.ContentType),
+		"message_body":        aws.ToString(config.MessageBody),
+		"status_code":         aws.ToString(config.StatusCode),
 	}
 
 	return []interface{}{m}

@@ -58,7 +58,7 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -118,7 +118,7 @@ func resourceServer() *schema.Resource {
 					},
 				},
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      transfer.EndpointTypePublic,
@@ -323,7 +323,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate"); ok {
+	if v, ok := d.GetOk(names.AttrCertificate); ok {
 		input.Certificate = aws.String(v.(string))
 	}
 
@@ -350,7 +350,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EndpointDetails.AddressAllocationIds = nil
 	}
 
-	if v, ok := d.GetOk("endpoint_type"); ok {
+	if v, ok := d.GetOk(names.AttrEndpointType); ok {
 		input.EndpointType = aws.String(v.(string))
 	}
 
@@ -484,7 +484,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrCertificate, output.Certificate)
 	if output.IdentityProviderDetails != nil {
 		d.Set("directory_id", output.IdentityProviderDetails.DirectoryId)
 	} else {
@@ -515,7 +515,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("endpoint_details", nil)
 	}
-	d.Set("endpoint_type", output.EndpointType)
+	d.Set(names.AttrEndpointType, output.EndpointType)
 	if output.IdentityProviderDetails != nil {
 		d.Set("function", output.IdentityProviderDetails.Function)
 	} else {
@@ -567,7 +567,7 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		var newEndpointTypeVpc bool
 		var oldEndpointTypeVpc bool
 
-		old, new := d.GetChange("endpoint_type")
+		old, new := d.GetChange(names.AttrEndpointType)
 
 		if old, new := old.(string), new.(string); new == transfer.EndpointTypeVpc {
 			newEndpointTypeVpc = true
@@ -582,8 +582,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			ServerId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("certificate") {
-			input.Certificate = aws.String(d.Get("certificate").(string))
+		if d.HasChange(names.AttrCertificate) {
+			input.Certificate = aws.String(d.Get(names.AttrCertificate).(string))
 		}
 
 		if d.HasChange("endpoint_details") {
@@ -663,8 +663,8 @@ func resourceServerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
-		if d.HasChange("endpoint_type") {
-			input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+		if d.HasChange(names.AttrEndpointType) {
+			input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
 
 			// Prevent the following error: InvalidRequestException: Server must be OFFLINE to change EndpointType
 			offlineUpdate = true

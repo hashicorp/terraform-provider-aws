@@ -58,7 +58,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},

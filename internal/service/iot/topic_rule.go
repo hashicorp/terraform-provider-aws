@@ -71,7 +71,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -168,7 +168,7 @@ func ResourceTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -186,7 +186,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -275,7 +275,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"log_group_name": {
+									names.AttrLogGroupName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -372,7 +372,7 @@ func ResourceTopicRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -392,7 +392,7 @@ func ResourceTopicRule() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"table_name": {
+												names.AttrTableName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -787,7 +787,7 @@ func ResourceTopicRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1159,7 +1159,7 @@ func ResourceTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1406,7 +1406,7 @@ func expandPutItemInput(tfList []interface{}) *iot.PutItemInput {
 	apiObject := &iot.PutItemInput{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
 	}
 
@@ -1448,7 +1448,7 @@ func expandCloudWatchLogsAction(tfList []interface{}) *iot.CloudwatchLogsAction 
 	apiObject := &iot.CloudwatchLogsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -1538,7 +1538,7 @@ func expandDynamoDBAction(tfList []interface{}) *iot.DynamoDBAction {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
 	}
 
@@ -1944,7 +1944,7 @@ func expandTimestreamAction(tfList []interface{}) *iot.TimestreamAction {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTableName].(string); ok && v != "" {
 		apiObject.TableName = aws.String(v)
 	}
 
@@ -2476,7 +2476,7 @@ func flattenCloudWatchLogsAction(apiObject *iot.CloudwatchLogsAction) []interfac
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RoleArn; v != nil {
@@ -2615,7 +2615,7 @@ func flattenDynamoDBAction(apiObject *iot.DynamoDBAction) []interface{} {
 	}
 
 	if v := apiObject.TableName; v != nil {
-		tfMap["table_name"] = aws.StringValue(v)
+		tfMap[names.AttrTableName] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -3027,7 +3027,7 @@ func flattenPutItemInput(apiObject *iot.PutItemInput) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.TableName; v != nil {
-		tfMap["table_name"] = aws.StringValue(v)
+		tfMap[names.AttrTableName] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}
@@ -3269,7 +3269,7 @@ func flattenTimestreamAction(apiObject *iot.TimestreamAction) []interface{} {
 	}
 
 	if v := apiObject.TableName; v != nil {
-		tfMap["table_name"] = aws.StringValue(v)
+		tfMap[names.AttrTableName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Timestamp; v != nil {

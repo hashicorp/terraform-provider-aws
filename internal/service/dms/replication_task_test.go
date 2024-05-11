@@ -427,7 +427,7 @@ func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 				Config: testAccReplicationTaskConfig_resourceIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "resource_identifier", "identifier"),
+					resource.TestCheckResourceAttr(resourceName, "resource_identifier", names.AttrIdentifier),
 				),
 			},
 			{

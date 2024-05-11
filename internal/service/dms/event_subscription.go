@@ -66,7 +66,7 @@ func ResourceEventSubscription() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -102,7 +102,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	input := &dms.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -154,7 +154,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set(names.AttrEnabled, subscription.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(subscription.EventCategoriesList))
 	d.Set(names.AttrName, d.Id())
-	d.Set("sns_topic_arn", subscription.SnsTopicArn)
+	d.Set(names.AttrSNSTopicARN, subscription.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(subscription.SourceIdsList))
 	d.Set("source_type", subscription.SourceType)
 
@@ -169,7 +169,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		input := &dms.ModifyEventSubscriptionInput{
 			Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
-			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+			SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 			SourceType:       aws.String(d.Get("source_type").(string)),
 			SubscriptionName: aws.String(d.Id()),
 		}

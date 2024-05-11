@@ -142,7 +142,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -418,7 +418,7 @@ var (
 	}
 
 	assessmentScopeAWSServicesAttrTypes = map[string]attr.Type{ // nosemgrep:ci.aws-in-var-name
-		"service_name": types.StringType,
+		names.AttrServiceName: types.StringType,
 	}
 )
 
@@ -664,7 +664,7 @@ func flattenAssessmentScopeAWSServices(ctx context.Context, apiObject []awstypes
 	elems := []attr.Value{}
 	for _, service := range apiObject {
 		obj := map[string]attr.Value{
-			"service_name": flex.StringToFramework(ctx, service.ServiceName),
+			names.AttrServiceName: flex.StringToFramework(ctx, service.ServiceName),
 		}
 		objVal, d := types.ObjectValue(assessmentScopeAWSServicesAttrTypes, obj)
 		diags.Append(d...)

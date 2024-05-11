@@ -1041,7 +1041,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		}
 
 		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
-			tfMap["table_name"] = v
+			tfMap[names.AttrTableName] = v
 		}
 
 		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]interface{}{tfMap})

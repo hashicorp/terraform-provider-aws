@@ -65,7 +65,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.port", "6379"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
-					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
@@ -116,7 +116,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
-					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "subnet_group_name", "default"), // created automatically & matches the default vpc
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "true"),
@@ -951,7 +951,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{
@@ -963,7 +963,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				Config: testAccClusterConfig_snsTopicNull(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 				),
 			},
 			{
@@ -975,7 +975,7 @@ func TestAccMemoryDBCluster_Update_snsTopicARN(t *testing.T) {
 				Config: testAccClusterConfig_snsTopic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", "aws_sns_topic.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{

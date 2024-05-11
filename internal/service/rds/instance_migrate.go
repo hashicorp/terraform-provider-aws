@@ -95,7 +95,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -592,7 +592,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -603,7 +603,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {

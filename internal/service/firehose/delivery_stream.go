@@ -106,7 +106,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional: true,
 								Default:  false,
 							},
-							"log_group_name": {
+							names.AttrLogGroupName: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -675,7 +675,7 @@ func resourceDeliveryStream() *schema.Resource {
 														Required:     true,
 														ValidateFunc: verify.ValidARN,
 													},
-													"table_name": {
+													names.AttrTableName: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -2202,7 +2202,7 @@ func expandSchemaConfiguration(l []interface{}) *types.SchemaConfiguration {
 	config := &types.SchemaConfiguration{
 		DatabaseName: aws.String(m[names.AttrDatabaseName].(string)),
 		RoleARN:      aws.String(m[names.AttrRoleARN].(string)),
-		TableName:    aws.String(m["table_name"].(string)),
+		TableName:    aws.String(m[names.AttrTableName].(string)),
 		VersionId:    aws.String(m["version_id"].(string)),
 	}
 
@@ -2333,7 +2333,7 @@ func expandCloudWatchLoggingOptions(s3 map[string]interface{}) *types.CloudWatch
 		Enabled: aws.Bool(loggingConfig[names.AttrEnabled].(bool)),
 	}
 
-	if v, ok := loggingConfig["log_group_name"]; ok {
+	if v, ok := loggingConfig[names.AttrLogGroupName]; ok {
 		loggingOptions.LogGroupName = aws.String(v.(string))
 	}
 
@@ -3210,7 +3210,7 @@ func flattenCloudWatchLoggingOptions(clo *types.CloudWatchLoggingOptions) []inte
 		names.AttrEnabled: aws.ToBool(clo.Enabled),
 	}
 	if aws.ToBool(clo.Enabled) {
-		cloudwatchLoggingOptions["log_group_name"] = aws.ToString(clo.LogGroupName)
+		cloudwatchLoggingOptions[names.AttrLogGroupName] = aws.ToString(clo.LogGroupName)
 		cloudwatchLoggingOptions["log_stream_name"] = aws.ToString(clo.LogStreamName)
 	}
 	return []interface{}{cloudwatchLoggingOptions}
@@ -3699,7 +3699,7 @@ func flattenSchemaConfiguration(sc *types.SchemaConfiguration) []map[string]inte
 		names.AttrDatabaseName: aws.ToString(sc.DatabaseName),
 		names.AttrRegion:       aws.ToString(sc.Region),
 		names.AttrRoleARN:      aws.ToString(sc.RoleARN),
-		"table_name":           aws.ToString(sc.TableName),
+		names.AttrTableName:    aws.ToString(sc.TableName),
 		"version_id":           aws.ToString(sc.VersionId),
 	}
 

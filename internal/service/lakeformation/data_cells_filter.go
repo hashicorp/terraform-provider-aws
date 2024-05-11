@@ -96,7 +96,7 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"table_name": schema.StringAttribute{
+						names.AttrTableName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),

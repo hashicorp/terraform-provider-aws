@@ -116,7 +116,7 @@ func ResourceJobTemplate() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"log_group_name": {
+															names.AttrLogGroupName: {
 																Type:     schema.TypeString,
 																Required: true,
 																ForceNew: true,
@@ -672,7 +672,7 @@ func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.Parametri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {

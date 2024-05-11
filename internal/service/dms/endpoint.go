@@ -109,7 +109,7 @@ func ResourceEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validEndpointID,
 			},
-			"endpoint_type": {
+			names.AttrEndpointType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(dms.ReplicationEndpointTypeValue_Values(), false),
@@ -781,7 +781,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 	endpointID := d.Get("endpoint_id").(string)
 	input := &dms.CreateEndpointInput{
 		EndpointIdentifier: aws.String(endpointID),
-		EndpointType:       aws.String(d.Get("endpoint_type").(string)),
+		EndpointType:       aws.String(d.Get(names.AttrEndpointType).(string)),
 		EngineName:         aws.String(d.Get("engine_name").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -1079,8 +1079,8 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				input.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 			}
 
-			if d.HasChange("endpoint_type") {
-				input.EndpointType = aws.String(d.Get("endpoint_type").(string))
+			if d.HasChange(names.AttrEndpointType) {
+				input.EndpointType = aws.String(d.Get(names.AttrEndpointType).(string))
 			}
 
 			if d.HasChange("engine_name") {
@@ -1534,7 +1534,7 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 	d.Set("endpoint_arn", endpoint.EndpointArn)
 	d.Set("endpoint_id", endpoint.EndpointIdentifier)
 	// For some reason the AWS API only accepts lowercase type but returns it as uppercase
-	d.Set("endpoint_type", strings.ToLower(aws.StringValue(endpoint.EndpointType)))
+	d.Set(names.AttrEndpointType, strings.ToLower(aws.StringValue(endpoint.EndpointType)))
 	d.Set("engine_name", endpoint.EngineName)
 	d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
 

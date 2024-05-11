@@ -106,7 +106,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -186,7 +186,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DocDBConn(ctx)
 
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -279,7 +279,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("engine", db.Engine)
 	d.Set(names.AttrEngineVersion, db.EngineVersion)
-	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set(names.AttrKMSKeyID, db.KmsKeyId)

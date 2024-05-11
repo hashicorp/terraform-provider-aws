@@ -147,7 +147,7 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -229,9 +229,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
 	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
-		d.Set("sns_topic_arn", cluster.SnsTopicArn)
+		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
-		d.Set("sns_topic_arn", "")
+		d.Set(names.AttrSNSTopicARN, "")
 	}
 
 	d.Set("subnet_group_name", cluster.SubnetGroupName)

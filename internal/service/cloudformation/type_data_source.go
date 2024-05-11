@@ -59,7 +59,7 @@ func dataSourceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

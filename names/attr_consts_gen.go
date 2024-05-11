@@ -23,9 +23,11 @@ const (
 	AttrBucketName                 = "bucket_name"
 	AttrBucketPrefix               = "bucket_prefix"
 	AttrCatalogID                  = "catalog_id"
+	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrConfiguration              = "configuration"
+	AttrContentType                = "content_type"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
 	AttrCreationDate               = "creation_date"
@@ -42,6 +44,7 @@ const (
 	AttrEncrypted                  = "encrypted"
 	AttrEncryptionConfiguration    = "encryption_configuration"
 	AttrEndpoint                   = "endpoint"
+	AttrEndpointType               = "endpoint_type"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
 	AttrExecutionRoleARN           = "execution_role_arn"
@@ -51,17 +54,20 @@ const (
 	AttrFormat                     = "format"
 	AttrHostedZoneID               = "hosted_zone_id"
 	AttrID                         = "id"
+	AttrIdentifier                 = "identifier"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
 	AttrKMSKeyARN                  = "kms_key_arn"
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
 	AttrLastUpdatedDate            = "last_updated_date"
+	AttrLogGroupName               = "log_group_name"
 	AttrMax                        = "max"
 	AttrMin                        = "min"
 	AttrMode                       = "mode"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
+	AttrNamespace                  = "namespace"
 	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
 	AttrOwnerID                    = "owner_id"
@@ -81,10 +87,13 @@ const (
 	AttrResourceARN                = "resource_arn"
 	AttrResourceType               = "resource_type"
 	AttrRoleARN                    = "role_arn"
+	AttrS3BucketName               = "s3_bucket_name"
+	AttrSNSTopicARN                = "sns_topic_arn"
 	AttrScheduleExpression         = "schedule_expression"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
+	AttrServiceName                = "service_name"
 	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
@@ -94,6 +103,7 @@ const (
 	AttrStatus                     = "status"
 	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
+	AttrTableName                  = "table_name"
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"
 	AttrTarget                     = "target"
@@ -103,6 +113,7 @@ const (
 	AttrType                       = "type"
 	AttrURL                        = "url"
 	AttrUnit                       = "unit"
+	AttrUserName                   = "user_name"
 	AttrUsername                   = "username"
 	AttrVPCID                      = "vpc_id"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
@@ -130,9 +141,11 @@ func ConstOrQuote(constant string) string {
 		"bucket_name":                   "AttrBucketName",
 		"bucket_prefix":                 "AttrBucketPrefix",
 		"catalog_id":                    "AttrCatalogID",
+		"certificate":                   "AttrCertificate",
 		"certificate_arn":               "AttrCertificateARN",
 		"cluster_identifier":            "AttrClusterIdentifier",
 		"configuration":                 "AttrConfiguration",
+		"content_type":                  "AttrContentType",
 		"created_at":                    "AttrCreatedAt",
 		"created_date":                  "AttrCreatedDate",
 		"creation_date":                 "AttrCreationDate",
@@ -149,6 +162,7 @@ func ConstOrQuote(constant string) string {
 		"encrypted":                     "AttrEncrypted",
 		"encryption_configuration":      "AttrEncryptionConfiguration",
 		"endpoint":                      "AttrEndpoint",
+		"endpoint_type":                 "AttrEndpointType",
 		"endpoints":                     "AttrEndpoints",
 		"engine_version":                "AttrEngineVersion",
 		"execution_role_arn":            "AttrExecutionRoleARN",
@@ -158,17 +172,20 @@ func ConstOrQuote(constant string) string {
 		"format":                        "AttrFormat",
 		"hosted_zone_id":                "AttrHostedZoneID",
 		"id":                            "AttrID",
+		"identifier":                    "AttrIdentifier",
 		"instance_id":                   "AttrInstanceID",
 		"instance_type":                 "AttrInstanceType",
 		"kms_key_arn":                   "AttrKMSKeyARN",
 		"kms_key_id":                    "AttrKMSKeyID",
 		"key":                           "AttrKey",
 		"last_updated_date":             "AttrLastUpdatedDate",
+		"log_group_name":                "AttrLogGroupName",
 		"max":                           "AttrMax",
 		"min":                           "AttrMin",
 		"mode":                          "AttrMode",
 		"name":                          "AttrName",
 		"name_prefix":                   "AttrNamePrefix",
+		"namespace":                     "AttrNamespace",
 		"network_configuration":         "AttrNetworkConfiguration",
 		"network_interface_id":          "AttrNetworkInterfaceID",
 		"owner_id":                      "AttrOwnerID",
@@ -188,10 +205,13 @@ func ConstOrQuote(constant string) string {
 		"resource_arn":                  "AttrResourceARN",
 		"resource_type":                 "AttrResourceType",
 		"role_arn":                      "AttrRoleARN",
+		"s3_bucket_name":                "AttrS3BucketName",
+		"sns_topic_arn":                 "AttrSNSTopicARN",
 		"schedule_expression":           "AttrScheduleExpression",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
+		"service_name":                  "AttrServiceName",
 		"session":                       "AttrSession",
 		"shared_config_files":           "AttrSharedConfigFiles",
 		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
@@ -201,6 +221,7 @@ func ConstOrQuote(constant string) string {
 		"status":                        "AttrStatus",
 		"subnet_id":                     "AttrSubnetID",
 		"subnet_ids":                    "AttrSubnetIDs",
+		"table_name":                    "AttrTableName",
 		"tags":                          "AttrTags",
 		"tags_all":                      "AttrTagsAll",
 		"target":                        "AttrTarget",
@@ -210,6 +231,7 @@ func ConstOrQuote(constant string) string {
 		"type":                          "AttrType",
 		"url":                           "AttrURL",
 		"unit":                          "AttrUnit",
+		"user_name":                     "AttrUserName",
 		"username":                      "AttrUsername",
 		"vpc_id":                        "AttrVPCID",
 		"vpc_security_group_ids":        "AttrVPCSecurityGroupIDs",

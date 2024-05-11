@@ -54,7 +54,7 @@ func DataSourceReportPlan() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -41,7 +41,7 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 				),

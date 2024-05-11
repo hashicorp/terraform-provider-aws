@@ -97,7 +97,7 @@ func resourcePolicy() *schema.Resource {
 														Type:     schema.TypeString,
 														Required: true,
 													},
-													"namespace": {
+													names.AttrNamespace: {
 														Type:     schema.TypeString,
 														Required: true,
 													},
@@ -424,7 +424,7 @@ func resourcePolicy() *schema.Resource {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
-																			"namespace": {
+																			names.AttrNamespace: {
 																				Type:     schema.TypeString,
 																				Required: true,
 																			},
@@ -451,7 +451,7 @@ func resourcePolicy() *schema.Resource {
 												},
 											},
 										},
-										"namespace": {
+										names.AttrNamespace: {
 											Type:          schema.TypeString,
 											Optional:      true,
 											ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
@@ -801,7 +801,7 @@ func expandTargetTrackingConfiguration(configs []interface{}) *awstypes.TargetTr
 		if val, ok := spec["metrics"].(*schema.Set); ok && val.Len() > 0 {
 			customSpec.Metrics = expandTargetTrackingMetricDataQueries(val.List())
 		} else {
-			customSpec.Namespace = aws.String(spec["namespace"].(string))
+			customSpec.Namespace = aws.String(spec[names.AttrNamespace].(string))
 			customSpec.MetricName = aws.String(spec["metric_name"].(string))
 			customSpec.Statistic = awstypes.MetricStatistic(spec["statistic"].(string))
 			if val, ok := spec[names.AttrUnit]; ok && len(val.(string)) > 0 {
@@ -842,7 +842,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
 			metric := &awstypes.Metric{
 				MetricName: aws.String(metricSpec["metric_name"].(string)),
-				Namespace:  aws.String(metricSpec["namespace"].(string)),
+				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
 				dims := v.(*schema.Set).List()
@@ -1007,7 +1007,7 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []awstypes.Met
 			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
 			metric := &awstypes.Metric{
 				MetricName: aws.String(metricSpec["metric_name"].(string)),
-				Namespace:  aws.String(metricSpec["namespace"].(string)),
+				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
 				dims := v.(*schema.Set).List()
@@ -1067,7 +1067,7 @@ func flattenTargetTrackingConfiguration(config *awstypes.TargetTrackingConfigura
 			spec["metrics"] = flattenTargetTrackingMetricDataQueries(config.CustomizedMetricSpecification.Metrics)
 		} else {
 			spec["metric_name"] = aws.ToString(config.CustomizedMetricSpecification.MetricName)
-			spec["namespace"] = aws.ToString(config.CustomizedMetricSpecification.Namespace)
+			spec[names.AttrNamespace] = aws.ToString(config.CustomizedMetricSpecification.Namespace)
 			spec["statistic"] = string(config.CustomizedMetricSpecification.Statistic)
 			if config.CustomizedMetricSpecification.Unit != nil {
 				spec[names.AttrUnit] = aws.ToString(config.CustomizedMetricSpecification.Unit)
@@ -1118,7 +1118,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []awstypes.TargetT
 				metricSpec["dimensions"] = dimSpec
 			}
 			metricSpec["metric_name"] = aws.ToString(rawMetric.MetricName)
-			metricSpec["namespace"] = aws.ToString(rawMetric.Namespace)
+			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
 			if rawMetricStat.Unit != nil {
@@ -1269,7 +1269,7 @@ func flattenMetricDataQueries(metricDataQueries []awstypes.MetricDataQuery) []in
 				metricSpec["dimensions"] = dimSpec
 			}
 			metricSpec["metric_name"] = aws.ToString(rawMetric.MetricName)
-			metricSpec["namespace"] = aws.ToString(rawMetric.Namespace)
+			metricSpec[names.AttrNamespace] = aws.ToString(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.ToString(rawMetricStat.Stat)
 			if rawMetricStat.Unit != nil {

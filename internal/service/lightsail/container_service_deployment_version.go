@@ -156,7 +156,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 					},
 				},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -177,7 +177,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(names.AttrServiceName).(string)
 
 	input := lightsail.CreateContainerServiceDeploymentInput{
 		ServiceName: aws.String(serviceName),
@@ -234,7 +234,7 @@ func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schem
 	}
 
 	d.Set(names.AttrCreatedAt, aws.ToTime(deployment.CreatedAt).Format(time.RFC3339))
-	d.Set("service_name", serviceName)
+	d.Set(names.AttrServiceName, serviceName)
 	d.Set(names.AttrState, deployment.State)
 	d.Set(names.AttrVersion, deployment.Version)
 

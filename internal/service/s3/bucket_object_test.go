@@ -82,7 +82,7 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/octet-stream"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
@@ -310,7 +310,7 @@ func TestAccS3BucketObject_withContentCharacteristics(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "{anything will do }"),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "binary/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "binary/octet-stream"),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", "http://google.com"),
 				),
 			},

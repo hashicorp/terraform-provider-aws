@@ -86,7 +86,7 @@ func resourceEventSubscription() *schema.Resource {
 					"INFO",
 				}, false),
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -119,7 +119,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 
 	request := &redshift.CreateEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Get(names.AttrName).(string)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		Tags:             getTagsIn(ctx),
 	}
@@ -180,7 +180,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
 	d.Set(names.AttrName, sub.CustSubscriptionId)
 	d.Set("severity", sub.Severity)
-	d.Set("sns_topic_arn", sub.SnsTopicArn)
+	d.Set(names.AttrSNSTopicARN, sub.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
 	d.Set("source_type", sub.SourceType)
 	d.Set(names.AttrStatus, sub.Status)
@@ -197,7 +197,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		req := &redshift.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
-			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+			SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 			Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			SourceIds:        flex.ExpandStringSet(d.Get("source_ids").(*schema.Set)),
 			SourceType:       aws.String(d.Get("source_type").(string)),

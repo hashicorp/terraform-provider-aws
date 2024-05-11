@@ -892,7 +892,7 @@ func expandSheetDefinition(tfMap map[string]interface{}) *quicksight.SheetDefini
 	if v, ok := tfMap["sheet_id"].(string); ok && v != "" {
 		sheet.SheetId = aws.String(v)
 	}
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		sheet.ContentType = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {

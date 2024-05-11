@@ -84,7 +84,7 @@ func resourceFargateProfile() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -324,7 +324,7 @@ func expandFargateProfileSelectors(l []interface{}) []types.FargateProfileSelect
 			fargateProfileSelector.Labels = flex.ExpandStringValueMap(v)
 		}
 
-		if v, ok := m["namespace"].(string); ok && v != "" {
+		if v, ok := m[names.AttrNamespace].(string); ok && v != "" {
 			fargateProfileSelector.Namespace = aws.String(v)
 		}
 
@@ -343,8 +343,8 @@ func flattenFargateProfileSelectors(fargateProfileSelectors []types.FargateProfi
 
 	for _, fargateProfileSelector := range fargateProfileSelectors {
 		m := map[string]interface{}{
-			"labels":    fargateProfileSelector.Labels,
-			"namespace": aws.ToString(fargateProfileSelector.Namespace),
+			"labels":            fargateProfileSelector.Labels,
+			names.AttrNamespace: aws.ToString(fargateProfileSelector.Namespace),
 		}
 
 		l = append(l, m)

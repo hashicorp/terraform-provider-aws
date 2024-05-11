@@ -81,7 +81,7 @@ func ResourceDataSource() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -521,7 +521,7 @@ func expandDynamoDBDataSourceConfig(l []interface{}, currentRegion string) *apps
 
 	result := &appsync.DynamodbDataSourceConfig{
 		AwsRegion: aws.String(currentRegion),
-		TableName: aws.String(configured["table_name"].(string)),
+		TableName: aws.String(configured[names.AttrTableName].(string)),
 	}
 
 	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
@@ -573,8 +573,8 @@ func flattenDynamoDBDataSourceConfig(config *appsync.DynamodbDataSourceConfig) [
 	}
 
 	result := map[string]interface{}{
-		names.AttrRegion: aws.StringValue(config.AwsRegion),
-		"table_name":     aws.StringValue(config.TableName),
+		names.AttrRegion:    aws.StringValue(config.AwsRegion),
+		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 
 	if config.UseCallerCredentials != nil {

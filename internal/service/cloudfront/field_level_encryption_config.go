@@ -60,7 +60,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"content_type": {
+												names.AttrContentType: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -327,7 +327,7 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 
 	apiObject := &awstypes.ContentTypeProfile{}
 
-	if v, ok := tfMap["content_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContentType].(string); ok && v != "" {
 		apiObject.ContentType = aws.String(v)
 	}
 
@@ -488,7 +488,7 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	}
 
 	if v := apiObject.ContentType; v != nil {
-		tfMap["content_type"] = aws.ToString(v)
+		tfMap[names.AttrContentType] = aws.ToString(v)
 	}
 
 	if v := apiObject.ProfileId; v != nil {

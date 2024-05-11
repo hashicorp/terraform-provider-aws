@@ -234,7 +234,7 @@ func ResourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -261,7 +261,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	in := &identitystore.CreateUserInput{
 		DisplayName:     aws.String(d.Get(names.AttrDisplayName).(string)),
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
-		UserName:        aws.String(d.Get("user_name").(string)),
+		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if v, ok := d.GetOk("addresses"); ok && len(v.([]interface{})) > 0 {
@@ -354,7 +354,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("timezone", out.Timezone)
 	d.Set("title", out.Title)
 	d.Set("user_id", out.UserId)
-	d.Set("user_name", out.UserName)
+	d.Set(names.AttrUserName, out.UserName)
 	d.Set("user_type", out.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(out.Addresses)); err != nil {

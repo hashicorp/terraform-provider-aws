@@ -77,7 +77,7 @@ func ResourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -879,7 +879,7 @@ func ExpandDataCellsFilter(in []interface{}) *awstypes.DataCellsFilterResource {
 		out.TableCatalogId = aws.String(v)
 	}
 
-	if v, ok := m["table_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrTableName].(string); ok && v != "" {
 		out.TableName = aws.String(v)
 	}
 
@@ -895,7 +895,7 @@ func flattenDataCellsFilter(in *awstypes.DataCellsFilterResource) []interface{} 
 		names.AttrDatabaseName: aws.ToString(in.DatabaseName),
 		names.AttrName:         aws.ToString(in.Name),
 		"table_catalog_id":     aws.ToString(in.TableCatalogId),
-		"table_name":           aws.ToString(in.TableName),
+		names.AttrTableName:    aws.ToString(in.TableName),
 	}
 
 	return []interface{}{m}

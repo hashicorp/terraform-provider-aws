@@ -135,7 +135,7 @@ func ResourceResponsePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sns_topic_arn": {
+									names.AttrSNSTopicARN: {
 										Type:     schema.TypeString,
 										Required: true,
 									},

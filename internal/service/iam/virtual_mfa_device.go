@@ -68,7 +68,7 @@ func resourceVirtualMFADevice() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -167,7 +167,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if u := vMFA.User; u != nil {
-		d.Set("user_name", u.UserName)
+		d.Set(names.AttrUserName, u.UserName)
 	}
 
 	// The call above returns empty tags.
@@ -193,7 +193,7 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if v := d.Get("user_name"); v != "" {
+	if v := d.Get(names.AttrUserName); v != "" {
 		_, err := conn.DeactivateMFADevice(ctx, &iam.DeactivateMFADeviceInput{
 			UserName:     aws.String(v.(string)),
 			SerialNumber: aws.String(d.Id()),

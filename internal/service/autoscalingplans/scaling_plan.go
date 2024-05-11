@@ -112,7 +112,7 @@ func ResourceScalingPlan() *schema.Resource {
 										Required: true,
 									},
 
-									"namespace": {
+									names.AttrNamespace: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -244,7 +244,7 @@ func ResourceScalingPlan() *schema.Resource {
 													Required: true,
 												},
 
-												"namespace": {
+												names.AttrNamespace: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
@@ -611,7 +611,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 			if v, ok := mCustomizedLoadMetricSpecification["metric_name"].(string); ok && v != "" {
 				customizedLoadMetricSpecification.MetricName = aws.String(v)
 			}
-			if v, ok := mCustomizedLoadMetricSpecification["namespace"].(string); ok && v != "" {
+			if v, ok := mCustomizedLoadMetricSpecification[names.AttrNamespace].(string); ok && v != "" {
 				customizedLoadMetricSpecification.Namespace = aws.String(v)
 			}
 			if v, ok := mCustomizedLoadMetricSpecification["statistic"].(string); ok && v != "" {
@@ -685,7 +685,7 @@ func expandScalingInstructions(vScalingInstructions *schema.Set) []awstypes.Scal
 					if v, ok := mCustomizedScalingMetricSpecification["metric_name"].(string); ok && v != "" {
 						customizedScalingMetricSpecification.MetricName = aws.String(v)
 					}
-					if v, ok := mCustomizedScalingMetricSpecification["namespace"].(string); ok && v != "" {
+					if v, ok := mCustomizedScalingMetricSpecification[names.AttrNamespace].(string); ok && v != "" {
 						customizedScalingMetricSpecification.Namespace = aws.String(v)
 					}
 					if v, ok := mCustomizedScalingMetricSpecification["statistic"].(string); ok && v != "" {
@@ -751,11 +751,11 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 
 			mScalingInstruction["customized_load_metric_specification"] = []interface{}{
 				map[string]interface{}{
-					"dimensions":   mDimensions,
-					"metric_name":  aws.ToString(customizedLoadMetricSpecification.MetricName),
-					"namespace":    aws.ToString(customizedLoadMetricSpecification.Namespace),
-					"statistic":    string(customizedLoadMetricSpecification.Statistic),
-					names.AttrUnit: aws.ToString(customizedLoadMetricSpecification.Unit),
+					"dimensions":        mDimensions,
+					"metric_name":       aws.ToString(customizedLoadMetricSpecification.MetricName),
+					names.AttrNamespace: aws.ToString(customizedLoadMetricSpecification.Namespace),
+					"statistic":         string(customizedLoadMetricSpecification.Statistic),
+					names.AttrUnit:      aws.ToString(customizedLoadMetricSpecification.Unit),
 				},
 			}
 		}
@@ -789,11 +789,11 @@ func flattenScalingInstructions(scalingInstructions []awstypes.ScalingInstructio
 
 					mTargetTrackingConfiguration["customized_scaling_metric_specification"] = []interface{}{
 						map[string]interface{}{
-							"dimensions":   mDimensions,
-							"metric_name":  aws.ToString(customizedScalingMetricSpecification.MetricName),
-							"namespace":    aws.ToString(customizedScalingMetricSpecification.Namespace),
-							"statistic":    string(customizedScalingMetricSpecification.Statistic),
-							names.AttrUnit: aws.ToString(customizedScalingMetricSpecification.Unit),
+							"dimensions":        mDimensions,
+							"metric_name":       aws.ToString(customizedScalingMetricSpecification.MetricName),
+							names.AttrNamespace: aws.ToString(customizedScalingMetricSpecification.Namespace),
+							"statistic":         string(customizedScalingMetricSpecification.Statistic),
+							names.AttrUnit:      aws.ToString(customizedScalingMetricSpecification.Unit),
 						},
 					}
 				}

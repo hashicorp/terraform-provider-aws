@@ -1728,14 +1728,14 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						names.AttrKey:  "test_body_1",
-						"content":      "test response 1",
-						"content_type": "TEXT_PLAIN",
+						names.AttrKey:         "test_body_1",
+						"content":             "test response 1",
+						names.AttrContentType: "TEXT_PLAIN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						names.AttrKey:  "test_body_2",
-						"content":      "<html><body>test response 2</body></html>",
-						"content_type": "TEXT_HTML",
+						names.AttrKey:         "test_body_2",
+						"content":             "<html><body>test response 2</body></html>",
+						names.AttrContentType: "TEXT_HTML",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1763,14 +1763,14 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_response_body.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						names.AttrKey:  "test_body_1",
-						"content":      "test response 1",
-						"content_type": "TEXT_PLAIN",
+						names.AttrKey:         "test_body_1",
+						"content":             "test response 1",
+						names.AttrContentType: "TEXT_PLAIN",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
-						names.AttrKey:  "test_body_2",
-						"content":      "<html><body>test response 2</body></html>",
-						"content_type": "TEXT_HTML",
+						names.AttrKey:         "test_body_2",
+						"content":             "<html><body>test response 2</body></html>",
+						names.AttrContentType: "TEXT_HTML",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{

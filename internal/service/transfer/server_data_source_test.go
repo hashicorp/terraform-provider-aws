@@ -53,9 +53,9 @@ func testAccServerDataSource_Service_managed(t *testing.T) {
 				Config: testAccServerDataSourceConfig_serviceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttrPair(datasourceName, "endpoint_type", resourceName, "endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpointType, resourceName, names.AttrEndpointType),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),

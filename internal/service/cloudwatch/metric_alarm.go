@@ -168,7 +168,7 @@ func resourceMetricAlarm() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -226,7 +226,7 @@ func resourceMetricAlarm() *schema.Resource {
 					},
 				},
 			},
-			"namespace": {
+			names.AttrNamespace: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
@@ -399,7 +399,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 			return sdkdiag.AppendErrorf(diags, "setting metric_query: %s", err)
 		}
 	}
-	d.Set("namespace", alarm.Namespace)
+	d.Set(names.AttrNamespace, alarm.Namespace)
 	d.Set("ok_actions", alarm.OKActions)
 	d.Set("period", alarm.Period)
 	d.Set("statistic", alarm.Statistic)
@@ -520,7 +520,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.Metrics = expandMetricAlarmMetrics(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("namespace"); ok {
+	if v, ok := d.GetOk(names.AttrNamespace); ok {
 		apiObject.Namespace = aws.String(v.(string))
 	}
 
@@ -603,7 +603,7 @@ func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string
 	if v := apiObject.Metric; v != nil {
 		tfMap["dimensions"] = flattenMetricAlarmDimensions(v.Dimensions)
 		tfMap["metric_name"] = aws.ToString(v.MetricName)
-		tfMap["namespace"] = aws.ToString(v.Namespace)
+		tfMap[names.AttrNamespace] = aws.ToString(v.Namespace)
 	}
 
 	return tfMap
@@ -677,7 +677,7 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricS
 		apiObject.Metric.Dimensions = expandMetricAlarmDimensions(v)
 	}
 
-	if v, ok := tfMap["namespace"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrNamespace]; ok && v.(string) != "" {
 		apiObject.Metric.Namespace = aws.String(v.(string))
 	}
 

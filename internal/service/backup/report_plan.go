@@ -76,7 +76,7 @@ func ResourceReportPlan() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
 							},
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -268,7 +268,7 @@ func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.Re
 	}
 
 	result := &backup.ReportDeliveryChannel{
-		S3BucketName: aws.String(tfMap["s3_bucket_name"].(string)),
+		S3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
 	}
 
 	if v, ok := tfMap["formats"]; ok && v.(*schema.Set).Len() > 0 {
@@ -325,7 +325,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryCh
 	}
 
 	values := map[string]interface{}{
-		"s3_bucket_name": aws.StringValue(reportDeliveryChannel.S3BucketName),
+		names.AttrS3BucketName: aws.StringValue(reportDeliveryChannel.S3BucketName),
 	}
 
 	if reportDeliveryChannel.Formats != nil && len(reportDeliveryChannel.Formats) > 0 {

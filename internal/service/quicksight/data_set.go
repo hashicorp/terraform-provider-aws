@@ -242,7 +242,7 @@ func ResourceDataSet() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionFormatVersion_Values(), false),
 							},
-							"namespace": {
+							names.AttrNamespace: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 64),
@@ -1830,7 +1830,7 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	if v, ok := tfMap["format_version"].(string); ok {
 		rowLevelPermission.FormatVersion = aws.String(v)
 	}
-	if v, ok := tfMap["namespace"].(string); ok {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok {
 		rowLevelPermission.Namespace = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrStatus].(string); ok {
@@ -2581,7 +2581,7 @@ func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDa
 		tfMap["format_version"] = aws.StringValue(apiObject.FormatVersion)
 	}
 	if apiObject.Namespace != nil {
-		tfMap["namespace"] = aws.StringValue(apiObject.Namespace)
+		tfMap[names.AttrNamespace] = aws.StringValue(apiObject.Namespace)
 	}
 	if apiObject.PermissionPolicy != nil {
 		tfMap["permission_policy"] = aws.StringValue(apiObject.PermissionPolicy)

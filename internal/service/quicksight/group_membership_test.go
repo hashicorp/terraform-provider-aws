@@ -66,8 +66,8 @@ func TestAccQuickSightGroupMembership_withNamespace(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "group_name", groupResourceName, "group_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "member_name", userResourceName, "user_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace", namespaceResourceName, "namespace"),
+					resource.TestCheckResourceAttrPair(resourceName, "member_name", userResourceName, names.AttrUserName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, namespaceResourceName, names.AttrNamespace),
 				),
 			},
 			{
