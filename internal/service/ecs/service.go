@@ -374,7 +374,7 @@ func ResourceService() *schema.Resource {
 								},
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1409,7 +1409,7 @@ func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConf
 		config.LogConfiguration = expandLogConfiguration(v)
 	}
 
-	if v, ok := raw["namespace"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrNamespace].(string); ok && v != "" {
 		config.Namespace = aws.String(v)
 	}
 
