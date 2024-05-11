@@ -395,7 +395,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"vpc_config": {
+						names.AttrVPCConfig: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -908,7 +908,7 @@ func flattenMonitoringNetworkConfig(config *sagemaker.MonitoringNetworkConfig) [
 	}
 
 	if config.VpcConfig != nil {
-		m["vpc_config"] = flattenVPCConfig(config.VpcConfig)
+		m[names.AttrVPCConfig] = flattenVPCConfig(config.VpcConfig)
 	}
 
 	return []map[string]interface{}{m}
@@ -1284,7 +1284,7 @@ func expandMonitoringNetworkConfig(configured []interface{}) *sagemaker.Monitori
 		c.EnableNetworkIsolation = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m["vpc_config"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 {
 		c.VpcConfig = expandVPCConfig(v)
 	}
 
