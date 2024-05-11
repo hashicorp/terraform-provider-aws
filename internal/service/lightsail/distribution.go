@@ -229,7 +229,7 @@ func ResourceDistribution() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(flattenIPAddressTypeValues(types.IpAddressType("").Values()), false),
 				Default:      "dualstack",
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:        schema.TypeList,
 				Computed:    true,
 				Description: "An object that describes the location of the distribution, such as the AWS Region and Availability Zone.",
@@ -439,7 +439,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDomainName, out.DomainName)
 	d.Set("is_enabled", out.IsEnabled)
 	d.Set("ip_address_type", out.IpAddressType)
-	d.Set("location", []interface{}{flattenResourceLocation(out.Location)})
+	d.Set(names.AttrLocation, []interface{}{flattenResourceLocation(out.Location)})
 	if err := d.Set("origin", []interface{}{flattenOrigin(out.Origin)}); err != nil {
 		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
 	}

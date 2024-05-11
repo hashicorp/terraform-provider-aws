@@ -73,7 +73,7 @@ func ResourceKeyPair() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -138,7 +138,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 			d.Set("encrypted_fingerprint", fingerprint)
 			d.Set("encrypted_private_key", encrypted)
 		} else {
-			d.Set("private_key", resp.PrivateKeyBase64)
+			d.Set(names.AttrPrivateKey, resp.PrivateKeyBase64)
 		}
 
 		op = resp.Operation
