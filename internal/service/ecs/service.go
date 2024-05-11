@@ -293,7 +293,7 @@ func ResourceService() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1295,7 +1295,7 @@ func expandPlacementConstraints(tfList []interface{}) ([]*ecs.PlacementConstrain
 
 		apiObject := &ecs.PlacementConstraint{}
 
-		if v, ok := tfMap["expression"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 			apiObject.Expression = aws.String(v)
 		}
 
@@ -1322,7 +1322,7 @@ func flattenServicePlacementConstraints(pcs []*ecs.PlacementConstraint) []map[st
 		c := make(map[string]interface{})
 		c[names.AttrType] = aws.StringValue(pc.Type)
 		if pc.Expression != nil {
-			c["expression"] = aws.StringValue(pc.Expression)
+			c[names.AttrExpression] = aws.StringValue(pc.Expression)
 		}
 
 		results = append(results, c)
