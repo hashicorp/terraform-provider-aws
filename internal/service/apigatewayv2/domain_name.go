@@ -72,7 +72,7 @@ func resourceDomainName() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
@@ -320,7 +320,7 @@ func expandDomainNameConfiguration(tfMap map[string]interface{}) awstypes.Domain
 		apiObject.CertificateArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["endpoint_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEndpointType].(string); ok && v != "" {
 		apiObject.EndpointType = awstypes.EndpointType(v)
 	}
 
@@ -363,7 +363,7 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
-	tfMap["endpoint_type"] = string(apiObject.EndpointType)
+	tfMap[names.AttrEndpointType] = string(apiObject.EndpointType)
 
 	if v := apiObject.HostedZoneId; v != nil {
 		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
