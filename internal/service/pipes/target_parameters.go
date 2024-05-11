@@ -443,7 +443,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"expression": {
+										names.AttrExpression: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 2000),
@@ -1573,7 +1573,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) *types.PlacementCon
 
 	apiObject := &types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
 
@@ -2462,7 +2462,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = aws.ToString(v)
+		tfMap[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
