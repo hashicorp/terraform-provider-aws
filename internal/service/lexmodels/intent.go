@@ -567,7 +567,7 @@ var messageResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 1000),
 		},
-		"content_type": {
+		names.AttrContentType: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.ContentType_Values(), false),
@@ -685,9 +685,9 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 func flattenMessages(messages []*lexmodelbuildingservice.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
-			"content":      aws.StringValue(message.Content),
-			"content_type": aws.StringValue(message.ContentType),
-			"group_number": aws.Int64Value(message.GroupNumber),
+			"content":             aws.StringValue(message.Content),
+			names.AttrContentType: aws.StringValue(message.ContentType),
+			"group_number":        aws.Int64Value(message.GroupNumber),
 		})
 	}
 
@@ -708,7 +708,7 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 
 		message := &lexmodelbuildingservice.Message{
 			Content:     aws.String(value["content"].(string)),
-			ContentType: aws.String(value["content_type"].(string)),
+			ContentType: aws.String(value[names.AttrContentType].(string)),
 		}
 
 		if v, ok := value["group_number"]; ok && v != 0 {
