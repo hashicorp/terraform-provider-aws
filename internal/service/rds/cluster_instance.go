@@ -126,7 +126,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -139,7 +139,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"identifier"},
+				ConflictsWith: []string{names.AttrIdentifier},
 				ValidateFunc:  validIdentifierPrefix,
 			},
 			"instance_class": {
@@ -243,7 +243,7 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	identifier := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredName(d.Get(names.AttrIdentifier).(string)),
 		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate()
@@ -409,7 +409,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set("engine", db.Engine)
-	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set(names.AttrIdentifier, db.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set(names.AttrKMSKeyID, db.KmsKeyId)

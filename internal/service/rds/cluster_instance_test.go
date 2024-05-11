@@ -51,7 +51,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
@@ -125,7 +125,7 @@ func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "identifier", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrIdentifier, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-"),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
 				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
