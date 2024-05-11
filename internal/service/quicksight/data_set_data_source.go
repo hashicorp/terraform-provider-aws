@@ -543,7 +543,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
