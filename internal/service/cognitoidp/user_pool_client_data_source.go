@@ -79,7 +79,7 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"client_id": {
+			names.AttrClientID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -187,7 +187,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	clientId := d.Get("client_id").(string)
+	clientId := d.Get(names.AttrClientID).(string)
 	d.SetId(clientId)
 
 	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
