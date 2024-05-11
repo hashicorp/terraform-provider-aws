@@ -50,7 +50,7 @@ func resourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func resourceResource() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			resourceResourceCustomizeDiffGetSchema,
 			resourceResourceCustomizeDiffSchemaDiff,
-			customdiff.ComputedIf("properties", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrProperties, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("desired_state")
 			}),
 		),
@@ -152,7 +152,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Cloud Control API (%s) Resource (%s): %s", typeName, d.Id(), err)
 	}
 
-	d.Set("properties", resourceDescription.Properties)
+	d.Set(names.AttrProperties, resourceDescription.Properties)
 
 	return diags
 }
