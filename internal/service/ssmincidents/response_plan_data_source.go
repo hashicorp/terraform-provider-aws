@@ -117,7 +117,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sns_topic_arn": {
+									names.AttrSNSTopicARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
