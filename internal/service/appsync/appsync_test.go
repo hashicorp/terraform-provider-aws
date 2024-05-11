@@ -40,7 +40,7 @@ func TestAccAppSync_serial(t *testing.T) {
 			"basic":                     testAccGraphQLAPI_basic,
 			"disappears":                testAccGraphQLAPI_disappears,
 			names.AttrTags:              testAccGraphQLAPI_tags,
-			"schema":                    testAccGraphQLAPI_schema,
+			names.AttrSchema:            testAccGraphQLAPI_schema,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
