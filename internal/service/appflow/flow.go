@@ -1213,7 +1213,7 @@ func resourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IsRFC3339Time,
 												},
-												"schedule_expression": {
+												names.AttrScheduleExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 256),
@@ -2604,7 +2604,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 		a.ScheduleEndTime = aws.Time(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		a.ScheduleExpression = aws.String(v)
 	}
 
@@ -3602,7 +3602,7 @@ func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperti
 	}
 
 	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.ToString(v)
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {

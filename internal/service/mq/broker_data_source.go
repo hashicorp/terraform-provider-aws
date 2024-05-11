@@ -208,7 +208,7 @@ func dataSourceBroker() *schema.Resource {
 					},
 				},
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -297,7 +297,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrEngineVersion, output.EngineVersion)
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
-	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)

@@ -243,7 +243,7 @@ func ResourcePermissions() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
@@ -988,7 +988,7 @@ func ExpandLFTagPolicyResource(tfMap map[string]interface{}) *awstypes.LFTagPoli
 		apiObject.Expression = ExpandLFTagExpression(v.List())
 	}
 
-	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
 		apiObject.ResourceType = awstypes.ResourceType(v)
 	}
 
@@ -1027,7 +1027,7 @@ func flattenLFTagPolicyResource(apiObject *awstypes.LFTagPolicyResource) map[str
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		tfMap["resource_type"] = string(v)
+		tfMap[names.AttrResourceType] = string(v)
 	}
 
 	return tfMap

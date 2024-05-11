@@ -945,7 +945,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		}
 
 		if v := rs.Primary.Attributes["lf_tag_policy.0.resource_type"]; v != "" {
-			tfMap["resource_type"] = v
+			tfMap[names.AttrResourceType] = v
 		}
 
 		if expressionCount, err := strconv.Atoi(rs.Primary.Attributes["lf_tag_policy.0.expression.#"]); err == nil {

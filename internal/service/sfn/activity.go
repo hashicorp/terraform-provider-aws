@@ -36,7 +36,7 @@ func ResourceActivity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func resourceActivityRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("reading Step Functions Activity (%s): %s", d.Id(), err)
 	}
 
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
 
 	return nil

@@ -113,7 +113,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"destination_arn": {
+									names.AttrDestinationARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -916,7 +916,7 @@ func expandOnFailure(tfMap map[string]interface{}) *awstypes.OnFailure {
 
 	apiObject := &awstypes.OnFailure{}
 
-	if v, ok := tfMap["destination_arn"].(string); ok {
+	if v, ok := tfMap[names.AttrDestinationARN].(string); ok {
 		apiObject.Destination = aws.String(v)
 	}
 
@@ -965,7 +965,7 @@ func flattenOnFailure(apiObject *awstypes.OnFailure) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap["destination_arn"] = aws.ToString(v)
+		tfMap[names.AttrDestinationARN] = aws.ToString(v)
 	}
 
 	return tfMap

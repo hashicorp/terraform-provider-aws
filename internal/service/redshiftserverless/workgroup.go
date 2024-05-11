@@ -168,7 +168,7 @@ func resourceWorkgroup() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -236,7 +236,7 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Port = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("publicly_accessible"); ok {
+	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
@@ -292,7 +292,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("max_capacity", out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set(names.AttrPort, flattenEndpoint(out.Endpoint)[names.AttrPort])
-	d.Set("publicly_accessible", out.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, out.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroupIDs, flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(out.SubnetIds))
 	d.Set("workgroup_id", out.WorkgroupId)
@@ -408,9 +408,9 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("publicly_accessible") {
+	if d.HasChange(names.AttrPubliclyAccessible) {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			PubliclyAccessible: aws.Bool(d.Get("publicly_accessible").(bool)),
+			PubliclyAccessible: aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 			WorkgroupName:      aws.String(d.Id()),
 		}
 

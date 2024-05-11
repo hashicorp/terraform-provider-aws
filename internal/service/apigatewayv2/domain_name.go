@@ -67,7 +67,7 @@ func resourceDomainName() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -316,7 +316,7 @@ func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.Client, nam
 func expandDomainNameConfiguration(tfMap map[string]interface{}) awstypes.DomainNameConfiguration {
 	apiObject := awstypes.DomainNameConfiguration{}
 
-	if v, ok := tfMap["certificate_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCertificateARN].(string); ok && v != "" {
 		apiObject.CertificateArn = aws.String(v)
 	}
 
@@ -360,7 +360,7 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.ToString(v)
+		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
 	tfMap["endpoint_type"] = string(apiObject.EndpointType)

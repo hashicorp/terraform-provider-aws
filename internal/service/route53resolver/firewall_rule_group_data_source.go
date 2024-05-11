@@ -23,7 +23,7 @@ func DataSourceFirewallRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -79,7 +79,7 @@ func dataSourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(aws.StringValue(ruleGroup.Id))
 	d.Set(names.AttrARN, ruleGroup.Arn)
-	d.Set("creation_time", ruleGroup.CreationTime)
+	d.Set(names.AttrCreationTime, ruleGroup.CreationTime)
 	d.Set("creator_request_id", ruleGroup.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroup.Id)
 	d.Set("modification_time", ruleGroup.ModificationTime)

@@ -69,14 +69,14 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_displayName(t *testin
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig_displayName(suffix, displayName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName1),
 				),
 			},
 			{
 				Config: testAccWebsiteCertificateAuthorityAssociationConfig_displayName(suffix, displayName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebsiteCertificateAuthorityAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName2),
 				),
 			},
 			{

@@ -87,7 +87,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"encryption_configuration": schema.ListAttribute{
+						names.AttrEncryptionConfiguration: schema.ListAttribute{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
 							Optional:   true,
 							Computed:   true,

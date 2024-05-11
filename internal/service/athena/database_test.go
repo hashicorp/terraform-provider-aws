@@ -142,7 +142,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy, "encryption_configuration"},
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrForceDestroy, names.AttrEncryptionConfiguration},
 			},
 		},
 	})

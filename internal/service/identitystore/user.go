@@ -87,7 +87,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
@@ -259,7 +259,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.CreateUserInput{
-		DisplayName:     aws.String(d.Get("display_name").(string)),
+		DisplayName:     aws.String(d.Get(names.AttrDisplayName).(string)),
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
 		UserName:        aws.String(d.Get("user_name").(string)),
 	}
@@ -345,7 +345,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameUser, d.Id(), err)
 	}
 
-	d.Set("display_name", out.DisplayName)
+	d.Set(names.AttrDisplayName, out.DisplayName)
 	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("locale", out.Locale)
 	d.Set("nickname", out.NickName)
@@ -419,7 +419,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		Expand func(interface{}) interface{}
 	}{
 		{
-			Attribute: "display_name",
+			Attribute: names.AttrDisplayName,
 			Field:     "displayName",
 		},
 		{

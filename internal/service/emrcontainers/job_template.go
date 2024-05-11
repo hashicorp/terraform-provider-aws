@@ -156,7 +156,7 @@ func ResourceJobTemplate() *schema.Resource {
 								},
 							},
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -362,7 +362,7 @@ func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTempl
 		apiObject.ConfigurationOverrides = expandConfigurationOverrides(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -570,7 +570,7 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.JobDriver; v != nil {

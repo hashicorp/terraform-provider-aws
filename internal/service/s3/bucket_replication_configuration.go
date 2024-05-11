@@ -98,7 +98,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -569,7 +569,7 @@ func expandDestination(l []interface{}) *types.Destination {
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["encryption_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrEncryptionConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.EncryptionConfiguration = expandEncryptionConfiguration(v)
 	}
 
@@ -948,7 +948,7 @@ func flattenDestination(dest *types.Destination) []interface{} {
 	}
 
 	if dest.EncryptionConfiguration != nil {
-		m["encryption_configuration"] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
+		m[names.AttrEncryptionConfiguration] = flattenEncryptionConfiguration(dest.EncryptionConfiguration)
 	}
 
 	if dest.Metrics != nil {

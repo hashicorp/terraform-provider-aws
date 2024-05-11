@@ -44,7 +44,7 @@ func DataSourceListener() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{"load_balancer_arn", names.AttrPort},
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -334,7 +334,7 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set(names.AttrARN, listener.ListenerArn)
 	if listener.Certificates != nil && len(listener.Certificates) == 1 {
-		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)

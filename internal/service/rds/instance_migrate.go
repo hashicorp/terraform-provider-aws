@@ -167,7 +167,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -276,7 +276,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Computed: true,
 			},
 
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -441,7 +441,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 			// apply_immediately is used to determine when the update modifications
 			// take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -771,7 +771,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

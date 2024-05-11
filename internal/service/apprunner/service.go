@@ -51,7 +51,7 @@ func resourceService() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -148,7 +148,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -447,7 +447,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AutoScalingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EncryptionConfiguration = expandServiceEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -459,7 +459,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.InstanceConfiguration = expandServiceInstanceConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 
@@ -524,7 +524,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("auto_scaling_configuration_arn", nil)
 	}
-	if err := d.Set("encryption_configuration", flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenServiceEncryptionConfiguration(service.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	if err := d.Set("health_check_configuration", flattenServiceHealthCheckConfiguration(service.HealthCheckConfiguration)); err != nil {
@@ -533,7 +533,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("instance_configuration", flattenServiceInstanceConfiguration(service.InstanceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_configuration: %s", err)
 	}
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	if err := d.Set("observability_configuration", flattenServiceObservabilityConfiguration(service.ObservabilityConfiguration)); err != nil {
@@ -572,8 +572,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.InstanceConfiguration = expandServiceInstanceConfiguration(d.Get("instance_configuration").([]interface{}))
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("observability_configuration") {

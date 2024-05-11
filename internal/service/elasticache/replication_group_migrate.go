@@ -31,7 +31,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

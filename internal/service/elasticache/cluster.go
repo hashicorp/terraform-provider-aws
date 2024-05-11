@@ -53,7 +53,7 @@ func resourceCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -567,7 +567,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &elasticache.ModifyCacheClusterInput{
 			CacheClusterId:   aws.String(d.Id()),
-			ApplyImmediately: aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately: aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 		}
 
 		requestUpdate := false

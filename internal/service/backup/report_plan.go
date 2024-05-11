@@ -43,7 +43,7 @@ func ResourceReportPlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -193,7 +193,7 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
-	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
 	d.Set("deployment_status", reportPlan.DeploymentStatus)
 	d.Set(names.AttrDescription, reportPlan.ReportPlanDescription)
 	d.Set(names.AttrName, reportPlan.ReportPlanName)

@@ -58,7 +58,7 @@ func resourceBroker() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -295,7 +295,7 @@ func resourceBroker() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -404,7 +404,7 @@ func resourceBrokerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		EngineType:              types.EngineType(engineType),
 		EngineVersion:           aws.String(d.Get(names.AttrEngineVersion).(string)),
 		HostInstanceType:        aws.String(d.Get("host_instance_type").(string)),
-		PubliclyAccessible:      aws.Bool(d.Get("publicly_accessible").(bool)),
+		PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		Tags:                    getTagsIn(ctx),
 		Users:                   expandUsers(d.Get("user").(*schema.Set).List()),
 	}
@@ -490,7 +490,7 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("host_instance_type", output.HostInstanceType)
 	d.Set("instances", flattenBrokerInstances(output.BrokerInstances))
 	d.Set("pending_data_replication_mode", output.PendingDataReplicationMode)
-	d.Set("publicly_accessible", output.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, output.PubliclyAccessible)
 	d.Set(names.AttrSecurityGroups, output.SecurityGroups)
 	d.Set("storage_type", output.StorageType)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)
@@ -649,7 +649,7 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		requiresReboot = true
 	}
 
-	if d.Get("apply_immediately").(bool) && requiresReboot {
+	if d.Get(names.AttrApplyImmediately).(bool) && requiresReboot {
 		_, err := conn.RebootBroker(ctx, &mq.RebootBrokerInput{
 			BrokerId: aws.String(d.Id()),
 		})

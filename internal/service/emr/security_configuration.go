@@ -41,7 +41,7 @@ func resourceSecurityConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringIsJSON,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrConfiguration, output.SecurityConfiguration)
-	d.Set("creation_date", aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.TimeValue(output.CreationDateTime).Format(time.RFC3339))
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.Name)))
 

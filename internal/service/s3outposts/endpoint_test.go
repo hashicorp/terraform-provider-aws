@@ -36,7 +36,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
@@ -72,7 +72,7 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),
@@ -108,7 +108,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
 					resource.TestCheckResourceAttrPair(resourceName, "outpost_id", "data.aws_outposts_outpost.test", names.AttrID),

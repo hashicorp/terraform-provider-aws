@@ -41,7 +41,7 @@ func setResponsePlanResourceData(
 	if err := d.Set("chat_channel", flattenChatChannel(getResponsePlanOutput.ChatChannel)); err != nil {
 		return d, err
 	}
-	if err := d.Set("display_name", getResponsePlanOutput.DisplayName); err != nil {
+	if err := d.Set(names.AttrDisplayName, getResponsePlanOutput.DisplayName); err != nil {
 		return d, err
 	}
 	if err := d.Set("engagements", flex.FlattenStringValueSet(getResponsePlanOutput.Engagements)); err != nil {

@@ -114,7 +114,7 @@ func resourceSchedule() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
@@ -210,7 +210,7 @@ func resourceSchedule() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.LaunchType](),
 									},
-									"network_configuration": {
+									names.AttrNetworkConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -438,7 +438,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &scheduler.CreateScheduleInput{
 		Name:               aws.String(name),
-		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
+		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 	}
 
 	if v, ok := d.Get(names.AttrDescription).(string); ok && v != "" {
@@ -547,7 +547,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
-	d.Set("schedule_expression", out.ScheduleExpression)
+	d.Set(names.AttrScheduleExpression, out.ScheduleExpression)
 	d.Set("schedule_expression_timezone", out.ScheduleExpressionTimezone)
 
 	if out.StartDate != nil {
@@ -572,7 +572,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
 		GroupName:          aws.String(d.Get("group_name").(string)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
-		ScheduleExpression: aws.String(d.Get("schedule_expression").(string)),
+		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
 	}
 

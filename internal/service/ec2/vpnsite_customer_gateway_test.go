@@ -40,7 +40,7 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
-					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", "172.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -216,7 +216,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ip_address", ""),
 				),
 			},

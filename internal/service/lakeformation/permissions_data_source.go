@@ -171,7 +171,7 @@ func DataSourcePermissions() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),

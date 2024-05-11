@@ -77,7 +77,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			// apply_immediately is used to determine when the update modifications take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -1298,7 +1298,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -1571,7 +1571,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
-				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{

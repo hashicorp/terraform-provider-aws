@@ -74,7 +74,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -310,7 +310,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
 	d.Set("boot_mode", image.BootMode)
-	d.Set("creation_date", image.CreationDate)
+	d.Set(names.AttrCreationDate, image.CreationDate)
 	d.Set("deprecation_time", image.DeprecationTime)
 	d.Set(names.AttrDescription, image.Description)
 	d.Set("ena_support", image.EnaSupport)

@@ -532,7 +532,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1285,7 +1285,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -2173,7 +2173,7 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap["resource_type"] = aws.StringValue(v)
+		tfMap[names.AttrResourceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RouteOrigin; v != nil {

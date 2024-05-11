@@ -36,7 +36,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
 			"allow_major_version_upgrade",
-			"apply_immediately",
+			names.AttrApplyImmediately,
 			"cluster_members",
 			"db_instance_parameter_group_name",
 			"enable_global_write_forwarding",
@@ -407,7 +407,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"cluster_identifier_prefix",
 					"cluster_members",
 					"db_instance_parameter_group_name",

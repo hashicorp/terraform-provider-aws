@@ -60,7 +60,7 @@ func resourceRuleV0() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

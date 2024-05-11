@@ -28,7 +28,7 @@ func DataSourceQueryLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(aws.StringValue(config.Id))
 	arn := aws.StringValue(config.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("destination_arn", config.DestinationArn)
+	d.Set(names.AttrDestinationARN, config.DestinationArn)
 	d.Set(names.AttrName, config.Name)
 	d.Set(names.AttrOwnerID, config.OwnerId)
 	d.Set("resolver_query_log_config_id", config.Id)

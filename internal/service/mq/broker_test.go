@@ -301,7 +301,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "efs"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -319,7 +319,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -389,7 +389,7 @@ func TestAccMQBroker_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccBrokerConfig_tags2(rName, testAccBrokerVersionNewer, "key1", "value1updated", "key2", "value2"),
@@ -455,7 +455,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
@@ -537,7 +537,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -584,7 +584,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				// Update configuration in-place
@@ -666,7 +666,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "true"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -713,7 +713,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				// Update configuration in-place
@@ -779,7 +779,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -817,7 +817,7 @@ func TestAccMQBroker_EncryptionOptions_managedKeyDisabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -855,7 +855,7 @@ func TestAccMQBroker_EncryptionOptions_managedKeyEnabled(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -898,7 +898,7 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			// Adding new user + modify existing
 			{
@@ -970,7 +970,7 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccBrokerConfig_updateSecurityGroups(rName, testAccBrokerVersionNewer),
@@ -1028,7 +1028,7 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 			{
 				Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccBrokerVersionNewer),
@@ -1120,7 +1120,7 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -1168,7 +1168,7 @@ func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -1214,7 +1214,7 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -1298,7 +1298,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", "data.aws_subnets.default", "ids.#"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
@@ -1320,7 +1320,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -1413,7 +1413,7 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user", "data_replication_primary_broker_arn"},
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user", "data_replication_primary_broker_arn"},
 			},
 			{
 				// Preparation for destruction would require multiple configuration changes

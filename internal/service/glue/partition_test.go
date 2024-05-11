@@ -40,7 +40,7 @@ func TestAccGluePartition_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 				),
 			},
 			{

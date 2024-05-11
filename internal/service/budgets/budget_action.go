@@ -188,7 +188,7 @@ func ResourceBudgetAction() *schema.Resource {
 					},
 				},
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -245,7 +245,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		ApprovalModel:    awstypes.ApprovalModel(d.Get("approval_model").(string)),
 		BudgetName:       aws.String(d.Get("budget_name").(string)),
 		Definition:       expandBudgetActionActionDefinition(d.Get("definition").([]interface{})),
-		ExecutionRoleArn: aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn: aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		NotificationType: awstypes.NotificationType(d.Get("notification_type").(string)),
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 		ResourceTags:     getTagsIn(ctx),
@@ -310,7 +310,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("definition", flattenBudgetActionDefinition(output.Definition)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting definition: %s", err)
 	}
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("notification_type", output.NotificationType)
 	d.Set(names.AttrStatus, output.Status)
 	if err := d.Set("subscriber", flattenBudgetActionSubscriber(output.Subscribers)); err != nil {
@@ -349,8 +349,8 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.Definition = expandBudgetActionActionDefinition(d.Get("definition").([]interface{}))
 		}
 
-		if d.HasChange("execution_role_arn") {
-			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 
 		if d.HasChange("notification_type") {

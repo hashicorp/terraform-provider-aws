@@ -35,7 +35,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "1"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Amazon Linux AMI")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
@@ -81,7 +81,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "27"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Microsoft Windows Server")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
@@ -128,7 +128,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "0"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),

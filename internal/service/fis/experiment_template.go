@@ -261,7 +261,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
@@ -652,7 +652,7 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -702,7 +702,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -862,7 +862,7 @@ func flattenExperimentTemplateTargets(configured map[string]types.ExperimentTemp
 		item[names.AttrFilter] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = v.ResourceArns
 		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
-		item["resource_type"] = aws.ToString(v.ResourceType)
+		item[names.AttrResourceType] = aws.ToString(v.ResourceType)
 		item["selection_mode"] = aws.ToString(v.SelectionMode)
 		item[names.AttrParameters] = v.Parameters
 

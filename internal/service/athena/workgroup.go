@@ -113,7 +113,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"encryption_configuration": {
+									names.AttrEncryptionConfiguration: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -442,7 +442,7 @@ func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfigurat
 
 	resultConfiguration := &types.ResultConfiguration{}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		resultConfiguration.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -470,7 +470,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 
 	resultConfigurationUpdates := &types.ResultConfigurationUpdates{}
 
-	if v, ok := m["encryption_configuration"]; ok {
+	if v, ok := m[names.AttrEncryptionConfiguration]; ok {
 		resultConfigurationUpdates.EncryptionConfiguration = expandWorkGroupEncryptionConfiguration(v.([]interface{}))
 	} else {
 		resultConfigurationUpdates.RemoveEncryptionConfiguration = aws.Bool(true)
@@ -554,8 +554,8 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfig
 	}
 
 	m := map[string]interface{}{
-		"encryption_configuration": flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
-		"output_location":          aws.ToString(resultConfiguration.OutputLocation),
+		names.AttrEncryptionConfiguration: flattenWorkGroupEncryptionConfiguration(resultConfiguration.EncryptionConfiguration),
+		"output_location":                 aws.ToString(resultConfiguration.OutputLocation),
 	}
 
 	if resultConfiguration.ExpectedBucketOwner != nil {

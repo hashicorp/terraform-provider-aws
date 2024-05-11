@@ -63,7 +63,7 @@ func resourceBucketLogging() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -363,7 +363,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 
 	grantee := &types.Grantee{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		grantee.DisplayName = aws.String(v)
 	}
 
@@ -414,7 +414,7 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.DisplayName != nil {
-		m["display_name"] = aws.ToString(g.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(g.DisplayName)
 	}
 
 	if g.EmailAddress != nil {

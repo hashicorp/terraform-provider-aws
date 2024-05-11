@@ -32,7 +32,7 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_basic(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "display_name", resourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDisplayName, resourceName, names.AttrDisplayName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "addresses.0", resourceName, "addresses.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "emails.0", resourceName, "emails.0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "external_ids.#", resourceName, "external_ids.#"),

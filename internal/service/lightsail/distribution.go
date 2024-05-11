@@ -286,7 +286,7 @@ func ResourceDistribution() *schema.Resource {
 							ValidateFunc: verify.ValidRegionName,
 							Description:  "The AWS Region name of the origin resource.",
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:        schema.TypeString,
 							Computed:    true,
 							Description: "The resource type of the origin resource (e.g., Instance).",
@@ -299,7 +299,7 @@ func ResourceDistribution() *schema.Resource {
 				Computed:    true,
 				Description: "The public DNS of the origin.",
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:        schema.TypeString,
 				Computed:    true,
 				Description: "The Lightsail resource type (e.g., Distribution).",
@@ -445,7 +445,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set(names.AttrName, out.Name)
 	d.Set("origin_public_dns", out.OriginPublicDNS)
-	d.Set("resource_type", out.ResourceType)
+	d.Set(names.AttrResourceType, out.ResourceType)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
 
@@ -771,7 +771,7 @@ func flattenOrigin(apiObject *types.Origin) map[string]interface{} {
 	}
 
 	if v := apiObject.ResourceType; v != "" {
-		m["resource_type"] = v
+		m[names.AttrResourceType] = v
 	}
 
 	return m

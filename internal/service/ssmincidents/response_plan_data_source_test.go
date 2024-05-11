@@ -55,7 +55,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "incident_template.0.incident_tags.b", dataSourceName, "incident_template.0.incident_tags.b"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic1, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "incident_template.0.notification_target.*.sns_topic_arn", snsTopic2, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "display_name", dataSourceName, "display_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDisplayName, dataSourceName, names.AttrDisplayName),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "chat_channel.0", chatChannelTopic, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,

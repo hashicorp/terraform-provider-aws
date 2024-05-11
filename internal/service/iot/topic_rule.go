@@ -568,7 +568,7 @@ func ResourceTopicRule() *schema.Resource {
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"destination_arn": {
+									names.AttrDestinationARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -940,7 +940,7 @@ func ResourceTopicRule() *schema.Resource {
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"destination_arn": {
+						names.AttrDestinationARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1720,7 +1720,7 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 		apiObject.ClientProperties = flex.ExpandStringMap(v)
 	}
 
-	if v, ok := tfMap["destination_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDestinationARN].(string); ok && v != "" {
 		apiObject.DestinationArn = aws.String(v)
 	}
 
@@ -2905,7 +2905,7 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 	}
 
 	if v := apiObject.DestinationArn; v != nil {
-		tfMap["destination_arn"] = aws.StringValue(v)
+		tfMap[names.AttrDestinationARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Headers; v != nil {

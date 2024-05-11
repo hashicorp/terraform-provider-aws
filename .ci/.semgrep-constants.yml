@@ -60,6 +60,16 @@ rules:
       - pattern: '"address"'
     severity: ERROR
     fix: "names.AttrAddress"
+  - id: literal-apply_immediately-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrApplyImmediately` for the string literal "apply_immediately"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"apply_immediately"'
+    severity: ERROR
+    fix: "names.AttrApplyImmediately"
   - id: literal-auto_minor_version_upgrade-string-constant
     languages: [go]
     message: Use the constant `names.AttrAutoMinorVersionUpgrade` for the string literal "auto_minor_version_upgrade"
@@ -130,6 +140,16 @@ rules:
       - pattern: '"catalog_id"'
     severity: ERROR
     fix: "names.AttrCatalogID"
+  - id: literal-certificate_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCertificateARN` for the string literal "certificate_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"certificate_arn"'
+    severity: ERROR
+    fix: "names.AttrCertificateARN"
   - id: literal-cluster_identifier-string-constant
     languages: [go]
     message: Use the constant `names.AttrClusterIdentifier` for the string literal "cluster_identifier"
@@ -170,6 +190,26 @@ rules:
       - pattern: '"created_date"'
     severity: ERROR
     fix: "names.AttrCreatedDate"
+  - id: literal-creation_date-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCreationDate` for the string literal "creation_date"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"creation_date"'
+    severity: ERROR
+    fix: "names.AttrCreationDate"
+  - id: literal-creation_time-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCreationTime` for the string literal "creation_time"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"creation_time"'
+    severity: ERROR
+    fix: "names.AttrCreationTime"
   - id: literal-database_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrDatabaseName` for the string literal "database_name"
@@ -210,6 +250,16 @@ rules:
       - pattern: '"destination"'
     severity: ERROR
     fix: "names.AttrDestination"
+  - id: literal-destination_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDestinationARN` for the string literal "destination_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"destination_arn"'
+    severity: ERROR
+    fix: "names.AttrDestinationARN"
   - id: literal-device_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrDeviceName` for the string literal "device_name"
@@ -220,6 +270,16 @@ rules:
       - pattern: '"device_name"'
     severity: ERROR
     fix: "names.AttrDeviceName"
+  - id: literal-display_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDisplayName` for the string literal "display_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"display_name"'
+    severity: ERROR
+    fix: "names.AttrDisplayName"
   - id: literal-domain_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrDomainName` for the string literal "domain_name"
@@ -250,6 +310,16 @@ rules:
       - pattern: '"encrypted"'
     severity: ERROR
     fix: "names.AttrEncrypted"
+  - id: literal-encryption_configuration-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEncryptionConfiguration` for the string literal "encryption_configuration"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"encryption_configuration"'
+    severity: ERROR
+    fix: "names.AttrEncryptionConfiguration"
   - id: literal-endpoint-string-constant
     languages: [go]
     message: Use the constant `names.AttrEndpoint` for the string literal "endpoint"
@@ -280,6 +350,16 @@ rules:
       - pattern: '"engine_version"'
     severity: ERROR
     fix: "names.AttrEngineVersion"
+  - id: literal-execution_role_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExecutionRoleARN` for the string literal "execution_role_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"execution_role_arn"'
+    severity: ERROR
+    fix: "names.AttrExecutionRoleARN"
   - id: literal-file_system_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrFileSystemID` for the string literal "file_system_id"
@@ -450,6 +530,16 @@ rules:
       - pattern: '"name_prefix"'
     severity: ERROR
     fix: "names.AttrNamePrefix"
+  - id: literal-network_configuration-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrNetworkConfiguration` for the string literal "network_configuration"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"network_configuration"'
+    severity: ERROR
+    fix: "names.AttrNetworkConfiguration"
   - id: literal-network_interface_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrNetworkInterfaceID` for the string literal "network_interface_id"
@@ -580,6 +670,16 @@ rules:
       - pattern: '"protocol"'
     severity: ERROR
     fix: "names.AttrProtocol"
+  - id: literal-publicly_accessible-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPubliclyAccessible` for the string literal "publicly_accessible"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"publicly_accessible"'
+    severity: ERROR
+    fix: "names.AttrPubliclyAccessible"
   - id: literal-region-string-constant
     languages: [go]
     message: Use the constant `names.AttrRegion` for the string literal "region"
@@ -600,6 +700,16 @@ rules:
       - pattern: '"resource_arn"'
     severity: ERROR
     fix: "names.AttrResourceARN"
+  - id: literal-resource_type-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrResourceType` for the string literal "resource_type"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"resource_type"'
+    severity: ERROR
+    fix: "names.AttrResourceType"
   - id: literal-role_arn-string-constant
     languages: [go]
     message: Use the constant `names.AttrRoleARN` for the string literal "role_arn"
@@ -610,6 +720,16 @@ rules:
       - pattern: '"role_arn"'
     severity: ERROR
     fix: "names.AttrRoleARN"
+  - id: literal-schedule_expression-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrScheduleExpression` for the string literal "schedule_expression"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"schedule_expression"'
+    severity: ERROR
+    fix: "names.AttrScheduleExpression"
   - id: literal-secret_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrSecretKey` for the string literal "secret_key"

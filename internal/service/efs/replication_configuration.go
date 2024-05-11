@@ -39,7 +39,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -159,7 +159,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 		copy(0, names.AttrKMSKeyID)
 	}
 
-	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
+	d.Set(names.AttrCreationTime, aws.TimeValue(replication.CreationTime).String())
 	if err := d.Set(names.AttrDestination, destinations); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 	}

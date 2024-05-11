@@ -26,7 +26,7 @@ func resourceClusterResourceV0() *schema.Resource {
 			},
 			// apply_immediately is used to determine when the update modifications take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,

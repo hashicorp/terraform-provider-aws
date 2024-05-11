@@ -320,7 +320,7 @@ func testAccPolicy_alb(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "ResourceTypeList"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "ResourceTypeList"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_type_list.*", "AWS::ElasticLoadBalancingV2::LoadBalancer"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
@@ -354,7 +354,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::SecurityGroup"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::SecurityGroup"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", names.AttrType, "SECURITY_GROUPS_CONTENT_AUDIT"),

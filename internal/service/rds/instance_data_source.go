@@ -177,7 +177,7 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -295,7 +295,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("option_group_memberships", optionGroupNames)
 	d.Set("preferred_backup_window", instance.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replicate_source_db", instance.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", instance.DbiResourceId)
 	d.Set("storage_encrypted", instance.StorageEncrypted)
