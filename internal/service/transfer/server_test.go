@@ -52,10 +52,10 @@ func testAccServer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
@@ -92,11 +92,11 @@ func testAccServer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
 					resource.TestCheckResourceAttr(resourceName, "domain", "S3"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttr(resourceName, "function", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "host_key"),
@@ -339,7 +339,7 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -360,7 +360,7 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -374,7 +374,7 @@ func testAccServer_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -411,7 +411,7 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -433,7 +433,7 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -447,7 +447,7 @@ func testAccServer_vpcAddressAllocationIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -480,7 +480,7 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -500,7 +500,7 @@ func testAccServer_vpcSecurityGroupIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -538,7 +538,7 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -560,7 +560,7 @@ func testAccServer_vpcAddressAllocationIds_securityGroupIDs(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_details.0.subnet_ids.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_details.0.vpc_endpoint_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_id", vpcResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 		},
@@ -584,7 +584,7 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
@@ -592,7 +592,7 @@ func testAccServer_updateEndpointType_publicToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -622,7 +622,7 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
@@ -630,7 +630,7 @@ func testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -660,7 +660,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
@@ -668,7 +668,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -697,7 +697,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				Config: testAccServerConfig_vpcEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 				),
 			},
@@ -705,7 +705,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				Config: testAccServerConfig_vpcAddressAllocationIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
 				),
 			},
@@ -736,7 +736,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
@@ -744,7 +744,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_securityGroupIDs(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -774,7 +774,7 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 				),
 			},
 			{
@@ -782,7 +782,7 @@ func testAccServer_updateEndpointType_vpcToPublic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "PUBLIC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
 				),
 			},
 			{
@@ -856,8 +856,8 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_protocols(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
-					resource.TestCheckResourceAttr(resourceName, "certificate", ""),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
@@ -881,8 +881,8 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_protocolsUpdate(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &s),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate", acmCertificateResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificate, acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "protocols.*", "FTP"),
@@ -1180,7 +1180,7 @@ func testAccServer_vpcEndpointID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.subnet_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_details.0.vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.0.vpc_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "VPC_ENDPOINT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "VPC_ENDPOINT"),
 				),
 			},
 			{
