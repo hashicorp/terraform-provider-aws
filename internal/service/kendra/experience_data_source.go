@@ -91,7 +91,7 @@ func DataSourceExperience() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
