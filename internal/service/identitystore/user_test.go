@@ -60,7 +60,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},

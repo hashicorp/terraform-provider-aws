@@ -268,7 +268,7 @@ func DataSourceUser() *schema.Resource {
 				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -336,7 +336,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("timezone", user.Timezone)
 		d.Set("title", user.Title)
 		d.Set("user_id", user.UserId)
-		d.Set("user_name", user.UserName)
+		d.Set(names.AttrUserName, user.UserName)
 		d.Set("user_type", user.UserType)
 
 		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
@@ -414,7 +414,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("timezone", user.Timezone)
 	d.Set("title", user.Title)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 	d.Set("user_type", user.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {

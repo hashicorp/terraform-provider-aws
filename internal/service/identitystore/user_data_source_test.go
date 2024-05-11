@@ -46,8 +46,8 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "timezone", resourceName, "timezone"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "title", resourceName, "title"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_type", resourceName, "user_type"),
 				),
 			},
@@ -75,7 +75,7 @@ func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
 				Config: testAccUserDataSourceConfig_filterUserName(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -102,7 +102,7 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 				Config: testAccUserDataSourceConfig_uniqueAttributeUserName(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -129,7 +129,7 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 				Config: testAccUserDataSourceConfig_email(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrUserName, name),
 				),
 			},
 		},
@@ -156,7 +156,7 @@ func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 				Config: testAccUserDataSourceConfig_id(name, email),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 				),
 			},
 		},
