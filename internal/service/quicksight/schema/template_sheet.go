@@ -508,7 +508,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 									},
 								},
 							},
-							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
 						},
 					},
 				},
@@ -1193,7 +1193,7 @@ func expandSheetElementRenderingRule(tfMap map[string]interface{}) *quicksight.S
 
 	layout := &quicksight.SheetElementRenderingRule{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		layout.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["configuration_overrides"].([]interface{}); ok && len(v) > 0 {
@@ -2046,7 +2046,7 @@ func flattenSheetElementRenderingRule(apiObject []*quicksight.SheetElementRender
 			tfMap["configuration_overrides"] = flattenSheetElementConfigurationOverrides(config.ConfigurationOverrides)
 		}
 		if config.Expression != nil {
-			tfMap["expression"] = aws.StringValue(config.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(config.Expression)
 		}
 		tfList = append(tfList, tfMap)
 	}

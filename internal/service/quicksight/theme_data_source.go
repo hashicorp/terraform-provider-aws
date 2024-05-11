@@ -251,7 +251,7 @@ func DataSourceTheme() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
