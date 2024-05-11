@@ -75,7 +75,7 @@ func DataSourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
