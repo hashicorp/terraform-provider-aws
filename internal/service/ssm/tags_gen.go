@@ -22,7 +22,7 @@ import (
 func listTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, optFns ...func(*ssm.Options)) (tftags.KeyValueTags, error) {
 	input := &ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
-		ResourceType: aws.String(resourceType),
+		ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 	}
 
 	output, err := conn.ListTagsForResource(ctx, input, optFns...)
@@ -121,7 +121,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	if len(removedTags) > 0 {
 		input := &ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
-			ResourceType: aws.String(resourceType),
+			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			TagKeys:      removedTags.Keys(),
 		}
 
@@ -137,7 +137,7 @@ func updateTags(ctx context.Context, conn *ssm.Client, identifier, resourceType 
 	if len(updatedTags) > 0 {
 		input := &ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
-			ResourceType: aws.String(resourceType),
+			ResourceType: awstypes.ResourceTypeForTagging(resourceType),
 			Tags:         Tags(updatedTags),
 		}
 
