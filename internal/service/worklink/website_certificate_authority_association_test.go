@@ -41,7 +41,7 @@ func TestAccWorkLinkWebsiteCertificateAuthorityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						resourceName, "fleet_arn",
 						"aws_worklink_fleet.test", names.AttrARN),
-					resource.TestMatchResourceAttr(resourceName, "certificate", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrCertificate, regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 			{

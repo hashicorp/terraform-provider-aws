@@ -38,7 +38,7 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
-		Certificate: aws.String(d.Get("certificate").(string)),
+		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDisplayName); ok {
@@ -106,7 +106,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *
 
 	d.Set("website_ca_id", websiteCaID)
 	d.Set("fleet_arn", fleetArn)
-	d.Set("certificate", resp.Certificate)
+	d.Set(names.AttrCertificate, resp.Certificate)
 	d.Set(names.AttrDisplayName, resp.DisplayName)
 
 	return diags
