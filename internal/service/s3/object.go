@@ -132,7 +132,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -296,7 +296,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("metadata", output.Metadata)
@@ -529,7 +529,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
@@ -651,7 +651,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
+		names.AttrContentType,
 		"content",
 		"etag",
 		names.AttrKMSKeyID,
