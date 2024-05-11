@@ -35,7 +35,7 @@ func testAccRepository_basic(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -115,7 +115,7 @@ func testAccRepository_owner(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codeartifact", fmt.Sprintf("repository/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "repository", rName),
-					resource.TestCheckResourceAttr(resourceName, "domain", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", "owner"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -290,7 +290,7 @@ func testAccCheckRepositoryExists(ctx context.Context, n string) resource.TestCh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-		_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"], rs.Primary.Attributes["repository"])
+		_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes[names.AttrDomain], rs.Primary.Attributes["repository"])
 
 		return err
 	}
@@ -305,7 +305,7 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-			_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"], rs.Primary.Attributes["repository"])
+			_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes[names.AttrDomain], rs.Primary.Attributes["repository"])
 
 			if tfresource.NotFound(err) {
 				continue
