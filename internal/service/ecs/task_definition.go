@@ -184,7 +184,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
@@ -210,7 +210,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"properties": {
+						names.AttrProperties: {
 							Type:     schema.TypeMap,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
@@ -762,7 +762,7 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
 		c[names.AttrType] = aws.StringValue(pc.Type)
-		c["expression"] = aws.StringValue(pc.Expression)
+		c[names.AttrExpression] = aws.StringValue(pc.Expression)
 		results = append(results, c)
 	}
 	return results
@@ -809,7 +809,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 	config := make(map[string]interface{})
 	config["container_name"] = aws.StringValue(pc.ContainerName)
 	config[names.AttrType] = aws.StringValue(pc.Type)
-	config["properties"] = meshProperties
+	config[names.AttrProperties] = meshProperties
 
 	return []map[string]interface{}{
 		config,
@@ -848,7 +848,7 @@ func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
 		t := p[names.AttrType].(string)
-		e := p["expression"].(string)
+		e := p[names.AttrExpression].(string)
 		if err := validPlacementConstraint(t, e); err != nil {
 			return nil, err
 		}
@@ -884,7 +884,7 @@ func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.Pro
 	proxyConfig := proxyConfigs[0]
 	configMap := proxyConfig.(map[string]interface{})
 
-	rawProperties := configMap["properties"].(map[string]interface{})
+	rawProperties := configMap[names.AttrProperties].(map[string]interface{})
 
 	properties := make([]*ecs.KeyValuePair, len(rawProperties))
 	i := 0
