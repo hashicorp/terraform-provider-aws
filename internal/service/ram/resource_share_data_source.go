@@ -31,7 +31,7 @@ func dataSourceResourceShare() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -96,7 +96,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		inputG.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		inputG.TagFilters = expandTagFilters(v.(*schema.Set).List())
 	}
 

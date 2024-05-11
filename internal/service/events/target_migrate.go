@@ -54,7 +54,7 @@ func resourceTargetV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"network_configuration": {
+						names.AttrNetworkConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{

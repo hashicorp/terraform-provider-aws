@@ -26,12 +26,10 @@ resource "aws_iam_role" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
 }
-
 
 variable "provider_tags" {
   type     = map(string)

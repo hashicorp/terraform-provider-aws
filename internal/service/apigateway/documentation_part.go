@@ -56,7 +56,7 @@ func resourceDocumentationPart() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -257,7 +257,7 @@ func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLo
 	if v, ok := loc[names.AttrName]; ok {
 		out.Name = aws.String(v.(string))
 	}
-	if v, ok := loc["path"]; ok {
+	if v, ok := loc[names.AttrPath]; ok {
 		out.Path = aws.String(v.(string))
 	}
 	if v, ok := loc["status_code"]; ok {
@@ -282,7 +282,7 @@ func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []inte
 	}
 
 	if v := l.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	if v := l.StatusCode; v != nil {

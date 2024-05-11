@@ -47,7 +47,7 @@ func ResourceMaintenanceWindowTarget() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -109,7 +109,7 @@ func resourceMaintenanceWindowTargetCreate(ctx context.Context, d *schema.Resour
 
 	params := &ssm.RegisterTargetWithMaintenanceWindowInput{
 		WindowId:     aws.String(d.Get("window_id").(string)),
-		ResourceType: aws.String(d.Get("resource_type").(string)),
+		ResourceType: aws.String(d.Get(names.AttrResourceType).(string)),
 		Targets:      expandTargets(d.Get("targets").([]interface{})),
 	}
 
@@ -167,7 +167,7 @@ func resourceMaintenanceWindowTargetRead(ctx context.Context, d *schema.Resource
 
 			d.Set("owner_information", t.OwnerInformation)
 			d.Set("window_id", t.WindowId)
-			d.Set("resource_type", t.ResourceType)
+			d.Set(names.AttrResourceType, t.ResourceType)
 			d.Set(names.AttrName, t.Name)
 			d.Set(names.AttrDescription, t.Description)
 

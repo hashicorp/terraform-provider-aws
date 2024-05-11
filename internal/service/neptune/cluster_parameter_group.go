@@ -71,7 +71,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validParamGroupNamePrefix,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -121,7 +121,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(name)
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
 		if err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List())); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -166,7 +166,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// Add only system parameters that are set in the config.
-	p := d.Get("parameter")
+	p := d.Get(names.AttrParameter)
 	if p == nil {
 		p = new(schema.Set)
 	}
@@ -189,7 +189,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	parameters = append(parameters, systemParameters...)
 
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
@@ -200,8 +200,8 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if parameters := expandParameters(ns.Difference(os).List()); len(parameters) > 0 {

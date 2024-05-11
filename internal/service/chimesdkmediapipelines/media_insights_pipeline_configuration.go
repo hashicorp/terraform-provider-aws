@@ -340,7 +340,7 @@ func S3RecordingSinkConfigurationSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"destination": {
+				names.AttrDestination: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: verify.ValidARN,
@@ -855,7 +855,7 @@ func expandElement(inputElement interface{}) (awstypes.MediaInsightsPipelineConf
 
 		rawConfiguration := configuration[0].(map[string]interface{})
 		element.S3RecordingSinkConfiguration = &awstypes.S3RecordingSinkConfiguration{
-			Destination: aws.String(rawConfiguration["destination"].(string)),
+			Destination: aws.String(rawConfiguration[names.AttrDestination].(string)),
 		}
 	case element.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		var configuration []interface{}
@@ -1030,7 +1030,7 @@ func flattenElement(apiElement awstypes.MediaInsightsPipelineConfigurationElemen
 		tfMap["sqs_queue_sink_configuration"] = []interface{}{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeS3RecordingSink:
 		processorConfiguration := apiElement.S3RecordingSinkConfiguration
-		configuration["destination"] = processorConfiguration.Destination
+		configuration[names.AttrDestination] = processorConfiguration.Destination
 		tfMap["s3_recording_sink_configuration"] = []interface{}{configuration}
 	case apiElement.Type == awstypes.MediaInsightsPipelineConfigurationElementTypeVoiceAnalyticsProcessor:
 		processorConfiguration := apiElement.VoiceAnalyticsProcessorConfiguration

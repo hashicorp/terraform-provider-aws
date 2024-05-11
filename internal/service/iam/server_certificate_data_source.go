@@ -59,7 +59,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -147,7 +147,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	metadata := metadatas[0]
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
 	d.Set(names.AttrARN, metadata.Arn)
-	d.Set("path", metadata.Path)
+	d.Set(names.AttrPath, metadata.Path)
 	d.Set(names.AttrName, metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))

@@ -109,7 +109,7 @@ func resourceRuleGroup() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"action": {
+							names.AttrAction: {
 								Type:     schema.TypeList,
 								Required: true,
 								MaxItems: 1,
@@ -129,7 +129,7 @@ func resourceRuleGroup() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 128),
 							},
-							"priority": {
+							names.AttrPriority: {
 								Type:     schema.TypeInt,
 								Required: true,
 							},

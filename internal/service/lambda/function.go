@@ -393,7 +393,7 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.TracingMode](),
@@ -566,7 +566,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.TracingConfig = &awstypes.TracingConfig{
-			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+			Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 		}
 	}
 
@@ -707,7 +707,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	if err := d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
-			"mode": string(tracingConfigMode),
+			names.AttrMode: string(tracingConfigMode),
 		},
 	}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
@@ -894,7 +894,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("tracing_config") {
 			if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.TracingConfig = &awstypes.TracingConfig{
-					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+					Mode: awstypes.TracingMode(v.([]interface{})[0].(map[string]interface{})[names.AttrMode].(string)),
 				}
 			}
 		}

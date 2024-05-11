@@ -235,7 +235,7 @@ func ResourceService() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -374,7 +374,7 @@ func ResourceService() *schema.Resource {
 								},
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -543,7 +543,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		DeploymentController:     deploymentController,
 		EnableECSManagedTags:     aws.Bool(d.Get("enable_ecs_managed_tags").(bool)),
 		EnableExecuteCommand:     aws.Bool(d.Get("enable_execute_command").(bool)),
-		NetworkConfiguration:     expandNetworkConfiguration(d.Get("network_configuration").([]interface{})),
+		NetworkConfiguration:     expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{})),
 		SchedulingStrategy:       aws.String(schedulingStrategy),
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
@@ -811,7 +811,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting placement_constraints: %s", err)
 	}
 
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -908,8 +908,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandNetworkConfiguration(d.Get("network_configuration").([]interface{}))
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandNetworkConfiguration(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("ordered_placement_strategy") {
@@ -1409,7 +1409,7 @@ func expandServiceConnectConfiguration(sc []interface{}) *ecs.ServiceConnectConf
 		config.LogConfiguration = expandLogConfiguration(v)
 	}
 
-	if v, ok := raw["namespace"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrNamespace].(string); ok && v != "" {
 		config.Namespace = aws.String(v)
 	}
 

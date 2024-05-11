@@ -46,7 +46,7 @@ func dataSourceType() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,7 +59,7 @@ func dataSourceType() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -147,7 +147,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("deprecated_status", output.DeprecatedStatus)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("documentation_url", output.DocumentationUrl)
-	d.Set("execution_role_arn", output.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, output.ExecutionRoleArn)
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {

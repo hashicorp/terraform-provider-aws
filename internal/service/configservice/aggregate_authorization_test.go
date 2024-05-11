@@ -37,7 +37,7 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAccountID, accountID),
-					resource.TestCheckResourceAttr(resourceName, "region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func testAccCheckAggregateAuthorizationExists(ctx context.Context, n string, v *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
-		output, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["region"])
+		output, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrRegion])
 
 		if err != nil {
 			return err
@@ -149,7 +149,7 @@ func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["region"])
+			_, err := tfconfig.FindAggregateAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes[names.AttrRegion])
 
 			if tfresource.NotFound(err) {
 				continue

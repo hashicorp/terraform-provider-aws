@@ -8,7 +8,6 @@ resource "aws_servicecatalog_portfolio" "test" {
 
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

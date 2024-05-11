@@ -39,7 +39,7 @@ func resourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"log_group_name": {
+			names.AttrLogGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -61,7 +61,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get(names.AttrName).(string)
 	input := &cloudwatchlogs.CreateLogStreamInput{
-		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
+		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(name),
 	}
 
@@ -74,7 +74,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(name)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+		return findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 	})
 
 	if err != nil {
@@ -89,7 +89,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	ls, err := findLogStreamByTwoPartKey(ctx, conn, d.Get(names.AttrLogGroupName).(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
@@ -114,7 +114,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
 	_, err := conn.DeleteLogStream(ctx, &cloudwatchlogs.DeleteLogStreamInput{
-		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
+		LogGroupName:  aws.String(d.Get(names.AttrLogGroupName).(string)),
 		LogStreamName: aws.String(d.Id()),
 	})
 
@@ -139,7 +139,7 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	logStreamName := parts[1]
 
 	d.SetId(logStreamName)
-	d.Set("log_group_name", logGroupName)
+	d.Set(names.AttrLogGroupName, logGroupName)
 
 	return []*schema.ResourceData{d}, nil
 }

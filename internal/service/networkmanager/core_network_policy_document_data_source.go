@@ -70,7 +70,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											"tag-value",
 											"tag-exists",
 											"resource-id",
-											"region",
+											names.AttrRegion,
 											"attachment-type",
 										}, false),
 									},
@@ -95,7 +95,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -250,7 +250,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -284,7 +284,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								),
 							},
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
@@ -366,12 +366,12 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 	for i, sgmtActionI := range cfgSegmentActionsIntf {
 		cfgSA := sgmtActionI.(map[string]interface{})
 		sgmtAction := &CoreNetworkPolicySegmentAction{}
-		action := cfgSA["action"].(string)
+		action := cfgSA[names.AttrAction].(string)
 		sgmtAction.Action = action
 		var shareWith, shareWithExcept interface{}
 
 		if action == "share" {
-			if mode, ok := cfgSA["mode"]; ok {
+			if mode, ok := cfgSA[names.AttrMode]; ok {
 				sgmtAction.Mode = mode.(string)
 			}
 
@@ -395,7 +395,7 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		if action == "create-route" {
-			if mode := cfgSA["mode"]; mode != "" {
+			if mode := cfgSA[names.AttrMode]; mode != "" {
 				return nil, fmt.Errorf("Cannot specify \"mode\" if action = \"create-route\". See segment_actions[%s].", strconv.Itoa(i))
 			}
 
@@ -440,7 +440,7 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 			policy.ConditionLogic = cL.(string)
 		}
 
-		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol["action"].([]interface{}))
+		action, err := expandDataCoreNetworkPolicyAttachmentPoliciesAction(cfgPol[names.AttrAction].([]interface{}))
 		if err != nil {
 			return nil, fmt.Errorf("Problem with attachment policy rule number (%s). See attachment_policy[%s].action: %q", ruleStr, strconv.Itoa(i), err)
 		}
@@ -504,7 +504,7 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{
 				return nil, fmt.Errorf("Conditions %s: You must set \"key\", \"operator\", and \"value\" if type = \"tag-value\".", strconv.Itoa(i))
 			}
 		}
-		if t == "region" || t == "resource-id" || t == "account-id" {
+		if t == names.AttrRegion || t == "resource-id" || t == "account-id" {
 			if k[names.AttrKey] || !k["operator"] || !k[names.AttrValue] {
 				return nil, fmt.Errorf("Conditions %s: You must set \"value\" and \"operator\" and cannot set \"key\" if type = \"region\", \"resource-id\", or \"account-id\".", strconv.Itoa(i))
 			}

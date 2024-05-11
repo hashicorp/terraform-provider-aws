@@ -49,7 +49,7 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.enforcement_in_record", ""),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.name", ""),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.type", "MEASURE"),
-					resource.TestCheckResourceAttr(resourceName, "table_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

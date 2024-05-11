@@ -54,7 +54,7 @@ func DataSourceCoIPPool() *schema.Resource {
 
 			names.AttrTags: tftags.TagsSchemaComputed(),
 
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 		},
 	}
 }
@@ -85,7 +85,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	req.Filters = append(req.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.

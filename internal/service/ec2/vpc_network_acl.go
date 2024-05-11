@@ -105,7 +105,7 @@ func resourceNetworkACL() *schema.Resource {
 func networkACLRuleNestedBlock() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeString,
 				Required: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -386,7 +386,7 @@ func networkACLRuleHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["to_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", tfMap["rule_no"].(int)))
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(tfMap["action"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(tfMap[names.AttrAction].(string))))
 
 	// The AWS network ACL API only speaks protocol numbers, and that's
 	// all we store. Never hash a protocol name.
@@ -511,7 +511,7 @@ func expandNetworkACLEntry(tfMap map[string]interface{}, egress bool) *ec2.Netwo
 		apiObject.RuleNumber = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
 		apiObject.RuleAction = aws.String(v)
 	}
 
@@ -596,7 +596,7 @@ func flattenNetworkACLEntry(apiObject *ec2.NetworkAclEntry) map[string]interface
 	}
 
 	if v := apiObject.RuleAction; v != nil {
-		tfMap["action"] = aws.StringValue(v)
+		tfMap[names.AttrAction] = aws.StringValue(v)
 	}
 
 	if v := apiObject.CidrBlock; v != nil {

@@ -64,7 +64,7 @@ func resourceCertificateAuthority() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -260,7 +260,7 @@ func resourceCertificateAuthority() *schema.Resource {
 											return true
 										},
 									},
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(3, 255),
@@ -421,10 +421,10 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
-	d.Set("certificate", "")
+	d.Set(names.AttrCertificate, "")
 	d.Set("certificate_chain", "")
 	if outputGCACert != nil {
-		d.Set("certificate", outputGCACert.Certificate)
+		d.Set(names.AttrCertificate, outputGCACert.Certificate)
 		d.Set("certificate_chain", outputGCACert.CertificateChain)
 	}
 
@@ -701,7 +701,7 @@ func expandCrlConfiguration(l []interface{}) *types.CrlConfiguration {
 		if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
 			config.ExpirationInDays = aws.Int32(int32(v.(int)))
 		}
-		if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
+		if v, ok := m[names.AttrS3BucketName]; ok && v.(string) != "" {
 			config.S3BucketName = aws.String(v.(string))
 		}
 		if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
@@ -789,11 +789,11 @@ func flattenCrlConfiguration(config *types.CrlConfiguration) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"custom_cname":       aws.ToString(config.CustomCname),
-		names.AttrEnabled:    aws.ToBool(config.Enabled),
-		"expiration_in_days": int(aws.ToInt32(config.ExpirationInDays)),
-		"s3_bucket_name":     aws.ToString(config.S3BucketName),
-		"s3_object_acl":      string(config.S3ObjectAcl),
+		"custom_cname":         aws.ToString(config.CustomCname),
+		names.AttrEnabled:      aws.ToBool(config.Enabled),
+		"expiration_in_days":   int(aws.ToInt32(config.ExpirationInDays)),
+		names.AttrS3BucketName: aws.ToString(config.S3BucketName),
+		"s3_object_acl":        string(config.S3ObjectAcl),
 	}
 
 	return []interface{}{m}

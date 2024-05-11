@@ -178,7 +178,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
 				),
 			},
 			{
@@ -191,7 +191,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayNameUpdated),
 				),
 			},
 			{

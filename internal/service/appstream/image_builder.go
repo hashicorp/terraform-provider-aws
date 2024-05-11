@@ -45,7 +45,7 @@ func ResourceImageBuilder() *schema.Resource {
 				MaxItems: 4,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(appstream.AccessEndpointType_Values(), false),
@@ -80,7 +80,7 @@ func ResourceImageBuilder() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -203,7 +203,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -273,7 +273,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, arn)
 	d.Set("created_time", aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, imageBuilder.Description)
-	d.Set("display_name", imageBuilder.DisplayName)
+	d.Set(names.AttrDisplayName, imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
 		if err = d.Set("domain_join_info", []interface{}{flattenDomainInfo(imageBuilder.DomainJoinInfo)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting domain_join_info: %s", err)

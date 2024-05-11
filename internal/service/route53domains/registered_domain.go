@@ -170,7 +170,7 @@ func resourceRegisteredDomain() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
-				"creation_date": {
+				names.AttrCreationDate: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -380,9 +380,9 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
-		d.Set("creation_date", aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
 	if domainDetail.BillingContact != nil {
 		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {

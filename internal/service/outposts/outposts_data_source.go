@@ -21,7 +21,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 		ReadWithoutTimeout: dataSourceOutpostsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -100,7 +100,7 @@ func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
-	if err := d.Set("arns", arns); err != nil {
+	if err := d.Set(names.AttrARNs, arns); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 

@@ -36,7 +36,7 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 				Config: testAccServiceConfig_imageRepository(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "service_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`service/%s/.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_configuration_arn", "apprunner", regexache.MustCompile(`autoscalingconfiguration/DefaultConfiguration/1/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),

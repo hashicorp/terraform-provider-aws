@@ -50,7 +50,7 @@ func ResourceFleet() *schema.Resource {
 					validation.StringLenBetween(1, 48),
 				),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -144,7 +144,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -192,7 +192,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrName, resp.FleetName)
-	d.Set("display_name", resp.DisplayName)
+	d.Set(names.AttrDisplayName, resp.DisplayName)
 	d.Set("optimize_for_end_user_location", resp.OptimizeForEndUserLocation)
 	d.Set("company_code", resp.CompanyCode)
 	d.Set("created_time", resp.CreatedTime.Format(time.RFC3339))
@@ -247,11 +247,11 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		OptimizeForEndUserLocation: aws.Bool(d.Get("optimize_for_end_user_location").(bool)),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
-	if d.HasChanges("display_name", "optimize_for_end_user_location") {
+	if d.HasChanges(names.AttrDisplayName, "optimize_for_end_user_location") {
 		_, err := conn.UpdateFleetMetadataWithContext(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WorkLink Fleet (%s): %s", d.Id(), err)

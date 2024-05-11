@@ -54,7 +54,7 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -88,7 +88,7 @@ func TestAccBatchJobQueue_basicCEO(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -314,14 +314,14 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 				Config: testAccJobQueueConfig_priority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "1"),
 				),
 			},
 			{
 				Config: testAccJobQueueConfig_priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
-					resource.TestCheckResourceAttr(resourceName, "priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "2"),
 				),
 			},
 			{

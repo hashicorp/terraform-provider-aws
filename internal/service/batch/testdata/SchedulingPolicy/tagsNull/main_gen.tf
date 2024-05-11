@@ -14,7 +14,6 @@ resource "aws_batch_scheduling_policy" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false
@@ -24,4 +23,5 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
+
 

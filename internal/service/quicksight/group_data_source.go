@@ -43,7 +43,7 @@ func DataSourceGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultGroupNamespace,
@@ -70,7 +70,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		awsAccountID = v.(string)
 	}
 	groupName := d.Get("group_name").(string)
-	namespace := d.Get("namespace").(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 	in := &quicksight.DescribeGroupInput{
 		GroupName:    aws.String(groupName),
 		AwsAccountId: aws.String(awsAccountID),

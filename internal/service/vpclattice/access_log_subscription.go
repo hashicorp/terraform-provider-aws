@@ -42,7 +42,7 @@ func resourceAccessLogSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -76,7 +76,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 
 	in := &vpclattice.CreateAccessLogSubscriptionInput{
 		ClientToken:        aws.String(id.UniqueId()),
-		DestinationArn:     aws.String(d.Get("destination_arn").(string)),
+		DestinationArn:     aws.String(d.Get(names.AttrDestinationARN).(string)),
 		ResourceIdentifier: aws.String(d.Get("resource_identifier").(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -84,7 +84,7 @@ func resourceAccessLogSubscriptionCreate(ctx context.Context, d *schema.Resource
 	out, err := conn.CreateAccessLogSubscription(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get("destination_arn").(string), err)
+		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameAccessLogSubscription, d.Get(names.AttrDestinationARN).(string), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -108,7 +108,7 @@ func resourceAccessLogSubscriptionRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set(names.AttrARN, out.Arn)
-	d.Set("destination_arn", out.DestinationArn)
+	d.Set(names.AttrDestinationARN, out.DestinationArn)
 	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("resource_identifier", out.ResourceId)
 

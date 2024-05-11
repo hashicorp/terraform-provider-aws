@@ -27,7 +27,7 @@ func DataSourceEBSVolumes() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -49,7 +49,7 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 	)...)
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {

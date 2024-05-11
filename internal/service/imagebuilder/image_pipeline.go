@@ -169,7 +169,7 @@ func ResourceImagePipeline() *schema.Resource {
 							Default:      imagebuilder.PipelineExecutionStartConditionExpressionMatchAndDependencyUpdatesAvailable,
 							ValidateFunc: validation.StringInSlice(imagebuilder.PipelineExecutionStartCondition_Values(), false),
 						},
-						"schedule_expression": {
+						names.AttrScheduleExpression: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -477,7 +477,7 @@ func expandPipelineSchedule(tfMap map[string]interface{}) *imagebuilder.Schedule
 		apiObject.PipelineExecutionStartCondition = aws.String(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		apiObject.ScheduleExpression = aws.String(v)
 	}
 
@@ -554,7 +554,7 @@ func flattenSchedule(apiObject *imagebuilder.Schedule) map[string]interface{} {
 	}
 
 	if v := apiObject.ScheduleExpression; v != nil {
-		tfMap["schedule_expression"] = aws.StringValue(v)
+		tfMap[names.AttrScheduleExpression] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Timezone; v != nil {

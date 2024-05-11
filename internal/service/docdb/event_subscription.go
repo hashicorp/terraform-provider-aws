@@ -78,7 +78,7 @@ func ResourceEventSubscription() *schema.Resource {
 				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -108,7 +108,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &docdb.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
 	}
@@ -163,7 +163,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("event_categories", aws.StringValueSlice(output.EventCategoriesList))
 	d.Set(names.AttrName, output.CustSubscriptionId)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(output.CustSubscriptionId)))
-	d.Set("sns_topic_arn", output.SnsTopicArn)
+	d.Set(names.AttrSNSTopicARN, output.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
 	d.Set("source_type", output.SourceType)
 
@@ -189,8 +189,8 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 			input.SourceType = aws.String(d.Get("source_type").(string))
 		}
 
-		if d.HasChange("sns_topic_arn") {
-			input.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
+		if d.HasChange(names.AttrSNSTopicARN) {
+			input.SnsTopicArn = aws.String(d.Get(names.AttrSNSTopicARN).(string))
 		}
 
 		if d.HasChange("source_type") {

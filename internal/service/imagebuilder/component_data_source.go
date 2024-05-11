@@ -44,7 +44,7 @@ func DataSourceComponent() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
 	d.Set(names.AttrDescription, component.Description)
-	d.Set("encrypted", component.Encrypted)
+	d.Set(names.AttrEncrypted, component.Encrypted)
 	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
 	d.Set(names.AttrName, component.Name)
 	d.Set("owner", component.Owner)

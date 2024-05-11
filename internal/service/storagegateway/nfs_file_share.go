@@ -178,7 +178,7 @@ func ResourceNFSFileShare() *schema.Resource {
 				Default:      storagegateway.ObjectACLPrivate,
 				ValidateFunc: validation.StringInSlice(storagegateway.ObjectACL_Values(), false),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -326,7 +326,7 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
-	d.Set("path", fileshare.Path)
+	d.Set(names.AttrPath, fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)

@@ -26,7 +26,7 @@ func DataSourceReportPlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourceReportPlan() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -129,7 +129,7 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.StringValue(reportPlan.ReportPlanName))
 
 	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
-	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
 	d.Set("deployment_status", reportPlan.DeploymentStatus)
 	d.Set(names.AttrDescription, reportPlan.ReportPlanDescription)
 	d.Set(names.AttrName, reportPlan.ReportPlanName)

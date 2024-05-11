@@ -710,7 +710,7 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameter"},
+				ImportStateVerifyIgnore: []string{names.AttrParameter},
 			},
 		},
 	})

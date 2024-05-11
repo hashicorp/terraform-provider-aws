@@ -296,7 +296,7 @@ func TestAccSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, scheduleExpression1),
 				),
 			},
 			{
@@ -309,7 +309,7 @@ func TestAccSSMAssociation_withAssociationNameAndScheduleExpression(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "association_name", assocName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", scheduleExpression2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, scheduleExpression2),
 				),
 			},
 		},
@@ -517,7 +517,7 @@ func TestAccSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAssociationConfig_basicScheduleExpression(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * TUE *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 16 ? * TUE *)"),
 				),
 			},
 			{
@@ -529,7 +529,7 @@ func TestAccSSMAssociation_withScheduleExpression(t *testing.T) {
 				Config: testAccAssociationConfig_basicScheduleExpressionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "cron(0 16 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 16 ? * WED *)"),
 				),
 			},
 		},

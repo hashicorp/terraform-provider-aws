@@ -113,7 +113,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -599,7 +599,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -913,7 +913,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
@@ -1434,7 +1434,7 @@ func flattenVPNStaticRoute(apiObject awstypes.VpnStaticRoute) map[string]interfa
 		tfMap["destination_cidr_block"] = aws.ToString(v)
 	}
 
-	tfMap["source"] = apiObject.Source
+	tfMap[names.AttrSource] = apiObject.Source
 	tfMap[names.AttrState] = apiObject.State
 
 	return tfMap
@@ -1502,7 +1502,7 @@ func flattenVGWTelemetry(apiObject awstypes.VgwTelemetry) map[string]interface{}
 	}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.ToString(v)
+		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.LastStatusChange; v != nil {

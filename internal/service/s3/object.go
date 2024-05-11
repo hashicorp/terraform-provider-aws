@@ -113,12 +113,12 @@ func resourceObject() *schema.Resource {
 			"content": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content_base64"},
+				ConflictsWith: []string{names.AttrSource, "content_base64"},
 			},
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content"},
+				ConflictsWith: []string{names.AttrSource, "content"},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -132,7 +132,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -146,7 +146,7 @@ func resourceObject() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -221,7 +221,7 @@ func resourceObject() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"content", "content_base64"},
@@ -296,7 +296,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("metadata", output.Metadata)
@@ -416,7 +416,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
@@ -463,7 +463,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var body io.ReadSeeker
 
-	if v, ok := d.GetOk("source"); ok {
+	if v, ok := d.GetOk(names.AttrSource); ok {
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
@@ -529,7 +529,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
@@ -651,13 +651,13 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
+		names.AttrContentType,
 		"content",
 		"etag",
 		names.AttrKMSKeyID,
 		"metadata",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_hash",
 		"storage_class",
 		"website_redirect",

@@ -92,7 +92,7 @@ func testAccTrail_basic(t *testing.T) {
 				Config: testAccCloudTrailConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "prefix"),
+					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", names.AttrPrefix),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),

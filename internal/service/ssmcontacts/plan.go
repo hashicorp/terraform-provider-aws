@@ -45,7 +45,7 @@ func ResourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{

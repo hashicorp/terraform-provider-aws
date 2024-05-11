@@ -50,13 +50,13 @@ func resourceCustomerGateway() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.Valid4ByteASN,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -102,11 +102,11 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		input.BgpAsn = aws.Int32(int32(v))
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("device_name"); ok {
+	if v, ok := d.GetOk(names.AttrDeviceName); ok {
 		input.DeviceName = aws.String(v.(string))
 	}
 
@@ -155,8 +155,8 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
-	d.Set("certificate_arn", customerGateway.CertificateArn)
-	d.Set("device_name", customerGateway.DeviceName)
+	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
+	d.Set(names.AttrDeviceName, customerGateway.DeviceName)
 	d.Set("ip_address", customerGateway.IpAddress)
 	d.Set(names.AttrType, customerGateway.Type)
 

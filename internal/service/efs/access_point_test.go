@@ -39,7 +39,7 @@ func TestAccEFSAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
 					resource.TestCheckResourceAttrPair(resourceName, "file_system_arn", fsResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "file_system_id", fsResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrFileSystemID, fsResourceName, names.AttrID),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`access-point/fsap-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),

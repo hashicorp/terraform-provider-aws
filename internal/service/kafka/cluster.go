@@ -454,7 +454,7 @@ func resourceCluster() *schema.Resource {
 													Type:     schema.TypeBool,
 													Required: true,
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1595,7 +1595,7 @@ func expandS3(tfMap map[string]interface{}) *types.S3 {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -2033,7 +2033,7 @@ func flattenS3(apiObject *types.S3) map[string]interface{} {
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.ToString(v)
+		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	return tfMap

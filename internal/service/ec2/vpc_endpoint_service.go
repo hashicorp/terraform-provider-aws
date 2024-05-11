@@ -115,7 +115,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 					},
 				},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -242,7 +242,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("private_dns_name_configuration", nil)
 	}
-	d.Set("service_name", svcCfg.ServiceName)
+	d.Set(names.AttrServiceName, svcCfg.ServiceName)
 	if len(svcCfg.ServiceType) > 0 {
 		d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
 	} else {

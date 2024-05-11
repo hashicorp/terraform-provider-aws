@@ -21,7 +21,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataMaintenanceWindowsRead,
 		Schema: map[string]*schema.Schema{
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -54,7 +54,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = expandMaintenanceWindowFilters(v.(*schema.Set).List())
 	}
 

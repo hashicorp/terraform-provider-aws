@@ -83,7 +83,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"password": {
+						names.AttrPassword: {
 							Type:      schema.TypeString,
 							Optional:  true,
 							Sensitive: true,
@@ -102,11 +102,11 @@ func ResourceStack() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(opsworks.SourceType_Values(), false),
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"username": {
+						names.AttrUsername: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -162,7 +162,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -206,7 +206,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	region := d.Get("region").(string)
+	region := d.Get(names.AttrRegion).(string)
 	input := &opsworks.CreateStackInput{
 		ChefConfiguration: &opsworks.ChefConfiguration{
 			ManageBerkshelf: aws.Bool(d.Get("manage_berkshelf").(bool)),
@@ -379,7 +379,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		if v, ok := d.GetOk("custom_cookbooks_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			v := v.([]interface{})[0].(map[string]interface{})
 
-			tfMap["password"] = v["password"]
+			tfMap[names.AttrPassword] = v[names.AttrPassword]
 			tfMap["ssh_key"] = v["ssh_key"]
 		}
 
@@ -398,7 +398,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("default_subnet_id", stack.DefaultSubnetId)
 	d.Set("hostname_theme", stack.HostnameTheme)
 	d.Set(names.AttrName, stack.Name)
-	d.Set("region", stack.Region)
+	d.Set(names.AttrRegion, stack.Region)
 	d.Set("service_role_arn", stack.ServiceRoleArn)
 	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
@@ -605,7 +605,7 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 
 	apiObject := &opsworks.Source{}
 
-	if v, ok := tfMap["password"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPassword].(string); ok && v != "" {
 		apiObject.Password = aws.String(v)
 	}
 
@@ -621,11 +621,11 @@ func expandSource(tfMap map[string]interface{}) *opsworks.Source {
 		apiObject.Type = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		apiObject.Url = aws.String(v)
 	}
 
-	if v, ok := tfMap["username"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUsername].(string); ok && v != "" {
 		apiObject.Username = aws.String(v)
 	}
 
@@ -640,7 +640,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Password; v != nil {
-		tfMap["password"] = aws.StringValue(v)
+		tfMap[names.AttrPassword] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Revision; v != nil {
@@ -656,11 +656,11 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	}
 
 	if v := apiObject.Url; v != nil {
-		tfMap["url"] = aws.StringValue(v)
+		tfMap[names.AttrURL] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Username; v != nil {
-		tfMap["username"] = aws.StringValue(v)
+		tfMap[names.AttrUsername] = aws.StringValue(v)
 	}
 
 	return tfMap

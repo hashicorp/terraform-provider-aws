@@ -33,7 +33,7 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				ExactlyOneOf: []string{names.AttrARN, "url"},
+				ExactlyOneOf: []string{names.AttrARN, names.AttrURL},
 			},
 			"client_id_list": {
 				Type:     schema.TypeList,
@@ -46,13 +46,13 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
 				ValidateFunc:     validOpenIDURL,
 				DiffSuppressFunc: suppressOpenIDURL,
-				ExactlyOneOf:     []string{names.AttrARN, "url"},
+				ExactlyOneOf:     []string{names.AttrARN, names.AttrURL},
 			},
 		},
 	}
@@ -68,7 +68,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk(names.AttrARN); ok {
 		input.OpenIDConnectProviderArn = aws.String(v.(string))
-	} else if v, ok := d.GetOk("url"); ok {
+	} else if v, ok := d.GetOk(names.AttrURL); ok {
 		url := v.(string)
 
 		oidcpEntry, err := dataSourceGetOpenIDConnectProviderByURL(ctx, conn, url)
@@ -90,7 +90,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 
 	d.SetId(aws.ToString(input.OpenIDConnectProviderArn))
 	d.Set(names.AttrARN, input.OpenIDConnectProviderArn)
-	d.Set("url", resp.Url)
+	d.Set(names.AttrURL, resp.Url)
 	d.Set("client_id_list", flex.FlattenStringValueList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringValueList(resp.ThumbprintList))
 

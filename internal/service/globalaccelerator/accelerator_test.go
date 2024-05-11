@@ -48,7 +48,7 @@ func TestAccGlobalAcceleratorAccelerator_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "dns_name", dnsNameRegex),
 					resource.TestCheckResourceAttr(resourceName, "dual_stack_dns_name", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttr(resourceName, "hosted_zone_id", "Z2BJ6XQ5FK7U4H"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2BJ6XQ5FK7U4H"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", "1"),

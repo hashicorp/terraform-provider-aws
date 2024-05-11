@@ -43,7 +43,7 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarm_description", "This metric monitors ec2 cpu utilization"),
 					resource.TestCheckResourceAttr(resourceName, "threshold", "80"),
 					resource.TestCheckResourceAttr(resourceName, "period", "120"),
-					resource.TestCheckResourceAttr(resourceName, "namespace", "AWS/EC2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, "AWS/EC2"),
 					resource.TestCheckResourceAttr(resourceName, "alarm_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "comparison_operator", "GreaterThanOrEqualToThreshold"),
 					resource.TestCheckResourceAttr(resourceName, "datapoints_to_alarm", "0"),

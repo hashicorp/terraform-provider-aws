@@ -54,7 +54,7 @@ func resourceApprovalRuleTemplate() *schema.Resource {
 					validation.StringLenBetween(1, 3000),
 				),
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +128,7 @@ func resourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("approval_rule_template_id", result.ApprovalRuleTemplateId)
 	d.Set(names.AttrDescription, result.ApprovalRuleTemplateDescription)
 	d.Set("content", result.ApprovalRuleTemplateContent)
-	d.Set("creation_date", result.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, result.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", result.LastModifiedDate.Format(time.RFC3339))
 	d.Set("last_modified_user", result.LastModifiedUser)
 	d.Set(names.AttrName, result.ApprovalRuleTemplateName)

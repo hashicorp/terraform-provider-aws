@@ -69,14 +69,14 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -104,7 +104,7 @@ func ResourceListenerRule() *schema.Resource {
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
 							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -167,7 +167,7 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
@@ -214,7 +214,7 @@ func ResourceListenerRule() *schema.Resource {
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -483,7 +483,7 @@ func ResourceListenerRule() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			validateListenerActionsCustomDiff("action"),
+			validateListenerActionsCustomDiff(names.AttrAction),
 		),
 	}
 }
@@ -513,7 +513,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 	if diags.HasError() {
 		return diags
 	}
@@ -603,19 +603,19 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.ToString(rule.Priority) == "default" {
-		d.Set("priority", listenerRulePriorityDefault)
+		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
 		} else {
-			d.Set("priority", priority)
+			d.Set(names.AttrPriority, priority)
 		}
 	}
 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+	if err := d.Set(names.AttrAction, flattenLbListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
 
@@ -685,12 +685,12 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		if d.HasChange("priority") {
+		if d.HasChange(names.AttrPriority) {
 			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
 					{
 						RuleArn:  aws.String(d.Id()),
-						Priority: aws.Int32(int32(d.Get("priority").(int))),
+						Priority: aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 					},
 				},
 			}
@@ -706,8 +706,8 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
@@ -753,7 +753,7 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 
 func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
 	var resp *elasticloadbalancingv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		var err error
 		params.Priority = aws.Int32(int32(v.(int)))
 		resp, err = conn.CreateRule(ctx, params)

@@ -25,7 +25,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
-	d.Set("creation_time", logGroup.CreationTime)
+	d.Set(names.AttrCreationTime, logGroup.CreationTime)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
 	d.Set("retention_in_days", logGroup.RetentionInDays)

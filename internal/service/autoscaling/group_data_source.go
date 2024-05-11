@@ -505,7 +505,7 @@ func dataSourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

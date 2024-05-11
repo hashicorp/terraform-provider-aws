@@ -38,7 +38,7 @@ func TestAccEC2EBSVolume_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -289,7 +289,7 @@ func TestAccEC2EBSVolume_kmsKey(t *testing.T) {
 				Config: testAccEBSVolumeConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "true"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "throughput", "0"),
 				),
@@ -537,7 +537,7 @@ func TestAccEC2EBSVolume_GP3_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -577,7 +577,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -601,7 +601,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "5000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -635,7 +635,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -659,7 +659,7 @@ func TestAccEC2EBSVolume_GP3_throughput(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -693,7 +693,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -717,7 +717,7 @@ func TestAccEC2EBSVolume_gp3ToGP2(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -751,7 +751,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -775,7 +775,7 @@ func TestAccEC2EBSVolume_io1ToGP3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "4000"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -810,7 +810,7 @@ func TestAccEC2EBSVolume_snapshotID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
@@ -851,7 +851,7 @@ func TestAccEC2EBSVolume_snapshotIDAndSize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),

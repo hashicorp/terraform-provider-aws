@@ -130,11 +130,11 @@ func ResourceChannel() *schema.Resource {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"url": {
+										names.AttrURL: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"username": {
+										names.AttrUsername: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -2259,10 +2259,10 @@ func expandChannelDestinationsSettings(tfList []interface{}) []types.OutputDesti
 		if v, ok := m["stream_name"].(string); ok {
 			s.StreamName = aws.String(v)
 		}
-		if v, ok := m["url"].(string); ok {
+		if v, ok := m[names.AttrURL].(string); ok {
 			s.Url = aws.String(v)
 		}
-		if v, ok := m["username"].(string); ok {
+		if v, ok := m[names.AttrUsername].(string); ok {
 			s.Username = aws.String(v)
 		}
 
@@ -2330,10 +2330,10 @@ func flattenChannelDestinationsSettings(apiObject []types.OutputDestinationSetti
 	var tfList []interface{}
 	for _, v := range apiObject {
 		m := map[string]interface{}{
-			"password_param": aws.ToString(v.PasswordParam),
-			"stream_name":    aws.ToString(v.StreamName),
-			"url":            aws.ToString(v.Url),
-			"username":       aws.ToString(v.Username),
+			"password_param":   aws.ToString(v.PasswordParam),
+			"stream_name":      aws.ToString(v.StreamName),
+			names.AttrURL:      aws.ToString(v.Url),
+			names.AttrUsername: aws.ToString(v.Username),
 		}
 
 		tfList = append(tfList, m)

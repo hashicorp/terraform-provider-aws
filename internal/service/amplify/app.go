@@ -186,7 +186,7 @@ func resourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -202,7 +202,7 @@ func resourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -700,7 +700,7 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 		apiObject.Condition = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
@@ -708,7 +708,7 @@ func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 		apiObject.Status = aws.String(v)
 	}
 
-	if v, ok := tfMap["target"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTarget].(string); ok && v != "" {
 		apiObject.Target = aws.String(v)
 	}
 
@@ -749,7 +749,7 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Status; v != nil {
@@ -757,7 +757,7 @@ func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	}
 
 	if v := apiObject.Target; v != nil {
-		tfMap["target"] = aws.ToString(v)
+		tfMap[names.AttrTarget] = aws.ToString(v)
 	}
 
 	return tfMap

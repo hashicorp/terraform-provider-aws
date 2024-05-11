@@ -21,7 +21,7 @@ func DataSourceParametersByPath() *schema.Resource {
 		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -31,7 +31,7 @@ func DataSourceParametersByPath() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -64,7 +64,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	path := d.Get("path").(string)
+	path := d.Get(names.AttrPath).(string)
 	input := &ssm.GetParametersByPathInput{
 		Path:           aws.String(path),
 		Recursive:      aws.Bool(d.Get("recursive").(bool)),
@@ -96,7 +96,7 @@ func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.SetId(path)
-	d.Set("arns", arns)
+	d.Set(names.AttrARNs, arns)
 	d.Set("names", n)
 	d.Set("types", types)
 	d.Set(names.AttrValues, values)

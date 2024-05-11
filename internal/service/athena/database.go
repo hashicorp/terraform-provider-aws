@@ -65,7 +65,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -187,7 +187,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
@@ -239,7 +239,7 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 	}
 
 	if v, ok := d.GetOk("expected_bucket_owner"); ok {

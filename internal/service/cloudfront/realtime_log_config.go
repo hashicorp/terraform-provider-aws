@@ -41,7 +41,7 @@ func resourceRealtimeLogConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -104,7 +104,7 @@ func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 
@@ -144,7 +144,7 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set(names.AttrARN, logConfig.ARN)
-	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
+	if err := d.Set(names.AttrEndpoint, flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("fields", logConfig.Fields)
@@ -166,7 +166,7 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 

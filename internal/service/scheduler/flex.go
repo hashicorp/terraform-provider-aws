@@ -107,7 +107,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -191,7 +191,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		m["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		m[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.PlacementConstraints; len(v) > 0 {
@@ -266,7 +266,7 @@ func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridg
 		a.DetailType = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		a.Source = aws.String(v)
 	}
 
@@ -285,7 +285,7 @@ func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[st
 	}
 
 	if v := apiObject.Source; v != nil {
-		m["source"] = aws.ToString(v)
+		m[names.AttrSource] = aws.ToString(v)
 	}
 
 	return m
@@ -302,7 +302,7 @@ func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeW
 		a.MaximumWindowInMinutes = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		a.Mode = types.FlexibleTimeWindowMode(v)
 	}
 
@@ -321,7 +321,7 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	}
 
 	if v := string(apiObject.Mode); v != "" {
-		m["mode"] = v
+		m[names.AttrMode] = v
 	}
 
 	return m

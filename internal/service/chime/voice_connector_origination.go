@@ -57,7 +57,7 @@ func ResourceVoiceConnectorOrigination() *schema.Resource {
 							Default:      5060,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(1, 99),
@@ -201,7 +201,7 @@ func expandOriginationRoutes(data []interface{}) []awstypes.OriginationRoute {
 		originationRoutes = append(originationRoutes, awstypes.OriginationRoute{
 			Host:     aws.String(item["host"].(string)),
 			Port:     aws.Int32(int32(item[names.AttrPort].(int))),
-			Priority: aws.Int32(int32(item["priority"].(int))),
+			Priority: aws.Int32(int32(item[names.AttrPriority].(int))),
 			Protocol: awstypes.OriginationRouteProtocol(item[names.AttrProtocol].(string)),
 			Weight:   aws.Int32(int32(item["weight"].(int))),
 		})
@@ -217,7 +217,7 @@ func flattenOriginationRoutes(routes []awstypes.OriginationRoute) []interface{} 
 		r := map[string]interface{}{
 			"host":             aws.ToString(route.Host),
 			names.AttrPort:     aws.ToInt32(route.Port),
-			"priority":         aws.ToInt32(route.Priority),
+			names.AttrPriority: aws.ToInt32(route.Priority),
 			names.AttrProtocol: string(route.Protocol),
 			"weight":           aws.ToInt32(route.Weight),
 		}

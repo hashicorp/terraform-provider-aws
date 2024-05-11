@@ -48,7 +48,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sns_topic_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSubnetID, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_failure", "false"),
@@ -441,7 +441,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_snsTopicARN1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -454,7 +454,7 @@ func TestAccImageBuilderInfrastructureConfiguration_snsTopicARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName2, names.AttrARN),
 				),
 			},
 		},

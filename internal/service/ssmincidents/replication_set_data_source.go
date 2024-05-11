@@ -24,7 +24,7 @@ func DataSourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -97,7 +97,7 @@ func dataSourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
 	d.Set(names.AttrStatus, replicationSet.Status)
 
-	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
+	if err := d.Set(names.AttrRegion, flattenRegions(replicationSet.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
