@@ -172,7 +172,7 @@ func DataSourceDataSet() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"namespace": {
+							names.AttrNamespace: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},

@@ -78,7 +78,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
-							"content_type": {
+							names.AttrContentType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -1381,7 +1381,7 @@ func flattenSheetDefinitions(apiObject []*quicksight.SheetDefinition) []interfac
 			"sheet_id": aws.StringValue(config.SheetId),
 		}
 		if config.ContentType != nil {
-			tfMap["content_type"] = aws.StringValue(config.ContentType)
+			tfMap[names.AttrContentType] = aws.StringValue(config.ContentType)
 		}
 		if config.Description != nil {
 			tfMap[names.AttrDescription] = aws.StringValue(config.Description)
