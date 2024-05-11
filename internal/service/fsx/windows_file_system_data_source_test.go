@@ -40,7 +40,7 @@ func TestAccFSxWindowsFileSystemDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "daily_automatic_backup_start_time", resourceName, "daily_automatic_backup_start_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "deployment_type", resourceName, "deployment_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "disk_iops_configuration.#", resourceName, "disk_iops_configuration.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(datasourceName, "network_interface_ids.#", resourceName, "network_interface_ids.#"),
