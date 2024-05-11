@@ -78,7 +78,7 @@ func resourcePipeline() *schema.Resource {
 								},
 							},
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -717,7 +717,7 @@ func expandArtifactStore(tfMap map[string]interface{}) *types.ArtifactStore {
 		apiObject.EncryptionKey = expandEncryptionKey(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["location"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLocation].(string); ok && v != "" {
 		apiObject.Location = aws.String(v)
 	}
 
@@ -1230,7 +1230,7 @@ func flattenArtifactStore(apiObject *types.ArtifactStore) map[string]interface{}
 	}
 
 	if v := apiObject.Location; v != nil {
-		tfMap["location"] = aws.ToString(v)
+		tfMap[names.AttrLocation] = aws.ToString(v)
 	}
 
 	return tfMap
