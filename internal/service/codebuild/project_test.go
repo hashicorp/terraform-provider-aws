@@ -1805,7 +1805,7 @@ phases:
 				ExpectError: regexache.MustCompile("`buildspec` must be set when source's `type` is `NO_SOURCE`"),
 			},
 			{
-				Config:      testAccProjectConfig_sourceTypeNoSource(rName, "location", rBuildspec),
+				Config:      testAccProjectConfig_sourceTypeNoSource(rName, names.AttrLocation, rBuildspec),
 				ExpectError: regexache.MustCompile("`location` must be empty when source's `type` is `NO_SOURCE`"),
 			},
 		},
@@ -2563,7 +2563,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName1,
+						names.AttrLocation: rName1,
 					}),
 				),
 			},
@@ -2573,7 +2573,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"location": rName2,
+						names.AttrLocation: rName2,
 					}),
 				),
 			},
