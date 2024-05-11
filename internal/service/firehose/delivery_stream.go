@@ -1001,7 +1001,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.SnowflakeDataLoadingOptionJsonMapping,
 								ValidateDiagFunc: enum.Validate[types.SnowflakeDataLoadingOption](),
 							},
-							"database": {
+							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
@@ -1041,7 +1041,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.SnowflakeS3BackupMode](),
 							},
 							"s3_configuration": s3ConfigurationSchema(),
-							"schema": {
+							names.AttrSchema: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
@@ -2650,12 +2650,12 @@ func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *type
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationConfiguration{
 		AccountUrl:      aws.String(tfMap["account_url"].(string)),
-		Database:        aws.String(tfMap["database"].(string)),
+		Database:        aws.String(tfMap[names.AttrDatabase].(string)),
 		PrivateKey:      aws.String(tfMap[names.AttrPrivateKey].(string)),
 		RetryOptions:    expandSnowflakeRetryOptions(tfMap),
 		RoleARN:         aws.String(roleARN),
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
-		Schema:          aws.String(tfMap["schema"].(string)),
+		Schema:          aws.String(tfMap[names.AttrSchema].(string)),
 		Table:           aws.String(tfMap["table"].(string)),
 		User:            aws.String(tfMap["user"].(string)),
 	}
@@ -2703,12 +2703,12 @@ func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.Snowf
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.SnowflakeDestinationUpdate{
 		AccountUrl:   aws.String(tfMap["account_url"].(string)),
-		Database:     aws.String(tfMap["database"].(string)),
+		Database:     aws.String(tfMap[names.AttrDatabase].(string)),
 		PrivateKey:   aws.String(tfMap[names.AttrPrivateKey].(string)),
 		RetryOptions: expandSnowflakeRetryOptions(tfMap),
 		RoleARN:      aws.String(roleARN),
 		S3Update:     expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
-		Schema:       aws.String(tfMap["schema"].(string)),
+		Schema:       aws.String(tfMap[names.AttrSchema].(string)),
 		Table:        aws.String(tfMap["table"].(string)),
 		User:         aws.String(tfMap["user"].(string)),
 	}
@@ -3414,7 +3414,7 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 		"cloudwatch_logging_options":   flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
 		"content_column_name":          aws.ToString(apiObject.ContentColumnName),
 		"data_loading_option":          apiObject.DataLoadingOption,
-		"database":                     aws.ToString(apiObject.Database),
+		names.AttrDatabase:             aws.ToString(apiObject.Database),
 		"key_passphrase":               configuredKeyPassphrase,
 		"metadata_column_name":         aws.ToString(apiObject.MetaDataColumnName),
 		names.AttrPrivateKey:           configuredPrivateKey,
@@ -3422,7 +3422,7 @@ func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinatio
 		names.AttrRoleARN:              roleARN,
 		"s3_backup_mode":               apiObject.S3BackupMode,
 		"s3_configuration":             flattenS3DestinationDescription(apiObject.S3DestinationDescription),
-		"schema":                       aws.ToString(apiObject.Schema),
+		names.AttrSchema:               aws.ToString(apiObject.Schema),
 		"snowflake_role_configuration": flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
 		"snowflake_vpc_configuration":  flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
 		"table":                        aws.ToString(apiObject.Table),
