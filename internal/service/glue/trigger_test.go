@@ -45,7 +45,7 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "schedule", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
@@ -254,14 +254,14 @@ func TestAccGlueTrigger_schedule(t *testing.T) {
 				Config: testAccTriggerConfig_schedule(rName, "cron(1 2 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(1 2 * * ? *)"),
 				),
 			},
 			{
 				Config: testAccTriggerConfig_schedule(rName, "cron(2 3 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(2 3 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(2 3 * * ? *)"),
 				),
 			},
 			{
@@ -291,7 +291,7 @@ func TestAccGlueTrigger_startOnCreate(t *testing.T) {
 				Config: testAccTriggerConfig_scheduleStart(rName, "cron(1 2 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "schedule", "cron(1 2 * * ? *)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(1 2 * * ? *)"),
 				),
 			},
 			{

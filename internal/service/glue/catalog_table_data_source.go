@@ -157,7 +157,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"location": {
+						names.AttrLocation: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
