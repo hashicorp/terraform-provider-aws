@@ -337,7 +337,15 @@ func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *
 		return nil, err
 	}
 
-	return output.ResourceShareInvitations, nil
+	var out []awstypes.ResourceShareInvitation
+	for _, v := range output.ResourceShareInvitations {
+		v := v
+		if v := v; filter(v) {
+			out = append(out, v)
+		}
+	}
+
+	return out, nil
 }
 
 func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {

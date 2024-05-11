@@ -206,7 +206,7 @@ func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, me
 
 func findResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.Client, arn string) (*awstypes.ResourceShare, error) {
 	input := &ram.GetResourceSharesInput{
-		ResourceOwner:     awstypes.ResourceOwner(awstypes.ResourceOwnerSelf),
+		ResourceOwner:     awstypes.ResourceOwnerSelf,
 		ResourceShareArns: []string{arn},
 	}
 	output, err := findResourceShare(ctx, conn, input)
