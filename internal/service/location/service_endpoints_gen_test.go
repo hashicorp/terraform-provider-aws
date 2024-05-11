@@ -65,10 +65,10 @@ const (
 )
 
 const (
-	packageName = "location"
+	packageName = names.AttrLocation
 	awsEnvVar   = "AWS_ENDPOINT_URL_LOCATION"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "location"
+	configParam = names.AttrLocation
 
 	aliasName0 = "locationservice"
 )
@@ -324,7 +324,7 @@ func withAliasName0EndpointInConfig(setup *caseSetup) {
 func conflictsWith(e caseExpectations) caseExpectations {
 	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
 		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
-		packageName,
+		names.AttrLocation,
 		aliasName0,
 	))
 	return e
@@ -537,7 +537,7 @@ services = endpoint-test
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, names.AttrLocation, serviceConfigFileEndpoint))
 	}
 
 	return buf.String()
