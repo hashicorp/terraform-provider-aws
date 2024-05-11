@@ -54,7 +54,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceActivation,
+			Factory:  resourceActivation,
 			TypeName: "aws_ssm_activation",
 			Name:     "Activation",
 			Tags:     &types.ServicePackageResourceTags{},

@@ -5,8 +5,10 @@ package ssm
 
 // Exports for use in tests only.
 var (
+	ResourceActivation           = resourceActivation
 	ResourceDefaultPatchBaseline = resourceDefaultPatchBaseline
 	ResourcePatchBaseline        = resourcePatchBaseline
 
+	FindActivationByID    = findActivationByID
 	FindPatchBaselineByID = findPatchBaselineByID
 )
