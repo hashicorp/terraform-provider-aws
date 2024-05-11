@@ -140,6 +140,16 @@ rules:
       - pattern: '"catalog_id"'
     severity: ERROR
     fix: "names.AttrCatalogID"
+  - id: literal-certificate-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrCertificate` for the string literal "certificate"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"certificate"'
+    severity: ERROR
+    fix: "names.AttrCertificate"
   - id: literal-certificate_arn-string-constant
     languages: [go]
     message: Use the constant `names.AttrCertificateARN` for the string literal "certificate_arn"
@@ -170,6 +180,16 @@ rules:
       - pattern: '"configuration"'
     severity: ERROR
     fix: "names.AttrConfiguration"
+  - id: literal-content_type-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrContentType` for the string literal "content_type"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"content_type"'
+    severity: ERROR
+    fix: "names.AttrContentType"
   - id: literal-created_at-string-constant
     languages: [go]
     message: Use the constant `names.AttrCreatedAt` for the string literal "created_at"
@@ -330,6 +350,16 @@ rules:
       - pattern: '"endpoint"'
     severity: ERROR
     fix: "names.AttrEndpoint"
+  - id: literal-endpoint_type-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrEndpointType` for the string literal "endpoint_type"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"endpoint_type"'
+    severity: ERROR
+    fix: "names.AttrEndpointType"
   - id: literal-endpoints-string-constant
     languages: [go]
     message: Use the constant `names.AttrEndpoints` for the string literal "endpoints"
@@ -420,6 +450,16 @@ rules:
       - pattern: '"id"'
     severity: ERROR
     fix: "names.AttrID"
+  - id: literal-identifier-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrIdentifier` for the string literal "identifier"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"identifier"'
+    severity: ERROR
+    fix: "names.AttrIdentifier"
   - id: literal-instance_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrInstanceID` for the string literal "instance_id"
@@ -480,6 +520,16 @@ rules:
       - pattern: '"last_updated_date"'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+  - id: literal-log_group_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLogGroupName` for the string literal "log_group_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"log_group_name"'
+    severity: ERROR
+    fix: "names.AttrLogGroupName"
   - id: literal-max-string-constant
     languages: [go]
     message: Use the constant `names.AttrMax` for the string literal "max"
@@ -530,6 +580,16 @@ rules:
       - pattern: '"name_prefix"'
     severity: ERROR
     fix: "names.AttrNamePrefix"
+  - id: literal-namespace-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrNamespace` for the string literal "namespace"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"namespace"'
+    severity: ERROR
+    fix: "names.AttrNamespace"
   - id: literal-network_configuration-string-constant
     languages: [go]
     message: Use the constant `names.AttrNetworkConfiguration` for the string literal "network_configuration"
@@ -720,6 +780,26 @@ rules:
       - pattern: '"role_arn"'
     severity: ERROR
     fix: "names.AttrRoleARN"
+  - id: literal-s3_bucket_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrS3BucketName` for the string literal "s3_bucket_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"s3_bucket_name"'
+    severity: ERROR
+    fix: "names.AttrS3BucketName"
+  - id: literal-sns_topic_arn-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSNSTopicARN` for the string literal "sns_topic_arn"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"sns_topic_arn"'
+    severity: ERROR
+    fix: "names.AttrSNSTopicARN"
   - id: literal-schedule_expression-string-constant
     languages: [go]
     message: Use the constant `names.AttrScheduleExpression` for the string literal "schedule_expression"
@@ -760,6 +840,16 @@ rules:
       - pattern: '"security_groups"'
     severity: ERROR
     fix: "names.AttrSecurityGroups"
+  - id: literal-service_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrServiceName` for the string literal "service_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"service_name"'
+    severity: ERROR
+    fix: "names.AttrServiceName"
   - id: literal-session-string-constant
     languages: [go]
     message: Use the constant `names.AttrSession` for the string literal "session"
@@ -850,6 +940,16 @@ rules:
       - pattern: '"subnet_ids"'
     severity: ERROR
     fix: "names.AttrSubnetIDs"
+  - id: literal-table_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrTableName` for the string literal "table_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"table_name"'
+    severity: ERROR
+    fix: "names.AttrTableName"
   - id: literal-tags-string-constant
     languages: [go]
     message: Use the constant `names.AttrTags` for the string literal "tags"
@@ -940,6 +1040,16 @@ rules:
       - pattern: '"unit"'
     severity: ERROR
     fix: "names.AttrUnit"
+  - id: literal-user_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrUserName` for the string literal "user_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"user_name"'
+    severity: ERROR
+    fix: "names.AttrUserName"
   - id: literal-username-string-constant
     languages: [go]
     message: Use the constant `names.AttrUsername` for the string literal "username"
