@@ -328,8 +328,8 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}
@@ -785,8 +785,8 @@ func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]s
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}

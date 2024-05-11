@@ -42,7 +42,7 @@ func TestAccIAMVirtualMFADevice_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "enable_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "qr_code_png"),
-					resource.TestCheckNoResourceAttr(resourceName, "user_name"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrUserName),
 				),
 			},
 			{
