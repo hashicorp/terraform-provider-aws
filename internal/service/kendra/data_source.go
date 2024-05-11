@@ -65,7 +65,7 @@ func ResourceDataSource() *schema.Resource {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if schedule, dataSourcetype := diff.Get(names.AttrSchedule).(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -456,7 +456,7 @@ func ResourceDataSource() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -625,7 +625,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
@@ -705,7 +705,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("language_code", resp.LanguageCode)
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrRoleARN, resp.RoleArn)
-	d.Set("schedule", resp.Schedule)
+	d.Set(names.AttrSchedule, resp.Schedule)
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
@@ -726,7 +726,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, "schedule") {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -761,8 +761,8 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
-		if d.HasChange("schedule") {
-			input.Schedule = aws.String(d.Get("schedule").(string))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
