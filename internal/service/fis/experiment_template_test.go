@@ -285,7 +285,7 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", "duration", "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
+				Config: testAccExperimentTemplateConfig_ebsVolume(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
@@ -297,7 +297,7 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", "EBS Volume Pause I/O"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:ebs:pause-volume-io"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "duration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", names.AttrDuration),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "PT6M"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Volumes"),
@@ -333,7 +333,7 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", "duration", "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
+				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", names.AttrDuration, "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "EBS Volume Pause I/O Experiment"),
@@ -345,7 +345,7 @@ func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", "EBS Volume Pause I/O"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:ebs:pause-volume-io"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "duration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", names.AttrDuration),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "PT6M"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Volumes"),
