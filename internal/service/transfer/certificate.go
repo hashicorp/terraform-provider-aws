@@ -71,7 +71,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -111,7 +111,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("private_key"); ok {
+	if v, ok := d.GetOk(names.AttrPrivateKey); ok {
 		input.PrivateKey = aws.String(v.(string))
 	}
 
