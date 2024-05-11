@@ -72,7 +72,7 @@ func resourceType() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"log_group_name": {
+						names.AttrLogGroupName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -412,7 +412,7 @@ func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 
 	apiObject := &awstypes.LoggingConfig{}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -472,7 +472,7 @@ func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]interfac
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.ToString(v)
+		tfMap[names.AttrLogGroupName] = aws.ToString(v)
 	}
 
 	if v := apiObject.LogRoleArn; v != nil {
