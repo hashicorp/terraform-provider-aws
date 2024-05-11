@@ -39,7 +39,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -62,7 +62,7 @@ func TestAccBackupReportPlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -98,7 +98,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -121,7 +121,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -145,7 +145,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -183,7 +183,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -206,7 +206,7 @@ func TestAccBackupReportPlan_updateReportDeliveryChannel(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -243,7 +243,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),
@@ -268,7 +268,7 @@ func TestAccBackupReportPlan_updateReportSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportPlanExists(ctx, resourceName, &reportPlan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_status"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "report_delivery_channel.#", "1"),

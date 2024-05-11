@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +37,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccWAFV2WebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -61,7 +62,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "token_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
@@ -82,7 +83,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 	ruleName1 := fmt.Sprintf("%s-1", webACLName)
@@ -101,7 +102,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
@@ -113,7 +114,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName1,
-						"priority":            "10",
+						names.AttrPriority:    "10",
 						"action.#":            "1",
 						"action.0.allow.#":    "0",
 						"action.0.block.#":    "0",
@@ -142,12 +143,12 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"statement.0.size_constraint_statement.0.text_transformation.#":                    "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "2",
-						names.AttrType: "CMD_LINE",
+						names.AttrPriority: "2",
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "5",
-						names.AttrType: "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 				),
 			},
@@ -159,7 +160,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
@@ -171,7 +172,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName1,
-						"priority":            "10",
+						names.AttrPriority:    "10",
 						"action.#":            "1",
 						"action.0.allow.#":    "0",
 						"action.0.block.#":    "0",
@@ -189,16 +190,16 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "2",
-						names.AttrType: "CMD_LINE",
+						names.AttrPriority: "2",
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "5",
-						names.AttrType: "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName2,
-						"priority":            "5",
+						names.AttrPriority:    "5",
 						"action.#":            "1",
 						"action.0.allow.#":    "1",
 						"action.0.block.#":    "0",
@@ -225,7 +226,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 
 func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 	ruleName1 := fmt.Sprintf("%s-1", webACLName)
@@ -244,7 +245,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
@@ -256,7 +257,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName1,
-						"priority":            "5",
+						names.AttrPriority:    "5",
 						"action.#":            "1",
 						"action.0.allow.#":    "0",
 						"action.0.block.#":    "0",
@@ -274,16 +275,16 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "2",
-						names.AttrType: "CMD_LINE",
+						names.AttrPriority: "2",
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "5",
-						names.AttrType: "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName2,
-						"priority":            "10",
+						names.AttrPriority:    "10",
 						"action.#":            "1",
 						"action.0.allow.#":    "1",
 						"action.0.block.#":    "0",
@@ -305,7 +306,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
@@ -317,7 +318,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName1,
-						"priority":            "10",
+						names.AttrPriority:    "10",
 						"action.#":            "1",
 						"action.0.allow.#":    "0",
 						"action.0.block.#":    "0",
@@ -335,16 +336,16 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "2",
-						names.AttrType: "CMD_LINE",
+						names.AttrPriority: "2",
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "5",
-						names.AttrType: "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName2,
-						"priority":            "5",
+						names.AttrPriority:    "5",
 						"action.#":            "1",
 						"action.0.allow.#":    "1",
 						"action.0.block.#":    "0",
@@ -366,7 +367,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
@@ -378,7 +379,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        ruleName1,
-						"priority":            "10",
+						names.AttrPriority:    "10",
 						"action.#":            "1",
 						"action.0.allow.#":    "0",
 						"action.0.block.#":    "0",
@@ -396,16 +397,16 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 						"statement.0.size_constraint_statement.0.text_transformation.#":           "2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "2",
-						names.AttrType: "CMD_LINE",
+						names.AttrPriority: "2",
+						names.AttrType:     "CMD_LINE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.size_constraint_statement.0.text_transformation.*", map[string]string{
-						"priority":     "5",
-						names.AttrType: "NONE",
+						names.AttrPriority: "5",
+						names.AttrType:     "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName:        "updated",
-						"priority":            "5",
+						names.AttrPriority:    "5",
 						"action.#":            "1",
 						"action.0.allow.#":    "1",
 						"action.0.block.#":    "0",
@@ -432,7 +433,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 
 func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after wafv2.WebACL
+	var before, after awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	ruleGroupNewName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
@@ -451,7 +452,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -469,7 +470,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -485,7 +486,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 
 func TestAccWAFV2WebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -509,7 +510,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -645,7 +646,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -718,7 +719,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -825,7 +826,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -912,7 +913,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -950,7 +951,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 
 func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1017,7 +1018,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 
 func TestAccWAFV2WebACL_minimal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1035,7 +1036,7 @@ func TestAccWAFV2WebACL_minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -1051,7 +1052,7 @@ func TestAccWAFV2WebACL_minimal(t *testing.T) {
 
 func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1123,7 +1124,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1134,7 +1135,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatement(webACLName, wafv2.PositionalConstraintContainsWord, "value1"),
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1154,7 +1155,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatement(webACLName, wafv2.PositionalConstraintExactly, "value2"),
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintExactly), "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1185,7 +1186,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1196,7 +1197,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, wafv2.FallbackBehaviorMatch),
+				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, string(awstypes.FallbackBehaviorMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1209,7 +1210,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, wafv2.FallbackBehaviorNoMatch),
+				Config: testAccWebACLConfig_byteMatchStatementJA3Fingerprint(webACLName, string(awstypes.FallbackBehaviorNoMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1233,7 +1234,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 
 func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1244,7 +1245,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, wafv2.JsonMatchScopeValue, wafv2.FallbackBehaviorMatch, wafv2.OversizeHandlingNoMatch, `included_paths = ["/dogs/0/name", "/dogs/1/name"]`),
+				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, string(awstypes.JsonMatchScopeValue), string(awstypes.FallbackBehaviorMatch), string(awstypes.OversizeHandlingNoMatch), `included_paths = ["/dogs/0/name", "/dogs/1/name"]`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1264,7 +1265,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, wafv2.JsonMatchScopeAll, wafv2.FallbackBehaviorNoMatch, wafv2.OversizeHandlingContinue, "all {}"),
+				Config: testAccWebACLConfig_byteMatchStatementJSONBody(webACLName, string(awstypes.JsonMatchScopeAll), string(awstypes.FallbackBehaviorNoMatch), string(awstypes.OversizeHandlingContinue), "all {}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1293,7 +1294,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 
 func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1304,7 +1305,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatementBody(webACLName, wafv2.OversizeHandlingNoMatch),
+				Config: testAccWebACLConfig_byteMatchStatementBody(webACLName, string(awstypes.OversizeHandlingNoMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1317,7 +1318,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatementBody(webACLName, wafv2.OversizeHandlingContinue),
+				Config: testAccWebACLConfig_byteMatchStatementBody(webACLName, string(awstypes.OversizeHandlingContinue)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1341,7 +1342,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 
 func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1352,7 +1353,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, wafv2.OversizeHandlingMatch),
+				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, string(awstypes.OversizeHandlingMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1365,7 +1366,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, wafv2.OversizeHandlingNoMatch),
+				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, string(awstypes.OversizeHandlingNoMatch)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1389,7 +1390,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
 
 func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 	countryCode := fmt.Sprintf("%q", "US")
@@ -1418,7 +1419,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 						"action.0.allow.#":                  "0",
 						"action.0.block.#":                  "1",
 						"action.0.count.#":                  "0",
-						"priority":                          "1",
+						names.AttrPriority:                  "1",
 						"statement.#":                       "1",
 						"statement.0.geo_match_statement.#": "1",
 						"statement.0.geo_match_statement.0.country_codes.#":       "1",
@@ -1452,7 +1453,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 						"action.0.allow.#":                  "0",
 						"action.0.block.#":                  "1",
 						"action.0.count.#":                  "0",
-						"priority":                          "1",
+						names.AttrPriority:                  "1",
 						"statement.#":                       "1",
 						"statement.0.geo_match_statement.#": "1",
 						"statement.0.geo_match_statement.0.country_codes.#":       "2",
@@ -1482,7 +1483,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1548,7 +1549,7 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 
 func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1600,7 +1601,7 @@ func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 
 func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1648,7 +1649,7 @@ func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 
 func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1695,7 +1696,7 @@ func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 
 func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -1800,7 +1801,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 
 func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2072,7 +2073,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 
 func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2144,7 +2145,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 
 func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2213,7 +2214,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/22869
 func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2236,10 +2237,10 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 				// DDoS mitigation with Shield for CF distribution. Doing so adds an out-of-band rule
 				// similar to the one added below.
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 					input := &wafv2.ListWebACLsInput{
-						Scope: aws.String("REGIONAL"),
+						Scope: awstypes.ScopeRegional,
 					}
 
 					aclID := ""
@@ -2251,9 +2252,9 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						}
 
 						for _, acl := range page.WebACLs {
-							if aws.StringValue(acl.Name) == webACLName {
-								aclID = aws.StringValue(acl.Id)
-								lockToken = aws.StringValue(acl.LockToken)
+							if aws.ToString(acl.Name) == webACLName {
+								aclID = aws.ToString(acl.Id)
+								lockToken = aws.ToString(acl.LockToken)
 
 								return false
 							}
@@ -2271,7 +2272,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 					}
 
 					in := &wafv2.ListRuleGroupsInput{
-						Scope: aws.String("REGIONAL"),
+						Scope: awstypes.ScopeRegional,
 					}
 
 					rgARN := ""
@@ -2282,8 +2283,8 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						}
 
 						for _, rg := range page.RuleGroups {
-							if aws.StringValue(rg.Name) == fmt.Sprintf("rule-group-%s", webACLName) {
-								rgARN = aws.StringValue(rg.ARN)
+							if aws.ToString(rg.Name) == fmt.Sprintf("rule-group-%s", webACLName) {
+								rgARN = aws.ToString(rg.ARN)
 
 								return false
 							}
@@ -2300,35 +2301,35 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("couldn't find Rule Group (%s)", webACLName)
 					}
 
-					_, err = conn.UpdateWebACLWithContext(ctx, &wafv2.UpdateWebACLInput{
-						DefaultAction: &wafv2.DefaultAction{
-							Allow: &wafv2.AllowAction{},
+					_, err = conn.UpdateWebACL(ctx, &wafv2.UpdateWebACLInput{
+						DefaultAction: &awstypes.DefaultAction{
+							Allow: &awstypes.AllowAction{},
 						},
 						Id:        aws.String(aclID),
 						LockToken: aws.String(lockToken),
 						Name:      aws.String(webACLName),
-						Rules: []*wafv2.Rule{{
+						Rules: []awstypes.Rule{{
 							Name:     aws.String("ShieldMitigationRuleGroup_012345678901_5e665b1c-1641-4b7a-8db1-567871a18b2a_uniqueid"),
-							Priority: aws.Int64(11),
-							OverrideAction: &wafv2.OverrideAction{
-								None: &wafv2.NoneAction{},
+							Priority: int32(11),
+							OverrideAction: &awstypes.OverrideAction{
+								None: &awstypes.NoneAction{},
 							},
-							Statement: &wafv2.Statement{
-								RuleGroupReferenceStatement: &wafv2.RuleGroupReferenceStatement{
+							Statement: &awstypes.Statement{
+								RuleGroupReferenceStatement: &awstypes.RuleGroupReferenceStatement{
 									ARN: aws.String(rgARN),
 								},
 							},
-							VisibilityConfig: &wafv2.VisibilityConfig{
-								CloudWatchMetricsEnabled: aws.Bool(true),
+							VisibilityConfig: &awstypes.VisibilityConfig{
+								CloudWatchMetricsEnabled: true,
 								MetricName:               aws.String("ShieldMitigationRuleGroup_012345678901_5e665b1c-1641-4b7a-8db1-567871a18b2a_uniqueid"),
-								SampledRequestsEnabled:   aws.Bool(true),
+								SampledRequestsEnabled:   true,
 							},
 						}},
-						Scope: aws.String("REGIONAL"),
-						VisibilityConfig: &wafv2.VisibilityConfig{
-							CloudWatchMetricsEnabled: aws.Bool(true),
+						Scope: awstypes.ScopeRegional,
+						VisibilityConfig: &awstypes.VisibilityConfig{
+							CloudWatchMetricsEnabled: true,
 							MetricName:               aws.String("friendly-metric-name"),
-							SampledRequestsEnabled:   aws.Bool(false),
+							SampledRequestsEnabled:   false,
 						},
 					})
 					if err != nil {
@@ -2370,7 +2371,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 // See https://github.com/hashicorp/terraform-provider-aws/issues/22869
 func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2410,7 +2411,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing
 
 func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2445,7 +2446,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.#":   "0",
 						"action.0.challenge.#": "0",
 						"action.0.count.#":     "0",
-						"priority":             "1",
+						names.AttrPriority:     "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2484,7 +2485,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.count.0.custom_request_handling.0.insert_header.0.value": "test-value-1",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.count.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
-						"priority": "1",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2517,7 +2518,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.0.custom_request_handling.0.insert_header.1.name":  "x-hdr2",
 						"action.0.captcha.0.custom_request_handling.0.insert_header.1.value": "test-value-2",
 						"action.0.count.#": "0",
-						"priority":         "1",
+						names.AttrPriority: "1",
 						"captcha_config.#": "1",
 						"captcha_config.0.immunity_time_property.0.immunity_time": "240",
 					}),
@@ -2549,7 +2550,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.captcha.#":   "0",
 						"action.0.challenge.#": "1",
 						"action.0.count.#":     "0",
-						"priority":             "1",
+						names.AttrPriority:     "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2563,7 +2564,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 
 func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2597,7 +2598,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr1",
 						"action.0.block.0.custom_response.0.response_header.0.value": "custom-response-header-value",
 						"action.0.count.#": "0",
-						"priority":         "1",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2629,7 +2630,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						"action.0.block.0.custom_response.0.response_header.0.name":  "x-hdr2",
 						"action.0.block.0.custom_response.0.response_header.0.value": "custom-response-header-value",
 						"action.0.count.#": "0",
-						"priority":         "1",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2663,7 +2664,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 						"action.0.block.0.custom_response.0.response_code":            "429",
 						"action.0.block.0.custom_response.0.custom_response_body_key": "test_body",
 						"action.0.count.#": "0",
-						"priority":         "1",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -2683,7 +2684,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 
 func TestAccWAFV2WebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2731,7 +2732,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13862
 func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2777,7 +2778,7 @@ func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 
 func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2822,7 +2823,7 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 
 func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain1 := "mywebsite.com"
 	domain2 := "myotherwebsite.com"
@@ -2842,7 +2843,7 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -2868,7 +2869,7 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 
 func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2895,7 +2896,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, webACLName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeCloudfront),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeCloudfront)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -2914,7 +2915,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 
 func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v wafv2.WebACL
+	var v awstypes.WebACL
 	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafv2_web_acl.test"
 
@@ -2933,7 +2934,7 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`global/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, webACLName),
-					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeCloudfront),
+					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeCloudfront)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrName: "rule-1",
@@ -2968,7 +2969,7 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 
 func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_wafv2_web_acl" {
@@ -2992,14 +2993,14 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckWebACLExists(ctx context.Context, n string, v *wafv2.WebACL) resource.TestCheckFunc {
+func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"])
 

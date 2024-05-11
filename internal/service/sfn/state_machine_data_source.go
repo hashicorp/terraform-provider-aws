@@ -25,7 +25,7 @@ func DataSourceStateMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -96,7 +96,7 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(arn)
 	d.Set(names.AttrARN, output.StateMachineArn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("definition", output.Definition)
 	d.Set(names.AttrName, output.Name)

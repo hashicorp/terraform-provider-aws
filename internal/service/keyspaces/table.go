@@ -274,7 +274,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -309,7 +309,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspaceName := d.Get("keyspace_name").(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	id := tableCreateResourceID(keyspaceName, tableName)
 	input := &keyspaces.CreateTableInput{
 		KeyspaceName: aws.String(keyspaceName),
@@ -432,7 +432,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	} else {
 		d.Set("schema_definition", nil)
 	}
-	d.Set("table_name", table.TableName)
+	d.Set(names.AttrTableName, table.TableName)
 	if table.Ttl != nil {
 		if err := d.Set("ttl", []interface{}{flattenTimeToLive(table.Ttl)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)

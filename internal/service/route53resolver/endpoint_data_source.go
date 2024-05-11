@@ -28,7 +28,7 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
@@ -38,7 +38,7 @@ func DataSourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -86,7 +86,7 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	endpointID := d.Get("resolver_endpoint_id").(string)
 	input := &route53resolver.ListResolverEndpointsInput{}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		input.Filters = buildR53ResolverTagFilters(v.(*schema.Set))
 	}
 
@@ -154,7 +154,7 @@ func buildR53ResolverTagFilters(set *schema.Set) []*route53resolver.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, aws.String(e.(string)))
 		}
 		filters = append(filters, &route53resolver.Filter{

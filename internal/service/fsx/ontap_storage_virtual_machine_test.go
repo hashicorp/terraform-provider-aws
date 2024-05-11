@@ -46,7 +46,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.management.0.dns_name"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.nfs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.nfs.0.dns_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "file_system_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "subtype", fsx.StorageVirtualMachineSubtypeDefault),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

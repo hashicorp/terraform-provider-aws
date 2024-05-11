@@ -251,7 +251,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[types.LaunchType](),
 							},
-							"network_configuration": {
+							names.AttrNetworkConfiguration: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -404,7 +404,7 @@ func targetParametersSchema() *schema.Schema {
 												},
 											},
 										},
-										"execution_role_arn": {
+										names.AttrExecutionRoleARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -414,7 +414,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"device_name": {
+													names.AttrDeviceName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -542,7 +542,7 @@ func targetParametersSchema() *schema.Schema {
 									ValidateFunc: verify.ValidARN,
 								},
 							},
-							"source": {
+							names.AttrSource: {
 								Type:     schema.TypeString,
 								Optional: true,
 								ValidateFunc: validation.All(
@@ -1141,7 +1141,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 		apiObject.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -1289,7 +1289,7 @@ func expandECSTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 		apiObject.EphemeralStorage = expandECSEphemeralStorage(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -1529,7 +1529,7 @@ func expandECSInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.
 
 	apiObject := &types.EcsInferenceAcceleratorOverride{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1673,7 +1673,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 		apiObject.Resources = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
@@ -2133,7 +2133,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		tfMap["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		tfMap[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2228,7 +2228,7 @@ func flattenECSTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.ToString(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.InferenceAcceleratorOverrides; v != nil {
@@ -2398,7 +2398,7 @@ func flattenECSInferenceAcceleratorOverride(apiObject types.EcsInferenceAccelera
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.ToString(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeviceType; v != nil {
@@ -2534,7 +2534,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Time; v != nil {

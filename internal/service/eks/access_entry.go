@@ -89,7 +89,7 @@ func resourceAccessEntry() *schema.Resource {
 				Default:      accessEntryTypeStandard,
 				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
@@ -116,7 +116,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("user_name"); ok {
+	if v, ok := d.GetOk(names.AttrUserName); ok {
 		input.Username = aws.String(v.(string))
 	}
 
@@ -161,7 +161,7 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
 	d.Set(names.AttrType, output.Type)
-	d.Set("user_name", output.Username)
+	d.Set(names.AttrUserName, output.Username)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -184,7 +184,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
-		input.Username = aws.String(d.Get("user_name").(string))
+		input.Username = aws.String(d.Get(names.AttrUserName).(string))
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
 

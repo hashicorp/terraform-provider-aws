@@ -105,7 +105,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceConfigurationModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),

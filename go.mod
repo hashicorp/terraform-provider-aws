@@ -6,13 +6,13 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.52.5
+	github.com/aws/aws-sdk-go v1.52.6
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.12
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.16
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.5
@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.19.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.2
@@ -126,7 +126,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.1
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.5
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.6
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.5
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.22.5
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.12.5
+	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/sso v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.7
@@ -172,8 +172,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.3
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.2
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.6
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.48.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.1
@@ -185,8 +186,8 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.22.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.52
-	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.53
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.53
+	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.54
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/cli v1.1.6
 	github.com/hashicorp/go-cleanhttp v0.5.2
@@ -201,9 +202,9 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.3.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
-	github.com/hashicorp/terraform-plugin-go v0.22.2
+	github.com/hashicorp/terraform-plugin-go v0.23.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
-	github.com/hashicorp/terraform-plugin-mux v0.15.0
+	github.com/hashicorp/terraform-plugin-mux v0.16.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.33.0
 	github.com/hashicorp/terraform-plugin-testing v1.7.0
 	github.com/jmespath/go-jmespath v0.4.0
@@ -280,17 +281,17 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	github.com/zclconf/go-cty v1.14.3 // indirect
-	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.50.0 // indirect
-	go.opentelemetry.io/otel v1.25.0 // indirect
-	go.opentelemetry.io/otel/metric v1.25.0 // indirect
-	go.opentelemetry.io/otel/trace v1.25.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/aws/aws-sdk-go-v2/otelaws v0.51.0 // indirect
+	go.opentelemetry.io/otel v1.26.0 // indirect
+	go.opentelemetry.io/otel/metric v1.26.0 // indirect
+	go.opentelemetry.io/otel/trace v1.26.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/grpc v1.63.2 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.34.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

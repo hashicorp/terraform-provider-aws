@@ -109,7 +109,7 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
 			{
@@ -121,14 +121,14 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 				),
 			},
 			{
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
 		},

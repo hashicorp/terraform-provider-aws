@@ -141,7 +141,7 @@ func resourceConnection() *schema.Resource {
 								},
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"password": {
+										names.AttrPassword: {
 											Type:      schema.TypeString,
 											Required:  true,
 											Sensitive: true,
@@ -149,7 +149,7 @@ func resourceConnection() *schema.Resource {
 												validation.StringLenBetween(1, 512),
 											),
 										},
-										"username": {
+										names.AttrUsername: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -521,10 +521,10 @@ func expandCreateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 	basicAuthParameters := &types.CreateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["username"].(string); ok && val != "" {
+		if val, ok := param[names.AttrUsername].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}
@@ -705,11 +705,11 @@ func flattenConnectionBasicAuthParameters(basicAuthParameters *types.ConnectionB
 
 	config := make(map[string]interface{})
 	if basicAuthParameters.Username != nil {
-		config["username"] = aws.ToString(basicAuthParameters.Username)
+		config[names.AttrUsername] = aws.ToString(basicAuthParameters.Username)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.basic.0.password"); ok {
-		config["password"] = v.(string)
+		config[names.AttrPassword] = v.(string)
 	}
 
 	result := []map[string]interface{}{config}
@@ -852,10 +852,10 @@ func expandUpdateConnectionBasicAuthRequestParameters(config []interface{}) *typ
 	basicAuthParameters := &types.UpdateConnectionBasicAuthRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["username"].(string); ok && val != "" {
+		if val, ok := param[names.AttrUsername].(string); ok && val != "" {
 			basicAuthParameters.Username = aws.String(val)
 		}
-		if val, ok := param["password"].(string); ok && val != "" {
+		if val, ok := param[names.AttrPassword].(string); ok && val != "" {
 			basicAuthParameters.Password = aws.String(val)
 		}
 	}

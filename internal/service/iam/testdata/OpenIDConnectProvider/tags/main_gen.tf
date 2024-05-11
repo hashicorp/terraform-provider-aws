@@ -13,7 +13,6 @@ resource "aws_iam_openid_connect_provider" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

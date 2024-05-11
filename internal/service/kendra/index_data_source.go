@@ -264,7 +264,7 @@ func DataSourceIndex() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

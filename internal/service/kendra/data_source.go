@@ -57,7 +57,7 @@ func ResourceDataSource() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -78,7 +78,7 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -355,7 +355,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -605,7 +605,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Type:        types.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
 	}
 
@@ -710,7 +710,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -726,7 +726,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, "schedule") {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -737,8 +737,8 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("configuration") {
-			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
@@ -1229,7 +1229,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
@@ -1592,7 +1592,7 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
-			m["target"] = flattenDocumentAttributeTarget(v)
+			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
 		inlineConfigurationList = append(inlineConfigurationList, m)

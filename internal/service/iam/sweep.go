@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -327,8 +328,8 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}
@@ -620,7 +621,7 @@ func sweepUsers(region string) error {
 					r := resourceUser()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(user.UserName))
-					d.Set("force_destroy", true)
+					d.Set(names.AttrForceDestroy, true)
 
 					// In general, sweeping should use the resource's Delete function. If Delete
 					// is missing something that affects sweeping, fix Delete. Most of the time,
@@ -784,8 +785,8 @@ func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]s
 		})
 		if err != nil {
 			tflog.Warn(ctx, "Skipping resource", map[string]any{
-				"error":     err.Error(),
-				"user_name": user.UserName,
+				"error":            err.Error(),
+				names.AttrUserName: user.UserName,
 			})
 			continue
 		}

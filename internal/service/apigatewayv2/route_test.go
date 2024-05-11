@@ -47,7 +47,7 @@ func TestAccAPIGatewayV2Route_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -113,7 +113,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccAPIGatewayV2Route_authorizer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -170,7 +170,7 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /test"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /test"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -222,14 +222,14 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeNone)),
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", "action"),
+					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -272,7 +272,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -296,7 +296,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -318,7 +318,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$connect"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 		},
@@ -351,7 +351,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -367,7 +367,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -383,7 +383,7 @@ func TestAccAPIGatewayV2Route_simpleAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -462,7 +462,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "GET /path"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -478,7 +478,7 @@ func TestAccAPIGatewayV2Route_updateRouteKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "POST /new/path"),
 					resource.TestCheckResourceAttr(resourceName, "route_response_selection_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "target", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTarget, ""),
 				),
 			},
 			{
@@ -557,7 +557,7 @@ func testAccCheckRouteTarget(resourceName, integrationResourceName string) resou
 			return fmt.Errorf("Not Found: %s", integrationResourceName)
 		}
 
-		return resource.TestCheckResourceAttr(resourceName, "target", fmt.Sprintf("integrations/%s", rs.Primary.ID))(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrTarget, fmt.Sprintf("integrations/%s", rs.Primary.ID))(s)
 	}
 }
 

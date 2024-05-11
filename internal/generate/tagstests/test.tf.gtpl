@@ -9,6 +9,15 @@
   tags = {
     (var.tagKey1) = null
   }
+{{- else if eq . "tagsComputed1"}}
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+  }
+{{- else if eq . "tagsComputed2"}}
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
+  }
 {{- end -}}
 {{ end -}}
 
@@ -21,9 +30,18 @@ provider "aws" {
 
 {{ end }}
 
+{{- if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
+provider "null" {}
+
+{{ end -}}
+
 {{- block "body" .Tags }}
 Missing block "body" in template
 {{ end }}
+{{ if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
+resource "null_resource" "test" {}
+
+{{ end -}}
 
 variable "rName" {
   type     = string
@@ -40,11 +58,30 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
-{{- end }}
+{{ else if eq .Tags "tagsComputed1" }}
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}
+{{ else if eq .Tags "tagsComputed2" }}
+variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}
 
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
+  type     = string
+  nullable = false
+}
+{{- end }}
 {{ if .WithDefaultTags -}}
 variable "provider_tags" {
   type     = map(string)
   nullable = false
 }
-{{ end -}}
+{{- end }}

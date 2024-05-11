@@ -57,7 +57,7 @@ func resourceConfigRule() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -120,7 +120,7 @@ func resourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -230,7 +230,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -291,7 +291,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
 		}
 	}
-	if err := d.Set("source", flattenSource(rule.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
@@ -425,7 +425,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 
 		apiObject := types.EvaluationModeConfiguration{}
 
-		if v, ok := tfMap["mode"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 			apiObject.Mode = types.EvaluationMode(v)
 		}
 
@@ -541,7 +541,7 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"mode": apiObject.Mode,
+			names.AttrMode: apiObject.Mode,
 		}
 
 		tfList = append(tfList, tfMap)

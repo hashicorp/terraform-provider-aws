@@ -41,7 +41,7 @@ func testAccConfigRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_identifier", "S3_BUCKET_VERSIONING_ENABLED"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
-						"mode": "DETECTIVE",
+						names.AttrMode: "DETECTIVE",
 					}),
 				),
 			},
@@ -82,7 +82,7 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
-						"mode": "DETECTIVE",
+						names.AttrMode: "DETECTIVE",
 					}),
 				),
 			},
@@ -92,10 +92,10 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
-						"mode": "DETECTIVE",
+						names.AttrMode: "DETECTIVE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
-						"mode": "PROACTIVE",
+						names.AttrMode: "PROACTIVE",
 					}),
 				),
 			},

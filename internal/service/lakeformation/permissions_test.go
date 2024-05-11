@@ -264,7 +264,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", tagName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, "values"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, names.AttrValues),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ASSOCIATE"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", "DESCRIBE"),
@@ -301,7 +301,7 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, names.AttrKey),
-					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, "values"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, names.AttrValues),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
@@ -869,7 +869,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 
 	noResource := true
 
-	if v, ok := rs.Primary.Attributes["catalog_id"]; ok && v != "" {
+	if v, ok := rs.Primary.Attributes[names.AttrCatalogID]; ok && v != "" {
 		input.CatalogId = aws.String(v)
 
 		noResource = false
@@ -885,7 +885,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["data_location.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["data_location.0.arn"]; v != "" {
@@ -901,7 +901,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["database.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["database.0.name"]; v != "" {
@@ -917,7 +917,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["lf_tag.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["lf_tag.0.key"]; v != "" {
@@ -929,7 +929,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 			for i := 0; i < count; i++ {
 				tagValues = append(tagValues, rs.Primary.Attributes[fmt.Sprintf("lf_tag.0.values.%d", i)])
 			}
-			tfMap["values"] = flex.FlattenStringSet(aws.StringSlice(tagValues))
+			tfMap[names.AttrValues] = flex.FlattenStringSet(aws.StringSlice(tagValues))
 		}
 
 		input.Resource.LFTag = tflakeformation.ExpandLFTagKeyResource(tfMap)
@@ -941,11 +941,11 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["lf_tag_policy.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["lf_tag_policy.0.resource_type"]; v != "" {
-			tfMap["resource_type"] = v
+			tfMap[names.AttrResourceType] = v
 		}
 
 		if expressionCount, err := strconv.Atoi(rs.Primary.Attributes["lf_tag_policy.0.expression.#"]); err == nil {
@@ -962,7 +962,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 					for j := 0; j < expressionValueCount; j++ {
 						valueSlice[j] = rs.Primary.Attributes[fmt.Sprintf("lf_tag_policy.0.expression.%d.values.%d", i, j)]
 					}
-					expression["values"] = flex.FlattenStringSet(aws.StringSlice(valueSlice))
+					expression[names.AttrValues] = flex.FlattenStringSet(aws.StringSlice(valueSlice))
 				}
 				expressionSlice[i] = expression
 			}
@@ -983,7 +983,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["table.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["table.0.database_name"]; v != "" {
@@ -1009,7 +1009,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["table_with_columns.0.catalog_id"]; v != "" {
-			tfMap["catalog_id"] = v
+			tfMap[names.AttrCatalogID] = v
 		}
 
 		if v := rs.Primary.Attributes["table_with_columns.0.database_name"]; v != "" {
@@ -1041,7 +1041,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		}
 
 		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
-			tfMap["table_name"] = v
+			tfMap[names.AttrTableName] = v
 		}
 
 		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]interface{}{tfMap})

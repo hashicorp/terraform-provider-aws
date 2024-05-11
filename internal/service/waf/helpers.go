@@ -257,12 +257,12 @@ func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 	out := make([]interface{}, len(activatedRules))
 	for i, ar := range activatedRules {
 		rule := map[string]interface{}{
-			"priority":     aws.Int64Value(ar.Priority),
-			"rule_id":      aws.StringValue(ar.RuleId),
-			names.AttrType: aws.StringValue(ar.Type),
+			names.AttrPriority: aws.Int64Value(ar.Priority),
+			"rule_id":          aws.StringValue(ar.RuleId),
+			names.AttrType:     aws.StringValue(ar.Type),
 		}
 		if ar.Action != nil {
-			rule["action"] = []interface{}{
+			rule[names.AttrAction] = []interface{}{
 				map[string]interface{}{
 					names.AttrType: aws.StringValue(ar.Action.Type),
 				},
@@ -275,12 +275,12 @@ func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 
 func ExpandActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 	r := &waf.ActivatedRule{
-		Priority: aws.Int64(int64(rule["priority"].(int))),
+		Priority: aws.Int64(int64(rule[names.AttrPriority].(int))),
 		RuleId:   aws.String(rule["rule_id"].(string)),
 		Type:     aws.String(rule[names.AttrType].(string)),
 	}
 
-	if a, ok := rule["action"].([]interface{}); ok && len(a) > 0 {
+	if a, ok := rule[names.AttrAction].([]interface{}); ok && len(a) > 0 {
 		m := a[0].(map[string]interface{})
 		r.Action = &waf.WafAction{
 			Type: aws.String(m[names.AttrType].(string)),

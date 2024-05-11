@@ -57,7 +57,7 @@ func ResourceEventIntegration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"source": {
+						names.AttrSource: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -207,7 +207,7 @@ func expandEventFilter(eventFilter []interface{}) *awstypes.EventFilter {
 	}
 
 	result := &awstypes.EventFilter{
-		Source: aws.String(tfMap["source"].(string)),
+		Source: aws.String(tfMap[names.AttrSource].(string)),
 	}
 
 	return result
@@ -219,7 +219,7 @@ func flattenEventFilter(eventFilter *awstypes.EventFilter) []interface{} {
 	}
 
 	values := map[string]interface{}{
-		"source": aws.ToString(eventFilter.Source),
+		names.AttrSource: aws.ToString(eventFilter.Source),
 	}
 
 	return []interface{}{values}

@@ -48,7 +48,7 @@ func ResourceThingGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"creation_date": {
+						names.AttrCreationDate: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -333,7 +333,7 @@ func flattenThingGroupMetadata(apiObject *awstypes.ThingGroupMetadata) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CreationDate; v != nil {
-		tfMap["creation_date"] = aws.ToTime(v).Format(time.RFC3339)
+		tfMap[names.AttrCreationDate] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.ParentGroupName; v != nil {

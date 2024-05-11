@@ -185,7 +185,7 @@ func TestAccDocDBClusterParameterGroup_systemParameter(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"parameter"},
+				ImportStateVerifyIgnore: []string{names.AttrParameter},
 			},
 		},
 	})

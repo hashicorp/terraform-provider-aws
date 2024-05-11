@@ -16,7 +16,6 @@ resource "aws_xray_group" "test" {
   }
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

@@ -138,7 +138,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"publicly_accessible": schema.BoolAttribute{
+			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
@@ -216,7 +216,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"file_system_id": schema.StringAttribute{
+									names.AttrFileSystemID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -241,7 +241,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"file_system_id": schema.StringAttribute{
+									names.AttrFileSystemID: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

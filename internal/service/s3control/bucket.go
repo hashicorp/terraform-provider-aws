@@ -61,7 +61,7 @@ func resourceBucket() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9a-z]$`), "must end with lowercase letter or number"),
 				),
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,7 +140,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrBucket, output.Bucket)
 	if output.CreationDate != nil {
-		d.Set("creation_date", aws.ToTime(output.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	}
 	d.Set("outpost_id", arnResourceParts[1])
 	d.Set("public_access_block_enabled", output.PublicAccessBlockEnabled)

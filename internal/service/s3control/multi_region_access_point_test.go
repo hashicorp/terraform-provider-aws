@@ -53,7 +53,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						names.AttrBucket:    bucketName,
 						"bucket_account_id": acctest.AccountID(),
-						"region":            acctest.Region(),
+						names.AttrRegion:    acctest.Region(),
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.MultiRegionAccessPointStatusReady)),
 				),

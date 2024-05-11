@@ -122,11 +122,11 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -175,7 +175,7 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -259,9 +259,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if rsc.ElasticIpStatus != nil {
 		d.Set("elastic_ip", rsc.ElasticIpStatus.ElasticIp)
 	}
-	d.Set("encrypted", rsc.Encrypted)
+	d.Set(names.AttrEncrypted, rsc.Encrypted)
 	if rsc.Endpoint != nil {
-		d.Set("endpoint", rsc.Endpoint.Address)
+		d.Set(names.AttrEndpoint, rsc.Endpoint.Address)
 		d.Set(names.AttrPort, rsc.Endpoint.Port)
 	}
 	d.Set("enhanced_vpc_routing", rsc.EnhancedVpcRouting)
@@ -280,7 +280,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set(names.AttrPreferredMaintenanceWindow, rsc.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rsc.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, rsc.PubliclyAccessible)
 	d.Set(names.AttrVPCID, rsc.VpcId)
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(rsc.VpcSecurityGroups, func(v *redshift.VpcSecurityGroupMembership) string {
 		return aws.StringValue(v.VpcSecurityGroupId)

@@ -121,7 +121,7 @@ func ResourceSigningProfile() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -271,7 +271,7 @@ func expandSigningMaterial(in []interface{}) *types.SigningMaterial {
 	m := in[0].(map[string]interface{})
 	var out types.SigningMaterial
 
-	if v, ok := m["certificate_arn"].(string); ok && v != "" {
+	if v, ok := m[names.AttrCertificateARN].(string); ok && v != "" {
 		out.CertificateArn = aws.String(v)
 	}
 
@@ -284,7 +284,7 @@ func flattenSigningMaterial(apiObject *types.SigningMaterial) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"certificate_arn": aws.ToString(apiObject.CertificateArn),
+		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
 	}
 
 	return []interface{}{m}

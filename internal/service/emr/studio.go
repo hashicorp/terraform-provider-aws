@@ -99,7 +99,7 @@ func resourceStudio() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -236,7 +236,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("idp_relay_state_parameter_name", studio.IdpRelayStateParameterName)
 	d.Set(names.AttrName, studio.Name)
 	d.Set("service_role", studio.ServiceRole)
-	d.Set("url", studio.Url)
+	d.Set(names.AttrURL, studio.Url)
 	d.Set("user_role", studio.UserRole)
 	d.Set(names.AttrVPCID, studio.VpcId)
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)

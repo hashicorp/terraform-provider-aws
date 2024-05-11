@@ -46,7 +46,7 @@ func ResourceImageRecipe() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -66,7 +66,7 @@ func ResourceImageRecipe() *schema.Resource {
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
@@ -142,7 +142,7 @@ func ResourceImageRecipe() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -393,7 +393,7 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.Co
 		apiObject.ComponentArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandComponentParameters(v.List())
 	}
 
@@ -483,7 +483,7 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -521,7 +521,7 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *imagebuilde
 
 	apiObject := &imagebuilder.InstanceBlockDeviceMapping{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -592,7 +592,7 @@ func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguratio
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameter"] = flattenComponentParameters(v)
+		tfMap[names.AttrParameter] = flattenComponentParameters(v)
 	}
 
 	return tfMap
@@ -666,7 +666,7 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
@@ -704,7 +704,7 @@ func flattenInstanceBlockDeviceMapping(apiObject *imagebuilder.InstanceBlockDevi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {

@@ -65,7 +65,7 @@ func resourceBucketACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"display_name": {
+												names.AttrDisplayName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -99,7 +99,7 @@ func resourceBucketACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -379,7 +379,7 @@ func expandOwner(l []interface{}) *types.Owner {
 
 	owner := &types.Owner{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		owner.DisplayName = aws.String(v)
 	}
 
@@ -436,7 +436,7 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	if grantee.DisplayName != nil {
-		m["display_name"] = aws.ToString(grantee.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(grantee.DisplayName)
 	}
 
 	if grantee.EmailAddress != nil {
@@ -462,7 +462,7 @@ func flattenOwner(owner *types.Owner) []interface{} {
 	m := make(map[string]interface{})
 
 	if owner.DisplayName != nil {
-		m["display_name"] = aws.ToString(owner.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(owner.DisplayName)
 	}
 
 	if owner.ID != nil {

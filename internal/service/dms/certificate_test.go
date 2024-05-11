@@ -33,7 +33,7 @@ func TestAccDMSCertificate_basic(t *testing.T) {
 				Config: testAccCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificateARN),
 				),
 			},
 			{

@@ -39,7 +39,7 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 			"base_model_arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"creation_time": schema.StringAttribute{
+			names.AttrCreationTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},

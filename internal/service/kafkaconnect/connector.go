@@ -302,7 +302,7 @@ func ResourceConnector() *schema.Resource {
 													Required: true,
 													ForceNew: true,
 												},
-												"prefix": {
+												names.AttrPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ForceNew: true,
@@ -973,7 +973,7 @@ func expandS3LogDelivery(tfMap map[string]interface{}) *kafkaconnect.S3LogDelive
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
 
@@ -1308,7 +1308,7 @@ func flattenS3LogDeliveryDescription(apiObject *kafkaconnect.S3LogDeliveryDescri
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.StringValue(v)
+		tfMap[names.AttrPrefix] = aws.StringValue(v)
 	}
 
 	return tfMap

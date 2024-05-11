@@ -36,7 +36,7 @@ func TestAccRUMMetricsDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricsDestinationExists(ctx, resourceName, &dest),
 					resource.TestCheckResourceAttrPair(resourceName, "app_monitor_name", "aws_rum_app_monitor.test", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "destination", "CloudWatch"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "CloudWatch"),
 				),
 			},
 			{

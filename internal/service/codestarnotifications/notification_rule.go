@@ -81,13 +81,13 @@ func resourceNotificationRule() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -122,7 +122,7 @@ func resourceNotificationRuleCreate(ctx context.Context, d *schema.ResourceData,
 		Resource:     aws.String(d.Get("resource").(string)),
 		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
 		Tags:         getTagsIn(ctx),
-		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
+		Targets:      expandNotificationRuleTargets(d.Get(names.AttrTarget).(*schema.Set).List()),
 	}
 
 	output, err := conn.CreateNotificationRule(ctx, input)
@@ -165,12 +165,12 @@ func resourceNotificationRuleRead(ctx context.Context, d *schema.ResourceData, m
 	targets := make([]map[string]interface{}, 0, len(rule.Targets))
 	for _, t := range rule.Targets {
 		targets = append(targets, map[string]interface{}{
-			"address":        aws.ToString(t.TargetAddress),
-			names.AttrType:   aws.ToString(t.TargetType),
-			names.AttrStatus: t.TargetStatus,
+			names.AttrAddress: aws.ToString(t.TargetAddress),
+			names.AttrType:    aws.ToString(t.TargetType),
+			names.AttrStatus:  t.TargetStatus,
 		})
 	}
-	if err := d.Set("target", targets); err != nil {
+	if err := d.Set(names.AttrTarget, targets); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target: %s", err)
 	}
 
@@ -189,15 +189,15 @@ func resourceNotificationRuleUpdate(ctx context.Context, d *schema.ResourceData,
 		EventTypeIds: flex.ExpandStringValueSet(d.Get("event_type_ids").(*schema.Set)),
 		Name:         aws.String(d.Get(names.AttrName).(string)),
 		Status:       types.NotificationRuleStatus(d.Get(names.AttrStatus).(string)),
-		Targets:      expandNotificationRuleTargets(d.Get("target").(*schema.Set).List()),
+		Targets:      expandNotificationRuleTargets(d.Get(names.AttrTarget).(*schema.Set).List()),
 	}
 
 	if _, err := conn.UpdateNotificationRule(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	if d.HasChange("target") {
-		o, n := d.GetChange("target")
+	if d.HasChange(names.AttrTarget) {
+		o, n := d.GetChange(names.AttrTarget)
 		if err := cleanupNotificationRuleTargets(ctx, conn, o.(*schema.Set), n.(*schema.Set)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s) targets: %s", d.Id(), err)
 		}
@@ -219,7 +219,7 @@ func resourceNotificationRuleDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s): %s", d.Id(), err)
 	}
 
-	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get("target").(*schema.Set), nil); err != nil {
+	if err = cleanupNotificationRuleTargets(ctx, conn, d.Get(names.AttrTarget).(*schema.Set), nil); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Notification Rule (%s) targets: %s", d.Id(), err)
 	}
 
@@ -273,7 +273,7 @@ func cleanupNotificationRuleTargets(ctx context.Context, conn *codestarnotificat
 
 		input := &codestarnotifications.DeleteTargetInput{
 			ForceUnsubscribeAll: false,
-			TargetAddress:       aws.String(target["address"].(string)),
+			TargetAddress:       aws.String(target[names.AttrAddress].(string)),
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, targetSubscriptionTimeout, func() (interface{}, error) {
@@ -298,7 +298,7 @@ func expandNotificationRuleTargets(targetsData []interface{}) []types.Target {
 	for _, t := range targetsData {
 		target := t.(map[string]interface{})
 		targets = append(targets, types.Target{
-			TargetAddress: aws.String(target["address"].(string)),
+			TargetAddress: aws.String(target[names.AttrAddress].(string)),
 			TargetType:    aws.String(target[names.AttrType].(string)),
 		})
 	}

@@ -31,7 +31,7 @@ func dataSourceResourceShare() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -40,7 +40,7 @@ func dataSourceResourceShare() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -96,7 +96,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 		inputG.Name = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
 		inputG.TagFilters = expandTagFilters(v.(*schema.Set).List())
 	}
 
@@ -148,7 +148,7 @@ func expandTagFilter(tfMap map[string]interface{}) *ram.TagFilter {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.TagValues = flex.ExpandStringList(v)
 	}
 

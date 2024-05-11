@@ -48,7 +48,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -63,7 +63,7 @@ func dataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -194,7 +194,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
-	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	haPairs := aws.Int64Value(ontapConfig.HAPairs)

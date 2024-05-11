@@ -66,7 +66,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"priority": schema.Int64Attribute{
+				names.AttrPriority: schema.Int64Attribute{
 					Required: true,
 				},
 				"slot_id": schema.StringAttribute{

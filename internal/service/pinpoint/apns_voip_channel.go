@@ -39,7 +39,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -79,7 +79,7 @@ func ResourceAPNSVoIPChannel() *schema.Resource {
 
 func resourceAPNSVoIPChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	certificate, certificateOk := d.GetOk("certificate")
+	certificate, certificateOk := d.GetOk(names.AttrCertificate)
 	privateKey, privateKeyOk := d.GetOk("private_key")
 
 	bundleId, bundleIdOk := d.GetOk("bundle_id")

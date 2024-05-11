@@ -115,7 +115,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"certificate": {
+													names.AttrCertificate: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -380,7 +380,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.IntBetween(5000, 300000),
 										},
-										"path": {
+										names.AttrPath: {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
@@ -435,7 +435,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"certificate": {
+										names.AttrCertificate: {
 											Type:     schema.TypeList,
 											Required: true,
 											MinItems: 1,
@@ -449,7 +449,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"certificate_arn": {
+																names.AttrCertificateARN: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: verify.ValidARN,
@@ -494,7 +494,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 												},
 											},
 										},
-										"mode": {
+										names.AttrMode: {
 											Type:         schema.TypeString,
 											Required:     true,
 											ValidateFunc: validation.StringInSlice(appmesh.VirtualGatewayListenerTlsMode_Values(), false),
@@ -601,7 +601,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"format": {
+													names.AttrFormat: {
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 0,
@@ -634,7 +634,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 															},
 														},
 													},
-													"path": {
+													names.AttrPath: {
 														Type:         schema.TypeString,
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
@@ -877,7 +877,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
 					healthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
 				}
-				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+				if vPath, ok := mHealthCheck[names.AttrPath].(string); ok && vPath != "" {
 					healthCheck.Path = aws.String(vPath)
 				}
 				if vPort, ok := mHealthCheck[names.AttrPort].(int); ok && vPort > 0 {
@@ -963,11 +963,11 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mTls := vTls[0].(map[string]interface{})
 
-				if vMode, ok := mTls["mode"].(string); ok && vMode != "" {
+				if vMode, ok := mTls[names.AttrMode].(string); ok && vMode != "" {
 					tls.Mode = aws.String(vMode)
 				}
 
-				if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+				if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 					certificate := &appmesh.VirtualGatewayListenerTlsCertificate{}
 
 					mCertificate := vCertificate[0].(map[string]interface{})
@@ -977,7 +977,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 						mAcm := vAcm[0].(map[string]interface{})
 
-						if vCertificateArn, ok := mAcm["certificate_arn"].(string); ok && vCertificateArn != "" {
+						if vCertificateArn, ok := mAcm[names.AttrCertificateARN].(string); ok && vCertificateArn != "" {
 							acm.CertificateArn = aws.String(vCertificateArn)
 						}
 
@@ -1098,7 +1098,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vFormat, ok := mFile["format"].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
+				if vFormat, ok := mFile[names.AttrFormat].([]interface{}); ok && len(vFormat) > 0 && vFormat[0] != nil {
 					format := &appmesh.LoggingFormat{}
 
 					mFormat := vFormat[0].(map[string]interface{})
@@ -1122,7 +1122,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 					file.Format = format
 				}
 
-				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+				if vPath, ok := mFile[names.AttrPath].(string); ok && vPath != "" {
 					file.Path = aws.String(vPath)
 				}
 
@@ -1152,7 +1152,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.Virt
 
 		mTls := vTls[0].(map[string]interface{})
 
-		if vCertificate, ok := mTls["certificate"].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
+		if vCertificate, ok := mTls[names.AttrCertificate].([]interface{}); ok && len(vCertificate) > 0 && vCertificate[0] != nil {
 			certificate := &appmesh.VirtualGatewayClientTlsCertificate{}
 
 			mCertificate := vCertificate[0].(map[string]interface{})
@@ -1325,7 +1325,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 				mHealthCheck := map[string]interface{}{
 					"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
 					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
-					"path":                aws.StringValue(healthCheck.Path),
+					names.AttrPath:        aws.StringValue(healthCheck.Path),
 					names.AttrPort:        int(aws.Int64Value(healthCheck.Port)),
 					names.AttrProtocol:    aws.StringValue(healthCheck.Protocol),
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
@@ -1344,7 +1344,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 			if tls := listener.Tls; tls != nil {
 				mTls := map[string]interface{}{
-					"mode": aws.StringValue(tls.Mode),
+					names.AttrMode: aws.StringValue(tls.Mode),
 				}
 
 				if certificate := tls.Certificate; certificate != nil {
@@ -1352,7 +1352,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 					if acm := certificate.Acm; acm != nil {
 						mAcm := map[string]interface{}{
-							"certificate_arn": aws.StringValue(acm.CertificateArn),
+							names.AttrCertificateARN: aws.StringValue(acm.CertificateArn),
 						}
 
 						mCertificate["acm"] = []interface{}{mAcm}
@@ -1375,7 +1375,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mTls["certificate"] = []interface{}{mCertificate}
+					mTls[names.AttrCertificate] = []interface{}{mCertificate}
 				}
 
 				if validation := tls.Validation; validation != nil {
@@ -1458,10 +1458,10 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 						mFormat["text"] = aws.StringValue(text)
 					}
 
-					mFile["format"] = []interface{}{mFormat}
+					mFile[names.AttrFormat] = []interface{}{mFormat}
 				}
 
-				mFile["path"] = aws.StringValue(file.Path)
+				mFile[names.AttrPath] = aws.StringValue(file.Path)
 
 				mAccessLog["file"] = []interface{}{mFile}
 			}
@@ -1508,7 +1508,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClien
 				mCertificate["sds"] = []interface{}{mSds}
 			}
 
-			mTls["certificate"] = []interface{}{mCertificate}
+			mTls[names.AttrCertificate] = []interface{}{mCertificate}
 		}
 
 		if validation := tls.Validation; validation != nil {

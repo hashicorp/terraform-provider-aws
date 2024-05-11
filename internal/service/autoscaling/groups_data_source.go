@@ -24,12 +24,12 @@ func dataSourceGroups() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -38,7 +38,7 @@ func dataSourceGroups() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,7 +61,7 @@ func buildFiltersDataSource(set *schema.Set) []awstypes.Filter {
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []string
-		for _, e := range m["values"].([]interface{}) {
+		for _, e := range m[names.AttrValues].([]interface{}) {
 			filterValues = append(filterValues, e.(string))
 		}
 
@@ -93,7 +93,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
@@ -103,19 +103,19 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, group := range groups {
 		arns = append(arns, aws.ToString(group.AutoScalingGroupARN))
-		names = append(names, aws.ToString(group.AutoScalingGroupName))
+		nms = append(nms, aws.ToString(group.AutoScalingGroupName))
 	}
 
 	sort.Strings(arns)
-	sort.Strings(names)
+	sort.Strings(nms)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set("names", nms)
 
 	return diags
 }

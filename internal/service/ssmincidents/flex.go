@@ -128,7 +128,7 @@ func expandNotificationTargets(targets []interface{}) []types.NotificationTarget
 		targetData := target.(map[string]interface{})
 
 		targetItem := &types.NotificationTargetItemMemberSnsTopicArn{
-			Value: targetData["sns_topic_arn"].(string),
+			Value: targetData[names.AttrSNSTopicARN].(string),
 		}
 
 		notificationTargets[i] = targetItem
@@ -147,7 +147,7 @@ func flattenNotificationTargets(targets []types.NotificationTargetItem) []map[st
 	for i, target := range targets {
 		targetItem := make(map[string]interface{})
 
-		targetItem["sns_topic_arn"] = target.(*types.NotificationTargetItemMemberSnsTopicArn).Value
+		targetItem[names.AttrSNSTopicARN] = target.(*types.NotificationTargetItemMemberSnsTopicArn).Value
 
 		notificationTargets[i] = targetItem
 	}
@@ -231,7 +231,7 @@ func expandSSMAutomations(automations []interface{}) []types.Action {
 			ssmAutomation.TargetAccount = types.SsmTargetAccount(v)
 		}
 
-		if v, ok := automationData["parameter"].(*schema.Set); ok {
+		if v, ok := automationData[names.AttrParameter].(*schema.Set); ok {
 			ssmAutomation.Parameters = expandParameters(v)
 		}
 
@@ -273,7 +273,7 @@ func flattenSSMAutomations(actions []types.Action) []interface{} {
 			}
 
 			if v := ssmAutomation.Parameters; v != nil {
-				a["parameter"] = flattenParameters(v)
+				a[names.AttrParameter] = flattenParameters(v)
 			}
 
 			if v := ssmAutomation.DynamicParameters; v != nil {
@@ -291,7 +291,7 @@ func expandParameters(parameters *schema.Set) map[string][]string {
 	for _, parameter := range parameters.List() {
 		parameterData := parameter.(map[string]interface{})
 		name := parameterData[names.AttrName].(string)
-		values := flex.ExpandStringValueSet(parameterData["values"].(*schema.Set))
+		values := flex.ExpandStringValueSet(parameterData[names.AttrValues].(*schema.Set))
 		parameterMap[name] = values
 	}
 	return parameterMap
@@ -302,7 +302,7 @@ func flattenParameters(parameterMap map[string][]string) []map[string]interface{
 	for name, values := range parameterMap {
 		data := make(map[string]interface{})
 		data[names.AttrName] = name
-		data["values"] = flex.FlattenStringValueList(values)
+		data[names.AttrValues] = flex.FlattenStringValueList(values)
 		result = append(result, data)
 	}
 	return result

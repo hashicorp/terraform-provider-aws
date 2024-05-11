@@ -45,7 +45,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", strings.TrimSpace(certificate)),
 				),
 			},
@@ -241,7 +241,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test/"),
 				),
 			},
 			{

@@ -35,7 +35,7 @@ func ResourcePolicyAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"target": {
+			names.AttrTarget: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -49,7 +49,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	policyName := d.Get(names.AttrPolicy).(string)
-	target := d.Get("target").(string)
+	target := d.Get(names.AttrTarget).(string)
 	id := policyAttachmentCreateResourceID(policyName, target)
 	input := &iot.AttachPolicyInput{
 		PolicyName: aws.String(policyName),

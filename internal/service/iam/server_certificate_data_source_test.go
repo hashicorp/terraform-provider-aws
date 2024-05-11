@@ -62,7 +62,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrARN),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrID),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrName),
-					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "path"),
+					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrPath),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "certificate_chain", ""),
 					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
@@ -106,7 +106,7 @@ func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 			{
 				Config: testAccServerCertificateDataSourceConfig_certPath(rName, path, pathPrefix, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "path", path),
+					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", names.AttrPath, path),
 				),
 			},
 		},

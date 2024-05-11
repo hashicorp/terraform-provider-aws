@@ -2692,7 +2692,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"path": path1,
+						names.AttrPath: path1,
 					}),
 				),
 			},
@@ -2702,7 +2702,7 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"path": path2,
+						names.AttrPath: path2,
 					}),
 				),
 			},

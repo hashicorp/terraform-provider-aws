@@ -52,7 +52,7 @@ func ResourceEBSSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("encrypted"); ok {
+	if v, ok := d.GetOk(names.AttrEncrypted); ok {
 		input.Encrypted = aws.Bool(v.(bool))
 	}
 

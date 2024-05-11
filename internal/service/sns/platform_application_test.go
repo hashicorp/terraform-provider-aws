@@ -47,7 +47,7 @@ type testAccPlatformApplicationPlatform struct {
 func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType string) []*testAccPlatformApplicationPlatform {
 	platforms := make([]*testAccPlatformApplicationPlatform, 0, 2)
 
-	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == "certificate" {
+	if os.Getenv("APNS_SANDBOX_CREDENTIAL") != "" && allowedApnsAuthType == names.AttrCertificate {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL set but missing APNS_SANDBOX_PRINCIPAL")
 		}
@@ -56,10 +56,10 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 			Name:         "APNS_SANDBOX",
 			Credential:   fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_CREDENTIAL"))),
 			Principal:    fmt.Sprintf("<<EOF\n%s\nEOF\n", strings.TrimSpace(os.Getenv("APNS_SANDBOX_PRINCIPAL"))),
-			ApnsAuthType: "certificate",
+			ApnsAuthType: names.AttrCertificate,
 		}
 		platforms = append(platforms, platform)
-	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == "certificate" {
+	} else if os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH") != "" && allowedApnsAuthType == names.AttrCertificate {
 		if os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH") == "" {
 			t.Fatalf("APNS_SANDBOX_CREDENTIAL_PATH set but missing APNS_SANDBOX_PRINCIPAL_PATH")
 		}
@@ -68,7 +68,7 @@ func testAccPlatformApplicationPlatformFromEnv(t *testing.T, allowedApnsAuthType
 			Name:         "APNS_SANDBOX",
 			Credential:   strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_CREDENTIAL_PATH"))),
 			Principal:    strconv.Quote(fmt.Sprintf("${file(pathexpand(%q))}", os.Getenv("APNS_SANDBOX_PRINCIPAL_PATH"))),
-			ApnsAuthType: "certificate",
+			ApnsAuthType: names.AttrCertificate,
 		}
 		platforms = append(platforms, platform)
 	} else if os.Getenv("APNS_SANDBOX_TOKEN_CREDENTIAL") != "" && allowedApnsAuthType == "token" {
@@ -301,7 +301,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 func TestAccSNSPlatformApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, names.AttrCertificate)
 	resourceName := "aws_sns_platform_application.test"
 
 	for _, platform := range platforms { //nolint:paralleltest
@@ -343,7 +343,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	platforms := testAccPlatformApplicationPlatformFromEnv(t, "certificate")
+	platforms := testAccPlatformApplicationPlatformFromEnv(t, names.AttrCertificate)
 	resourceName := "aws_sns_platform_application.test"
 
 	var testCases = []struct {

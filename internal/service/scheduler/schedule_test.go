@@ -211,7 +211,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression_timezone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -644,7 +644,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 hour)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 				),
 			},
 			{
@@ -656,7 +656,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccScheduleConfig_scheduleExpression(name, "rate(1 day)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 day)"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 day)"),
 				),
 			},
 			{
@@ -1219,7 +1219,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 				Config: testAccScheduleConfig_targetInput(name, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", "url", func(value string) error {
+					resource.TestCheckResourceAttrWith("aws_sqs_queue.test", names.AttrURL, func(value string) error {
 						queueUrl = value
 						return nil
 					}),

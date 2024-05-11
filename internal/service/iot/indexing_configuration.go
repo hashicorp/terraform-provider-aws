@@ -114,7 +114,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Default:          awstypes.DeviceDefenderIndexingModeOff,
 							ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
 						},
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -271,7 +271,7 @@ func flattenThingIndexingConfiguration(apiObject *awstypes.ThingIndexingConfigur
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = []interface{}{flattenIndexingFilter(v)}
+		tfMap[names.AttrFilter] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	if v := apiObject.ManagedFields; v != nil {
@@ -358,7 +358,7 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *awstypes.Th
 		apiObject.DeviceDefenderIndexingMode = awstypes.DeviceDefenderIndexingMode(v)
 	}
 
-	if v, ok := tfMap["filter"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := tfMap[names.AttrFilter]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 

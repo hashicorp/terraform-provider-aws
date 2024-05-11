@@ -42,7 +42,7 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("terraform-kinesis-video-stream-test-%d", rInt1)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt1))),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
 					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "1"),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h264"),
-					resource.TestCheckResourceAttr(resourceName, "device_name", fmt.Sprintf("kinesis-video-device-name-%s", rName1)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, fmt.Sprintf("kinesis-video-device-name-%s", rName1)),
 					resource.TestCheckResourceAttrPair(
 						resourceName, names.AttrKMSKeyID,
 						kmsResourceName, names.AttrID),
@@ -97,7 +97,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h120"),
-					resource.TestCheckResourceAttr(resourceName, "device_name", fmt.Sprintf("kinesis-video-device-name-%s", rName2)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, fmt.Sprintf("kinesis-video-device-name-%s", rName2)),
 				),
 			},
 			{

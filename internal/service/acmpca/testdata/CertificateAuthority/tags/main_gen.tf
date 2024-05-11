@@ -17,7 +17,6 @@ resource "aws_acmpca_certificate_authority" "test" {
   tags = var.tags
 }
 
-
 variable "rName" {
   type     = string
   nullable = false

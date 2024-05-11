@@ -40,7 +40,7 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 					testAccCheckUserInGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", userPoolResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "group_name", userGroupResourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, userResourceName, names.AttrUsername),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func testAccCheckUserInGroupExists(ctx context.Context, resourceName string) res
 
 		groupName := rs.Primary.Attributes["group_name"]
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
-		username := rs.Primary.Attributes["username"]
+		username := rs.Primary.Attributes[names.AttrUsername]
 
 		found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
@@ -139,7 +139,7 @@ func testAccCheckUserInGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			groupName := rs.Primary.Attributes["group_name"]
 			userPoolId := rs.Primary.Attributes["user_pool_id"]
-			username := rs.Primary.Attributes["username"]
+			username := rs.Primary.Attributes[names.AttrUsername]
 
 			found, err := tfcognitoidp.FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
