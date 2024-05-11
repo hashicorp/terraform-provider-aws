@@ -160,6 +160,16 @@ rules:
       - pattern: '"certificate_arn"'
     severity: ERROR
     fix: "names.AttrCertificateARN"
+  - id: literal-client_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrClientID` for the string literal "client_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"client_id"'
+    severity: ERROR
+    fix: "names.AttrClientID"
   - id: literal-cluster_identifier-string-constant
     languages: [go]
     message: Use the constant `names.AttrClusterIdentifier` for the string literal "cluster_identifier"
@@ -390,6 +400,16 @@ rules:
       - pattern: '"execution_role_arn"'
     severity: ERROR
     fix: "names.AttrExecutionRoleARN"
+  - id: literal-expression-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExpression` for the string literal "expression"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"expression"'
+    severity: ERROR
+    fix: "names.AttrExpression"
   - id: literal-file_system_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrFileSystemID` for the string literal "file_system_id"
@@ -430,6 +450,16 @@ rules:
       - pattern: '"format"'
     severity: ERROR
     fix: "names.AttrFormat"
+  - id: literal-group_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrGroupName` for the string literal "group_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"group_name"'
+    severity: ERROR
+    fix: "names.AttrGroupName"
   - id: literal-hosted_zone_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrHostedZoneID` for the string literal "hosted_zone_id"
@@ -450,6 +480,16 @@ rules:
       - pattern: '"id"'
     severity: ERROR
     fix: "names.AttrID"
+  - id: literal-ip_address-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrIPAddress` for the string literal "ip_address"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"ip_address"'
+    severity: ERROR
+    fix: "names.AttrIPAddress"
   - id: literal-identifier-string-constant
     languages: [go]
     message: Use the constant `names.AttrIdentifier` for the string literal "identifier"
@@ -520,6 +560,16 @@ rules:
       - pattern: '"last_updated_date"'
     severity: ERROR
     fix: "names.AttrLastUpdatedDate"
+  - id: literal-location-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLocation` for the string literal "location"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"location"'
+    severity: ERROR
+    fix: "names.AttrLocation"
   - id: literal-log_group_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrLogGroupName` for the string literal "log_group_name"
@@ -540,6 +590,16 @@ rules:
       - pattern: '"max"'
     severity: ERROR
     fix: "names.AttrMax"
+  - id: literal-metric_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMetricName` for the string literal "metric_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"metric_name"'
+    severity: ERROR
+    fix: "names.AttrMetricName"
   - id: literal-min-string-constant
     languages: [go]
     message: Use the constant `names.AttrMin` for the string literal "min"
@@ -700,6 +760,16 @@ rules:
       - pattern: '"prefix"'
     severity: ERROR
     fix: "names.AttrPrefix"
+  - id: literal-principal-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPrincipal` for the string literal "principal"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"principal"'
+    severity: ERROR
+    fix: "names.AttrPrincipal"
   - id: literal-priority-string-constant
     languages: [go]
     message: Use the constant `names.AttrPriority` for the string literal "priority"
@@ -710,6 +780,16 @@ rules:
       - pattern: '"priority"'
     severity: ERROR
     fix: "names.AttrPriority"
+  - id: literal-private_key-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPrivateKey` for the string literal "private_key"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"private_key"'
+    severity: ERROR
+    fix: "names.AttrPrivateKey"
   - id: literal-profile-string-constant
     languages: [go]
     message: Use the constant `names.AttrProfile` for the string literal "profile"
@@ -720,6 +800,16 @@ rules:
       - pattern: '"profile"'
     severity: ERROR
     fix: "names.AttrProfile"
+  - id: literal-properties-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrProperties` for the string literal "properties"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"properties"'
+    severity: ERROR
+    fix: "names.AttrProperties"
   - id: literal-protocol-string-constant
     languages: [go]
     message: Use the constant `names.AttrProtocol` for the string literal "protocol"
@@ -800,6 +890,16 @@ rules:
       - pattern: '"sns_topic_arn"'
     severity: ERROR
     fix: "names.AttrSNSTopicARN"
+  - id: literal-schedule-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSchedule` for the string literal "schedule"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"schedule"'
+    severity: ERROR
+    fix: "names.AttrSchedule"
   - id: literal-schedule_expression-string-constant
     languages: [go]
     message: Use the constant `names.AttrScheduleExpression` for the string literal "schedule_expression"
@@ -1060,6 +1160,16 @@ rules:
       - pattern: '"username"'
     severity: ERROR
     fix: "names.AttrUsername"
+  - id: literal-vpc_config-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVPCConfig` for the string literal "vpc_config"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"vpc_config"'
+    severity: ERROR
+    fix: "names.AttrVPCConfig"
   - id: literal-vpc_id-string-constant
     languages: [go]
     message: Use the constant `names.AttrVPCID` for the string literal "vpc_id"
