@@ -1547,7 +1547,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", "certificate_chain"},
 			},
 		},
 	})
@@ -1588,7 +1588,7 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", "certificate_chain"},
 			},
 		},
 	})
@@ -1621,7 +1621,7 @@ func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body"},
 			},
 		},
 	})
@@ -1655,7 +1655,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate_body"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body"},
 			},
 			{
 				Config: testAccCertificateConfig_tags2(certificate1, key1, "key1", "value1updated", "key2", "value2"),
