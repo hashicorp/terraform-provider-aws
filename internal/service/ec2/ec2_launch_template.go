@@ -851,7 +851,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"group_name": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -2103,7 +2103,7 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *ec2.Lau
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -3097,7 +3097,7 @@ func flattenLaunchTemplatePlacement(apiObject *ec2.LaunchTemplatePlacement) map[
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostId; v != nil {
