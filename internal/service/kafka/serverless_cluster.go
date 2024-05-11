@@ -95,7 +95,7 @@ func resourceServerlessCluster() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -135,7 +135,7 @@ func resourceServerlessClusterCreate(ctx context.Context, d *schema.ResourceData
 		ClusterName: aws.String(name),
 		Serverless: &types.ServerlessRequest{
 			ClientAuthentication: expandServerlessClientAuthentication(d.Get("client_authentication").([]interface{})[0].(map[string]interface{})),
-			VpcConfigs:           expandVpcConfigs(d.Get("vpc_config").([]interface{})),
+			VpcConfigs:           expandVpcConfigs(d.Get(names.AttrVPCConfig).([]interface{})),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -183,7 +183,7 @@ func resourceServerlessClusterRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("cluster_name", cluster.ClusterName)
 	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
 	d.Set("cluster_uuid", clusterUUID)
-	if err := d.Set("vpc_config", flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVpcConfigs(cluster.Serverless.VpcConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
