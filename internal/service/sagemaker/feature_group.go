@@ -122,7 +122,7 @@ func ResourceFeatureGroup() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"table_name": {
+									names.AttrTableName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -635,7 +635,7 @@ func expandFeatureGroupOfflineStoreConfigDataCatalogConfig(l []interface{}) *sag
 	config := &sagemaker.DataCatalogConfig{
 		Catalog:   aws.String(m["catalog"].(string)),
 		Database:  aws.String(m["database"].(string)),
-		TableName: aws.String(m["table_name"].(string)),
+		TableName: aws.String(m[names.AttrTableName].(string)),
 	}
 
 	return config
@@ -647,9 +647,9 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 	}
 
 	m := map[string]interface{}{
-		"catalog":    aws.StringValue(config.Catalog),
-		"database":   aws.StringValue(config.Database),
-		"table_name": aws.StringValue(config.TableName),
+		"catalog":           aws.StringValue(config.Catalog),
+		"database":          aws.StringValue(config.Database),
+		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 
 	return []map[string]interface{}{m}
