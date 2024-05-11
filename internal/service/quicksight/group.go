@@ -56,7 +56,7 @@ func ResourceGroup() *schema.Resource {
 					Optional: true,
 				},
 
-				"group_name": {
+				names.AttrGroupName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -91,7 +91,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	createOpts := &quicksight.CreateGroupInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(namespace),
-		GroupName:    aws.String(d.Get("group_name").(string)),
+		GroupName:    aws.String(d.Get(names.AttrGroupName).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -135,7 +135,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, resp.Group.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("group_name", resp.Group.GroupName)
+	d.Set(names.AttrGroupName, resp.Group.GroupName)
 	d.Set(names.AttrDescription, resp.Group.Description)
 	d.Set(names.AttrNamespace, namespace)
 
