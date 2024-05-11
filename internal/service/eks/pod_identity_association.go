@@ -88,7 +88,7 @@ func (r *podIdentityAssociationResource) Schema(ctx context.Context, req resourc
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"namespace": schema.StringAttribute{
+			names.AttrNamespace: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
