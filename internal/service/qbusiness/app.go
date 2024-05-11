@@ -72,7 +72,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "The display name of the Amazon Q application.",
 				Required:    true,
 				Validators: []validator.String{
@@ -113,7 +113,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),

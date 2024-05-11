@@ -81,7 +81,7 @@ func (r *resourceRetriever) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"retriever_id": framework.IDAttribute(),
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "The display name of the Amazon Q retriever.",
 				Optional:    true,
 				Validators: []validator.String{

@@ -38,7 +38,7 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
 			{
