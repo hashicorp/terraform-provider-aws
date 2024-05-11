@@ -139,7 +139,7 @@ func ResourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -798,7 +798,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 	config := &awstypes.AuthenticateOidcActionConfig{
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
-		ClientId:                         aws.String(tfMap["client_id"].(string)),
+		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
 		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
 		Issuer:                           aws.String(tfMap["issuer"].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
@@ -1079,7 +1079,7 @@ func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcAction
 	m := map[string]interface{}{
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
-		"client_id":                           aws.ToString(config.ClientId),
+		names.AttrClientID:                    aws.ToString(config.ClientId),
 		"client_secret":                       clientSecret,
 		"issuer":                              aws.ToString(config.Issuer),
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
