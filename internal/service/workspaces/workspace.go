@@ -45,7 +45,7 @@ func ResourceWorkspace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -207,7 +207,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	workspace := rawOutput.(types.Workspace)
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
-	d.Set("ip_address", workspace.IpAddress)
+	d.Set(names.AttrIPAddress, workspace.IpAddress)
 	d.Set("computer_name", workspace.ComputerName)
 	d.Set(names.AttrState, workspace.State)
 	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)
