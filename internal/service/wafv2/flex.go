@@ -402,7 +402,7 @@ func expandVisibilityConfig(l []interface{}) *awstypes.VisibilityConfig {
 		configuration.CloudWatchMetricsEnabled = v.(bool)
 	}
 
-	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
+	if v, ok := m[names.AttrMetricName]; ok && len(v.(string)) > 0 {
 		configuration.MetricName = aws.String(v.(string))
 	}
 
@@ -2348,7 +2348,7 @@ func flattenVisibilityConfig(config *awstypes.VisibilityConfig) interface{} {
 
 	m := map[string]interface{}{
 		"cloudwatch_metrics_enabled": aws.Bool(config.CloudWatchMetricsEnabled),
-		"metric_name":                aws.ToString(config.MetricName),
+		names.AttrMetricName:         aws.ToString(config.MetricName),
 		"sampled_requests_enabled":   aws.Bool(config.SampledRequestsEnabled),
 	}
 
