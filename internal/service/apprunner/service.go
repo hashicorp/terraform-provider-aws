@@ -221,7 +221,7 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -436,7 +436,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
-	name := d.Get("service_name").(string)
+	name := d.Get(names.AttrServiceName).(string)
 	input := &apprunner.CreateServiceInput{
 		ServiceName:         aws.String(name),
 		SourceConfiguration: expandServiceSourceConfiguration(d.Get("source_configuration").([]interface{})),
@@ -540,7 +540,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting observability_configuration: %s", err)
 	}
 	d.Set("service_id", service.ServiceId)
-	d.Set("service_name", service.ServiceName)
+	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set("service_url", serviceURL)
 	if err := d.Set("source_configuration", flattenServiceSourceConfiguration(service.SourceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source_configuration: %s", err)
