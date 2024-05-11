@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ram"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association ram.ResourceShareAssociation
+	var association awstypes.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,7 +52,7 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 
 func TestAccRAMPrincipalAssociation_AccountID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association ram.ResourceShareAssociation
+	var association awstypes.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -82,7 +82,7 @@ func TestAccRAMPrincipalAssociation_AccountID(t *testing.T) {
 
 func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association ram.ResourceShareAssociation
+	var association awstypes.ResourceShareAssociation
 	resourceName := "aws_ram_principal_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -140,14 +140,14 @@ func testAccPreCheckSharingWithOrganizationEnabled(ctx context.Context, t *testi
 	}
 }
 
-func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *awstypes.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
 
 		output, err := tfram.FindPrincipalAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["principal"])
 
@@ -163,7 +163,7 @@ func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *ra
 
 func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ram_principal_association" {

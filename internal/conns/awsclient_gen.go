@@ -123,6 +123,7 @@ import (
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	ram_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ram"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -227,7 +228,6 @@ import (
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
-	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -966,8 +966,8 @@ func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickS
 	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
-func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
-	return errs.Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM, make(map[string]any)))
+func (c *AWSClient) RAMClient(ctx context.Context) *ram_sdkv2.Client {
+	return errs.Must(client[*ram_sdkv2.Client](ctx, c, names.RAM, make(map[string]any)))
 }
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
