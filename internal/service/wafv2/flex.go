@@ -320,7 +320,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
 			Content:     aws.String(vm["content"].(string)),
-			ContentType: awstypes.ResponseContentType(vm["content_type"].(string)),
+			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
 
@@ -1219,7 +1219,7 @@ func expandEmailField(tfList []interface{}) *awstypes.EmailField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.EmailField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1232,7 +1232,7 @@ func expandPasswordField(tfList []interface{}) *awstypes.PasswordField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.PasswordField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1263,7 +1263,7 @@ func expandUsernameField(tfList []interface{}) *awstypes.UsernameField {
 
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.UsernameField{
-		Identifier: aws.String(m["identifier"].(string)),
+		Identifier: aws.String(m[names.AttrIdentifier].(string)),
 	}
 
 	return &out
@@ -1423,7 +1423,7 @@ func expandResponseInspectionJSON(tfList []interface{}) *awstypes.ResponseInspec
 	m := tfList[0].(map[string]interface{})
 	out := awstypes.ResponseInspectionJson{
 		FailureValues: flex.ExpandStringValueSet(m["failure_values"].(*schema.Set)),
-		Identifier:    aws.String(m["identifier"].(string)),
+		Identifier:    aws.String(m[names.AttrIdentifier].(string)),
 		SuccessValues: flex.ExpandStringValueSet(m["success_values"].(*schema.Set)),
 	}
 
@@ -1474,7 +1474,7 @@ func expandRateLimitLabelNamespace(l []interface{}) *awstypes.RateLimitLabelName
 	}
 	m := l[0].(map[string]interface{})
 	return &awstypes.RateLimitLabelNamespace{
-		Namespace: aws.String(m["namespace"].(string)),
+		Namespace: aws.String(m[names.AttrNamespace].(string)),
 	}
 }
 
@@ -1813,9 +1813,9 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	i := 0
 	for key, body := range b {
 		out[i] = map[string]interface{}{
-			names.AttrKey:  key,
-			"content":      aws.ToString(body.Content),
-			"content_type": string(body.ContentType),
+			names.AttrKey:         key,
+			"content":             aws.ToString(body.Content),
+			names.AttrContentType: string(body.ContentType),
 		}
 		i += 1
 	}
@@ -2629,7 +2629,7 @@ func flattenEmailField(apiObject *awstypes.EmailField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2641,7 +2641,7 @@ func flattenPasswordField(apiObject *awstypes.PasswordField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2670,7 +2670,7 @@ func flattenUsernameField(apiObject *awstypes.UsernameField) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"identifier": aws.ToString(apiObject.Identifier),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
 	}
 
 	return []interface{}{m}
@@ -2812,9 +2812,9 @@ func flattenResponseInspectionJSON(apiObject *awstypes.ResponseInspectionJson) [
 	}
 
 	m := map[string]interface{}{
-		"failure_values": flex.FlattenStringValueSet(apiObject.FailureValues),
-		"identifier":     aws.ToString(apiObject.Identifier),
-		"success_values": flex.FlattenStringValueSet(apiObject.SuccessValues),
+		"failure_values":     flex.FlattenStringValueSet(apiObject.FailureValues),
+		names.AttrIdentifier: aws.ToString(apiObject.Identifier),
+		"success_values":     flex.FlattenStringValueSet(apiObject.SuccessValues),
 	}
 
 	return []interface{}{m}
@@ -2863,7 +2863,7 @@ func flattenRateLimitLabelNamespace(apiObject *awstypes.RateLimitLabelNamespace)
 	}
 	return []interface{}{
 		map[string]interface{}{
-			"namespace": aws.ToString(apiObject.Namespace),
+			names.AttrNamespace: aws.ToString(apiObject.Namespace),
 		},
 	}
 }
