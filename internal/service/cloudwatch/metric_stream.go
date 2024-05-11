@@ -71,7 +71,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -98,7 +98,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -183,7 +183,7 @@ func resourceMetricStream() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -468,7 +468,7 @@ func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter 
 			apiObject.MetricNames = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -496,7 +496,7 @@ func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interfa
 			}
 
 			if v := apiObject.Namespace; v != nil {
-				tfMap["namespace"] = aws.ToString(v)
+				tfMap[names.AttrNamespace] = aws.ToString(v)
 			}
 
 			tfList = append(tfList, tfMap)
@@ -550,7 +550,7 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface
 			apiObject.MetricName = aws.String(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -603,7 +603,7 @@ func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []type
 		}
 
 		if v := apiObject.Namespace; v != nil {
-			tfMap["namespace"] = aws.ToString(v)
+			tfMap[names.AttrNamespace] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)
