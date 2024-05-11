@@ -25,6 +25,7 @@ const (
 	AttrCatalogID                  = "catalog_id"
 	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
+	AttrClientID                   = "client_id"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrConfiguration              = "configuration"
 	AttrContentType                = "content_type"
@@ -48,12 +49,15 @@ const (
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
 	AttrExecutionRoleARN           = "execution_role_arn"
+	AttrExpression                 = "expression"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
+	AttrGroupName                  = "group_name"
 	AttrHostedZoneID               = "hosted_zone_id"
 	AttrID                         = "id"
+	AttrIPAddress                  = "ip_address"
 	AttrIdentifier                 = "identifier"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
@@ -61,8 +65,10 @@ const (
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
 	AttrLastUpdatedDate            = "last_updated_date"
+	AttrLocation                   = "location"
 	AttrLogGroupName               = "log_group_name"
 	AttrMax                        = "max"
+	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
 	AttrMode                       = "mode"
 	AttrName                       = "name"
@@ -79,8 +85,11 @@ const (
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"
 	AttrPrefix                     = "prefix"
+	AttrPrincipal                  = "principal"
 	AttrPriority                   = "priority"
+	AttrPrivateKey                 = "private_key"
 	AttrProfile                    = "profile"
+	AttrProperties                 = "properties"
 	AttrProtocol                   = "protocol"
 	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
@@ -89,6 +98,7 @@ const (
 	AttrRoleARN                    = "role_arn"
 	AttrS3BucketName               = "s3_bucket_name"
 	AttrSNSTopicARN                = "sns_topic_arn"
+	AttrSchedule                   = "schedule"
 	AttrScheduleExpression         = "schedule_expression"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
@@ -115,6 +125,7 @@ const (
 	AttrUnit                       = "unit"
 	AttrUserName                   = "user_name"
 	AttrUsername                   = "username"
+	AttrVPCConfig                  = "vpc_config"
 	AttrVPCID                      = "vpc_id"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
 	AttrValue                      = "value"
@@ -143,6 +154,7 @@ func ConstOrQuote(constant string) string {
 		"catalog_id":                    "AttrCatalogID",
 		"certificate":                   "AttrCertificate",
 		"certificate_arn":               "AttrCertificateARN",
+		"client_id":                     "AttrClientID",
 		"cluster_identifier":            "AttrClusterIdentifier",
 		"configuration":                 "AttrConfiguration",
 		"content_type":                  "AttrContentType",
@@ -166,12 +178,15 @@ func ConstOrQuote(constant string) string {
 		"endpoints":                     "AttrEndpoints",
 		"engine_version":                "AttrEngineVersion",
 		"execution_role_arn":            "AttrExecutionRoleARN",
+		"expression":                    "AttrExpression",
 		"file_system_id":                "AttrFileSystemID",
 		"filter":                        "AttrFilter",
 		"force_destroy":                 "AttrForceDestroy",
 		"format":                        "AttrFormat",
+		"group_name":                    "AttrGroupName",
 		"hosted_zone_id":                "AttrHostedZoneID",
 		"id":                            "AttrID",
+		"ip_address":                    "AttrIPAddress",
 		"identifier":                    "AttrIdentifier",
 		"instance_id":                   "AttrInstanceID",
 		"instance_type":                 "AttrInstanceType",
@@ -179,8 +194,10 @@ func ConstOrQuote(constant string) string {
 		"kms_key_id":                    "AttrKMSKeyID",
 		"key":                           "AttrKey",
 		"last_updated_date":             "AttrLastUpdatedDate",
+		"location":                      "AttrLocation",
 		"log_group_name":                "AttrLogGroupName",
 		"max":                           "AttrMax",
+		"metric_name":                   "AttrMetricName",
 		"min":                           "AttrMin",
 		"mode":                          "AttrMode",
 		"name":                          "AttrName",
@@ -197,8 +214,11 @@ func ConstOrQuote(constant string) string {
 		"port":                          "AttrPort",
 		"preferred_maintenance_window":  "AttrPreferredMaintenanceWindow",
 		"prefix":                        "AttrPrefix",
+		"principal":                     "AttrPrincipal",
 		"priority":                      "AttrPriority",
+		"private_key":                   "AttrPrivateKey",
 		"profile":                       "AttrProfile",
+		"properties":                    "AttrProperties",
 		"protocol":                      "AttrProtocol",
 		"publicly_accessible":           "AttrPubliclyAccessible",
 		"region":                        "AttrRegion",
@@ -207,6 +227,7 @@ func ConstOrQuote(constant string) string {
 		"role_arn":                      "AttrRoleARN",
 		"s3_bucket_name":                "AttrS3BucketName",
 		"sns_topic_arn":                 "AttrSNSTopicARN",
+		"schedule":                      "AttrSchedule",
 		"schedule_expression":           "AttrScheduleExpression",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
@@ -233,6 +254,7 @@ func ConstOrQuote(constant string) string {
 		"unit":                          "AttrUnit",
 		"user_name":                     "AttrUserName",
 		"username":                      "AttrUsername",
+		"vpc_config":                    "AttrVPCConfig",
 		"vpc_id":                        "AttrVPCID",
 		"vpc_security_group_ids":        "AttrVPCSecurityGroupIDs",
 		"value":                         "AttrValue",
