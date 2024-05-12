@@ -178,7 +178,7 @@ func DataSourceListener() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"duration": {
+												names.AttrDuration: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -198,7 +198,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},

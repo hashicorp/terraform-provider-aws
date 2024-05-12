@@ -237,7 +237,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 10000),
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -351,7 +351,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.GraphqlApi.ApiId))
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -461,8 +461,8 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
 		}
 
-		if d.HasChange("schema") {
-			if v, ok := d.GetOk("schema"); ok {
+		if d.HasChange(names.AttrSchema) {
+			if v, ok := d.GetOk(names.AttrSchema); ok {
 				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}

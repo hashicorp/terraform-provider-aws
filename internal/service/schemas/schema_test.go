@@ -110,7 +110,7 @@ func TestAccSchemasSchema_openAPI3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "content"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -148,7 +148,7 @@ func TestAccSchemasSchema_jsonSchemaDraftv4(t *testing.T) {
 					testAccCheckSchemaExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccJSONSchemaContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccJSONSchemaContent),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
@@ -207,7 +207,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
@@ -221,7 +221,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContentUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),

@@ -497,7 +497,7 @@ func hookConfigurationSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"s3_bucket": {
+				names.AttrS3Bucket: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -1278,7 +1278,7 @@ func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
 
 	result := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
-		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
 	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
@@ -1627,8 +1627,8 @@ func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"lambda_arn": aws.ToString(apiObject.LambdaArn),
-		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
+		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
+		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {

@@ -120,7 +120,7 @@ func ResourceEBSSnapshotImport() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket": {
+									names.AttrS3Bucket: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -369,7 +369,7 @@ func expandUserBucket(tfMap map[string]interface{}) *awstypes.UserBucket {
 
 	apiObject := &awstypes.UserBucket{}
 
-	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
 		apiObject.S3Bucket = aws.String(v)
 	}
 

@@ -112,7 +112,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "schema"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSchema),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
 					testAccCheckGraphQLAPITypeExists(ctx, resourceName, "Post"),
@@ -122,7 +122,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"schema"},
+				ImportStateVerifyIgnore: []string{names.AttrSchema},
 			},
 			{
 				Config: testAccGraphQLAPIConfig_schemaUpdate(rName),

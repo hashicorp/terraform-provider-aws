@@ -101,7 +101,7 @@ func resourceLustreFileSystem() *schema.Resource {
 				Default:      fsx.LustreDeploymentTypeScratch1,
 				ValidateFunc: validation.StringInSlice(fsx.LustreDeploymentType_Values(), false),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -459,7 +459,7 @@ func resourceLustreFileSystemRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("daily_automatic_backup_start_time", lustreConfig.DailyAutomaticBackupStartTime)
 	d.Set("data_compression_type", lustreConfig.DataCompressionType)
 	d.Set("deployment_type", lustreConfig.DeploymentType)
-	d.Set("dns_name", filesystem.DNSName)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("drive_cache_type", lustreConfig.DriveCacheType)
 	d.Set("export_path", lustreConfig.DataRepositoryConfiguration.ExportPath)
 	d.Set("file_system_type_version", filesystem.FileSystemTypeVersion)

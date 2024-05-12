@@ -110,7 +110,7 @@ func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 							ExactlyOneOf: []string{"protocol.0.nfs", "protocol.0.smb"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"domain": {
+									names.AttrDomain: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,

@@ -156,7 +156,7 @@ func ResourceCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"zip_file"},
@@ -166,7 +166,7 @@ func ResourceCanary() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"zip_file"},
-				RequiredWith:  []string{"s3_bucket"},
+				RequiredWith:  []string{names.AttrS3Bucket},
 			},
 			"s3_version": {
 				Type:          schema.TypeString,
@@ -264,7 +264,7 @@ func ResourceCanary() *schema.Resource {
 			"zip_file": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
+				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_version"},
 			},
 		},
 
@@ -445,7 +445,7 @@ func resourceCanaryUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.RuntimeVersion = aws.String(d.Get("runtime_version").(string))
 		}
 
-		if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
+		if d.HasChanges("handler", "zip_file", names.AttrS3Bucket, "s3_key", "s3_version") {
 			if code, err := expandCanaryCode(d); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Synthetics Canary (%s): %s", d.Id(), err)
 			} else {
@@ -577,7 +577,7 @@ func expandCanaryCode(d *schema.ResourceData) (*awstypes.CanaryCodeInput, error)
 		}
 		codeConfig.ZipFile = file
 	} else {
-		codeConfig.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+		codeConfig.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 		codeConfig.S3Key = aws.String(d.Get("s3_key").(string))
 
 		if v, ok := d.GetOk("s3_version"); ok {

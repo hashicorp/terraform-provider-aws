@@ -37,7 +37,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
 					resource.TestCheckResourceAttr(resourceName, "ptr_record", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					testAccCheckEIPPublicDNS(ctx, resourceName),
@@ -95,7 +95,7 @@ func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 				Config: testAccEIPConfig_vpc,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
@@ -124,7 +124,7 @@ func TestAccEC2EIP_noVPC(t *testing.T) {
 				Config: testAccEIPConfig_noVPC,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),

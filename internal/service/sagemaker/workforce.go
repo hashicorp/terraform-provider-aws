@@ -165,7 +165,7 @@ func ResourceWorkforce() *schema.Resource {
 							MaxItems: 5,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							MaxItems: 16,
@@ -427,7 +427,7 @@ func expandWorkforceVPCConfig(l []interface{}) *sagemaker.WorkforceVpcConfigRequ
 
 	config := &sagemaker.WorkforceVpcConfigRequest{
 		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
 		VpcId:            aws.String(m[names.AttrVPCID].(string)),
 	}
 
@@ -441,7 +441,7 @@ func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []m
 
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringSet(config.SecurityGroupIds),
-		"subnets":                  flex.FlattenStringSet(config.Subnets),
+		names.AttrSubnets:          flex.FlattenStringSet(config.Subnets),
 		"vpc_endpoint_id":          aws.StringValue(config.VpcEndpointId),
 		names.AttrVPCID:            aws.StringValue(config.VpcId),
 	}

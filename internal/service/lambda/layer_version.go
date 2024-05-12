@@ -79,7 +79,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -96,7 +96,7 @@ func resourceLayerVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -152,7 +152,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
-	s3Bucket, bucketOk := d.GetOk("s3_bucket")
+	s3Bucket, bucketOk := d.GetOk(names.AttrS3Bucket)
 	s3Key, keyOk := d.GetOk("s3_key")
 	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
 

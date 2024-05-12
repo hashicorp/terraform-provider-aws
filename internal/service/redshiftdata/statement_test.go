@@ -44,7 +44,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database", "db_user"},
+				ImportStateVerifyIgnore: []string{names.AttrDatabase, "db_user"},
 			},
 		},
 	})
@@ -76,7 +76,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database", "db_user"},
+				ImportStateVerifyIgnore: []string{names.AttrDatabase, "db_user"},
 			},
 		},
 	})

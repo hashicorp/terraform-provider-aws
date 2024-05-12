@@ -28,11 +28,14 @@ const (
 	AttrClientID                   = "client_id"
 	AttrClusterIdentifier          = "cluster_identifier"
 	AttrConfiguration              = "configuration"
+	AttrContent                    = "content"
 	AttrContentType                = "content_type"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
 	AttrCreationDate               = "creation_date"
 	AttrCreationTime               = "creation_time"
+	AttrDNSName                    = "dns_name"
+	AttrDatabase                   = "database"
 	AttrDatabaseName               = "database_name"
 	AttrDeleteOnTermination        = "delete_on_termination"
 	AttrDescription                = "description"
@@ -40,7 +43,9 @@ const (
 	AttrDestinationARN             = "destination_arn"
 	AttrDeviceName                 = "device_name"
 	AttrDisplayName                = "display_name"
+	AttrDomain                     = "domain"
 	AttrDomainName                 = "domain_name"
+	AttrDuration                   = "duration"
 	AttrEnabled                    = "enabled"
 	AttrEncrypted                  = "encrypted"
 	AttrEncryptionConfiguration    = "encryption_configuration"
@@ -66,6 +71,7 @@ const (
 	AttrKey                        = "key"
 	AttrLastUpdatedDate            = "last_updated_date"
 	AttrLogGroupName               = "log_group_name"
+	AttrLoggingConfiguration       = "logging_configuration"
 	AttrMax                        = "max"
 	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
@@ -95,10 +101,12 @@ const (
 	AttrResourceARN                = "resource_arn"
 	AttrResourceType               = "resource_type"
 	AttrRoleARN                    = "role_arn"
+	AttrS3Bucket                   = "s3_bucket"
 	AttrS3BucketName               = "s3_bucket_name"
 	AttrSNSTopicARN                = "sns_topic_arn"
 	AttrSchedule                   = "schedule"
 	AttrScheduleExpression         = "schedule_expression"
+	AttrSchema                     = "schema"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
@@ -112,6 +120,7 @@ const (
 	AttrStatus                     = "status"
 	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
+	AttrSubnets                    = "subnets"
 	AttrTableName                  = "table_name"
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"
@@ -130,6 +139,7 @@ const (
 	AttrValue                      = "value"
 	AttrValues                     = "values"
 	AttrVersion                    = "version"
+	AttrWeight                     = "weight"
 )
 
 // ConstOrQuote returns the constant name for the given attribute if it exists.
@@ -156,11 +166,14 @@ func ConstOrQuote(constant string) string {
 		"client_id":                     "AttrClientID",
 		"cluster_identifier":            "AttrClusterIdentifier",
 		"configuration":                 "AttrConfiguration",
+		"content":                       "AttrContent",
 		"content_type":                  "AttrContentType",
 		"created_at":                    "AttrCreatedAt",
 		"created_date":                  "AttrCreatedDate",
 		"creation_date":                 "AttrCreationDate",
 		"creation_time":                 "AttrCreationTime",
+		"dns_name":                      "AttrDNSName",
+		"database":                      "AttrDatabase",
 		"database_name":                 "AttrDatabaseName",
 		"delete_on_termination":         "AttrDeleteOnTermination",
 		"description":                   "AttrDescription",
@@ -168,7 +181,9 @@ func ConstOrQuote(constant string) string {
 		"destination_arn":               "AttrDestinationARN",
 		"device_name":                   "AttrDeviceName",
 		"display_name":                  "AttrDisplayName",
+		"domain":                        "AttrDomain",
 		"domain_name":                   "AttrDomainName",
+		"duration":                      "AttrDuration",
 		"enabled":                       "AttrEnabled",
 		"encrypted":                     "AttrEncrypted",
 		"encryption_configuration":      "AttrEncryptionConfiguration",
@@ -194,6 +209,7 @@ func ConstOrQuote(constant string) string {
 		"key":                           "AttrKey",
 		"last_updated_date":             "AttrLastUpdatedDate",
 		"log_group_name":                "AttrLogGroupName",
+		"logging_configuration":         "AttrLoggingConfiguration",
 		"max":                           "AttrMax",
 		"metric_name":                   "AttrMetricName",
 		"min":                           "AttrMin",
@@ -223,10 +239,12 @@ func ConstOrQuote(constant string) string {
 		"resource_arn":                  "AttrResourceARN",
 		"resource_type":                 "AttrResourceType",
 		"role_arn":                      "AttrRoleARN",
+		"s3_bucket":                     "AttrS3Bucket",
 		"s3_bucket_name":                "AttrS3BucketName",
 		"sns_topic_arn":                 "AttrSNSTopicARN",
 		"schedule":                      "AttrSchedule",
 		"schedule_expression":           "AttrScheduleExpression",
+		"schema":                        "AttrSchema",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
@@ -240,6 +258,7 @@ func ConstOrQuote(constant string) string {
 		"status":                        "AttrStatus",
 		"subnet_id":                     "AttrSubnetID",
 		"subnet_ids":                    "AttrSubnetIDs",
+		"subnets":                       "AttrSubnets",
 		"table_name":                    "AttrTableName",
 		"tags":                          "AttrTags",
 		"tags_all":                      "AttrTagsAll",
@@ -258,6 +277,7 @@ func ConstOrQuote(constant string) string {
 		"value":                         "AttrValue",
 		"values":                        "AttrValues",
 		"version":                       "AttrVersion",
+		"weight":                        "AttrWeight",
 	}
 
 	if v, ok := allConstants[constant]; ok {

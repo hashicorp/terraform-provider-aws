@@ -47,7 +47,7 @@ func TestAccCloudControlResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},
@@ -484,7 +484,7 @@ func TestAccCloudControlResource_resourceSchema(t *testing.T) {
 			{
 				Config: testAccResourceConfig_schema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "schema", "data.aws_cloudformation_type.test", "schema"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSchema, "data.aws_cloudformation_type.test", names.AttrSchema),
 				),
 			},
 		},
@@ -514,7 +514,7 @@ func TestAccCloudControlResource_lambdaFunction(t *testing.T) {
 				Config: testAccResourceConfig_lambdaFunction(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`^\{.*\}$`)),
-					resource.TestMatchResourceAttr(resourceName, "schema", regexache.MustCompile(`^\{.*`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
 				),
 			},
 		},

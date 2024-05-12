@@ -37,7 +37,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.TestName", t.Name()),
-					resource.TestCheckResourceAttrSet(dataSourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, "aws_elb.test", names.AttrARN),
 				),

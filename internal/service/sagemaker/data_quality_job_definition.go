@@ -410,7 +410,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 										ForceNew: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"subnets": {
+									names.AttrSubnets: {
 										Type:     schema.TypeSet,
 										MinItems: 1,
 										MaxItems: 16,
@@ -926,7 +926,7 @@ func flattenVPCConfig(config *sagemaker.VpcConfig) []map[string]interface{} {
 	}
 
 	if config.Subnets != nil {
-		m["subnets"] = flex.FlattenStringSet(config.Subnets)
+		m[names.AttrSubnets] = flex.FlattenStringSet(config.Subnets)
 	}
 
 	return []map[string]interface{}{m}
@@ -1304,7 +1304,7 @@ func expandVPCConfig(configured []interface{}) *sagemaker.VpcConfig {
 		c.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := m["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		c.Subnets = flex.ExpandStringSet(v)
 	}
 

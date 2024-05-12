@@ -49,7 +49,7 @@ func ResourceMaintenanceWindow() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
@@ -99,7 +99,7 @@ func resourceMaintenanceWindowCreate(ctx context.Context, d *schema.ResourceData
 	input := &ssm.CreateMaintenanceWindowInput{
 		AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
 		Cutoff:                   aws.Int64(int64(d.Get("cutoff").(int))),
-		Duration:                 aws.Int64(int64(d.Get("duration").(int))),
+		Duration:                 aws.Int64(int64(d.Get(names.AttrDuration).(int))),
 		Name:                     aws.String(name),
 		Schedule:                 aws.String(d.Get(names.AttrSchedule).(string)),
 		Tags:                     getTagsIn(ctx),
@@ -168,7 +168,7 @@ func resourceMaintenanceWindowRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("allow_unassociated_targets", output.AllowUnassociatedTargets)
 	d.Set("cutoff", output.Cutoff)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("duration", output.Duration)
+	d.Set(names.AttrDuration, output.Duration)
 	d.Set(names.AttrEnabled, output.Enabled)
 	d.Set("end_date", output.EndDate)
 	d.Set(names.AttrName, output.Name)
@@ -190,7 +190,7 @@ func resourceMaintenanceWindowUpdate(ctx context.Context, d *schema.ResourceData
 		input := &ssm.UpdateMaintenanceWindowInput{
 			AllowUnassociatedTargets: aws.Bool(d.Get("allow_unassociated_targets").(bool)),
 			Cutoff:                   aws.Int64(int64(d.Get("cutoff").(int))),
-			Duration:                 aws.Int64(int64(d.Get("duration").(int))),
+			Duration:                 aws.Int64(int64(d.Get(names.AttrDuration).(int))),
 			Enabled:                  aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			Name:                     aws.String(d.Get(names.AttrName).(string)),
 			Replace:                  aws.Bool(true),
