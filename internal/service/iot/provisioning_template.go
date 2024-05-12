@@ -226,12 +226,16 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if d.HasChanges(names.AttrDescription, names.AttrEnabled, "provisioning_role_arn") {
+	if d.HasChanges(names.AttrDescription, names.AttrEnabled, "provisioning_role_arn", "pre_provisioning_hook") {
 		input := &iot.UpdateProvisioningTemplateInput{
 			Description:         aws.String(d.Get(names.AttrDescription).(string)),
 			Enabled:             aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			ProvisioningRoleArn: aws.String(d.Get("provisioning_role_arn").(string)),
 			TemplateName:        aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("pre_provisioning_hook"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.PreProvisioningHook = expandProvisioningHook(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating IoT Provisioning Template: %s", d.Id())

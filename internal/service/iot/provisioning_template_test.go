@@ -167,7 +167,8 @@ func TestAccIoTProvisioningTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "For testing"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "pre_provisioning_hook.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "pre_provisioning_hook.0.target_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_body"),
@@ -387,12 +388,19 @@ resource "aws_iot_provisioning_template" "test" {
 }
 
 func testAccProvisioningTemplateConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccProvisioningTemplateBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccProvisioningTemplateBaseConfig(rName),
+		testAccProvisioningTemplateConfig_preProvisioningHook(rName),
+		fmt.Sprintf(`
 resource "aws_iot_provisioning_template" "test" {
   name                  = %[1]q
   provisioning_role_arn = aws_iam_role.test.arn
   description           = "For testing"
   enabled               = true
+
+  pre_provisioning_hook {
+    target_arn = aws_lambda_function.test.arn
+  }
 
   template_body = jsonencode({
     Parameters = {
@@ -418,4 +426,44 @@ resource "aws_iot_provisioning_template" "test" {
   })
 }
 `, rName))
+}
+
+func testAccProvisioningTemplateConfig_preProvisioningHook(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test2" {
+  name = "%[1]s-2"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_lambda_permission" "test" {
+  statement_id  = "AllowExecutionFromIot"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.test.arn
+  principal     = "iot.amazonaws.com"
+}
+
+resource "aws_lambda_function" "test" {
+  filename         = "test-fixtures/lambda-preprovisioninghook.zip"
+  source_code_hash = filebase64sha256("test-fixtures/lambda-preprovisioninghook.zip")
+  function_name    = %[1]q
+  role             = aws_iam_role.test2.arn
+  handler          = "lambda-preprovisioninghook.handler"
+  runtime          = "nodejs20.x"
+}
+`, rName)
 }
