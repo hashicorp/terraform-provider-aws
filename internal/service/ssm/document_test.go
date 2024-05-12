@@ -622,11 +622,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Document ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
@@ -636,7 +632,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 
 func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_document" {

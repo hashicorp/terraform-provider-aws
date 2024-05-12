@@ -8,9 +8,11 @@ var (
 	ResourceActivation           = resourceActivation
 	ResourceAssociation          = resourceAssociation
 	ResourceDefaultPatchBaseline = resourceDefaultPatchBaseline
+	ResourceDocument             = resourceDocument
 	ResourcePatchBaseline        = resourcePatchBaseline
 
 	FindActivationByID    = findActivationByID
 	FindAssociationByID   = findAssociationByID
+	FindDocumentByName    = findDocumentByName
 	FindPatchBaselineByID = findPatchBaselineByID
 )

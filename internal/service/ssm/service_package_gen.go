@@ -70,7 +70,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Default Patch Baseline",
 		},
 		{
-			Factory:  ResourceDocument,
+			Factory:  resourceDocument,
 			TypeName: "aws_ssm_document",
 			Name:     "Document",
 			Tags: &types.ServicePackageResourceTags{
