@@ -26,7 +26,7 @@ func DataSourceDedicatedIPPool() *schema.Resource {
 		ReadWithoutTimeout: dataSourceDedicatedIPPoolRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,7 +58,7 @@ func DataSourceDedicatedIPPool() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -77,7 +77,7 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	poolName := aws.ToString(out.DedicatedIpPool.PoolName)
 	d.SetId(poolName)
 	d.Set("scaling_mode", string(out.DedicatedIpPool.ScalingMode))
-	d.Set("arn", poolNameToARN(meta, poolName))
+	d.Set(names.AttrARN, poolNameToARN(meta, poolName))
 
 	outIP, err := findDedicatedIPPoolIPs(ctx, conn, poolName)
 	if err != nil {
@@ -85,7 +85,7 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set("dedicated_ips", flattenDedicatedIPs(outIP.DedicatedIps))
 
-	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	if err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionReading, DSNameDedicatedIPPool, d.Id(), err)
 	}
@@ -94,7 +94,7 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return create.DiagError(names.SESV2, create.ErrActionSetting, DSNameDedicatedIPPool, d.Id(), err)
 	}
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -279,6 +280,7 @@ func sweepRules(region string) error {
 					r := resourceRule()
 					d := r.Data(nil)
 					d.SetId(ruleCreateResourceID(eventBusName, ruleName))
+					d.Set(names.AttrForceDestroy, true)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -357,6 +359,7 @@ func sweepTargets(region string) error {
 							d := r.Data(nil)
 							d.SetId(targetCreateResourceID(eventBusName, ruleName, targetID))
 							d.Set("event_bus_name", eventBusName)
+							d.Set(names.AttrForceDestroy, true)
 							d.Set("rule", ruleName)
 							d.Set("target_id", targetID)
 

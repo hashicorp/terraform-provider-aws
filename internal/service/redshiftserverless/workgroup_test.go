@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 				Config: testAccWorkgroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("workgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "workgroup_id"),
@@ -97,7 +97,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "5632"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "256"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
 				Config: testAccWorkgroupConfig_port(rName, 8191),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port", "8191"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "8191"),
 				),
 			},
 			{

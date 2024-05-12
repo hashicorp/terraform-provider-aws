@@ -49,7 +49,7 @@ func ResourceFleet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -102,7 +102,7 @@ func ResourceFleet() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidCIDRNetworkAddress,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(gamelift.IpProtocol_Values(), false),
@@ -148,7 +148,7 @@ func ResourceFleet() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 255),
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -214,7 +214,7 @@ func ResourceFleet() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"parameters": {
+									names.AttrParameters: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -249,7 +249,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	input := &gamelift.CreateFleetInput{
 		EC2InstanceType: aws.String(d.Get("ec2_instance_type").(string)),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -261,7 +261,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ScriptId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("fleet_type"); ok {
@@ -314,7 +314,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating GameLift Fleet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating GameLift Fleet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.FleetAttributes.FleetId))
@@ -345,11 +345,11 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	arn := aws.StringValue(fleet.FleetArn)
 	d.Set("build_arn", fleet.BuildArn)
 	d.Set("build_id", fleet.BuildId)
-	d.Set("description", fleet.Description)
-	d.Set("arn", arn)
+	d.Set(names.AttrDescription, fleet.Description)
+	d.Set(names.AttrARN, arn)
 	d.Set("log_paths", aws.StringValueSlice(fleet.LogPaths))
 	d.Set("metric_groups", flex.FlattenStringList(fleet.MetricGroups))
-	d.Set("name", fleet.Name)
+	d.Set(names.AttrName, fleet.Name)
 	d.Set("fleet_type", fleet.FleetType)
 	d.Set("instance_role_arn", fleet.InstanceRoleArn)
 	d.Set("ec2_instance_type", fleet.InstanceType)
@@ -388,12 +388,12 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[INFO] Updating GameLift Fleet: %s", d.Id())
 
-	if d.HasChanges("description", "metric_groups", "name", "new_game_session_protection_policy", "resource_creation_limit_policy") {
+	if d.HasChanges(names.AttrDescription, "metric_groups", names.AttrName, "new_game_session_protection_policy", "resource_creation_limit_policy") {
 		_, err := conn.UpdateFleetAttributesWithContext(ctx, &gamelift.UpdateFleetAttributesInput{
-			Description:                    aws.String(d.Get("description").(string)),
+			Description:                    aws.String(d.Get(names.AttrDescription).(string)),
 			FleetId:                        aws.String(d.Id()),
 			MetricGroups:                   flex.ExpandStringList(d.Get("metric_groups").([]interface{})),
-			Name:                           aws.String(d.Get("name").(string)),
+			Name:                           aws.String(d.Get(names.AttrName).(string)),
 			NewGameSessionProtectionPolicy: aws.String(d.Get("new_game_session_protection_policy").(string)),
 			ResourceCreationLimitPolicy:    expandResourceCreationLimitPolicy(d.Get("resource_creation_limit_policy").([]interface{})),
 		})
@@ -484,7 +484,7 @@ func expandIPPermission(cfg map[string]interface{}) *gamelift.IpPermission {
 	return &gamelift.IpPermission{
 		FromPort: aws.Int64(int64(cfg["from_port"].(int))),
 		IpRange:  aws.String(cfg["ip_range"].(string)),
-		Protocol: aws.String(cfg["protocol"].(string)),
+		Protocol: aws.String(cfg[names.AttrProtocol].(string)),
 		ToPort:   aws.Int64(int64(cfg["to_port"].(int))),
 	}
 }
@@ -517,7 +517,7 @@ func flattenIPPermission(apiObject *gamelift.IpPermission) map[string]interface{
 
 	tfMap["from_port"] = aws.Int64Value(apiObject.FromPort)
 	tfMap["to_port"] = aws.Int64Value(apiObject.ToPort)
-	tfMap["protocol"] = aws.StringValue(apiObject.Protocol)
+	tfMap[names.AttrProtocol] = aws.StringValue(apiObject.Protocol)
 	tfMap["ip_range"] = aws.StringValue(apiObject.IpRange)
 
 	return tfMap
@@ -584,7 +584,7 @@ func expandServerProcesses(cfgs []interface{}) []*gamelift.ServerProcess {
 			ConcurrentExecutions: aws.Int64(int64(cfg["concurrent_executions"].(int))),
 			LaunchPath:           aws.String(cfg["launch_path"].(string)),
 		}
-		if v, ok := cfg["parameters"].(string); ok && len(v) > 0 {
+		if v, ok := cfg[names.AttrParameters].(string); ok && len(v) > 0 {
 			process.Parameters = aws.String(v)
 		}
 		processes[i] = process

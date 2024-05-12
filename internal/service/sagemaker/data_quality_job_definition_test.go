@@ -34,13 +34,13 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_endpointBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("data-quality-job-definition/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_app_specification.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_quality_app_specification.0.image_uri", "data.aws_sagemaker_prebuilt_ecr_image.monitor", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_input.0.endpoint_input.0.endpoint_name", "aws_sagemaker_endpoint.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_data_distribution_type", "FullyReplicated"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_input.0.endpoint_input.0.s3_input_mode", "File"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
@@ -55,7 +55,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -117,7 +117,7 @@ func TestAccSageMakerDataQualityJobDefinition_baselineConfig(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_baselineConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.0.constraints_resource.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "data_quality_baseline_config.0.constraints_resource.0.s3_uri", regexache.MustCompile("constraints")),
@@ -334,7 +334,7 @@ func TestAccSageMakerDataQualityJobDefinition_outputConfigKMSKeyID(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_job_output_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_output_config.0.kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "data_quality_job_output_config.0.kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -394,7 +394,7 @@ func TestAccSageMakerDataQualityJobDefinition_jobResourcesVolumeKMSKeyID(t *test
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "job_resources.0.cluster_config.0.volume_kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_resources.0.cluster_config.0.volume_kms_key_id", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{

@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // This is part of an experimental feature, do not use this as a starting point for tests
@@ -31,7 +32,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
 			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
 			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
-			"tags":                         testAccClientVPNEndpoint_tags,
+			names.AttrTags:                 testAccClientVPNEndpoint_tags,
 			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
 			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
 			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
@@ -51,9 +52,9 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 			"disappears":      testAccClientVPNNetworkAssociation_disappears,
 		},
 		"Route": {
-			"basic":       testAccClientVPNRoute_basic,
-			"description": testAccClientVPNRoute_description,
-			"disappears":  testAccClientVPNRoute_disappears,
+			"basic":               testAccClientVPNRoute_basic,
+			names.AttrDescription: testAccClientVPNRoute_description,
+			"disappears":          testAccClientVPNRoute_disappears,
 		},
 	}
 

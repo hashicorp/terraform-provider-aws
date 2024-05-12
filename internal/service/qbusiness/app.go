@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -63,7 +64,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Description: "A description of the Amazon Q application.",
 				Optional:    true,
 				Validators: []validator.String{
@@ -71,9 +72,9 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "The display name of the Amazon Q application.",
-				Optional:    true,
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
@@ -87,10 +88,11 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			"identity_center_instance_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Description: "ARN of the IAM Identity Center instance you are either creating for—or connecting to—your Amazon Q Business application",
-				Optional:    true,
+				Required:    true,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"identity_center_application_arn": framework.ARNAttributeComputedOnly(),
+			names.AttrTags:                    tftags.TagsAttribute(),
+			names.AttrTagsAll:                 tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"attachments_configuration": schema.ListNestedBlock{
@@ -111,14 +113,14 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"encryption_configuration": schema.ListNestedBlock{
+			names.AttrEncryptionConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionConfigurationData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"kms_key_id": schema.StringAttribute{
+						names.AttrKMSKeyID: schema.StringAttribute{
 							Required:    true,
 							Description: "The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.",
 							Validators: []validator.String{
@@ -128,7 +130,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -162,6 +164,12 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	appId := aws.ToString(out.ApplicationId)
+
+	if _, err := waitApplicationCreated(ctx, conn, appId, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		resp.Diagnostics.AddError("failed to wait for Q Business application creation", err.Error())
+		return
+	}
+
 	app, err := FindAppByID(ctx, conn, appId)
 
 	if err != nil {
@@ -171,11 +179,7 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 
 	data.ApplicationId = fwflex.StringToFramework(ctx, app.ApplicationId)
 	data.ApplicationArn = fwflex.StringToFramework(ctx, app.ApplicationArn)
-
-	if _, err := waitApplicationCreated(ctx, conn, data.ApplicationId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError("failed to wait for Q Business application creation", err.Error())
-		return
-	}
+	data.IdentityCenterApplicationArn = fwflex.StringToFramework(ctx, app.IdentityCenterApplicationArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -237,6 +241,8 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	data.IdentityCenterInstanceArn = fwflex.StringToFrameworkARN(ctx, convertARN(out.IdentityCenterApplicationArn))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -276,22 +282,31 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
+// Converts the ARN of the Identity Center Application to the ARN of the Identity Center Instance
+func convertARN(arn *string) *string {
+	parts := strings.Split(*arn, ":")
+	subParts := strings.Split(parts[5], "/")
+	newArn := fmt.Sprintf("%s:%s:%s:::instance/%s", parts[0], parts[1], parts[2], subParts[1])
+	return &newArn
+}
+
 func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
 type resourceApplicationData struct {
-	ApplicationId             types.String                                                  `tfsdk:"id"`
-	ApplicationArn            types.String                                                  `tfsdk:"arn"`
-	Description               types.String                                                  `tfsdk:"description"`
-	DisplayName               types.String                                                  `tfsdk:"display_name"`
-	RoleArn                   fwtypes.ARN                                                   `tfsdk:"iam_service_role_arn"`
-	IdentityCenterInstanceArn fwtypes.ARN                                                   `tfsdk:"identity_center_instance_arn"`
-	Tags                      types.Map                                                     `tfsdk:"tags"`
-	TagsAll                   types.Map                                                     `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`
-	AttachmentsConfiguration  fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`
-	EncryptionConfiguration   fwtypes.ListNestedObjectValueOf[encryptionConfigurationData]  `tfsdk:"encryption_configuration"`
+	ApplicationId                types.String                                                  `tfsdk:"id"`
+	ApplicationArn               types.String                                                  `tfsdk:"arn"`
+	Description                  types.String                                                  `tfsdk:"description"`
+	DisplayName                  types.String                                                  `tfsdk:"display_name"`
+	RoleArn                      fwtypes.ARN                                                   `tfsdk:"iam_service_role_arn"`
+	IdentityCenterInstanceArn    fwtypes.ARN                                                   `tfsdk:"identity_center_instance_arn"`
+	IdentityCenterApplicationArn types.String                                                  `tfsdk:"identity_center_application_arn"`
+	Tags                         types.Map                                                     `tfsdk:"tags"`
+	TagsAll                      types.Map                                                     `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                                `tfsdk:"timeouts"`
+	AttachmentsConfiguration     fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`
+	EncryptionConfiguration      fwtypes.ListNestedObjectValueOf[encryptionConfigurationData]  `tfsdk:"encryption_configuration"`
 }
 
 type attachmentsConfigurationData struct {

@@ -64,15 +64,15 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -88,10 +88,10 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticbeanstalk.CreateApplicationInput{
 		ApplicationName: aws.String(name),
-		Description:     aws.String(d.Get("description").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -146,9 +146,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
-	d.Set("arn", app.ApplicationArn)
-	d.Set("description", app.Description)
-	d.Set("name", app.ApplicationName)
+	d.Set(names.AttrARN, app.ApplicationArn)
+	d.Set(names.AttrDescription, app.Description)
+	d.Set(names.AttrName, app.ApplicationName)
 
 	return diags
 }
@@ -157,10 +157,10 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &elasticbeanstalk.UpdateApplicationInput{
 			ApplicationName: aws.String(d.Id()),
-			Description:     aws.String(d.Get("description").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
 		_, err := conn.UpdateApplication(ctx, input)

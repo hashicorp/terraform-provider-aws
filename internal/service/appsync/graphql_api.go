@@ -87,7 +87,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -127,7 +127,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
@@ -210,7 +210,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -296,7 +296,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appsync.CreateGraphqlApiInput{
 		AuthenticationType: aws.String(d.Get("authentication_type").(string)),
 		Name:               aws.String(name),
@@ -379,7 +379,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("additional_authentication_provider", flattenGraphQLAPIAdditionalAuthenticationProviders(api.AdditionalAuthenticationProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting additional_authentication_provider: %s", err)
 	}
-	d.Set("arn", api.Arn)
+	d.Set(names.AttrARN, api.Arn)
 	d.Set("authentication_type", api.AuthenticationType)
 	if err := d.Set("lambda_authorizer_config", flattenGraphQLAPILambdaAuthorizerConfig(api.LambdaAuthorizerConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting lambda_authorizer_config: %s", err)
@@ -391,7 +391,7 @@ func resourceGraphQLAPIRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting openid_connect_config: %s", err)
 	}
 	d.Set("introspection_config", api.IntrospectionConfig)
-	d.Set("name", api.Name)
+	d.Set(names.AttrName, api.Name)
 	d.Set("query_depth_limit", api.QueryDepthLimit)
 	d.Set("resolver_count_limit", api.ResolverCountLimit)
 	d.Set("uris", aws.StringValueMap(api.Uris))
@@ -412,11 +412,11 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appsync.UpdateGraphqlApiInput{
 			ApiId:              aws.String(d.Id()),
 			AuthenticationType: aws.String(d.Get("authentication_type").(string)),
-			Name:               aws.String(d.Get("name").(string)),
+			Name:               aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if v, ok := d.GetOk("additional_authentication_provider"); ok {
@@ -626,7 +626,7 @@ func expandGraphQLAPIOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnect
 		openIDConnectConfig.AuthTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["client_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
 		openIDConnectConfig.ClientId = aws.String(v)
 	}
 
@@ -757,10 +757,10 @@ func flattenGraphQLAPIOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDCon
 	}
 
 	m := map[string]interface{}{
-		"auth_ttl":  aws.Int64Value(openIDConnectConfig.AuthTTL),
-		"client_id": aws.StringValue(openIDConnectConfig.ClientId),
-		"iat_ttl":   aws.Int64Value(openIDConnectConfig.IatTTL),
-		"issuer":    aws.StringValue(openIDConnectConfig.Issuer),
+		"auth_ttl":         aws.Int64Value(openIDConnectConfig.AuthTTL),
+		names.AttrClientID: aws.StringValue(openIDConnectConfig.ClientId),
+		"iat_ttl":          aws.Int64Value(openIDConnectConfig.IatTTL),
+		"issuer":           aws.StringValue(openIDConnectConfig.Issuer),
 	}
 
 	return []interface{}{m}

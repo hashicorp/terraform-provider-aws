@@ -38,13 +38,13 @@ func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConstraintExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
-					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NOTIFICATION"),
+					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
-					resource.TestCheckResourceAttrSet(resourceName, "parameters"),
-					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameters),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
 			{
@@ -94,13 +94,13 @@ func TestAccServiceCatalogConstraint_update(t *testing.T) {
 			{
 				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
 				Config: testAccConstraintConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName2),
 				),
 			},
 		},

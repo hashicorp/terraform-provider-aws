@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_usage_plan_key", name="Usage Plan Key")
@@ -54,7 +55,7 @@ func resourceUsagePlanKey() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +64,7 @@ func resourceUsagePlanKey() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"value": {
+			names.AttrValue: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,8 +110,8 @@ func resourceUsagePlanKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("key_type", upk.Type)
-	d.Set("name", upk.Name)
-	d.Set("value", upk.Value)
+	d.Set(names.AttrName, upk.Name)
+	d.Set(names.AttrValue, upk.Value)
 
 	return diags
 }

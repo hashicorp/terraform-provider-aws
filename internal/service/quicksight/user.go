@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -34,7 +35,7 @@ func ResourceUser() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"arn": {
+				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -68,7 +69,7 @@ func ResourceUser() *schema.Resource {
 					}, false),
 				},
 
-				"namespace": {
+				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
@@ -85,7 +86,7 @@ func ResourceUser() *schema.Resource {
 					ForceNew: true,
 				},
 
-				"user_name": {
+				names.AttrUserName: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.NoZeroValues,
@@ -112,7 +113,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 
-	namespace := d.Get("namespace").(string)
+	namespace := d.Get(names.AttrNamespace).(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
 		awsAccountID = v.(string)
@@ -134,7 +135,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		createOpts.SessionName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("user_name"); ok {
+	if v, ok := d.GetOk(names.AttrUserName); ok {
 		createOpts.UserName = aws.String(v.(string))
 	}
 
@@ -173,12 +174,12 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.User.Arn)
+	d.Set(names.AttrARN, resp.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("email", resp.User.Email)
-	d.Set("namespace", namespace)
+	d.Set(names.AttrNamespace, namespace)
 	d.Set("user_role", resp.User.Role)
-	d.Set("user_name", resp.User.UserName)
+	d.Set(names.AttrUserName, resp.User.UserName)
 
 	return diags
 }

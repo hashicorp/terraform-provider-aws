@@ -106,7 +106,10 @@ func sweepClusters(region string) error {
 				log.Printf("[ERROR] Failed to delete ElastiCache Cache Cluster (%s): %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", id, err))
 			}
-			_, err = WaitCacheClusterDeleted(ctx, conn, id, CacheClusterDeletedTimeout)
+			const (
+				timeout = 40 * time.Minute
+			)
+			_, err = waitCacheClusterDeleted(ctx, conn, id, timeout)
 			if err != nil {
 				log.Printf("[ERROR] Failed waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", id, err)
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): waiting for completion: %w", id, err))
@@ -156,10 +159,8 @@ func sweepGlobalReplicationGroups(region string) error {
 
 				log.Printf("[INFO] Deleting ElastiCache Global Replication Group: %s", id)
 				err := deleteGlobalReplicationGroup(ctx, conn, id, sweeperGlobalReplicationGroupDefaultUpdatedTimeout, globalReplicationGroupDefaultDeletedTimeout)
-				if err != nil {
-					return fmt.Errorf("deleting ElastiCache Global Replication Group (%s): %w", id, err)
-				}
-				return nil
+
+				return err
 			})
 		}
 
@@ -241,7 +242,7 @@ func sweepReplicationGroups(region string) error {
 		}
 
 		for _, replicationGroup := range page.ReplicationGroups {
-			r := ResourceReplicationGroup()
+			r := resourceReplicationGroup()
 			d := r.Data(nil)
 
 			if replicationGroup.GlobalReplicationGroupInfo != nil {
@@ -348,7 +349,7 @@ func sweepUsers(region string) error {
 				continue
 			}
 
-			r := ResourceUser()
+			r := resourceUser()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -392,7 +393,7 @@ func sweepUserGroups(region string) error {
 		}
 
 		for _, v := range page.UserGroups {
-			r := ResourceUserGroup()
+			r := resourceUserGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.UserGroupId))
 
@@ -426,20 +427,16 @@ func DisassociateMembers(ctx context.Context, conn *elasticache.ElastiCache, glo
 	for _, member := range globalReplicationGroup.Members {
 		member := member
 
-		if aws.StringValue(member.Role) == GlobalReplicationGroupMemberRolePrimary {
+		if aws.StringValue(member.Role) == globalReplicationGroupMemberRolePrimary {
 			continue
 		}
 
 		id := aws.StringValue(globalReplicationGroup.GlobalReplicationGroupId)
 
 		membersGroup.Go(func() error {
-			if err := DisassociateReplicationGroup(ctx, conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
-				sweeperErr := fmt.Errorf(
-					"error disassociating ElastiCache Replication Group (%s) in %s from Global Group (%s): %w",
-					aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), id, err,
-				)
-				log.Printf("[ERROR] %s", sweeperErr)
-				return sweeperErr
+			if err := disassociateReplicationGroup(ctx, conn, id, aws.StringValue(member.ReplicationGroupId), aws.StringValue(member.ReplicationGroupRegion), sweeperGlobalReplicationGroupDisassociationReadyTimeout); err != nil {
+				log.Printf("[ERROR] %s", err)
+				return err
 			}
 			return nil
 		})

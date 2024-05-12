@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
@@ -43,11 +44,11 @@ func resourcePolicy() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -139,18 +140,18 @@ func resourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"name": {
+												names.AttrName: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Required: true,
 												},
 											},
 										},
 									},
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -161,12 +162,12 @@ func resourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.dimensions", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metric_name", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.namespace", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.statistic", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.unit"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"expression": {
+												names.AttrExpression: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(1, 2047),
 												},
-												"id": {
+												names.AttrID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 255),
@@ -193,22 +194,22 @@ func resourcePolicy() *schema.Resource {
 																			Optional: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
-																					"name": {
+																					names.AttrName: {
 																						Type:     schema.TypeString,
 																						Required: true,
 																					},
-																					"value": {
+																					names.AttrValue: {
 																						Type:     schema.TypeString,
 																						Required: true,
 																					},
 																				},
 																			},
 																		},
-																		"metric_name": {
+																		names.AttrMetricName: {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
-																		"namespace": {
+																		names.AttrNamespace: {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
@@ -220,7 +221,7 @@ func resourcePolicy() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(1, 100),
 															},
-															"unit": {
+															names.AttrUnit: {
 																Type:     schema.TypeString,
 																Optional: true,
 															},
@@ -235,7 +236,7 @@ func resourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -246,7 +247,7 @@ func resourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
 										ValidateFunc:  validation.StringInSlice(applicationautoscaling.MetricStatistic_Values(), false),
 									},
-									"unit": {
+									names.AttrUnit: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -301,7 +302,7 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-	id := d.Get("name").(string)
+	id := d.Get(names.AttrName).(string)
 	input := expandPutScalingPolicyInput(d)
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutScalingPolicyWithContext(ctx, input)
@@ -323,7 +324,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return findScalingPolicyByFourPartKey(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
 	}, applicationautoscaling.ErrCodeFailedResourceAccessException)
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
@@ -340,8 +341,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("alarm_arns", tfslices.ApplyToAll(output.Alarms, func(v *applicationautoscaling.Alarm) string {
 		return aws.StringValue(v.AlarmARN)
 	}))
-	d.Set("arn", output.PolicyARN)
-	d.Set("name", output.PolicyName)
+	d.Set(names.AttrARN, output.PolicyARN)
+	d.Set(names.AttrName, output.PolicyName)
 	d.Set("policy_type", output.PolicyType)
 	d.Set("resource_id", output.ResourceId)
 	d.Set("scalable_dimension", output.ScalableDimension)
@@ -361,7 +362,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 
 	input := &applicationautoscaling.DeleteScalingPolicyInput{
-		PolicyName:        aws.String(d.Get("name").(string)),
+		PolicyName:        aws.String(d.Get(names.AttrName).(string)),
 		ResourceId:        aws.String(d.Get("resource_id").(string)),
 		ScalableDimension: aws.String(d.Get("scalable_dimension").(string)),
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
@@ -394,7 +395,7 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 	name := parts[3]
 
 	d.SetId(name)
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 	d.Set("resource_id", resourceID)
 	d.Set("scalable_dimension", scalableDimension)
 	d.Set("service_namespace", serviceNamespace)
@@ -547,15 +548,15 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 		if val, ok := data["metrics"].(*schema.Set); ok && val.Len() > 0 {
 			spec.Metrics = expandTargetTrackingMetricDataQueries(val.List())
 		} else {
-			if v, ok := data["metric_name"]; ok {
+			if v, ok := data[names.AttrMetricName]; ok {
 				spec.MetricName = aws.String(v.(string))
 			}
 
-			if v, ok := data["namespace"]; ok {
+			if v, ok := data[names.AttrNamespace]; ok {
 				spec.Namespace = aws.String(v.(string))
 			}
 
-			if v, ok := data["unit"].(string); ok && v != "" {
+			if v, ok := data[names.AttrUnit].(string); ok && v != "" {
 				spec.Unit = aws.String(v)
 			}
 
@@ -568,8 +569,8 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 				for i, d := range s.List() {
 					dimension := d.(map[string]interface{})
 					dimensions[i] = &applicationautoscaling.MetricDimension{
-						Name:  aws.String(dimension["name"].(string)),
-						Value: aws.String(dimension["value"].(string)),
+						Name:  aws.String(dimension[names.AttrName].(string)),
+						Value: aws.String(dimension[names.AttrValue].(string)),
 					}
 				}
 				spec.Dimensions = dimensions
@@ -588,14 +589,14 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 	for i := range metricDataQueries {
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := &applicationautoscaling.TargetTrackingMetricDataQuery{
-			Id: aws.String(metricDataQueryFlat["id"].(string)),
+			Id: aws.String(metricDataQueryFlat[names.AttrID].(string)),
 		}
 		if val, ok := metricDataQueryFlat["metric_stat"]; ok && len(val.([]interface{})) > 0 {
 			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
 			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
 			metric := &applicationautoscaling.TargetTrackingMetric{
-				MetricName: aws.String(metricSpec["metric_name"].(string)),
-				Namespace:  aws.String(metricSpec["namespace"].(string)),
+				MetricName: aws.String(metricSpec[names.AttrMetricName].(string)),
+				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
 				dims := v.(*schema.Set).List()
@@ -603,8 +604,8 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 				for i := range dimList {
 					dim := dims[i].(map[string]interface{})
 					md := &applicationautoscaling.TargetTrackingMetricDimension{
-						Name:  aws.String(dim["name"].(string)),
-						Value: aws.String(dim["value"].(string)),
+						Name:  aws.String(dim[names.AttrName].(string)),
+						Value: aws.String(dim[names.AttrValue].(string)),
 					}
 					dimList[i] = md
 				}
@@ -614,12 +615,12 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 				Metric: metric,
 				Stat:   aws.String(metricStatSpec["stat"].(string)),
 			}
-			if v, ok := metricStatSpec["unit"]; ok && len(v.(string)) > 0 {
+			if v, ok := metricStatSpec[names.AttrUnit]; ok && len(v.(string)) > 0 {
 				metricStat.Unit = aws.String(v.(string))
 			}
 			metricDataQuery.MetricStat = metricStat
 		}
-		if val, ok := metricDataQueryFlat["expression"]; ok && val.(string) != "" {
+		if val, ok := metricDataQueryFlat[names.AttrExpression]; ok && val.(string) != "" {
 			metricDataQuery.Expression = aws.String(val.(string))
 		}
 		if val, ok := metricDataQueryFlat["label"]; ok && val.(string) != "" {
@@ -652,7 +653,7 @@ func expandPredefinedMetricSpecification(configured []interface{}) *applicationa
 
 func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling.PutScalingPolicyInput {
 	apiObject := &applicationautoscaling.PutScalingPolicyInput{
-		PolicyName: aws.String(d.Get("name").(string)),
+		PolicyName: aws.String(d.Get(names.AttrName).(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 	}
 
@@ -846,11 +847,11 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 		}
 
 		if v := cfg.MetricName; v != nil {
-			m["metric_name"] = aws.StringValue(v)
+			m[names.AttrMetricName] = aws.StringValue(v)
 		}
 
 		if v := cfg.Namespace; v != nil {
-			m["namespace"] = aws.StringValue(v)
+			m[names.AttrNamespace] = aws.StringValue(v)
 		}
 
 		if v := cfg.Statistic; v != nil {
@@ -858,7 +859,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 		}
 
 		if v := cfg.Unit; v != nil {
-			m["unit"] = aws.StringValue(v)
+			m[names.AttrUnit] = aws.StringValue(v)
 		}
 	}
 
@@ -870,9 +871,9 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 	for i := range metricDataQueriesSpec {
 		metricDataQuery := map[string]interface{}{}
 		rawMetricDataQuery := metricDataQueries[i]
-		metricDataQuery["id"] = aws.StringValue(rawMetricDataQuery.Id)
+		metricDataQuery[names.AttrID] = aws.StringValue(rawMetricDataQuery.Id)
 		if rawMetricDataQuery.Expression != nil {
-			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
+			metricDataQuery[names.AttrExpression] = aws.StringValue(rawMetricDataQuery.Expression)
 		}
 		if rawMetricDataQuery.Label != nil {
 			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
@@ -887,18 +888,18 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 				for i := range dimSpec {
 					dim := map[string]interface{}{}
 					rawDim := rawMetric.Dimensions[i]
-					dim["name"] = aws.StringValue(rawDim.Name)
-					dim["value"] = aws.StringValue(rawDim.Value)
+					dim[names.AttrName] = aws.StringValue(rawDim.Name)
+					dim[names.AttrValue] = aws.StringValue(rawDim.Value)
 					dimSpec[i] = dim
 				}
 				metricSpec["dimensions"] = dimSpec
 			}
-			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
-			metricSpec["namespace"] = aws.StringValue(rawMetric.Namespace)
+			metricSpec[names.AttrMetricName] = aws.StringValue(rawMetric.MetricName)
+			metricSpec[names.AttrNamespace] = aws.StringValue(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)
 			if rawMetricStat.Unit != nil {
-				metricStatSpec["unit"] = aws.StringValue(rawMetricStat.Unit)
+				metricStatSpec[names.AttrUnit] = aws.StringValue(rawMetricStat.Unit)
 			}
 			metricDataQuery["metric_stat"] = []map[string]interface{}{metricStatSpec}
 		}
@@ -920,11 +921,11 @@ func flattenMetricDimensions(ds []*applicationautoscaling.MetricDimension) []int
 		m := map[string]interface{}{}
 
 		if v := d.Name; v != nil {
-			m["name"] = aws.StringValue(v)
+			m[names.AttrName] = aws.StringValue(v)
 		}
 
 		if v := d.Value; v != nil {
-			m["value"] = aws.StringValue(v)
+			m[names.AttrValue] = aws.StringValue(v)
 		}
 
 		l[i] = m

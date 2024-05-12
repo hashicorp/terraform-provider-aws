@@ -6,7 +6,7 @@ package cloudfront_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +19,7 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_origin_access_identity.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessIdentityDestroy(ctx),
@@ -27,7 +27,7 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginAccessIdentityExistence(ctx, resourceName, &origin),
+					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),
@@ -44,6 +44,7 @@ const testAccOriginAccessIdentityDataSourceConfig_basic = `
 resource "aws_cloudfront_origin_access_identity" "test" {
   comment = "some comment"
 }
+
 data "aws_cloudfront_origin_access_identity" "test" {
   id = aws_cloudfront_origin_access_identity.test.id
 }

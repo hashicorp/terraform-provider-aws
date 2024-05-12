@@ -44,9 +44,9 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "folder_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "folder_type", quicksight.FolderTypeShared),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("folder/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("folder/%s", rId)),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeFolder"),
 				),
@@ -121,7 +121,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 					testAccCheckFolderExists(ctx, resourceName, &folder),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
-						"principal": regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
+						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:CreateFolder"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*.actions.*", "quicksight:DescribeFolder"),

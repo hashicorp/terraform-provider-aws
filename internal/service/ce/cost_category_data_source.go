@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ce_cost_category", name="Cost Category")
@@ -39,7 +40,7 @@ func dataSourceCostCategory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -67,13 +68,13 @@ func dataSourceCostCategory() *schema.Resource {
 							"rule": {
 								Type:     schema.TypeList,
 								Computed: true,
-								Elem:     sdkv2.DataSourceElemFromResourceElem(elemExpression()),
+								Elem:     sdkv2.DataSourceElemFromResourceElem(expressionElem(costCategoryRuleRootElementSchemaLevel)),
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"value": {
+							names.AttrValue: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -93,16 +94,16 @@ func dataSourceCostCategory() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"parameter": {
+							names.AttrParameter: {
 								Type:     schema.TypeSet,
 								Computed: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"type": {
+										names.AttrType: {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeSet,
 											Computed: true,
 											Elem: &schema.Schema{
@@ -113,7 +114,7 @@ func dataSourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							"source": {
+							names.AttrSource: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -128,7 +129,7 @@ func dataSourceCostCategory() *schema.Resource {
 						},
 					},
 				},
-				"tags": tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaComputed(),
 			}
 		},
 	}
@@ -150,7 +151,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("default_value", costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
-	d.Set("name", costCategory.Name)
+	d.Set(names.AttrName, costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
@@ -165,7 +166,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "listing Cost Explorer Cost Category (%s) tags: %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting split_charge_rule: %s", err)
 	}
 

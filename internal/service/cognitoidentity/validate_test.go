@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {
@@ -57,7 +58,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -72,7 +73,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -185,7 +186,7 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 		if tc.AmbiguousRoleResolution != nil {
 			m["ambiguous_role_resolution"] = tc.AmbiguousRoleResolution
 		}
-		m["type"] = tc.Type
+		m[names.AttrType] = tc.Type
 
 		errors := validRoleMappingsAmbiguousRoleResolutionAgainstType(m)
 		if len(errors) != tc.ErrCount {
@@ -244,7 +245,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 		if tc.MappingRule != nil {
 			m["mapping_rule"] = tc.MappingRule
 		}
-		m["type"] = tc.Type
+		m[names.AttrType] = tc.Type
 
 		errors := validRoleMappingsRulesConfiguration(m)
 		if len(errors) != tc.ErrCount {

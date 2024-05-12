@@ -30,11 +30,11 @@ func testAccPolicyDataSource_UnattachedPolicy(t *testing.T) {
 			{
 				Config: testAccPolicyDataSourceConfig_unattachedPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "policy_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, "policy_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "content", dataSourceName, "content"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 				),
 			},
 		},

@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -157,6 +158,13 @@ func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
 	})
 }
 
+// ExpandFloat64ValueMap expands a map of string to interface to a map of string to float64
+func ExpandFloat64ValueMap(m map[string]interface{}) map[string]float64 {
+	return tfmaps.ApplyToAllValues(m, func(v any) float64 {
+		return v.(float64)
+	})
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	return tfmaps.ApplyToAllValues(m, func(v any) *string {
@@ -230,6 +238,12 @@ func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	})
 }
 
+func FlattenStringValueMap(m map[string]string) map[string]interface{} {
+	return tfmaps.ApplyToAllValues(m, func(v string) any {
+		return v
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*int64
 func ExpandInt64Set(configured *schema.Set) []*int64 {
 	return ExpandInt64List(configured.List())
@@ -245,6 +259,19 @@ func ExpandInt32ValueList(configured []interface{}) []int32 {
 	return tfslices.ApplyToAll(configured, func(v any) int32 {
 		return int32(v.(int))
 	})
+}
+
+// Takes the result of schema.Set of strings and returns a []int32
+func ExpandInt32ValueSet(configured *schema.Set) []int32 {
+	return ExpandInt32ValueList(configured.List())
+}
+
+func FlattenInt32Set(set []*int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32List(set))
+}
+
+func FlattenInt32ValueSet(set []int32) *schema.Set {
+	return schema.NewSet(schema.HashInt, FlattenInt32ValueList(set))
 }
 
 // Takes the result of flatmap.Expand for an array of int64
@@ -263,6 +290,12 @@ func ExpandFloat64List(configured []interface{}) []*float64 {
 	})
 }
 
+func FlattenInt32ValueList(list []int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v int32) any {
+		return int(v)
+	})
+}
+
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet
@@ -278,6 +311,15 @@ func FlattenInt64List(list []*int64) []interface{} {
 func FlattenFloat64List(list []*float64) []interface{} {
 	return tfslices.ApplyToAll(list, func(v *float64) any {
 		return int(aws.Float64Value(v))
+	})
+}
+
+// Takes list of pointers to int32s. Expand to an array
+// of raw ints and returns a []interface{}
+// to keep compatibility w/ schema.NewSet
+func FlattenInt32List(list []*int32) []interface{} {
+	return tfslices.ApplyToAll(list, func(v *int32) any {
+		return int(aws.Int32Value(v))
 	})
 }
 
@@ -388,6 +430,13 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
+// StringToInt32Value converts a string pointer to a Go int32 value.
+// Invalid integer strings are converted to 0.
+func StringToInt32Value(v *string) int32 {
+	i, _ := strconv.ParseInt(aws.StringValue(v), 0, 32)
+	return int32(i)
+}
+
 // StringValueToBase64String converts a string to a Go base64 string pointer.
 func StringValueToBase64String(v string) *string {
 	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
@@ -411,24 +460,6 @@ func StringValueToInt64Value(v string) int64 {
 func ResourceIdPartCount(id string) int {
 	idParts := strings.Split(id, ResourceIdSeparator)
 	return len(idParts)
-}
-
-type Set[T comparable] []T
-
-// Difference find the elements in two sets that are not similar.
-func (s Set[T]) Difference(ns Set[T]) Set[T] {
-	m := make(map[T]struct{})
-	for _, v := range ns {
-		m[v] = struct{}{}
-	}
-
-	var result []T
-	for _, v := range s {
-		if _, ok := m[v]; !ok {
-			result = append(result, v)
-		}
-	}
-	return result
 }
 
 // DiffStringMaps returns the set of keys and values that must be created, the set of keys
@@ -473,6 +504,28 @@ func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]stri
 			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove and what is unchanged.
+	remove := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		if !slices.ContainsFunc(new, eq) {
+			// Delete it!
+			remove = append(remove, e)
+		} else {
+			unchanged = append(unchanged, e)
+			// Already present, so remove from new.
+			add = slices.DeleteFunc(add, eq)
 		}
 	}
 

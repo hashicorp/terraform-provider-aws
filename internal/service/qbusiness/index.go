@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -80,7 +81,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"index_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Description: "A description of the Amazon Q application.",
 				Optional:    true,
 				Validators: []validator.String{
@@ -88,9 +89,9 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
 				},
 			},
-			"display_name": schema.StringAttribute{
+			names.AttrDisplayName: schema.StringAttribute{
 				Description: "The display name of the Amazon Q application.",
-				Optional:    true,
+				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
@@ -116,14 +117,14 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"document_attribute_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[documentAttributeConfigurationData](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(500),
+			"document_attribute_configuration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[documentAttributeConfigurationData](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(500),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required:    true,
 							Description: "The name of the document attribute.",
 							Validators: []validator.String{
@@ -137,7 +138,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 								enum.FrameworkValidate[awstypes.Status](),
 							},
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required:    true,
 							Description: "The type of document attribute.",
 							Validators: []validator.String{
@@ -147,7 +148,7 @@ func (r *resourceIndex) Schema(ctx context.Context, req resource.SchemaRequest, 
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 				Update: true,
@@ -338,17 +339,17 @@ func (r *resourceIndex) ModifyPlan(ctx context.Context, request resource.ModifyP
 }
 
 type resourceIndexData struct {
-	ApplicationId                   types.String                                                        `tfsdk:"application_id"`
-	CapacityConfiguration           fwtypes.ListNestedObjectValueOf[capacityConfigurationData]          `tfsdk:"capacity_configuration"`
-	DisplayName                     types.String                                                        `tfsdk:"display_name"`
-	Description                     types.String                                                        `tfsdk:"description"`
-	ID                              types.String                                                        `tfsdk:"id"`
-	IndexId                         types.String                                                        `tfsdk:"index_id"`
-	IndexArn                        types.String                                                        `tfsdk:"arn"`
-	Tags                            types.Map                                                           `tfsdk:"tags"`
-	TagsAll                         types.Map                                                           `tfsdk:"tags_all"`
-	Timeouts                        timeouts.Value                                                      `tfsdk:"timeouts"`
-	DocumentAttributeConfigurations fwtypes.ListNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
+	ApplicationId                   types.String                                                       `tfsdk:"application_id"`
+	CapacityConfiguration           fwtypes.ListNestedObjectValueOf[capacityConfigurationData]         `tfsdk:"capacity_configuration"`
+	DisplayName                     types.String                                                       `tfsdk:"display_name"`
+	Description                     types.String                                                       `tfsdk:"description"`
+	ID                              types.String                                                       `tfsdk:"id"`
+	IndexId                         types.String                                                       `tfsdk:"index_id"`
+	IndexArn                        types.String                                                       `tfsdk:"arn"`
+	Tags                            types.Map                                                          `tfsdk:"tags"`
+	TagsAll                         types.Map                                                          `tfsdk:"tags_all"`
+	Timeouts                        timeouts.Value                                                     `tfsdk:"timeouts"`
+	DocumentAttributeConfigurations fwtypes.SetNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
 }
 
 type capacityConfigurationData struct {

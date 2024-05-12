@@ -44,7 +44,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrRFC3339(resourceName, "active_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "inactive_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "usage", "SIGNING"),
@@ -54,7 +54,7 @@ func TestAccTransferCertificate_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 		},
 	})
@@ -91,7 +91,7 @@ func TestAccTransferCertificate_certificate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 		},
 	})
@@ -132,7 +132,7 @@ func TestAccTransferCertificate_certificateChain(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 		},
 	})
@@ -169,7 +169,7 @@ func TestAccTransferCertificate_certificateKey(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 		},
 	})
@@ -233,7 +233,7 @@ func TestAccTransferCertificate_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 			{
 				Config: testAccCertificateConfig_tags2(certificate, "key1", "value1updated", "key2", "value2"),
@@ -277,20 +277,20 @@ func TestAccTransferCertificate_description(t *testing.T) {
 				Config: testAccCertificateConfig_description(certificate, "desc1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_key", "certificate", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, names.AttrCertificate, "certificate_chain"},
 			},
 			{
 				Config: testAccCertificateConfig_description(certificate, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "description", "desc2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "desc2"),
 				),
 			},
 		},

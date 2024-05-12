@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_appmesh_mesh", name="Service Mesh")
 // @Tags(identifierAttribute="arn")
-func ResourceMesh() *schema.Resource {
+func resourceMesh() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMeshCreate,
 		ReadWithoutTimeout:   resourceMeshRead,
@@ -36,36 +36,38 @@ func ResourceMesh() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"created_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mesh_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 255),
-			},
-			"resource_owner": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"spec":            resourceMeshSpecSchema(),
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLastUpdatedDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mesh_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 255),
+				},
+				"resource_owner": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"spec":            resourceMeshSpecSchema(),
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -88,11 +90,26 @@ func resourceMeshSpecSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"type": {
+							names.AttrType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Default:      appmesh.EgressFilterTypeDropAll,
 								ValidateFunc: validation.StringInSlice(appmesh.EgressFilterType_Values(), false),
+							},
+						},
+					},
+				},
+				"service_discovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip_preference": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(appmesh.IpPreference_Values(), false),
 							},
 						},
 					},
@@ -106,7 +123,7 @@ func resourceMeshCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appmesh.CreateMeshInput{
 		MeshName: aws.String(name),
 		Spec:     expandMeshSpec(d.Get("spec").([]interface{})),
@@ -129,7 +146,7 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).AppMeshConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
+		return findMeshByTwoPartKey(ctx, conn, d.Id(), d.Get("mesh_owner").(string))
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -144,11 +161,11 @@ func resourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	mesh := outputRaw.(*appmesh.MeshData)
 	arn := aws.StringValue(mesh.Metadata.Arn)
-	d.Set("arn", arn)
-	d.Set("created_date", mesh.Metadata.CreatedAt.Format(time.RFC3339))
-	d.Set("last_updated_date", mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedDate, mesh.Metadata.CreatedAt.Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedDate, mesh.Metadata.LastUpdatedAt.Format(time.RFC3339))
 	d.Set("mesh_owner", mesh.Metadata.MeshOwner)
-	d.Set("name", mesh.MeshName)
+	d.Set(names.AttrName, mesh.MeshName)
 	d.Set("resource_owner", mesh.Metadata.ResourceOwner)
 	if err := d.Set("spec", flattenMeshSpec(mesh.Spec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
@@ -197,7 +214,7 @@ func resourceMeshDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owner string) (*appmesh.MeshData, error) {
+func findMeshByTwoPartKey(ctx context.Context, conn *appmesh.AppMesh, name, owner string) (*appmesh.MeshData, error) {
 	input := &appmesh.DescribeMeshInput{
 		MeshName: aws.String(name),
 	}

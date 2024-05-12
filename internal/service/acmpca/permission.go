@@ -22,6 +22,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -51,11 +52,11 @@ func resourcePermission() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -78,7 +79,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	caARN := d.Get("certificate_authority_arn").(string)
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	sourceAccount := d.Get("source_account").(string)
 	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true))
 	input := &acmpca.CreatePermissionInput{
@@ -126,8 +127,8 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("actions", flattenPermissionActions(permission.Actions))
 	d.Set("certificate_authority_arn", permission.CertificateAuthorityArn)
-	d.Set("policy", permission.Policy)
-	d.Set("principal", permission.Principal)
+	d.Set(names.AttrPolicy, permission.Policy)
+	d.Set(names.AttrPrincipal, permission.Principal)
 	d.Set("source_account", permission.SourceAccount)
 
 	return diags

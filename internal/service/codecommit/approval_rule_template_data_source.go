@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_codecommit_approval_rule_template", name="Approval Rule Template")
@@ -29,11 +30,11 @@ func dataSourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,7 +46,7 @@ func dataSourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
@@ -62,7 +63,7 @@ func dataSourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	templateName := d.Get("name").(string)
+	templateName := d.Get(names.AttrName).(string)
 	result, err := findApprovalRuleTemplateByName(ctx, conn, templateName)
 
 	if err != nil {
@@ -72,11 +73,11 @@ func dataSourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.ToString(result.ApprovalRuleTemplateName))
 	d.Set("approval_rule_template_id", result.ApprovalRuleTemplateId)
 	d.Set("content", result.ApprovalRuleTemplateContent)
-	d.Set("creation_date", result.CreationDate.Format(time.RFC3339))
-	d.Set("description", result.ApprovalRuleTemplateDescription)
+	d.Set(names.AttrCreationDate, result.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, result.ApprovalRuleTemplateDescription)
 	d.Set("last_modified_date", result.LastModifiedDate.Format(time.RFC3339))
 	d.Set("last_modified_user", result.LastModifiedUser)
-	d.Set("name", result.ApprovalRuleTemplateName)
+	d.Set(names.AttrName, result.ApprovalRuleTemplateName)
 	d.Set("rule_content_sha256", result.RuleContentSha256)
 
 	return diags

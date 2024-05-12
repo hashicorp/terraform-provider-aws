@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfqbusiness "github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQBusinessIndex_basic(t *testing.T) {
@@ -36,9 +37,9 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Index name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Index name"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_configuration.0.units", "1"),
 				),
 			},
@@ -114,6 +115,8 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 	var index qbusiness.GetIndexOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_index.test"
+	attr1 := "foo1"
+	attr2 := "foo2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
@@ -122,29 +125,19 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "index_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", "Index name"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccIndexConfig_documentAttributeConfigurations(rName),
+				Config: testAccIndexConfig_documentAttributeConfigurations(rName, attr1, attr2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.0.name", "foo1"),
-					resource.TestCheckResourceAttr(resourceName, "document_attribute_configuration.1.name", "foo2"),
 				),
+			},
+			{
+				Config: testAccIndexConfig_documentAttributeConfigurations(rName, attr2, attr1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIndexExists(ctx, resourceName, &index),
+				),
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
 			},
 		},
 	})
@@ -216,10 +209,14 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *qbusiness.GetInde
 func testAccIndexConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }
@@ -256,13 +253,17 @@ resource "aws_qbusiness_index" "test" {
 `, rName)
 }
 
-func testAccIndexConfig_documentAttributeConfigurations(rName string) string {
+func testAccIndexConfig_documentAttributeConfigurations(rName, attr1, attr2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }
@@ -296,26 +297,30 @@ resource "aws_qbusiness_index" "test" {
   }
   description = %[1]q
   document_attribute_configuration {
-    name   = "foo1"
+    name   = %[2]q
     search = "ENABLED"
     type   = "STRING"
   }
   document_attribute_configuration {
-    name   = "foo2"
+    name   = %[3]q
     search = "ENABLED"
     type   = "STRING"
   }
 }
-`, rName)
+`, rName, attr1, attr2)
 }
 
 func testAccIndexConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
+data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
   attachments_configuration {
     attachments_control_mode = "ENABLED"
   }

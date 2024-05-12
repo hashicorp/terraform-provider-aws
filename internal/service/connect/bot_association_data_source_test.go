@@ -28,7 +28,7 @@ func testAccBotAssociationDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBotAssociationDataSourceConfig_basic(rName, rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
 					resource.TestCheckResourceAttrPair(datasourceName, "lex_bot", resourceName, "lex_bot"),
 				),
 			},

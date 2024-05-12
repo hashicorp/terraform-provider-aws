@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_secretsmanager_secrets", name="Secrets")
@@ -22,12 +23,12 @@ func dataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretsRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfiltersv2.Schema(),
+			names.AttrFilter: namevaluesfiltersv2.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -43,7 +44,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &secretsmanager.ListSecretsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).SecretsmanagerFilters()
 	}
 
@@ -63,7 +64,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.ARN) }))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.ARN) }))
 	d.Set("names", tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.Name) }))
 
 	return diags

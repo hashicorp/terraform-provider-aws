@@ -37,12 +37,12 @@ func testAccOrganizationManagedRule_basic(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_id_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule_identifier", "IAM_PASSWORD_POLICY"),
@@ -117,7 +117,7 @@ func testAccOrganizationManagedRule_Description(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func testAccOrganizationManagedRule_Description(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},

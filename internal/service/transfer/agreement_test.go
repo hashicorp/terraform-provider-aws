@@ -41,9 +41,9 @@ func testAccAgreement_basic(t *testing.T) {
 				Config: testAccAgreementConfig_basic(rName, baseDirectory1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory1),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -51,14 +51,14 @@ func testAccAgreement_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccAgreementConfig_basic(rName, baseDirectory2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory2),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -124,7 +124,7 @@ func testAccAgreement_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccAgreementConfig_tags2(rName, baseDirectory, "key1", "value1updated", "key2", "value2"),

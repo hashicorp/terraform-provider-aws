@@ -52,7 +52,7 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +81,7 @@ func ResourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -140,7 +140,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -169,15 +169,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"arn": {
+									names.AttrARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -192,15 +192,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -212,15 +212,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -232,15 +232,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -273,7 +273,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -327,7 +327,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -376,7 +376,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -384,7 +384,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -392,7 +392,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -436,7 +436,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -456,15 +456,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -476,15 +476,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -496,15 +496,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -532,7 +532,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -540,7 +540,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -552,15 +552,15 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -581,15 +581,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -625,7 +625,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 								},
 							},
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -640,7 +640,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"address": {
+			names.AttrAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -654,22 +654,22 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -700,15 +700,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -720,35 +720,35 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -760,15 +760,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -784,15 +784,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -808,15 +808,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -828,15 +828,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -856,15 +856,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -876,15 +876,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -904,15 +904,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -924,15 +924,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -943,7 +943,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"port": {
+			names.AttrPort: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -968,15 +968,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -993,15 +993,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1029,7 +1029,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1037,7 +1037,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1045,7 +1045,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1061,15 +1061,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1109,7 +1109,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1120,20 +1120,20 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1145,22 +1145,22 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1169,15 +1169,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1189,15 +1189,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1209,15 +1209,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1229,15 +1229,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1249,15 +1249,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1285,7 +1285,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1293,7 +1293,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1305,15 +1305,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1325,15 +1325,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1345,15 +1345,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1365,15 +1365,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1385,15 +1385,15 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1456,7 +1456,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("alternate_path_hints", flattenAlternatePathHints(output.AlternatePathHints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting alternate_path_hints: %s", err)
 	}
-	d.Set("arn", output.NetworkInsightsAnalysisArn)
+	d.Set(names.AttrARN, output.NetworkInsightsAnalysisArn)
 	if err := d.Set("explanations", flattenExplanations(output.Explanations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting explanations: %s", err)
 	}
@@ -1470,7 +1470,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "setting return_path_components: %s", err)
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
-	d.Set("status", output.Status)
+	d.Set(names.AttrStatus, output.Status)
 	d.Set("status_message", output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
@@ -1597,7 +1597,7 @@ func flattenAnalysisAclRule(apiObject *ec2.AnalysisAclRule) map[string]interface
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RuleAction; v != nil {
@@ -1637,15 +1637,15 @@ func flattenAnalysisComponent(apiObject *ec2.AnalysisComponent) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Arn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap[names.AttrARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.StringValue(v)
+		tfMap[names.AttrID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -1677,11 +1677,11 @@ func flattenAnalysisLoadBalancerTarget(apiObject *ec2.AnalysisLoadBalancerTarget
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.AvailabilityZone; v != nil {
-		tfMap["availability_zone"] = aws.StringValue(v)
+		tfMap[names.AttrAvailabilityZone] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Instance; v != nil {
@@ -1689,7 +1689,7 @@ func flattenAnalysisLoadBalancerTarget(apiObject *ec2.AnalysisLoadBalancerTarget
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -1711,7 +1711,7 @@ func flattenAnalysisPacketHeader(apiObject *ec2.AnalysisPacketHeader) map[string
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SourceAddresses; v != nil {
@@ -1749,7 +1749,7 @@ func flattenAnalysisRouteTableRoute(apiObject *ec2.AnalysisRouteTableRoute) map[
 	}
 
 	if v := apiObject.InstanceId; v != nil {
-		tfMap["instance_id"] = aws.StringValue(v)
+		tfMap[names.AttrInstanceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.NatGatewayId; v != nil {
@@ -1757,7 +1757,7 @@ func flattenAnalysisRouteTableRoute(apiObject *ec2.AnalysisRouteTableRoute) map[
 	}
 
 	if v := apiObject.NetworkInterfaceId; v != nil {
-		tfMap["network_interface_id"] = aws.StringValue(v)
+		tfMap[names.AttrNetworkInterfaceID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Origin; v != nil {
@@ -1765,7 +1765,7 @@ func flattenAnalysisRouteTableRoute(apiObject *ec2.AnalysisRouteTableRoute) map[
 	}
 
 	if v := apiObject.TransitGatewayId; v != nil {
-		tfMap["transit_gateway_id"] = aws.StringValue(v)
+		tfMap[names.AttrTransitGatewayID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcPeeringConnectionId; v != nil {
@@ -1795,7 +1795,7 @@ func flattenAnalysisSecurityGroupRule(apiObject *ec2.AnalysisSecurityGroupRule) 
 	}
 
 	if v := apiObject.Protocol; v != nil {
-		tfMap["protocol"] = aws.StringValue(v)
+		tfMap[names.AttrProtocol] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityGroupId; v != nil {
@@ -1821,7 +1821,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Addresses; v != nil {
@@ -1833,7 +1833,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.AvailabilityZones; v != nil {
-		tfMap["availability_zones"] = aws.StringValueSlice(v)
+		tfMap[names.AttrAvailabilityZones] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.Cidrs; v != nil {
@@ -1853,7 +1853,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Destination; v != nil {
-		tfMap["destination"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrDestination] = []interface{}{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.DestinationVpc; v != nil {
@@ -1921,7 +1921,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.Int64Value(v)
+		tfMap[names.AttrPort] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.PortRanges; v != nil {
@@ -1953,7 +1953,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = flattenAnalysisComponents(v)
+		tfMap[names.AttrSecurityGroups] = flattenAnalysisComponents(v)
 	}
 
 	if v := apiObject.SourceVpc; v != nil {
@@ -1961,7 +1961,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
+		tfMap[names.AttrState] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Subnet; v != nil {
@@ -2173,7 +2173,7 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap["resource_type"] = aws.StringValue(v)
+		tfMap[names.AttrResourceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RouteOrigin; v != nil {
@@ -2181,7 +2181,7 @@ func flattenTransitGatewayRouteTableRoute(apiObject *ec2.TransitGatewayRouteTabl
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
+		tfMap[names.AttrState] = aws.StringValue(v)
 	}
 
 	return tfMap

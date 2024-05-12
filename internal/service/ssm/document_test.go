@@ -34,8 +34,8 @@ func TestAccSSMDocument_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ssm", fmt.Sprintf("document/%s", rName)),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_date"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
@@ -66,7 +66,7 @@ func TestAccSSMDocument_name(t *testing.T) {
 				Config: testAccDocumentConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccSSMDocument_name(t *testing.T) {
 				Config: testAccDocumentConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},

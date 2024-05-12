@@ -45,7 +45,7 @@ func resourceLedger() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func resourceLedger() *schema.Resource {
 					verify.ValidARN,
 				),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func resourceLedger() *schema.Resource {
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QLDBClient(ctx)
 
-	name := create.Name(d.Get("name").(string), "tf")
+	name := create.Name(d.Get(names.AttrName).(string), "tf")
 	input := &qldb.CreateLedgerInput{
 		DeletionProtection: aws.Bool(d.Get("deletion_protection").(bool)),
 		Name:               aws.String(name),
@@ -131,14 +131,14 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("reading QLDB Ledger (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ledger.Arn)
+	d.Set(names.AttrARN, ledger.Arn)
 	d.Set("deletion_protection", ledger.DeletionProtection)
 	if ledger.EncryptionDescription != nil {
 		d.Set("kms_key", ledger.EncryptionDescription.KmsKeyArn)
 	} else {
 		d.Set("kms_key", nil)
 	}
-	d.Set("name", ledger.Name)
+	d.Set(names.AttrName, ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
 	return nil

@@ -96,8 +96,8 @@ func TestAccStorageGatewayWorkingStorage_basic(t *testing.T) {
 				Config: testAccWorkingStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkingStorageExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 				),
 			},
 			{

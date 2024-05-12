@@ -186,7 +186,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range validCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q not to trigger a validation error.", tc.Value)
 		}
@@ -233,7 +233,7 @@ func TestValidLoadBalancerHealthCheckTarget(t *testing.T) {
 	}
 
 	for _, tc := range invalidCases {
-		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, "target")
+		_, errors := tfelb.ValidHeathCheckTarget(tc.Value, names.AttrTarget)
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %q to trigger a validation error.", tc.Value)
 		}
@@ -258,7 +258,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
@@ -275,8 +275,8 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 						"lb_port":           "80",
 						"lb_protocol":       "http",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group_id"),
@@ -333,8 +333,8 @@ func TestAccELBLoadBalancer_nameGenerated(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nameGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "name", "tf-lb-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-lb-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrName, "tf-lb-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-lb-"),
 				),
 			},
 			{
@@ -361,8 +361,8 @@ func TestAccELBLoadBalancer_namePrefix(t *testing.T) {
 				Config: testAccLoadBalancerConfig_namePrefix("tf-px-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-px-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-px-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-px-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-px-"),
 				),
 			},
 			{
@@ -439,7 +439,7 @@ func TestAccELBLoadBalancer_fullCharacterRange(t *testing.T) {
 				Config: testAccLoadBalancerConfig_fullRangeOfCharacters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -542,7 +542,7 @@ func TestAccELBLoadBalancer_generatesNameForZeroValue(t *testing.T) {
 				Config: testAccLoadBalancerConfig_zeroValueName,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestMatchResourceAttr(resourceName, "name", generatedNameRegexp),
+					resource.TestMatchResourceAttr(resourceName, names.AttrName, generatedNameRegexp),
 				),
 			},
 		},

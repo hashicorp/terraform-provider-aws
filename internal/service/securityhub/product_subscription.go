@@ -20,6 +20,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_securityhub_product_subscription", name="Product Subscription")
@@ -34,7 +35,7 @@ func resourceProductSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +96,7 @@ func resourceProductSubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Product Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", productSubscriptionARN)
+	d.Set(names.AttrARN, productSubscriptionARN)
 	d.Set("product_arn", productARN)
 
 	return diags

@@ -93,7 +93,7 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 					directoryIDValidator,
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"last_updated_date_time": schema.StringAttribute{
 				Computed: true,
 			},
@@ -351,7 +351,7 @@ func (r *resourceTrust) ImportState(ctx context.Context, req resource.ImportStat
 		)
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), aws.ToString(trust.TrustId))...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), aws.ToString(trust.TrustId))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("directory_id"), directoryID)...)
 }
 

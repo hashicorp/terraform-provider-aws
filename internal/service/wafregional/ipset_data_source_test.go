@@ -33,8 +33,8 @@ func TestAccWAFRegionalIPSetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIPSetDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 				),
 			},
 		},

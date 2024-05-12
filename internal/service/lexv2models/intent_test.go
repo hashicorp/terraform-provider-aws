@@ -920,7 +920,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -986,7 +986,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -995,7 +995,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "640",
@@ -1006,7 +1006,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 650, 660),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1015,7 +1015,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "650",
@@ -1051,7 +1051,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1059,7 +1059,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 						"active": "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1072,7 +1072,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "Hvad", "er", "hygge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1080,7 +1080,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 						"active": "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1115,7 +1115,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "sammanhang1", "sammanhang2", "sammanhang3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1132,7 +1132,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "kropp", "utan", "blod"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1171,7 +1171,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "branch1", "tre", "slumpmässiga", "ord"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1271,7 +1271,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "gren1", "några", "olika", "bokstäver"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1393,7 +1393,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "meddelande", 10, "slumpmässiga", "gren1", "alfanumerisk", "olika"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1519,7 +1519,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "dagdröm", 10, "dansa", "dumbom", "gås", "mat"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1667,7 +1667,7 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1680,7 +1680,7 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1715,7 +1715,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name1", "name2", "name3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1738,7 +1738,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name2", "name3", "name4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1783,7 +1783,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "yttrande", "twocolors", "danny", "dansa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1802,7 +1802,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "rustedroot", "sendme", "onmy", "way"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),

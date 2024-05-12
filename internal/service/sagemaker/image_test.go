@@ -37,8 +37,8 @@ func TestAccSageMakerImage_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "image_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("image/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("image/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -67,7 +67,7 @@ func TestAccSageMakerImage_description(t *testing.T) {
 				Config: testAccImageConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -79,14 +79,14 @@ func TestAccSageMakerImage_description(t *testing.T) {
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
 				Config: testAccImageConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 		},
@@ -109,7 +109,7 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
 			{
@@ -121,14 +121,14 @@ func TestAccSageMakerImage_displayName(t *testing.T) {
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, ""),
 				),
 			},
 			{
 				Config: testAccImageConfig_displayName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 				),
 			},
 		},

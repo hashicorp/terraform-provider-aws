@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -301,8 +300,8 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice("PROVISIONING"),
-		Target:  enum.Slice("READY"),
+		Pending: []string{keyValueStoreStatusProvisioning},
+		Target:  []string{keyValueStoreStatusReady},
 		Refresh: statusKeyValueStore(ctx, conn, name),
 		Timeout: timeout,
 	}

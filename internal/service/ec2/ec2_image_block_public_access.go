@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")
@@ -33,7 +34,7 @@ func ResourceImageBlockPublicAccess() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(imageBlockPublicAccessState_Values(), false),
@@ -46,7 +47,7 @@ func resourceImageBlockPublicAccessPut(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	state := d.Get("state").(string)
+	state := d.Get(names.AttrState).(string)
 
 	if slices.Contains(imageBlockPublicAccessEnabledState_Values(), state) {
 		input := &ec2.EnableImageBlockPublicAccessInput{
@@ -95,7 +96,7 @@ func resourceImageBlockPublicAccessRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Image Block Public Access (%s): %s", d.Id(), err)
 	}
 
-	d.Set("state", output)
+	d.Set(names.AttrState, output)
 
 	return diags
 }

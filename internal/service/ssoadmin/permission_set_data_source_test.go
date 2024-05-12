@@ -28,12 +28,12 @@ func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 			{
 				Config: testAccPermissionSetDataSourceConfig_ssoByARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "relay_state", dataSourceName, "relay_state"),
 					resource.TestCheckResourceAttrPair(resourceName, "session_duration", dataSourceName, "session_duration"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -54,12 +54,12 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 			{
 				Config: testAccPermissionSetDataSourceConfig_ssoByName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "relay_state", dataSourceName, "relay_state"),
 					resource.TestCheckResourceAttrPair(resourceName, "session_duration", dataSourceName, "session_duration"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},

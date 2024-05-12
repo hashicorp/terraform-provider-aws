@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_lambda_function_association")
@@ -34,7 +35,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -48,7 +49,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-	instanceId := d.Get("instance_id").(string)
+	instanceId := d.Get(names.AttrInstanceID).(string)
 	functionArn := d.Get("function_arn").(string)
 
 	input := &connect.AssociateLambdaFunctionInput{
@@ -90,7 +91,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("function_arn", lfaArn)
-	d.Set("instance_id", instanceID)
+	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags
 }

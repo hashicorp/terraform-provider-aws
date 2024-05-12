@@ -38,7 +38,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 		},
@@ -61,7 +61,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 			{
@@ -74,7 +74,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "principal_tags.new", "map"),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 		},

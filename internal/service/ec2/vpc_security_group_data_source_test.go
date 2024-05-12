@@ -39,11 +39,11 @@ func testAccSecurityGroupCheckDataSource(dataSourceName string) resource.TestChe
 	resourceName := "aws_security_group.test"
 
 	return resource.ComposeAggregateTestCheckFunc(
-		resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-		resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-		resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 		resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-		resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+		resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 	)
 }
 

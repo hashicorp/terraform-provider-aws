@@ -26,9 +26,9 @@ func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 				Config: testAccVPCPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					resource.TestCheckResourceAttrSet(ds1Name, names.AttrName),
 					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds2Name, "name"),
+					resource.TestCheckResourceAttrSet(ds2Name, names.AttrName),
 				),
 			},
 		},
@@ -49,9 +49,9 @@ func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 				Config: testAccVPCPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					resource.TestCheckResourceAttrSet(ds1Name, names.AttrName),
 					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds2Name, "name"),
+					resource.TestCheckResourceAttrSet(ds2Name, names.AttrName),
 				),
 			},
 		},

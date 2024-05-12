@@ -34,7 +34,7 @@ func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
 				Config: testAccHSMConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`hsmconfiguration:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`hsmconfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_configuration_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

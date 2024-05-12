@@ -46,11 +46,11 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -60,13 +60,13 @@ func ResourceEventSubscription() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -98,11 +98,11 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &dms.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
-		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+		SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
 		SubscriptionName: aws.String(name),
 		Tags:             getTagsIn(ctx),
@@ -150,11 +150,11 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("es:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("enabled", subscription.Enabled)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrEnabled, subscription.Enabled)
 	d.Set("event_categories", aws.StringValueSlice(subscription.EventCategoriesList))
-	d.Set("name", d.Id())
-	d.Set("sns_topic_arn", subscription.SnsTopicArn)
+	d.Set(names.AttrName, d.Id())
+	d.Set(names.AttrSNSTopicARN, subscription.SnsTopicArn)
 	d.Set("source_ids", aws.StringValueSlice(subscription.SourceIdsList))
 	d.Set("source_type", subscription.SourceType)
 
@@ -165,11 +165,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dms.ModifyEventSubscriptionInput{
-			Enabled:          aws.Bool(d.Get("enabled").(bool)),
+			Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
-			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+			SnsTopicArn:      aws.String(d.Get(names.AttrSNSTopicARN).(string)),
 			SourceType:       aws.String(d.Get("source_type").(string)),
 			SubscriptionName: aws.String(d.Id()),
 		}

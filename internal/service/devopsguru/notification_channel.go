@@ -51,7 +51,7 @@ func (r *resourceNotificationChannel) Metadata(_ context.Context, req resource.M
 func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
@@ -209,7 +209,7 @@ func (r *resourceNotificationChannel) Delete(ctx context.Context, req resource.D
 }
 
 func (r *resourceNotificationChannel) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findNotificationChannelByID(ctx context.Context, conn *devopsguru.Client, id string) (*awstypes.NotificationChannel, error) {

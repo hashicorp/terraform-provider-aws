@@ -42,7 +42,7 @@ func ResourceResourceLFTags() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				ForceNew:     true,
@@ -62,14 +62,14 @@ func ResourceResourceLFTags() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -83,19 +83,19 @@ func ResourceResourceLFTags() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
 							Computed: true,
 						},
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -118,19 +118,19 @@ func ResourceResourceLFTags() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 							ForceNew: true,
@@ -166,7 +166,7 @@ func ResourceResourceLFTags() *schema.Resource {
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Computed:     true,
 							ForceNew:     true,
@@ -187,7 +187,7 @@ func ResourceResourceLFTags() *schema.Resource {
 								"table_with_columns.0.wildcard",
 							},
 						},
-						"database_name": {
+						names.AttrDatabaseName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -202,7 +202,7 @@ func ResourceResourceLFTags() *schema.Resource {
 								ValidateFunc: validation.NoZeroValues,
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
@@ -231,7 +231,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 
 	input := &lakeformation.AddLFTagsToResourceInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -302,7 +302,7 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		ShowAssignedLFTags: aws.Bool(true),
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -334,7 +334,7 @@ func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, m
 
 	input := &lakeformation.RemoveLFTagsFromResourceInput{}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -463,9 +463,9 @@ func lfTagsHash(v interface{}) int {
 	}
 
 	var buf bytes.Buffer
-	buf.WriteString(m["key"].(string))
-	buf.WriteString(m["value"].(string))
-	buf.WriteString(m["catalog_id"].(string))
+	buf.WriteString(m[names.AttrKey].(string))
+	buf.WriteString(m[names.AttrValue].(string))
+	buf.WriteString(m[names.AttrCatalogID].(string))
 
 	return create.StringHashcode(buf.String())
 }
@@ -477,15 +477,15 @@ func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
 
 	apiObject := awstypes.LFTagPair{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
-	if v, ok := tfMap["key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKey].(string); ok && v != "" {
 		apiObject.TagKey = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.TagValues = []string{v}
 	}
 
@@ -526,15 +526,15 @@ func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.ToString(v)
+		tfMap[names.AttrCatalogID] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagKey; v != nil {
-		tfMap["key"] = aws.ToString(v)
+		tfMap[names.AttrKey] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagValues; len(v) > 0 {
-		tfMap["value"] = apiObject.TagValues[0]
+		tfMap[names.AttrValue] = apiObject.TagValues[0]
 	}
 
 	return tfMap

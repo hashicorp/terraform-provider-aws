@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_sns_topic_policy")
@@ -34,7 +35,7 @@ func resourceTopicPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -44,7 +45,7 @@ func resourceTopicPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -62,12 +63,12 @@ func resourceTopicPolicy() *schema.Resource {
 func resourceTopicPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 	err = putTopicPolicy(ctx, conn, arn, policy)
 
 	if err != nil {
@@ -106,15 +107,15 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading SNS Topic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", attributes[topicAttributeNameTopicARN])
+	d.Set(names.AttrARN, attributes[topicAttributeNameTopicARN])
 	d.Set("owner", attributes[topicAttributeNameOwner])
 
-	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.Set("policy", policyToSet)
+	d.Set(names.AttrPolicy, policyToSet)
 
 	return nil
 }

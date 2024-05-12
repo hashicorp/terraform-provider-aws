@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_api_gateway_documentation_part", name="Documentation Part")
@@ -50,12 +51,12 @@ func resourceDocumentationPart() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -65,7 +66,7 @@ func resourceDocumentationPart() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -73,7 +74,7 @@ func resourceDocumentationPart() *schema.Resource {
 					},
 				},
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -93,7 +94,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 	apiID := d.Get("rest_api_id").(string)
 	input := &apigateway.CreateDocumentationPartInput{
 		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
-		Properties: aws.String(d.Get("properties").(string)),
+		Properties: aws.String(d.Get(names.AttrProperties).(string)),
 		RestApiId:  aws.String(apiID),
 	}
 
@@ -131,7 +132,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 
 	d.Set("documentation_part_id", docPart.Id)
 	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
-	d.Set("properties", docPart.Properties)
+	d.Set(names.AttrProperties, docPart.Properties)
 	d.Set("rest_api_id", apiID)
 
 	return diags
@@ -152,8 +153,8 @@ func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData
 	}
 	operations := make([]types.PatchOperation, 0)
 
-	if d.HasChange("properties") {
-		properties := d.Get("properties").(string)
+	if d.HasChange(names.AttrProperties) {
+		properties := d.Get(names.AttrProperties).(string)
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/properties"),
@@ -248,15 +249,15 @@ func expandDocumentationPartLocation(l []interface{}) *types.DocumentationPartLo
 	}
 	loc := l[0].(map[string]interface{})
 	out := &types.DocumentationPartLocation{
-		Type: types.DocumentationPartType(loc["type"].(string)),
+		Type: types.DocumentationPartType(loc[names.AttrType].(string)),
 	}
 	if v, ok := loc["method"]; ok {
 		out.Method = aws.String(v.(string))
 	}
-	if v, ok := loc["name"]; ok {
+	if v, ok := loc[names.AttrName]; ok {
 		out.Name = aws.String(v.(string))
 	}
-	if v, ok := loc["path"]; ok {
+	if v, ok := loc[names.AttrPath]; ok {
 		out.Path = aws.String(v.(string))
 	}
 	if v, ok := loc["status_code"]; ok {
@@ -277,18 +278,18 @@ func flattenDocumentationPartLocation(l *types.DocumentationPartLocation) []inte
 	}
 
 	if v := l.Name; v != nil {
-		m["name"] = aws.ToString(v)
+		m[names.AttrName] = aws.ToString(v)
 	}
 
 	if v := l.Path; v != nil {
-		m["path"] = aws.ToString(v)
+		m[names.AttrPath] = aws.ToString(v)
 	}
 
 	if v := l.StatusCode; v != nil {
 		m["status_code"] = aws.ToString(v)
 	}
 
-	m["type"] = string(l.Type)
+	m[names.AttrType] = string(l.Type)
 
 	return []interface{}{m}
 }

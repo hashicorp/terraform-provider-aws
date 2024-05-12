@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +25,7 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -54,7 +53,7 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "true"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
@@ -90,7 +89,7 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", "false"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
@@ -106,7 +105,7 @@ func TestAccCloudFrontResponseHeadersPolicy_customHeaders(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -120,17 +119,17 @@ func TestAccCloudFrontResponseHeadersPolicy_customHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
-						"header":   "X-Header1",
-						"override": "true",
-						"value":    "value1",
+						"header":        "X-Header1",
+						"override":      "true",
+						names.AttrValue: "value1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
-						"header":   "X-Header2",
-						"override": "false",
-						"value":    "value2",
+						"header":        "X-Header2",
+						"override":      "false",
+						names.AttrValue: "value2",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "0"),
@@ -152,7 +151,7 @@ func TestAccCloudFrontResponseHeadersPolicy_RemoveHeadersConfig(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -166,12 +165,12 @@ func TestAccCloudFrontResponseHeadersPolicy_RemoveHeadersConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
-						"header":   "X-Header1",
-						"override": "true",
-						"value":    "value1",
+						"header":        "X-Header1",
+						"override":      "true",
+						names.AttrValue: "value1",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.0.items.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "remove_headers_config.0.items.*", map[string]string{
@@ -200,7 +199,7 @@ func TestAccCloudFrontResponseHeadersPolicy_securityHeaders(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -214,12 +213,12 @@ func TestAccCloudFrontResponseHeadersPolicy_securityHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
-						"header":   "X-Header1",
-						"override": "true",
-						"value":    "value1",
+						"header":        "X-Header1",
+						"override":      "true",
+						names.AttrValue: "value1",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.0.items.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "remove_headers_config.0.items.*", map[string]string{
@@ -257,7 +256,7 @@ func TestAccCloudFrontResponseHeadersPolicy_securityHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.0.content_security_policy.#", "0"),
@@ -286,7 +285,7 @@ func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -301,7 +300,7 @@ func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "10"),
@@ -323,7 +322,7 @@ func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "90"),
@@ -338,7 +337,7 @@ func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "0"),
@@ -354,7 +353,7 @@ func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remove_headers_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "server_timing_headers_config.0.sampling_rate", "0"),
@@ -370,7 +369,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_response_headers_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponseHeadersPolicyDestroy(ctx),
@@ -389,7 +388,7 @@ func TestAccCloudFrontResponseHeadersPolicy_disappears(t *testing.T) {
 
 func testAccCheckResponseHeadersPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_response_headers_policy" {
@@ -420,11 +419,7 @@ func testAccCheckResponseHeadersPolicyExists(ctx context.Context, n string) reso
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudFront Response Headers Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		_, err := tfcloudfront.FindResponseHeadersPolicyByID(ctx, conn, rs.Primary.ID)
 

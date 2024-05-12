@@ -50,11 +50,11 @@ func resourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -67,17 +67,17 @@ func resourceDomainName() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.EndpointTypeRegional), true),
 						},
-						"hosted_zone_id": {
+						names.AttrHostedZoneID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -128,7 +128,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	input := &apigatewayv2.CreateDomainNameInput{
 		DomainName:               aws.String(domainName),
 		DomainNameConfigurations: expandDomainNameConfigurations(d.Get("domain_name_configuration").([]interface{})),
@@ -174,8 +174,8 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  "/domainnames/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("domain_name", output.DomainName)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDomainName, output.DomainName)
 	if err := d.Set("domain_name_configuration", flattenDomainNameConfiguration(output.DomainNameConfigurations[0])); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting domain_name_configuration: %s", err)
 	}
@@ -316,11 +316,11 @@ func waitDomainNameAvailable(ctx context.Context, conn *apigatewayv2.Client, nam
 func expandDomainNameConfiguration(tfMap map[string]interface{}) awstypes.DomainNameConfiguration {
 	apiObject := awstypes.DomainNameConfiguration{}
 
-	if v, ok := tfMap["certificate_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCertificateARN].(string); ok && v != "" {
 		apiObject.CertificateArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["endpoint_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEndpointType].(string); ok && v != "" {
 		apiObject.EndpointType = awstypes.EndpointType(v)
 	}
 
@@ -360,13 +360,13 @@ func flattenDomainNameConfiguration(apiObject awstypes.DomainNameConfiguration) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.ToString(v)
+		tfMap[names.AttrCertificateARN] = aws.ToString(v)
 	}
 
-	tfMap["endpoint_type"] = string(apiObject.EndpointType)
+	tfMap[names.AttrEndpointType] = string(apiObject.EndpointType)
 
 	if v := apiObject.HostedZoneId; v != nil {
-		tfMap["hosted_zone_id"] = aws.ToString(v)
+		tfMap[names.AttrHostedZoneID] = aws.ToString(v)
 	}
 
 	tfMap["security_policy"] = string(apiObject.SecurityPolicy)

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_vpc_endpoint_service")
@@ -35,11 +36,11 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -49,7 +50,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"manages_vpc_endpoints": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -65,13 +66,13 @@ func DataSourceVPCEndpointService() *schema.Resource {
 			"service": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"service_name"},
+				ConflictsWith: []string{names.AttrServiceName},
 			},
 			"service_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -88,7 +89,7 @@ func DataSourceVPCEndpointService() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_endpoint_policy_supported": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -112,7 +113,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	var serviceName string
 
-	if v, ok := d.GetOk("service_name"); ok {
+	if v, ok := d.GetOk(names.AttrServiceName); ok {
 		serviceName = v.(string)
 	} else if v, ok := d.GetOk("service"); ok {
 		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
@@ -122,14 +123,14 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		input.ServiceNames = aws.StringSlice([]string{serviceName})
 	}
 
-	if v, ok := d.GetOk("tags"); ok {
+	if v, ok := d.GetOk(names.AttrTags); ok {
 		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -154,7 +155,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		for _, name := range serviceNames {
 			if name == serviceName {
 				d.SetId(strconv.Itoa(create.StringHashcode(name)))
-				d.Set("service_name", name)
+				d.Set(names.AttrServiceName, name)
 				return diags
 			}
 		}
@@ -180,15 +181,15 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
-	d.Set("availability_zones", aws.StringValueSlice(sd.AvailabilityZones))
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(sd.AvailabilityZones))
 	d.Set("base_endpoint_dns_names", aws.StringValueSlice(sd.BaseEndpointDnsNames))
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set("owner", sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
 	d.Set("service_id", serviceID)
-	d.Set("service_name", serviceName)
+	d.Set(names.AttrServiceName, serviceName)
 	if len(sd.ServiceType) > 0 {
 		d.Set("service_type", sd.ServiceType[0].ServiceType)
 	} else {
@@ -197,7 +198,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("supported_ip_address_types", aws.StringValueSlice(sd.SupportedIpAddressTypes))
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set("tags", KeyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set(names.AttrTags, KeyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

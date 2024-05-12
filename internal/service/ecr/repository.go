@@ -44,11 +44,11 @@ func resourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -95,7 +95,7 @@ func resourceRepository() *schema.Resource {
 				Default:          types.ImageTagMutabilityMutable,
 				ValidateDiagFunc: enum.Validate[types.ImageTagMutability](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -118,9 +118,9 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ecr.CreateRepositoryInput{
-		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 		ImageTagMutability:      types.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 		RepositoryName:          aws.String(name),
 		Tags:                    getTagsIn(ctx),
@@ -185,15 +185,15 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	repository := outputRaw.(*types.Repository)
 
-	d.Set("arn", repository.RepositoryArn)
-	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
+	d.Set(names.AttrARN, repository.RepositoryArn)
+	if err := d.Set(names.AttrEncryptionConfiguration, flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
 	}
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
 	}
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
-	d.Set("name", repository.RepositoryName)
+	d.Set(names.AttrName, repository.RepositoryName)
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 

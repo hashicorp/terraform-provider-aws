@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_docdb_engine_version")
@@ -45,7 +46,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"version"},
+				ConflictsWith: []string{names.AttrVersion},
 			},
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
@@ -56,7 +57,7 @@ func DataSourceEngineVersion() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
@@ -84,7 +85,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.DBParameterGroupFamily = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.EngineVersion = aws.String(v.(string))
 	} else if _, ok := d.GetOk("preferred_versions"); !ok {
 		if _, ok := d.GetOk("parameter_group_family"); !ok {
@@ -133,7 +134,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		return aws.StringValue(v.EngineVersion)
 	}))
 
-	d.Set("version", engineVersion.EngineVersion)
+	d.Set(names.AttrVersion, engineVersion.EngineVersion)
 	d.Set("version_description", engineVersion.DBEngineVersionDescription)
 
 	return diags

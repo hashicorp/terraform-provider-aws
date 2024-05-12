@@ -36,12 +36,12 @@ func resourceResourceServer() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateResourceServer.html
 		Schema: map[string]*schema.Schema{
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,12 +85,12 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	identifier := d.Get("identifier").(string)
+	identifier := d.Get(names.AttrIdentifier).(string)
 	userPoolID := d.Get("user_pool_id").(string)
 
 	params := &cognitoidentityprovider.CreateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		UserPoolId: aws.String(userPoolID),
 	}
 
@@ -150,8 +150,8 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), errors.New("not found after creation"))
 	}
 
-	d.Set("identifier", resp.ResourceServer.Identifier)
-	d.Set("name", resp.ResourceServer.Name)
+	d.Set(names.AttrIdentifier, resp.ResourceServer.Identifier)
+	d.Set(names.AttrName, resp.ResourceServer.Name)
 	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
 
 	scopes := flattenServerScope(resp.ResourceServer.Scopes)
@@ -181,7 +181,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
 		Identifier: aws.String(identifier),
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(d.Get(names.AttrName).(string)),
 		Scopes:     expandServerScope(d.Get("scope").(*schema.Set).List()),
 		UserPoolId: aws.String(userPoolID),
 	}

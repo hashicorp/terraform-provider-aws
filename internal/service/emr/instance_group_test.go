@@ -45,7 +45,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -128,7 +128,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_bidPrice(rName),
@@ -143,7 +143,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -181,7 +181,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName2"),
@@ -195,7 +195,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -225,7 +225,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 2, 3),
@@ -239,7 +239,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -268,7 +268,7 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_zeroCount(rName),
@@ -303,7 +303,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, false),

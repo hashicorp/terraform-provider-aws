@@ -38,8 +38,8 @@ func TestAccECRRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecr", fmt.Sprintf("repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					testAccCheckRepositoryRegistryID(resourceName),
 					testAccCheckRepositoryRepositoryURL(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
@@ -142,7 +142,7 @@ func TestAccECRRepository_immutability(t *testing.T) {
 				Config: testAccRepositoryConfig_immutability(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
 				),
 			},
@@ -171,7 +171,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
 				),
@@ -241,7 +241,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 					testAccCheckRepositoryRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, names.AttrARN),
 				),
 			},
 			{

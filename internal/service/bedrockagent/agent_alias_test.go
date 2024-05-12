@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockAgentAlias_basic(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -39,7 +39,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -53,7 +53,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_disappears(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -77,7 +77,7 @@ func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_update(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionOld := "Agent Alias Before Update"
@@ -99,7 +99,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionOld),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -118,7 +118,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionNew),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -128,7 +128,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
@@ -149,7 +149,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -168,7 +168,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", updatedVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -178,7 +178,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockAgentAlias_tags(t *testing.T) {
+func TestAccBedrockAgentAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"

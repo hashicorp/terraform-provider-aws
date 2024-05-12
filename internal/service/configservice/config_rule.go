@@ -42,11 +42,11 @@ func resourceConfigRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -57,7 +57,7 @@ func resourceConfigRule() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"mode": {
+						names.AttrMode: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -76,7 +76,7 @@ func resourceConfigRule() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.MaximumExecutionFrequency](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -120,7 +120,7 @@ func resourceConfigRule() *schema.Resource {
 					},
 				},
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -204,13 +204,13 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	if d.IsNewResource() || d.HasChangesExcept("tags", "tags_all") {
-		name := d.Get("name").(string)
+	if d.IsNewResource() || d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		name := d.Get(names.AttrName).(string)
 		configRule := &types.ConfigRule{
 			ConfigRuleName: aws.String(name),
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			configRule.Description = aws.String(v.(string))
 		}
 
@@ -230,7 +230,7 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -271,14 +271,14 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ConfigService Config Rule (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", rule.ConfigRuleArn)
-	d.Set("description", rule.Description)
+	d.Set(names.AttrARN, rule.ConfigRuleArn)
+	d.Set(names.AttrDescription, rule.Description)
 	if err := d.Set("evaluation_mode", flattenEvaluationModeConfigurations(rule.EvaluationModes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting evaluation_mode: %s", err)
 	}
 	d.Set("input_parameters", rule.InputParameters)
 	d.Set("maximum_execution_frequency", rule.MaximumExecutionFrequency)
-	d.Set("name", rule.ConfigRuleName)
+	d.Set(names.AttrName, rule.ConfigRuleName)
 	d.Set("rule_id", rule.ConfigRuleId)
 	if rule.Scope != nil {
 		if err := d.Set("scope", flattenScope(rule.Scope)); err != nil {
@@ -291,7 +291,7 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
 		}
 	}
-	if err := d.Set("source", flattenSource(rule.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(rule.Source)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
@@ -425,7 +425,7 @@ func expandEvaluationModeConfigurations(tfList []interface{}) []types.Evaluation
 
 		apiObject := types.EvaluationModeConfiguration{}
 
-		if v, ok := tfMap["mode"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 			apiObject.Mode = types.EvaluationMode(v)
 		}
 
@@ -541,7 +541,7 @@ func flattenEvaluationModeConfigurations(apiObjects []types.EvaluationModeConfig
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"mode": apiObject.Mode,
+			names.AttrMode: apiObject.Mode,
 		}
 
 		tfList = append(tfList, tfMap)

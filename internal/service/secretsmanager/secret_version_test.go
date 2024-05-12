@@ -42,7 +42,7 @@ func TestAccSecretsManagerSecretVersion_basicString(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, secretResourceName, names.AttrARN),
 				),
 			},
 			{

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route53_zone")
@@ -24,7 +25,7 @@ func DataSourceZone() *schema.Resource {
 		ReadWithoutTimeout: dataSourceZoneRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +45,7 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -68,8 +69,8 @@ func DataSourceZone() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"vpc_id": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -88,11 +89,11 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name, nameExists := d.GetOk("name")
+	name, nameExists := d.GetOk(names.AttrName)
 	name = name.(string)
 	id, idExists := d.GetOk("zone_id")
-	vpcId, vpcIdExists := d.GetOk("vpc_id")
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS()
+	vpcId, vpcIdExists := d.GetOk(names.AttrVPCID)
+	tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS()
 
 	if nameExists && idExists {
 		return sdkdiag.AppendErrorf(diags, "zone_id and name arguments can't be used together")
@@ -178,7 +179,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("zone_id", idHostedZone)
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", NormalizeZoneName(aws.StringValue(hostedZoneFound.Name)))
+	d.Set(names.AttrName, NormalizeZoneName(aws.StringValue(hostedZoneFound.Name)))
 	d.Set("comment", hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)
@@ -208,7 +209,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "listing Route 53 Hosted Zone (%s) tags: %s", idHostedZone, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -217,7 +218,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Service:   "route53",
 		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }

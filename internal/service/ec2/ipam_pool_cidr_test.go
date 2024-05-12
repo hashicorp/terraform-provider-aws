@@ -37,7 +37,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
 					testAccCheckIPAMPoolCIDRPrefix(&cidr, netmaskLength),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", names.AttrID),
 				),
 			},
 			{

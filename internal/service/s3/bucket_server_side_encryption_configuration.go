@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_server_side_encryption_configuration", name="Bucket Server-side Encryption Configuration")
@@ -34,7 +35,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -83,7 +84,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
@@ -140,7 +141,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		return diag.Errorf("reading S3 Bucket Server-side Encryption Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	if err := d.Set("rule", flattenServerSideEncryptionRules(sse.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)

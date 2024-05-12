@@ -35,20 +35,20 @@ func ResourceTrustAnchor() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -93,11 +93,11 @@ func ResourceTrustAnchor() *schema.Resource {
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &rolesanywhere.CreateTrustAnchorInput{
-		Enabled: aws.Bool(d.Get("enabled").(bool)),
+		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		Name:    aws.String(name),
-		Source:  expandSource(d.Get("source").([]interface{})),
+		Source:  expandSource(d.Get(names.AttrSource).([]interface{})),
 		Tags:    getTagsIn(ctx),
 	}
 
@@ -128,11 +128,11 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", trustAnchor.TrustAnchorArn)
-	d.Set("enabled", trustAnchor.Enabled)
-	d.Set("name", trustAnchor.Name)
+	d.Set(names.AttrARN, trustAnchor.TrustAnchorArn)
+	d.Set(names.AttrEnabled, trustAnchor.Enabled)
+	d.Set(names.AttrName, trustAnchor.Name)
 
-	if err := d.Set("source", flattenSource(trustAnchor.Source)); err != nil {
+	if err := d.Set(names.AttrSource, flattenSource(trustAnchor.Source)); err != nil {
 		return diag.Errorf("setting source: %s", err)
 	}
 
@@ -142,11 +142,11 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rolesanywhere.UpdateTrustAnchorInput{
 			TrustAnchorId: aws.String(d.Id()),
-			Name:          aws.String(d.Get("name").(string)),
-			Source:        expandSource(d.Get("source").([]interface{})),
+			Name:          aws.String(d.Get(names.AttrName).(string)),
+			Source:        expandSource(d.Get(names.AttrSource).([]interface{})),
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Trust Anchor (%s): %#v", d.Id(), input)
@@ -156,8 +156,8 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return diag.Errorf("updating RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 		}
 
-		if d.HasChange("enabled") {
-			_, n := d.GetChange("enabled")
+		if d.HasChange(names.AttrEnabled) {
+			_, n := d.GetChange(names.AttrEnabled)
 			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
 					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)

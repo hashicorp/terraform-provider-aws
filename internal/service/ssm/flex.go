@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandTargets(in []interface{}) []*ssm.Target {
@@ -18,8 +19,8 @@ func expandTargets(in []interface{}) []*ssm.Target {
 		config := tConfig.(map[string]interface{})
 
 		target := &ssm.Target{
-			Key:    aws.String(config["key"].(string)),
-			Values: flex.ExpandStringList(config["values"].([]interface{})),
+			Key:    aws.String(config[names.AttrKey].(string)),
+			Values: flex.ExpandStringList(config[names.AttrValues].([]interface{})),
 		}
 
 		targets = append(targets, target)
@@ -50,8 +51,8 @@ func flattenTargets(targets []*ssm.Target) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(targets))
 	for _, target := range targets {
 		t := make(map[string]interface{}, 1)
-		t["key"] = aws.StringValue(target.Key)
-		t["values"] = flex.FlattenStringList(target.Values)
+		t[names.AttrKey] = aws.StringValue(target.Key)
+		t[names.AttrValues] = flex.FlattenStringList(target.Values)
 
 		result = append(result, t)
 	}

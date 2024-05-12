@@ -39,13 +39,13 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 				Config: testAccServerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("server-certificate/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", strings.TrimSpace(certificate)),
 				),
 			},
@@ -54,7 +54,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})
@@ -77,8 +77,8 @@ func TestAccIAMServerCertificate_nameGenerated(t *testing.T) {
 				Config: testAccServerCertificateConfig_nameGenerated(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 		},
@@ -102,8 +102,8 @@ func TestAccIAMServerCertificate_namePrefix(t *testing.T) {
 				Config: testAccServerCertificateConfig_namePrefix("tf-acc-test-prefix-", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 		},
@@ -163,7 +163,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
@@ -211,7 +211,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_file(rName, winFile),
@@ -241,7 +241,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				Config: testAccServerCertificateConfig_path(rName, "/test/", key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/test/"),
 				),
 			},
 			{
@@ -249,7 +249,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})
@@ -268,7 +268,7 @@ func testAccCheckCertExists(ctx context.Context, n string, v *awstypes.ServerCer
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		output, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes["name"])
+		output, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		if err != nil {
 			return err
@@ -289,7 +289,7 @@ func testAccCheckServerCertificateDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes["name"])
+			_, err := tfiam.FindServerCertificateByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 			if tfresource.NotFound(err) {
 				continue

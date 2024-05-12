@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_user", name="User")
@@ -22,11 +23,11 @@ func dataSourceUser() *schema.Resource {
 		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,11 +39,11 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -52,7 +53,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	req := &iam.GetUserInput{
 		UserName: aws.String(userName),
 	}
@@ -65,8 +66,8 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	user := resp.User
 	d.SetId(aws.ToString(user.UserId))
-	d.Set("arn", user.Arn)
-	d.Set("path", user.Path)
+	d.Set(names.AttrARN, user.Arn)
+	d.Set(names.AttrPath, user.Path)
 	d.Set("permissions_boundary", "")
 	if user.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", user.PermissionsBoundary.PermissionsBoundaryArn)
@@ -76,7 +77,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	tags := KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

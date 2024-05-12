@@ -1,8 +1,5 @@
 # Adding a New Function
 
-!!! tip
-    Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
-
 Provider-defined functions were introduced with Terraform 1.8, enabling provider developers to expose functions specific to a given cloud provider or use case.
 Functions in the AWS provider provide a utility that is valuable when paired with AWS resources.
 

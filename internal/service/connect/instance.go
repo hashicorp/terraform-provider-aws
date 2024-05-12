@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_instance")
@@ -43,7 +44,7 @@ func ResourceInstance() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +113,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,7 +186,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(aws.StringValue(instance.Id))
-	d.Set("arn", instance.Arn)
+	d.Set(names.AttrARN, instance.Arn)
 	if instance.CreatedTime != nil {
 		d.Set("created_time", instance.CreatedTime.Format(time.RFC3339))
 	}
@@ -194,7 +195,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("instance_alias", instance.InstanceAlias)
 	d.Set("outbound_calls_enabled", instance.OutboundCallsEnabled)
 	d.Set("service_role", instance.ServiceRole)
-	d.Set("status", instance.InstanceStatus)
+	d.Set(names.AttrStatus, instance.InstanceStatus)
 
 	for attributeType, key := range InstanceAttributeMapping() {
 		input := &connect.DescribeInstanceAttributeInput{

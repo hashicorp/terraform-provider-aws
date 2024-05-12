@@ -81,7 +81,7 @@ func (r *deploymentResource) Schema(ctx context.Context, request resource.Schema
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,

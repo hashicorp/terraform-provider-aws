@@ -110,8 +110,8 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile("hostedzone/.+")),
-					resource.TestCheckResourceAttr(resourceName, "name", zoneName),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("hostedzone/.+")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, zoneName),
 					resource.TestCheckResourceAttr(resourceName, "name_servers.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceName, "primary_name_server"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -122,7 +122,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -212,7 +212,7 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -235,14 +235,14 @@ func TestAccRoute53Zone_delegationSetID(t *testing.T) {
 				Config: testAccZoneConfig_delegationSetID(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttrPair(resourceName, "delegation_set_id", delegationSetResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "delegation_set_id", delegationSetResourceName, names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -322,7 +322,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccZoneConfig_tags2(zoneName, "tag1key", "tag1valueupdated", "tag2key", "tag2value"),
@@ -371,7 +371,7 @@ func TestAccRoute53Zone_VPC_single(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -405,7 +405,7 @@ func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})

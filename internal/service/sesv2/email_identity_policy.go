@@ -44,7 +44,7 @@ func ResourceEmailIdentityPolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -77,9 +77,9 @@ func resourceEmailIdentityPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	policy_name := d.Get("policy_name").(string)
 	emailIdentityPolicyID := FormatEmailIdentityPolicyID(email_identity, policy_name)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	in := &sesv2.CreateEmailIdentityPolicyInput{
@@ -123,7 +123,7 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
 
-	policy, err = verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
+	policy, err = verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), policy)
 	if err != nil {
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
@@ -134,7 +134,7 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set("email_identity", emailIdentity)
-	d.Set("policy", policy)
+	d.Set(names.AttrPolicy, policy)
 	d.Set("policy_name", policyName)
 
 	return diags
@@ -144,9 +144,9 @@ func resourceEmailIdentityPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get(names.AttrPolicy).(string), err)
 	}
 
 	in := &sesv2.UpdateEmailIdentityPolicyInput{

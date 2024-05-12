@@ -59,7 +59,7 @@ func (r *resourceBotLocale) Metadata(_ context.Context, req resource.MetadataReq
 func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"bot_id": schema.StringAttribute{
@@ -80,7 +80,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -89,7 +89,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 			"n_lu_intent_confidence_threshold": schema.Float64Attribute{
 				Required: true,
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -120,7 +120,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -365,7 +365,7 @@ func (r *resourceBotLocale) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceBotLocale) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeBotLocaleOutput, error) {

@@ -37,8 +37,8 @@ func TestAccRoute53ResolverQueryLogConfigAssociation_basic(t *testing.T) {
 				Config: testAccQueryLogConfigAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_query_log_config_id", queryLogConfigResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_query_log_config_id", queryLogConfigResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_id", vpcResourceName, names.AttrID),
 				),
 			},
 			{

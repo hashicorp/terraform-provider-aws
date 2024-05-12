@@ -34,8 +34,8 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 				Config: testAccRepositoryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -48,9 +48,9 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 				Config: testAccRepositoryPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", "name"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("ecr:DescribeImages")),
+					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("ecr:DescribeImages")),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 				),
 			},
@@ -73,8 +73,8 @@ func TestAccECRRepositoryPolicy_IAM_basic(t *testing.T) {
 				Config: testAccRepositoryPolicyConfig_iamRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("iam")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("iam")),
 				),
 			},
 			{
@@ -102,8 +102,8 @@ func TestAccECRRepositoryPolicy_IAM_principalOrder(t *testing.T) {
 				Config: testAccRepositoryPolicyConfig_iamRoleOrderJSONEncode(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(rName)),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile("iam")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("iam")),
 				),
 			},
 			{

@@ -30,7 +30,7 @@ func dataSourceKeyPair() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,7 +38,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -75,7 +75,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &ec2.DescribeKeyPairsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterListV2(v.(*schema.Set))
 	}
 
@@ -106,7 +106,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "key-pair/" + keyName,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("create_time", aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("include_public_key", input.IncludePublicKey)

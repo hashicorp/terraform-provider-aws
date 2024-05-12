@@ -37,9 +37,9 @@ func TestAccCECostCategory_basic(t *testing.T) {
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`costcategory/.+$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfThisMonth),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfThisMonth),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfLastMonth),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfLastMonth),
 				),
 			},
@@ -134,14 +134,42 @@ func TestAccCECostCategory_complete(t *testing.T) {
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccCostCategoryConfig_operandAnd(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCECostCategory_notWithAnd(t *testing.T) {
+	ctx := acctest.Context(t)
+	var output awstypes.CostCategory
+	resourceName := "aws_ce_cost_category.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCostCategoryDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCostCategoryConfig_operandNot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -169,14 +197,14 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 				Config: testAccCostCategoryConfig_splitCharges(rName, "PROPORTIONAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccCostCategoryConfig_splitCharges(rName, "EVEN"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -567,4 +595,35 @@ resource "aws_ce_cost_category" "test" {
   }
 }
 `, rName, date)
+}
+
+func testAccCostCategoryConfig_operandNot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ce_cost_category" "test" {
+  name         = %[1]q
+  rule_version = "CostCategoryExpression.v1"
+  rule {
+    value = "notax"
+    rule {
+      and {
+        dimension {
+          key           = "LINKED_ACCOUNT_NAME"
+          values        = ["-prod"]
+          match_options = ["ENDS_WITH"]
+        }
+      }
+      and {
+        not {
+          dimension {
+            key           = "RECORD_TYPE"
+            values        = ["Tax"]
+            match_options = ["EQUALS"]
+          }
+        }
+      }
+    }
+    type = "REGULAR"
+  }
+}
+`, rName)
 }

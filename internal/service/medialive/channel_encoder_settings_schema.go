@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func channelEncoderSettingsSchema() *schema.Schema {
@@ -28,7 +29,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -165,7 +166,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.AacInputType](),
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -566,7 +567,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"archive_cdn_settings": {
@@ -605,7 +606,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"frame_capture_cdn_settings": {
@@ -642,7 +643,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"ad_markers": {
@@ -971,7 +972,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"mode": {
+													names.AttrMode: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1053,7 +1054,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 												},
@@ -1073,7 +1074,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"destination": func() *schema.Schema {
+													names.AttrDestination: func() *schema.Schema {
 														return destinationSchema()
 													}(),
 													"acquisition_point_id": {
@@ -1284,7 +1285,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 									},
 								},
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
@@ -1297,7 +1298,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"source": {
+							names.AttrSource: {
 								Type:             schema.TypeString,
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[types.TimecodeConfigSource](),
@@ -1316,7 +1317,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -1523,7 +1524,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional: true,
 														Computed: true,
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1796,7 +1797,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
-													"profile": {
+													names.AttrProfile: {
 														Type:             schema.TypeString,
 														Optional:         true,
 														Computed:         true,
@@ -1853,7 +1854,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 																	Computed:         true,
 																	ValidateDiagFunc: enum.Validate[types.TimecodeBurninPosition](),
 																},
-																"prefix": {
+																names.AttrPrefix: {
 																	Type:     schema.TypeString,
 																	Optional: true,
 																	Computed: true,
@@ -1914,7 +1915,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 							"avail_blanking_image": func() *schema.Schema {
 								return inputLocationSchema()
 							}(),
-							"state": {
+							names.AttrState: {
 								Type:     schema.TypeString,
 								Optional: true,
 								Computed: true,
@@ -1934,7 +1935,7 @@ func channelEncoderSettingsSchema() *schema.Schema {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -2500,7 +2501,7 @@ func outputSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 						},
 					},
 				},
@@ -2510,7 +2511,7 @@ func outputSettingsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 							"certificate_mode": {
 								Type:             schema.TypeString,
 								Optional:         true,
@@ -2547,7 +2548,7 @@ func outputSettingsSchema() *schema.Schema {
 										}(),
 									}},
 							},
-							"destination": destinationSchema(),
+							names.AttrDestination: destinationSchema(),
 							"buffer_msec": {
 								Type:     schema.TypeInt,
 								Optional: true,
@@ -2871,7 +2872,7 @@ func m2tsSettingsSchema() *schema.Schema {
 								Type:     schema.TypeInt,
 								Optional: true,
 							},
-							"service_name": {
+							names.AttrServiceName: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -3119,7 +3120,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		if v, ok := m["audio_selector_name"].(string); ok && v != "" {
 			a.AudioSelectorName = aws.String(v)
 		}
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
 		if v, ok := m["audio_normalization_settings"].([]interface{}); ok && len(v) > 0 {
@@ -3175,7 +3176,7 @@ func expandChannelEncoderSettingsOutputGroups(tfList []interface{}) []types.Outp
 		if v, ok := m["outputs"].([]interface{}); ok && len(v) > 0 {
 			o.Outputs = expandChannelEncoderSettingsOutputGroupsOutputs(v)
 		}
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			o.Name = aws.String(v)
 		}
 
@@ -3256,7 +3257,7 @@ func expandAudioDescriptionsCodecSettingsAacSettings(tfList []interface{}) *type
 	if v, ok := m["input_type"].(string); ok && v != "" {
 		out.InputType = types.AacInputType(v)
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.AacProfile(v)
 	}
 	if v, ok := m["rate_control_mode"].(string); ok && v != "" {
@@ -3589,7 +3590,7 @@ func expandMediaPackageGroupSettings(tfList []interface{}) *types.MediaPackageGr
 
 	var o types.MediaPackageGroupSettings
 
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
 
@@ -3605,7 +3606,7 @@ func expandArchiveGroupSettings(tfList []interface{}) *types.ArchiveGroupSetting
 
 	var o types.ArchiveGroupSettings
 
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		o.Destination = expandDestination(v)
 	}
 	if v, ok := m["archive_cdn_settings"].([]interface{}); ok && len(v) > 0 {
@@ -3626,7 +3627,7 @@ func expandFrameCaptureGroupSettings(tfList []interface{}) *types.FrameCaptureGr
 	m := tfList[0].(map[string]interface{})
 
 	var out types.FrameCaptureGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["frame_capture_cdn_settings"].([]interface{}); ok && len(v) > 0 {
@@ -3673,7 +3674,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["ad_markers"].([]interface{}); ok && len(v) > 0 {
@@ -3760,7 +3761,7 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["min_segment_length"].(int); ok && v != 0 {
 		out.MinSegmentLength = aws.Int32(int32(v))
 	}
-	if v, ok := m["mode"].(string); ok && v != "" {
+	if v, ok := m[names.AttrMode].(string); ok && v != "" {
 		out.Mode = types.HlsMode(v)
 	}
 	if v, ok := m["output_selection"].(string); ok && v != "" {
@@ -3811,7 +3812,7 @@ func expandMsSmoothGroupSettings(tfList []interface{}) *types.MsSmoothGroupSetti
 	m := tfList[0].(map[string]interface{})
 
 	var out types.MsSmoothGroupSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		out.Destination = expandDestination(v)
 	}
 	if v, ok := m["acquisition_point_id"].(string); ok && v != "" {
@@ -4099,7 +4100,7 @@ func expandInputLocation(tfList []interface{}) *types.InputLocation {
 	if v, ok := m["password_param"].(string); ok && v != "" {
 		out.PasswordParam = aws.String(v)
 	}
-	if v, ok := m["username"].(string); ok && v != "" {
+	if v, ok := m[names.AttrUsername].(string); ok && v != "" {
 		out.Username = aws.String(v)
 	}
 
@@ -4313,7 +4314,7 @@ func expandOutputsOutputSettings(tfList []interface{}) *types.OutputSettings {
 
 			data := inner[0].(map[string]interface{})
 			var mos types.MultiplexOutputSettings
-			if v, ok := data["destination"].([]interface{}); ok && len(v) > 0 {
+			if v, ok := data[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 				mos.Destination = expandDestination(v)
 			}
 			return &mos
@@ -4565,7 +4566,7 @@ func expandOutputsOutputSettingsRtmpOutputSettings(tfList []interface{}) *types.
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.RtmpOutputSettings
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["certificate_mode"].(string); ok && v != "" {
@@ -4592,7 +4593,7 @@ func expandOutputsOutputSettingsUdpOutputSettings(tfList []interface{}) *types.U
 	if v, ok := m["container_settings"].([]interface{}); ok && len(v) > 0 {
 		settings.ContainerSettings = expandOutputsOutputSettingsUdpSettingsContainerSettings(v)
 	}
-	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrDestination].([]interface{}); ok && len(v) > 0 {
 		settings.Destination = expandDestination(v)
 	}
 	if v, ok := m["buffer_msec"].(int); ok && v != 0 {
@@ -4858,7 +4859,7 @@ func expandM2tsDvbSdtSettings(tfList []interface{}) *types.DvbSdtSettings {
 	if v, ok := m["rep_interval"].(int); ok && v != 0 {
 		s.RepInterval = aws.Int32(int32(v))
 	}
-	if v, ok := m["service_name"].(string); ok && v != "" {
+	if v, ok := m[names.AttrServiceName].(string); ok && v != "" {
 		s.ServiceName = aws.String(v)
 	}
 	if v, ok := m["service_provider_name"].(string); ok && v != "" {
@@ -4875,7 +4876,7 @@ func expandChannelEncoderSettingsTimecodeConfig(tfList []interface{}) *types.Tim
 	m := tfList[0].(map[string]interface{})
 
 	var config types.TimecodeConfig
-	if v, ok := m["source"].(string); ok && v != "" {
+	if v, ok := m[names.AttrSource].(string); ok && v != "" {
 		config.Source = types.TimecodeConfigSource(v)
 	}
 	if v, ok := m["sync_threshold"].(int); ok && v != 0 {
@@ -4898,7 +4899,7 @@ func expandChannelEncoderSettingsVideoDescriptions(tfList []interface{}) []types
 		}
 
 		var d types.VideoDescription
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			d.Name = aws.String(v)
 		}
 		if v, ok := m["codec_settings"].([]interface{}); ok && len(v) > 0 {
@@ -4937,7 +4938,7 @@ func expandChannelEncoderSettingsAvailBlanking(tfList []interface{}) *types.Avai
 	if v, ok := m["avail_blanking_image"].([]interface{}); ok && len(v) > 0 {
 		out.AvailBlankingImage = expandInputLocation(v)
 	}
-	if v, ok := m["state"].(string); ok && v != "" {
+	if v, ok := m[names.AttrState].(string); ok && v != "" {
 		out.State = types.AvailBlankingState(v)
 	}
 
@@ -4960,7 +4961,7 @@ func expandChannelEncoderSettingsCaptionDescriptions(tfList []interface{}) []typ
 		if v, ok := m["caption_selector_name"].(string); ok && v != "" {
 			d.CaptionSelectorName = aws.String(v)
 		}
-		if v, ok := m["name"].(string); ok && v != "" {
+		if v, ok := m[names.AttrName].(string); ok && v != "" {
 			d.Name = aws.String(v)
 		}
 		if v, ok := m["accessibility"].(string); ok && v != "" {
@@ -5465,7 +5466,7 @@ func expandsVideoDescriptionsCodecSettingsH264Settings(tfList []interface{}) *ty
 	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.H264Profile(v)
 	}
 	if v, ok := m["quality_level"].(string); ok && v != "" {
@@ -5612,7 +5613,7 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["par_numerator"].(int); ok && v != 0 {
 		out.ParNumerator = aws.Int32(int32(v))
 	}
-	if v, ok := m["profile"].(string); ok && v != "" {
+	if v, ok := m[names.AttrProfile].(string); ok && v != "" {
 		out.Profile = types.H265Profile(v)
 	}
 	if v, ok := m["qvbr_quality_level"].(int); ok && v != 0 {
@@ -5735,7 +5736,7 @@ func expandH265TimecodeBurninSettings(tfList []interface{}) *types.TimecodeBurni
 	if v, ok := m["timecode_burnin_position"].(string); ok && v != "" {
 		out.Position = types.TimecodeBurninPosition(v)
 	}
-	if v, ok := m["prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPrefix].(string); ok && v != "" {
 		out.Prefix = &v
 	}
 
@@ -5814,7 +5815,7 @@ func flattenAudioDescriptions(od []types.AudioDescription) []interface{} {
 	for _, v := range od {
 		m := map[string]interface{}{
 			"audio_selector_name":          aws.ToString(v.AudioSelectorName),
-			"name":                         aws.ToString(v.Name),
+			names.AttrName:                 aws.ToString(v.Name),
 			"audio_normalization_settings": flattenAudioNormalization(v.AudioNormalizationSettings),
 			"audio_type":                   v.AudioType,
 			"audio_type_control":           v.AudioTypeControl,
@@ -5843,7 +5844,7 @@ func flattenOutputGroups(op []types.OutputGroup) []interface{} {
 		m := map[string]interface{}{
 			"output_group_settings": flattenOutputGroupSettings(v.OutputGroupSettings),
 			"outputs":               flattenOutputs(v.Outputs),
-			"name":                  aws.ToString(v.Name),
+			names.AttrName:          aws.ToString(v.Name),
 		}
 
 		ol = append(ol, m)
@@ -5919,7 +5920,7 @@ func flattenOutputsOutputSettings(in *types.OutputSettings) []interface{} {
 				return nil
 			}
 			data := map[string]interface{}{
-				"destination": flattenDestination(inner.Destination),
+				names.AttrDestination: flattenDestination(inner.Destination),
 			}
 
 			return []interface{}{data}
@@ -6081,7 +6082,7 @@ func flattenOutputsOutputSettingsRtmpOutputSettings(in *types.RtmpOutputSettings
 	}
 
 	m := map[string]interface{}{
-		"destination":               flattenDestination(in.Destination),
+		names.AttrDestination:       flattenDestination(in.Destination),
 		"certificate_mode":          string(in.CertificateMode),
 		"connection_retry_interval": int(aws.ToInt32(in.ConnectionRetryInterval)),
 		"num_retries":               int(aws.ToInt32(in.NumRetries)),
@@ -6097,7 +6098,7 @@ func flattenOutputsOutputSettingsUdpOutputSettings(in *types.UdpOutputSettings) 
 
 	m := map[string]interface{}{
 		"container_settings":  flattenOutputsOutputSettingsUdpOutputSettingsContainerSettings(in.ContainerSettings),
-		"destination":         flattenDestination(in.Destination),
+		names.AttrDestination: flattenDestination(in.Destination),
 		"buffer_msec":         int(aws.ToInt32(in.BufferMsec)),
 		"fec_output_settings": flattenFecOutputSettings(in.FecOutputSettings),
 	}
@@ -6224,7 +6225,7 @@ func flattenDvbSdtSettings(in *types.DvbSdtSettings) []interface{} {
 	m := map[string]interface{}{
 		"output_sdt":            string(in.OutputSdt),
 		"rep_interval":          int(aws.ToInt32(in.RepInterval)),
-		"service_name":          aws.ToString(in.ServiceName),
+		names.AttrServiceName:   aws.ToString(in.ServiceName),
 		"service_provider_name": aws.ToString(in.ServiceProviderName),
 	}
 
@@ -6249,7 +6250,7 @@ func flattenOutputGroupSettingsArchiveGroupSettings(in *types.ArchiveGroupSettin
 	}
 
 	m := map[string]interface{}{
-		"destination":          flattenDestination(in.Destination),
+		names.AttrDestination:  flattenDestination(in.Destination),
 		"archive_cdn_settings": flattenOutputGroupSettingsArchiveCDNSettings(in.ArchiveCdnSettings),
 		"rollover_interval":    int(aws.ToInt32(in.RolloverInterval)),
 	}
@@ -6263,7 +6264,7 @@ func flattenOutputGroupSettingsFrameCaptureGroupSettings(in *types.FrameCaptureG
 	}
 
 	m := map[string]interface{}{
-		"destination":                flattenDestination(in.Destination),
+		names.AttrDestination:        flattenDestination(in.Destination),
 		"frame_capture_cdn_settings": flattenFrameCaptureCDNSettings(in.FrameCaptureCdnSettings),
 	}
 
@@ -6276,7 +6277,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 	}
 
 	m := map[string]interface{}{
-		"destination":                  flattenDestination(in.Destination),
+		names.AttrDestination:          flattenDestination(in.Destination),
 		"ad_markers":                   flattenHLSAdMarkers(in.AdMarkers),
 		"base_url_content":             aws.ToString(in.BaseUrlContent),
 		"base_url_content1":            aws.ToString(in.BaseUrlContent1),
@@ -6305,7 +6306,7 @@ func flattenOutputGroupSettingsHLSGroupSettings(in *types.HlsGroupSettings) []in
 		"manifest_compression":         string(in.ManifestCompression),
 		"manifest_duration_format":     string(in.ManifestDurationFormat),
 		"min_segment_length":           int(aws.ToInt32(in.MinSegmentLength)),
-		"mode":                         string(in.Mode),
+		names.AttrMode:                 string(in.Mode),
 		"output_selection":             string(in.OutputSelection),
 		"program_date_time":            string(in.ProgramDateTime),
 		"program_date_time_clock":      string(in.ProgramDateTimeClock),
@@ -6329,7 +6330,7 @@ func flattenOutputGroupSettingsMsSmoothGroupSettings(in *types.MsSmoothGroupSett
 	}
 
 	m := map[string]interface{}{
-		"destination":                 flattenDestination(in.Destination),
+		names.AttrDestination:         flattenDestination(in.Destination),
 		"acquisition_point_id":        aws.ToString(in.AcquisitionPointId),
 		"audio_only_timecode_control": string(in.AudioOnlyTimecodeControl),
 		"certificate_mode":            string(in.CertificateMode),
@@ -6521,9 +6522,9 @@ func flattenInputLocation(in *types.InputLocation) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"uri":            aws.ToString(in.Uri),
-		"password_param": aws.ToString(in.PasswordParam),
-		"username":       aws.ToString(in.Username),
+		"uri":              aws.ToString(in.Uri),
+		"password_param":   aws.ToString(in.PasswordParam),
+		names.AttrUsername: aws.ToString(in.Username),
 	}
 
 	return []interface{}{m}
@@ -6547,7 +6548,7 @@ func flattenOutputGroupSettingsMediaPackageGroupSettings(mp *types.MediaPackageG
 	}
 
 	m := map[string]interface{}{
-		"destination": flattenDestination(mp.Destination),
+		names.AttrDestination: flattenDestination(mp.Destination),
 	}
 
 	return []interface{}{m}
@@ -6638,7 +6639,7 @@ func flattenTimecodeConfig(in *types.TimecodeConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"source":         string(in.Source),
+		names.AttrSource: string(in.Source),
 		"sync_threshold": int(aws.ToInt32(in.SyncThreshold)),
 	}
 
@@ -6654,7 +6655,7 @@ func flattenVideoDescriptions(tfList []types.VideoDescription) []interface{} {
 
 	for _, item := range tfList {
 		m := map[string]interface{}{
-			"name":             aws.ToString(item.Name),
+			names.AttrName:     aws.ToString(item.Name),
 			"codec_settings":   flattenVideoDescriptionsCodecSettings(item.CodecSettings),
 			"height":           int(aws.ToInt32(item.Height)),
 			"respond_to_afd":   string(item.RespondToAfd),
@@ -6675,7 +6676,7 @@ func flattenAvailBlanking(in *types.AvailBlanking) []interface{} {
 
 	m := map[string]interface{}{
 		"avail_blanking_image": flattenInputLocation(in.AvailBlankingImage),
-		"state":                string(in.State),
+		names.AttrState:        string(in.State),
 	}
 
 	return []interface{}{m}
@@ -6691,7 +6692,7 @@ func flattenCaptionDescriptions(tfList []types.CaptionDescription) []interface{}
 	for _, item := range tfList {
 		m := map[string]interface{}{
 			"caption_selector_name": aws.ToString(item.CaptionSelectorName),
-			"name":                  aws.ToString(item.Name),
+			names.AttrName:          aws.ToString(item.Name),
 			"accessibility":         string(item.Accessibility),
 			"destination_settings":  flattenCaptionDescriptionsCaptionDestinationSettings(item.DestinationSettings),
 			"language_code":         aws.ToString(item.LanguageCode),
@@ -6953,7 +6954,7 @@ func flattenCodecSettingsH264Settings(in *types.H264Settings) []interface{} {
 		"par_control":             string(in.ParControl),
 		"par_denominator":         int(aws.ToInt32(in.ParDenominator)),
 		"par_numerator":           int(aws.ToInt32(in.ParNumerator)),
-		"profile":                 string(in.Profile),
+		names.AttrProfile:         string(in.Profile),
 		"quality_level":           string(in.QualityLevel),
 		"qvbr_quality_level":      int(aws.ToInt32(in.QvbrQualityLevel)),
 		"rate_control_mode":       string(in.RateControlMode),
@@ -7022,7 +7023,7 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"min_i_interval":                int(aws.ToInt32(in.MinIInterval)),
 		"par_denominator":               int(aws.ToInt32(in.ParDenominator)),
 		"par_numerator":                 int(aws.ToInt32(in.ParNumerator)),
-		"profile":                       string(in.Profile),
+		names.AttrProfile:               string(in.Profile),
 		"qvbr_quality_level":            int(aws.ToInt32(in.QvbrQualityLevel)),
 		"rate_control_mode":             string(in.RateControlMode),
 		"scan_type":                     string(in.ScanType),
@@ -7106,7 +7107,7 @@ func flattenH265TimecodeBurninSettings(in *types.TimecodeBurninSettings) []inter
 	m := map[string]interface{}{
 		"timecode_burnin_font_size": string(in.FontSize),
 		"timecode_burnin_position":  string(in.Position),
-		"prefix":                    in.Prefix,
+		names.AttrPrefix:            in.Prefix,
 	}
 
 	return []interface{}{m}
@@ -7180,7 +7181,7 @@ func flattenCodecSettingsAacSettings(in *types.AacSettings) []interface{} {
 		"bitrate":           in.Bitrate,
 		"coding_mode":       string(in.CodingMode),
 		"input_type":        string(in.InputType),
-		"profile":           string(in.Profile),
+		names.AttrProfile:   string(in.Profile),
 		"rate_control_mode": string(in.RateControlMode),
 		"raw_format":        string(in.RawFormat),
 		"sample_rate":       in.SampleRate,

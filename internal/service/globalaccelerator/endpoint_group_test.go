@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -39,7 +39,7 @@ func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -63,7 +63,7 @@ func TestAccGlobalAcceleratorEndpointGroup_basic(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -87,7 +87,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	albResourceName := "aws_lb.test"
@@ -104,13 +104,13 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 				Config: testAccEndpointGroupConfig_albClientIP(rName, false, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -131,13 +131,13 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 				Config: testAccEndpointGroupConfig_albClientIP(rName, true, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
 						"weight":                         "0",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", albResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -162,7 +162,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	instanceResourceName := "aws_instance.test"
@@ -179,13 +179,13 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 				Config: testAccEndpointGroupConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "true",
 						"weight":                         "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", instanceResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
@@ -215,7 +215,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -230,13 +230,13 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 				Config: testAccEndpointGroupConfig_multiRegion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/foo"),
@@ -259,7 +259,7 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -273,7 +273,7 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 				Config: testAccEndpointGroupConfig_portOverrides(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -294,7 +294,7 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 				Config: testAccEndpointGroupConfig_portOverridesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -326,7 +326,7 @@ func TestAccGlobalAcceleratorEndpointGroup_portOverrides(t *testing.T) {
 
 func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -341,13 +341,13 @@ func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) 
 				Config: testAccEndpointGroupConfig_tcpHealthCheckProtocol(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "10",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -370,7 +370,7 @@ func TestAccGlobalAcceleratorEndpointGroup_tcpHealthCheckProtocol(t *testing.T) 
 
 func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v globalaccelerator.EndpointGroup
+	var v awstypes.EndpointGroup
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
 	eipResourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -385,7 +385,7 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "30"),
@@ -402,13 +402,13 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 				Config: testAccEndpointGroupConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "globalaccelerator", regexache.MustCompile(`accelerator/[^/]+/listener/[^/]+/endpoint-group/[^/]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "endpoint_configuration.*", map[string]string{
 						"client_ip_preservation_enabled": "false",
 						"weight":                         "20",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.*.endpoint_id", eipResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_group_region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "health_check_interval_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/foo"),
@@ -429,18 +429,14 @@ func TestAccGlobalAcceleratorEndpointGroup_update(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointGroupExists(ctx context.Context, name string, v *globalaccelerator.EndpointGroup) resource.TestCheckFunc {
+func testAccCheckEndpointGroupExists(ctx context.Context, name string, v *awstypes.EndpointGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
-
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Global Accelerator Endpoint Group ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		endpointGroup, err := tfglobalaccelerator.FindEndpointGroupByARN(ctx, conn, rs.Primary.ID)
 
@@ -456,7 +452,7 @@ func testAccCheckEndpointGroupExists(ctx context.Context, name string, v *global
 
 func testAccCheckEndpointGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_endpoint_group" {
@@ -486,7 +482,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.
 		meta := acctest.Provider.Meta()
 		conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
+		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.ToString(vpc.VpcId), aws.ToString(vpc.OwnerId))
 
 		if tfresource.NotFound(err) {
 			// Already gone.
@@ -499,7 +495,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.
 
 		r := tfec2.ResourceSecurityGroup()
 		d := r.Data(nil)
-		d.SetId(aws.StringValue(v.GroupId))
+		d.SetId(aws.ToString(v.GroupId))
 		d.Set("revoke_rules_on_delete", true)
 
 		err = acctest.DeleteResource(ctx, r, d, meta)
@@ -532,7 +528,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
+func testAccEndpointGroupConfig_baseALB(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -578,7 +574,11 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
   ip_address_type = "IPV4"

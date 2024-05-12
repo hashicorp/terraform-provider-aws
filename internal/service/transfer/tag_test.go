@@ -29,8 +29,8 @@ func testAccTag_basic(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1"),
 				),
 			},
 			{
@@ -80,8 +80,8 @@ func testAccTag_value(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1"),
 				),
 			},
 			{
@@ -93,8 +93,8 @@ func testAccTag_value(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "key1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "value1updated"),
 				),
 			},
 		},
@@ -116,8 +116,8 @@ func testAccTag_system(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "aws:transfer:customHostname", "abc.example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "aws:transfer:customHostname"),
-					resource.TestCheckResourceAttr(resourceName, "value", "abc.example.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "aws:transfer:customHostname"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "abc.example.com"),
 				),
 			},
 			{

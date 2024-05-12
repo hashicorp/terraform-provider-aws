@@ -25,11 +25,11 @@ func DataSourceSubscribedRuleGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -39,8 +39,8 @@ func DataSourceSubscribedRuleGroup() *schema.Resource {
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFConn(ctx)
-	name, nameOk := d.Get("name").(string)
-	metricName, metricNameOk := d.Get("metric_name").(string)
+	name, nameOk := d.Get(names.AttrName).(string)
+	metricName, metricNameOk := d.Get(names.AttrMetricName).(string)
 
 	// Error out if string-assertion fails for either name or metricName
 	if !nameOk || !metricNameOk {
@@ -59,8 +59,8 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.StringValue(output.RuleGroupId))
-	d.Set("metric_name", output.MetricName)
-	d.Set("name", output.Name)
+	d.Set(names.AttrMetricName, output.MetricName)
+	d.Set(names.AttrName, output.Name)
 
 	return nil
 }

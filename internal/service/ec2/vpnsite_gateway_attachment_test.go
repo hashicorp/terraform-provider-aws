@@ -78,7 +78,7 @@ func testAccCheckVPNGatewayAttachmentExists(ctx context.Context, n string, v *ec
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		output, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+		output, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
 		if err != nil {
 			return err
@@ -99,7 +99,7 @@ func testAccCheckVPNGatewayAttachmentDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes["vpc_id"])
+			_, err := tfec2.FindVPNGatewayVPCAttachment(ctx, conn, rs.Primary.Attributes["vpn_gateway_id"], rs.Primary.Attributes[names.AttrVPCID])
 
 			if tfresource.NotFound(err) {
 				continue

@@ -73,15 +73,15 @@ func ResourceLoadBalancer() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"bucket": {
+						names.AttrBucket: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -95,11 +95,11 @@ func ResourceLoadBalancer() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -151,7 +151,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(5, 300),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: ValidHeathCheckTarget,
@@ -221,23 +221,23 @@ func ResourceLoadBalancer() *schema.Resource {
 				},
 				Set: ListenerHash,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  ValidName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validNamePrefix,
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -278,8 +278,8 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	elbName := create.NewNameGenerator(
-		create.WithConfiguredName(d.Get("name").(string)),
-		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithConfiguredName(d.Get(names.AttrName).(string)),
+		create.WithConfiguredPrefix(d.Get(names.AttrNamePrefix).(string)),
 		create.WithDefaultPrefix("tf-lb-"),
 	).Generate()
 	input := &elb.CreateLoadBalancerInput{
@@ -288,7 +288,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		input.AvailabilityZones = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -296,7 +296,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Scheme = aws.String("internal")
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -346,8 +346,8 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
-	d.Set("availability_zones", flex.FlattenStringList(lb.AvailabilityZones))
+	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrAvailabilityZones, flex.FlattenStringList(lb.AvailabilityZones))
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
@@ -362,9 +362,9 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("internal", scheme)
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
-	d.Set("name", lb.LoadBalancerName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
-	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
+	d.Set(names.AttrName, lb.LoadBalancerName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
+	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
 	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
@@ -551,10 +551,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		if logs := d.Get("access_logs").([]interface{}); len(logs) == 1 {
 			l := logs[0].(map[string]interface{})
 			input.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
-				Enabled:        aws.Bool(l["enabled"].(bool)),
+				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
 				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
-				S3BucketName:   aws.String(l["bucket"].(string)),
-				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
+				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
+				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
 		} else if len(logs) == 0 {
 			// disable access logs
@@ -621,7 +621,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				HealthCheck: &elb.HealthCheck{
 					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
 					Interval:           aws.Int64(int64(check["interval"].(int))),
-					Target:             aws.String(check["target"].(string)),
+					Target:             aws.String(check[names.AttrTarget].(string)),
 					Timeout:            aws.Int64(int64(check["timeout"].(int))),
 					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
 				},
@@ -635,10 +635,10 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("security_groups") {
+	if d.HasChange(names.AttrSecurityGroups) {
 		input := &elb.ApplySecurityGroupsToLoadBalancerInput{
 			LoadBalancerName: aws.String(d.Id()),
-			SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
+			SecurityGroups:   flex.ExpandStringSet(d.Get(names.AttrSecurityGroups).(*schema.Set)),
 		}
 
 		_, err := conn.ApplySecurityGroupsToLoadBalancerWithContext(ctx, input)
@@ -648,8 +648,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("availability_zones") {
-		o, n := d.GetChange("availability_zones")
+	if d.HasChange(names.AttrAvailabilityZones) {
+		o, n := d.GetChange(names.AttrAvailabilityZones)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 

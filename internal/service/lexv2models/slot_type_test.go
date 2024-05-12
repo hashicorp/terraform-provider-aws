@@ -44,7 +44,7 @@ func TestAccLexV2ModelsSlotType_basic(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),

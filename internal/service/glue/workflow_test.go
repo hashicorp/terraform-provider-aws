@@ -37,8 +37,8 @@ func TestAccGlueWorkflow_basic(t *testing.T) {
 				Config: testAccWorkflowConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("workflow/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("workflow/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -142,14 +142,14 @@ func TestAccGlueWorkflow_description(t *testing.T) {
 				Config: testAccWorkflowConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccWorkflowConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{

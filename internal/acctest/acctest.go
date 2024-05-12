@@ -11,6 +11,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -30,13 +31,14 @@ import (
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -116,7 +118,9 @@ var (
 // the use of saving and referencing specific ProviderFactories instances.
 //
 // PreCheck(t) must be called before using this provider instance.
-var Provider *schema.Provider
+var (
+	Provider *schema.Provider = errs.Must(provider.New(context.Background()))
+)
 
 type ProviderFunc func() *schema.Provider
 
@@ -127,15 +131,6 @@ type ProviderFunc func() *schema.Provider
 // not prevent reconfiguration that may happen should the address of
 // Provider be errantly reused in ProviderFactories.
 var testAccProviderConfigure sync.Once
-
-func init() {
-	var err error
-	Provider, err = provider.New(context.Background())
-
-	if err != nil {
-		panic(err)
-	}
-}
 
 func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
@@ -1268,12 +1263,12 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
 	}
 
-	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 	input := &wafv2.ListWebACLsInput{
-		Scope: aws.String(wafv2.ScopeCloudfront),
+		Scope: wafv2types.ScopeCloudfront,
 	}
 
-	_, err := conn.ListWebACLsWithContext(ctx, input)
+	_, err := conn.ListWebACLs(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1867,7 +1862,7 @@ func (d domainName) Subdomain(name string) domainName {
 }
 
 func (d domainName) RandomSubdomain() domainName {
-	return d.Subdomain(sdkacctest.RandString(8)) //nolint:gomnd
+	return d.Subdomain(sdkacctest.RandString(8)) //nolint:mnd // standard length of 8
 }
 
 func (d domainName) FQDN() domainName {
@@ -2418,6 +2413,34 @@ resource "aws_subnet" "test" {
 	)
 }
 
+func ConfigVPCWithSubnetsEnableDNSHostnames(rName string, subnetCount int) string {
+	return ConfigCompose(
+		ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, subnetCount),
+	)
+}
+
 func ConfigVPCWithSubnetsIPv6(rName string, subnetCount int) string {
 	return ConfigCompose(
 		ConfigAvailableAZsNoOptInDefaultExclude(),
@@ -2584,6 +2607,18 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 	v := os.Getenv(key)
 	if v == "" {
 		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
+}
+
+// SkipIfExeNotOnPath skips the current test if the specified executable is not found in the directories named by the PATH environment variable.
+// The absolute path to the executable is returned.
+func SkipIfExeNotOnPath(t *testing.T, file string) string {
+	t.Helper()
+
+	v, err := exec.LookPath(file)
+	if err != nil {
+		t.Skipf("File %s not found on PATH, skipping test: %s", v, err)
 	}
 	return v
 }

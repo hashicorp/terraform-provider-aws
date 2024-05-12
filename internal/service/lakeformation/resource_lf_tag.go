@@ -66,8 +66,8 @@ func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.Metadat
 func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"catalog_id": catalogIDSchemaOptional(),
-			"id":         framework.IDAttribute(),
+			names.AttrCatalogID: catalogIDSchemaOptional(),
+			names.AttrID:        framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"database": schema.ListNestedBlock{
@@ -80,8 +80,8 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
-						"name": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptional(),
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -101,8 +101,8 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptionalComputed(),
-						"key": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptionalComputed(),
+						names.AttrKey: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 128),
@@ -111,7 +111,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"value": schema.StringAttribute{
+						names.AttrValue: schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 255),
@@ -134,18 +134,18 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
-						"database_name": schema.StringAttribute{
+						names.AttrCatalogID: catalogIDSchemaOptional(),
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -157,7 +157,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							Optional: true,
 							Validators: []validator.Bool{
 								boolvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
+									path.MatchRelative().AtParent().AtName(names.AttrName),
 									path.MatchRelative().AtParent().AtName("wildcard"),
 								),
 							},
@@ -178,7 +178,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchemaOptional(),
+						names.AttrCatalogID: catalogIDSchemaOptional(),
 						"column_names": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
@@ -192,13 +192,13 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 								setplanmodifier.RequiresReplace(),
 							},
 						},
-						"database_name": schema.StringAttribute{
+						names.AttrDatabaseName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -234,7 +234,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),

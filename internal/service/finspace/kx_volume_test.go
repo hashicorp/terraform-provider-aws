@@ -44,8 +44,8 @@ func TestAccFinSpaceKxVolume_basic(t *testing.T) {
 				Config: testAccKxVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxVolumeStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxVolumeStatusActive)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccFinSpaceKxVolume_tags(t *testing.T) {
 				Config: testAccKxVolumeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -125,7 +125,7 @@ func TestAccFinSpaceKxVolume_tags(t *testing.T) {
 				Config: testAccKxVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -135,7 +135,7 @@ func TestAccFinSpaceKxVolume_tags(t *testing.T) {
 				Config: testAccKxVolumeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

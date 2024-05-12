@@ -39,8 +39,8 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -100,7 +100,7 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 				Config: testAccWorkspaceConfig_kms(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 		},

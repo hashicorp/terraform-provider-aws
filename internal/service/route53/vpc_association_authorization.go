@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_vpc_association_authorization")
@@ -36,7 +37,7 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -59,7 +60,7 @@ func resourceVPCAssociationAuthorizationCreate(ctx context.Context, d *schema.Re
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
 		VPC: &route53.VPC{
-			VPCId:     aws.String(d.Get("vpc_id").(string)),
+			VPCId:     aws.String(d.Get(names.AttrVPCID).(string)),
 			VPCRegion: aws.String(meta.(*conns.AWSClient).Region),
 		},
 	}
@@ -112,7 +113,7 @@ func resourceVPCAssociationAuthorizationRead(ctx context.Context, d *schema.Reso
 
 		for _, vpc := range res.VPCs {
 			if vpc_id == aws.StringValue(vpc.VPCId) {
-				d.Set("vpc_id", vpc.VPCId)
+				d.Set(names.AttrVPCID, vpc.VPCId)
 				d.Set("vpc_region", vpc.VPCRegion)
 				d.Set("zone_id", zone_id)
 				return diags

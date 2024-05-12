@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -55,7 +56,6 @@ func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 
 type agentResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -91,7 +91,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 200),
@@ -147,7 +147,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -248,8 +248,6 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.PrepareAgent = types.BoolValue(agent.AgentStatus == awstypes.AgentStatusPrepared)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -353,17 +351,23 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 		return
 	}
 
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", agentID), err.Error())
+
+		return
+	}
+
 	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
 
 		return
 	}
+}
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
+func (r *agentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), req.ID)...)
+	// Set prepare_agent to default value on import
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
 func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

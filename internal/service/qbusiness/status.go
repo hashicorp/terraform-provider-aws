@@ -42,6 +42,23 @@ func statusIndexAvailability(ctx context.Context, conn *qbusiness.Client, index_
 		return output, string(output.Status), nil
 	}
 }
+
+func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.Client, retriever_id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindRetrieverByID(ctx, conn, retriever_id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
 func statusDatasourceAvailability(ctx context.Context, conn *qbusiness.Client, datasource_id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindDatasourceByID(ctx, conn, datasource_id)

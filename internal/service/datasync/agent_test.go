@@ -38,8 +38,8 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 				Config: testAccAgentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`agent/agent-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`agent/agent-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
 					resource.TestCheckResourceAttr(resourceName, "private_link_endpoint", ""),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "0"),
@@ -51,7 +51,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 		},
 	})
@@ -98,21 +98,21 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 				Config: testAccAgentConfig_name(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
 				Config: testAccAgentConfig_name(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 		},
 	})
@@ -142,7 +142,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 			{
 				Config: testAccAgentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -187,17 +187,17 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_arns.*", subnetResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_arns.*", subnetResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address", "private_link_ip"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress, "private_link_ip"},
 			},
 		},
 	})
