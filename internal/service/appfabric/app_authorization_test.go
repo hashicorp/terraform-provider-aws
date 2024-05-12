@@ -4,31 +4,37 @@
 package appfabric_test
 
 import (
+	"context"
+	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/appfabric/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappfabric "github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAppFabricAppAuthorization_basic(t *testing.T) {
+func testAccAppAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_appfabric_app_authorization.test"
-	// var appauthorization types.AppAuthorization
+	var appauthorization types.AppAuthorization
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.AppFabric)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppAuthorizationConfig_basic(),
-				Check:  resource.ComposeTestCheckFunc(
-				// testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 				),
 			},
 			{
@@ -41,87 +47,77 @@ func TestAccAppFabricAppAuthorization_basic(t *testing.T) {
 	})
 }
 
-// func TestAccAppFabricAppAuthorization_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var appauthorization types.AppAuthorization
-// 	resourceName := "aws_appfabric_app_authorization.test"
+func testAccAppAuthorization_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var appauthorization types.AppAuthorization
+	resourceName := "aws_appfabric_app_authorization.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.AppFabric)
-// 			testAccPreCheck(ctx, t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccAppAuthorizationConfig_basic(),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppAuthorizationConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
+func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_appfabric_app_authorization" {
-// 				continue
-// 			}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appfabric_app_authorization" {
+				continue
+			}
 
-// 			input := &appfabric.DescribeAppAuthorizationInput{
-// 				AppAuthorizationId: aws.String(rs.Primary.ID),
-// 			}
-// 			_, err := conn.DescribeAppAuthorization(ctx, &appfabric.DescribeAppAuthorizationInput{
-// 				AppAuthorizationId: aws.String(rs.Primary.ID),
-// 			})
-// 			if errs.IsA[*types.ResourceNotFoundException](err) {
-// 				return nil
-// 			}
-// 			if err != nil {
-// 				return create.Error(names.AppFabric, create.ErrActionCheckingDestroyed, tfappfabric.ResNameAppAuthorization, rs.Primary.ID, err)
-// 			}
+			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["arn"], rs.Primary.Attributes["app_bundle_identifier"])
 
-// 			return create.Error(names.AppFabric, create.ErrActionCheckingDestroyed, tfappfabric.ResNameAppAuthorization, rs.Primary.ID, errors.New("not destroyed"))
-// 		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-// 		return nil
-// 	}
-// }
+			if err != nil {
+				return err
+			}
 
-// func testAccCheckAppAuthorizationExists(ctx context.Context, name string, appauthorization *appfabric.DescribeAppAuthorizationResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return create.Error(names.AppFabric, create.ErrActionCheckingExistence, tfappfabric.ResNameAppAuthorization, name, errors.New("not found"))
-// 		}
+			return fmt.Errorf("App Fabric App Authorization %s still exists", rs.Primary.ID)
+		}
 
-// 		if rs.Primary.ID == "" {
-// 			return create.Error(names.AppFabric, create.ErrActionCheckingExistence, tfappfabric.ResNameAppAuthorization, name, errors.New("not set"))
-// 		}
+		return nil
+	}
+}
 
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
-// 		resp, err := conn.DescribeAppAuthorization(ctx, &appfabric.DescribeAppAuthorizationInput{
-// 			AppAuthorizationId: aws.String(rs.Primary.ID),
-// 		})
+func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.AppAuthorization) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-// 		if err != nil {
-// 			return create.Error(names.AppFabric, create.ErrActionCheckingExistence, tfappfabric.ResNameAppAuthorization, rs.Primary.ID, err)
-// 		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-// 		*appauthorization = *resp
+		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["arn"], rs.Primary.Attributes["app_bundle_identifier"])
 
-// 		return nil
-// 	}
-// }
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
 
 func testAccAppAuthorizationConfig_basic() string {
 	return `
@@ -138,8 +134,7 @@ resource "aws_appfabric_app_authorization" "test" {
   tenant {
 	tenant_display_name = "mkandylis-org-aws"
 	tenant_identifier   = "mkandylis-org-aws"
-  }      
-
+  }
 }
 `
 }
