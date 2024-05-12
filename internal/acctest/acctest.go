@@ -1940,7 +1940,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeRoot) {
+		if v := certificateAuthority.Type; v != acmpcatypes.CertificateAuthorityTypeRoot {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
@@ -2009,7 +2009,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeSubordinate) {
+		if v := certificateAuthority.Type; v != acmpcatypes.CertificateAuthorityTypeSubordinate {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
@@ -2044,14 +2044,14 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		// Wait for certificate status to become ISSUED.
 		waiter := acmpca.NewCertificateIssuedWaiter(conn)
 		params := &acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(arn),
+			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		}
 
 		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
-			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
+			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate (%s) to become ISSUED: %w", arn, aws.StringValue(issueCertOutput.CertificateArn), err)
 		}
 
 		getCertOutput, err := conn.GetCertificate(ctx, &acmpca.GetCertificateInput{

@@ -194,7 +194,6 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	acmCertificateResourceName := "aws_acm_certificate.test"
 	rootDomain := acctest.RandomDomainName()
 	subDomain := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), rootDomain)
-	domain := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), subDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -213,7 +212,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
+				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
@@ -226,7 +225,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
+				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain),
 				Check: resource.ComposeTestCheckFunc(
 					// CAs must be DISABLED for deletion.
 					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caSubordinate),
@@ -389,7 +388,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 `, rootDomain, subDomain)
 }
 
-func testAccSiteVPNCustomerGatewayConfig_certificate(rName string, rBgpAsn int, rootDomain, subDomain, domain string) string {
+func testAccSiteVPNCustomerGatewayConfig_certificate(rName string, rBgpAsn int, rootDomain, subDomain string) string {
 	return acctest.ConfigCompose(testAccSiteVPNCustomerGatewayConfig_cas(rootDomain, subDomain), fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   domain_name               = %[3]q
@@ -405,5 +404,5 @@ resource "aws_customer_gateway" "test" {
     Name = %[1]q
   }
 }
-`, rName, rBgpAsn, domain))
+`, rName, rBgpAsn, subDomain))
 }
