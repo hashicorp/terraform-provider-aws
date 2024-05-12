@@ -27,7 +27,7 @@ func DataSourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -98,7 +98,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(output.ServerId))
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrCertificate, output.Certificate)
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrDomain, output.Domain)
 	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", serverID)))
 	d.Set(names.AttrEndpointType, output.EndpointType)
 	d.Set("identity_provider_type", output.IdentityProviderType)

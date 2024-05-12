@@ -246,7 +246,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
-			"vpc_config": schema.ListNestedBlock{
+			names.AttrVPCConfig: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelVPCConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.RequiresReplace(),

@@ -170,7 +170,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrS3Bucket, "s3_key", "skip_destroy"},
 			},
 		},
 	})

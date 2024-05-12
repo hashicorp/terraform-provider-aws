@@ -183,7 +183,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 						"external_id": schema.StringAttribute{
 							Required: true,
 						},
-						"principal": schema.StringAttribute{
+						names.AttrPrincipal: schema.StringAttribute{
 							Required: true,
 						},
 					},

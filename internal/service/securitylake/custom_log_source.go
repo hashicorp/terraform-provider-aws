@@ -157,7 +157,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"principal": schema.StringAttribute{
+									names.AttrPrincipal: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

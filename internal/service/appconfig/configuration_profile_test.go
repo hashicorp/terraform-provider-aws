@@ -134,8 +134,8 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"content":      "",
-						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
+						names.AttrContent: "",
+						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
 					}),
 				),
 			},
@@ -212,8 +212,8 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"content":      "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
-						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
+						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
+						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{

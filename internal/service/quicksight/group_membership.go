@@ -43,7 +43,7 @@ func ResourceGroupMembership() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
-				"group_name": {
+				names.AttrGroupName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -73,7 +73,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get(names.AttrNamespace).(string)
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 	memberName := d.Get("member_name").(string)
 
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -125,7 +125,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("aws_account_id", awsAccountID)
 	d.Set(names.AttrNamespace, namespace)
 	d.Set("member_name", userName)
-	d.Set("group_name", groupName)
+	d.Set(names.AttrGroupName, groupName)
 
 	return nil
 }

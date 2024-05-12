@@ -112,7 +112,7 @@ func dataSourceBroker() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"ip_address": {
+						names.AttrIPAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

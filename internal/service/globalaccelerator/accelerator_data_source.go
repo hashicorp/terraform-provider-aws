@@ -53,7 +53,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 					},
 				},
 			},
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Computed: true,
 			},
 			"dual_stack_dns_name": schema.StringAttribute{

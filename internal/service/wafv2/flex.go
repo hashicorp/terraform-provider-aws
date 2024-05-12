@@ -319,7 +319,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		vm := v.(map[string]interface{})
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
-			Content:     aws.String(vm["content"].(string)),
+			Content:     aws.String(vm[names.AttrContent].(string)),
 			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
@@ -402,7 +402,7 @@ func expandVisibilityConfig(l []interface{}) *awstypes.VisibilityConfig {
 		configuration.CloudWatchMetricsEnabled = v.(bool)
 	}
 
-	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
+	if v, ok := m[names.AttrMetricName]; ok && len(v.(string)) > 0 {
 		configuration.MetricName = aws.String(v.(string))
 	}
 
@@ -1814,7 +1814,7 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	for key, body := range b {
 		out[i] = map[string]interface{}{
 			names.AttrKey:         key,
-			"content":             aws.ToString(body.Content),
+			names.AttrContent:     aws.ToString(body.Content),
 			names.AttrContentType: string(body.ContentType),
 		}
 		i += 1
@@ -2348,7 +2348,7 @@ func flattenVisibilityConfig(config *awstypes.VisibilityConfig) interface{} {
 
 	m := map[string]interface{}{
 		"cloudwatch_metrics_enabled": aws.Bool(config.CloudWatchMetricsEnabled),
-		"metric_name":                aws.ToString(config.MetricName),
+		names.AttrMetricName:         aws.ToString(config.MetricName),
 		"sampled_requests_enabled":   aws.Bool(config.SampledRequestsEnabled),
 	}
 

@@ -35,7 +35,7 @@ func ResourceDomainIdentityVerification() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -66,7 +66,7 @@ func getIdentityVerificationAttributes(ctx context.Context, conn *ses.SES, domai
 func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
-	domainName := d.Get("domain").(string)
+	domainName := d.Get(names.AttrDomain).(string)
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 		if err != nil {
@@ -105,7 +105,7 @@ func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
 	domainName := d.Id()
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 
 	att, err := getIdentityVerificationAttributes(ctx, conn, domainName)
 	if err != nil {

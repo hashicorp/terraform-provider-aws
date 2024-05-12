@@ -562,7 +562,7 @@ var codeHookResource = &schema.Resource{
 
 var messageResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
-		"content": {
+		names.AttrContent: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -685,7 +685,7 @@ func expandFulfilmentActivity(rawObject interface{}) (activity *lexmodelbuilding
 func flattenMessages(messages []*lexmodelbuildingservice.Message) (flattenedMessages []map[string]interface{}) {
 	for _, message := range messages {
 		flattenedMessages = append(flattenedMessages, map[string]interface{}{
-			"content":             aws.StringValue(message.Content),
+			names.AttrContent:     aws.StringValue(message.Content),
 			names.AttrContentType: aws.StringValue(message.ContentType),
 			"group_number":        aws.Int64Value(message.GroupNumber),
 		})
@@ -707,7 +707,7 @@ func expandMessages(rawValues []interface{}) []*lexmodelbuildingservice.Message 
 		}
 
 		message := &lexmodelbuildingservice.Message{
-			Content:     aws.String(value["content"].(string)),
+			Content:     aws.String(value[names.AttrContent].(string)),
 			ContentType: aws.String(value[names.AttrContentType].(string)),
 		}
 

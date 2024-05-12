@@ -78,7 +78,7 @@ func resourceSchedule() *schema.Resource {
 					},
 				},
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -184,7 +184,7 @@ func resourceSchedule() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:             schema.TypeInt,
 													Optional:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 1000)),
@@ -226,7 +226,7 @@ func resourceSchedule() *schema.Resource {
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"subnets": {
+												names.AttrSubnets: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -241,7 +241,7 @@ func resourceSchedule() *schema.Resource {
 										Set:      placementConstraintHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"expression": {
+												names.AttrExpression: {
 													Type:             schema.TypeString,
 													Optional:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2000)),
@@ -454,7 +454,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.FlexibleTimeWindow = expandFlexibleTimeWindow(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.Get("group_name").(string); ok && v != "" {
+	if v, ok := d.Get(names.AttrGroupName).(string); ok && v != "" {
 		in.GroupName = aws.String(v)
 	}
 
@@ -543,7 +543,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Scheduler, create.ErrActionSetting, ResNameSchedule, d.Id(), err)
 	}
 
-	d.Set("group_name", out.GroupName)
+	d.Set(names.AttrGroupName, out.GroupName)
 	d.Set(names.AttrKMSKeyARN, out.KmsKeyArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(out.Name)))
@@ -570,7 +570,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
-		GroupName:          aws.String(d.Get("group_name").(string)),
+		GroupName:          aws.String(d.Get(names.AttrGroupName).(string)),
 		Name:               aws.String(d.Get(names.AttrName).(string)),
 		ScheduleExpression: aws.String(d.Get(names.AttrScheduleExpression).(string)),
 		Target:             expandTarget(ctx, d.Get(names.AttrTarget).([]interface{})[0].(map[string]interface{})),
@@ -713,7 +713,7 @@ func capacityProviderHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := m["weight"].(int); ok {
+	if v, ok := m[names.AttrWeight].(int); ok {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 
@@ -724,7 +724,7 @@ func placementConstraintHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	if v, ok := m["expression"]; ok {
+	if v, ok := m[names.AttrExpression]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 

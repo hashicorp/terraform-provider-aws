@@ -150,7 +150,7 @@ func testAccCheckApprovalRuleTemplateContent(resourceName string, numApprovals i
 		expectedContent := fmt.Sprintf(`{"Version":"2018-11-08","DestinationReferences":["refs/heads/master"],"Statements":[{"Type":"Approvers","NumberOfApprovalsNeeded":%d,"ApprovalPoolMembers":["arn:%s:sts::%s:assumed-role/CodeCommitReview/*"]}]}`,
 			numApprovals, acctest.Partition(), acctest.AccountID(),
 		)
-		return resource.TestCheckResourceAttr(resourceName, "content", expectedContent)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrContent, expectedContent)(s)
 	}
 }
 

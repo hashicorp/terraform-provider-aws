@@ -298,8 +298,8 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
-						"s3_bucket": rName,
-						"s3_key":    codePath,
+						names.AttrS3Bucket: rName,
+						"s3_key":           codePath,
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
@@ -309,8 +309,8 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
-						"s3_bucket": rName,
-						"s3_key":    updatedCodePath,
+						names.AttrS3Bucket: rName,
+						"s3_key":           updatedCodePath,
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),

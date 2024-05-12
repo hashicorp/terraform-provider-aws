@@ -25,7 +25,7 @@ func TestAccAthenaNamedQueryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNamedQueryDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "database", resourceName, "database"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDatabase, resourceName, names.AttrDatabase),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),

@@ -35,7 +35,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
-					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
@@ -54,7 +54,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
-					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
@@ -85,7 +85,7 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "client_id", "aws_cognito_user_pool_client.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClientID, "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),

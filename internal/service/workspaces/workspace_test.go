@@ -52,7 +52,7 @@ func testAccWorkspace_basic(t *testing.T) {
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, names.AttrID),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.WorkspaceStateAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "Administrator"),

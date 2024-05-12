@@ -175,7 +175,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -627,7 +627,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -753,7 +753,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -877,7 +877,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1003,7 +1003,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSystemId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1195,10 +1195,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
 		domainMembership := dbc.DomainMemberships[0]
-		d.Set("domain", domainMembership.Domain)
+		d.Set(names.AttrDomain, domainMembership.Domain)
 		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
 	} else {
-		d.Set("domain", nil)
+		d.Set(names.AttrDomain, nil)
 		d.Set("domain_iam_role_name", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
@@ -1343,8 +1343,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		}
 
-		if d.HasChanges("domain", "domain_iam_role_name") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		}
 

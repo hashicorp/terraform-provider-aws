@@ -36,7 +36,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain1),
 				),
 			},
@@ -45,7 +45,7 @@ func TestAccSESDomainMailFrom_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainMailFromExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "behavior_on_mx_failure", ses.BehaviorOnMXFailureUseDefaultValue),
-					resource.TestCheckResourceAttr(resourceName, "domain", domain),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, domain),
 					resource.TestCheckResourceAttr(resourceName, "mail_from_domain", mailFromDomain2),
 				),
 			},

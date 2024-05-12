@@ -35,7 +35,7 @@ func DataSourceWorkspace() *schema.Resource {
 				RequiredWith:  []string{names.AttrUserName},
 				ConflictsWith: []string{"workspace_id"},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -155,7 +155,7 @@ func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.ToString(workspace.WorkspaceId))
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
-	d.Set("ip_address", workspace.IpAddress)
+	d.Set(names.AttrIPAddress, workspace.IpAddress)
 	d.Set("computer_name", workspace.ComputerName)
 	d.Set(names.AttrState, workspace.State)
 	d.Set("root_volume_encryption_enabled", workspace.RootVolumeEncryptionEnabled)

@@ -44,7 +44,7 @@ func ResourceAssessmentTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +99,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 	input := &inspector.CreateAssessmentTemplateInput{
 		AssessmentTargetArn:    aws.String(d.Get("target_arn").(string)),
 		AssessmentTemplateName: aws.String(name),
-		DurationInSeconds:      aws.Int64(int64(d.Get("duration").(int))),
+		DurationInSeconds:      aws.Int64(int64(d.Get(names.AttrDuration).(int))),
 		RulesPackageArns:       flex.ExpandStringSet(d.Get("rules_package_arns").(*schema.Set)),
 	}
 
@@ -147,7 +147,7 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 
 	arn := aws.StringValue(template.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("duration", template.DurationInSeconds)
+	d.Set(names.AttrDuration, template.DurationInSeconds)
 	d.Set(names.AttrName, template.Name)
 	d.Set("rules_package_arns", aws.StringValueSlice(template.RulesPackageArns))
 	d.Set("target_arn", template.AssessmentTargetArn)

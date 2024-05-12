@@ -69,7 +69,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

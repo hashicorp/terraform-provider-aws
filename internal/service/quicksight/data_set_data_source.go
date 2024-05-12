@@ -147,7 +147,7 @@ func DataSourceDataSet() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -286,7 +286,7 @@ func logicalTableMapDataSourceSchema() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"expression": {
+												names.AttrExpression: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -543,7 +543,7 @@ func physicalTableMapDataSourceSchema() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

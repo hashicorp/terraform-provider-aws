@@ -54,7 +54,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})
@@ -163,7 +163,7 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
@@ -211,7 +211,7 @@ func TestAccIAMServerCertificate_file(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
 				Config: testAccServerCertificateConfig_file(rName, winFile),
@@ -249,7 +249,7 @@ func TestAccIAMServerCertificate_path(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateId:           rName,
-				ImportStateVerifyIgnore: []string{"private_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 		},
 	})
