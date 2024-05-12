@@ -30,7 +30,7 @@ func TestAccMetaService_basic(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", ec2.EndpointsID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", ec2.EndpointsID, acctest.Region(), "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", acctest.Partition()),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, acctest.Region()),
@@ -101,7 +101,7 @@ func TestAccMetaService_byParts(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_byPart(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", s3.EndpointsID, acctest.Region(), "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", s3.EndpointsID, acctest.Region(), "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", acctest.Region(), s3.EndpointsID)),
 					resource.TestCheckResourceAttr(dataSourceName, "supported", "true"),
 				),
@@ -122,7 +122,7 @@ func TestAccMetaService_unsupported(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_unsupported(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "dns_name", fmt.Sprintf("%s.%s.%s", waf.EndpointsID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDNSName, fmt.Sprintf("%s.%s.%s", waf.EndpointsID, endpoints.UsGovWest1RegionID, "amazonaws.com")),
 					resource.TestCheckResourceAttr(dataSourceName, "partition", endpoints.AwsUsGovPartitionID),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, endpoints.UsGovWest1RegionID),

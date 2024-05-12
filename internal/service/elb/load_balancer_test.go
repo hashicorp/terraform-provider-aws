@@ -264,7 +264,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),

@@ -172,7 +172,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -719,12 +719,12 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return aws.StringValue(v.VpcSecurityGroupId)
 	}))
 
-	d.Set("dns_name", nil)
+	d.Set(names.AttrDNSName, nil)
 	d.Set(names.AttrEndpoint, nil)
 	d.Set(names.AttrPort, nil)
 	if endpoint := rsc.Endpoint; endpoint != nil {
 		if address := aws.StringValue(endpoint.Address); address != "" {
-			d.Set("dns_name", address)
+			d.Set(names.AttrDNSName, address)
 			if port := aws.Int64Value(endpoint.Port); port != 0 {
 				d.Set(names.AttrEndpoint, fmt.Sprintf("%s:%d", address, port))
 				d.Set(names.AttrPort, port)

@@ -212,7 +212,7 @@ func ResourceDataSet() *schema.Resource {
 								MaxItems: 20,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -437,7 +437,7 @@ func logicalTableMapSchema() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 128),
 												},
-												"expression": {
+												names.AttrExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 4096),
@@ -753,7 +753,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1496,7 +1496,7 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	if v, ok := tfMap["column_name"].(string); ok {
 		calculatedColumn.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok {
+	if v, ok := tfMap[names.AttrExpression].(string); ok {
 		calculatedColumn.Expression = aws.String(v)
 	}
 
@@ -1760,7 +1760,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["schema"].(string); ok {
+	if v, ok := tfMap[names.AttrSchema].(string); ok {
 		relationalTable.Schema = aws.String(v)
 	}
 
@@ -2246,7 +2246,7 @@ func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interfac
 			tfMap["column_name"] = aws.StringValue(column.ColumnName)
 		}
 		if column.Expression != nil {
-			tfMap["expression"] = aws.StringValue(column.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(column.Expression)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -2517,7 +2517,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
-		tfMap["schema"] = aws.StringValue(apiObject.Schema)
+		tfMap[names.AttrSchema] = aws.StringValue(apiObject.Schema)
 	}
 
 	return []interface{}{tfMap}

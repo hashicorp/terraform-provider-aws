@@ -38,7 +38,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -80,7 +80,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	domain := d.Get("domain")
+	domain := d.Get(names.AttrDomain)
 	input := &acm.ListCertificatesInput{}
 
 	if v, ok := d.GetOk("key_types"); ok && v.(*schema.Set).Len() > 0 {

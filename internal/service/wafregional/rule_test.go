@@ -42,7 +42,7 @@ func TestAccWAFRegionalRule_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccWAFRegionalRule_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleNewName),
 				),
 			},
 			{

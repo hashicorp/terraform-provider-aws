@@ -51,7 +51,7 @@ func resourceLocationSMB() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -132,7 +132,7 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 		User:           aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -175,7 +175,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("agent_arns", output.AgentArns)
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrDomain, output.Domain)
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
@@ -201,7 +201,7 @@ func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta
 			User:         aws.String(d.Get("user").(string)),
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 

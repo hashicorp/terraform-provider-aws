@@ -96,7 +96,7 @@ func ResourceListenerRule() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      100,
@@ -484,7 +484,7 @@ func flattenWeightedTargetGroup(apiObject *types.WeightedTargetGroup) map[string
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.ToInt32(v)
+		tfMap[names.AttrWeight] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -734,7 +734,7 @@ func expandWeightedTargetGroup(tfMap map[string]interface{}) types.WeightedTarge
 		apiObject.TargetGroupIdentifier = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int32(int32(v))
 	}
 

@@ -45,7 +45,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, lb.Arn)
 	d.Set(names.AttrCreatedAt, lb.CreatedAt.Format(time.RFC3339))
-	d.Set("dns_name", lb.DnsName)
+	d.Set(names.AttrDNSName, lb.DnsName)
 	d.Set("health_check_path", lb.HealthCheckPath)
 	d.Set("instance_port", lb.InstancePort)
 	d.Set("ip_address_type", lb.IpAddressType)

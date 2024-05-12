@@ -86,7 +86,7 @@ func ResourceJobTemplate() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"properties": {
+															names.AttrProperties: {
 																Type:     schema.TypeMap,
 																Optional: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func ResourceJobTemplate() *schema.Resource {
 														},
 													},
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -439,7 +439,7 @@ func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configurat
 		apiObject.Configurations = expandConfigurations(v)
 	}
 
-	if v, ok := tfMap["properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Properties = flex.ExpandStringMap(v)
 	}
 
@@ -636,7 +636,7 @@ func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]int
 	}
 
 	if v := apiObject.Properties; v != nil {
-		tfMap["properties"] = aws.StringValueMap(v)
+		tfMap[names.AttrProperties] = aws.StringValueMap(v)
 	}
 
 	return tfMap

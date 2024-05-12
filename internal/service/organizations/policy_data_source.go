@@ -28,7 +28,7 @@ func DataSourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(policySummary.Id))
 	d.Set(names.AttrARN, policySummary.Arn)
 	d.Set("aws_managed", policySummary.AwsManaged)
-	d.Set("content", policy.Content)
+	d.Set(names.AttrContent, policy.Content)
 	d.Set(names.AttrDescription, policySummary.Description)
 	d.Set(names.AttrName, policySummary.Name)
 	d.Set(names.AttrType, policySummary.Type)

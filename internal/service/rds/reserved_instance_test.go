@@ -47,7 +47,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
 					resource.TestCheckResourceAttrPair(dataSourceName, "currency_code", resourceName, "currency_code"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "duration", resourceName, "duration"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
 					resource.TestCheckResourceAttr(resourceName, "instance_count", instanceCount),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),

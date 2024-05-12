@@ -151,7 +151,7 @@ func resourcePolicy() *schema.Resource {
 											},
 										},
 									},
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:          schema.TypeString,
 										Optional:      true,
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metrics"},
@@ -162,7 +162,7 @@ func resourcePolicy() *schema.Resource {
 										ConflictsWith: []string{"target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.dimensions", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.metric_name", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.namespace", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.statistic", "target_tracking_scaling_policy_configuration.0.customized_metric_specification.0.unit"},
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"expression": {
+												names.AttrExpression: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(1, 2047),
@@ -205,7 +205,7 @@ func resourcePolicy() *schema.Resource {
 																				},
 																			},
 																		},
-																		"metric_name": {
+																		names.AttrMetricName: {
 																			Type:     schema.TypeString,
 																			Required: true,
 																		},
@@ -548,7 +548,7 @@ func expandCustomizedMetricSpecification(configured []interface{}) *applicationa
 		if val, ok := data["metrics"].(*schema.Set); ok && val.Len() > 0 {
 			spec.Metrics = expandTargetTrackingMetricDataQueries(val.List())
 		} else {
-			if v, ok := data["metric_name"]; ok {
+			if v, ok := data[names.AttrMetricName]; ok {
 				spec.MetricName = aws.String(v.(string))
 			}
 
@@ -595,7 +595,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 			metricStatSpec := val.([]interface{})[0].(map[string]interface{})
 			metricSpec := metricStatSpec["metric"].([]interface{})[0].(map[string]interface{})
 			metric := &applicationautoscaling.TargetTrackingMetric{
-				MetricName: aws.String(metricSpec["metric_name"].(string)),
+				MetricName: aws.String(metricSpec[names.AttrMetricName].(string)),
 				Namespace:  aws.String(metricSpec[names.AttrNamespace].(string)),
 			}
 			if v, ok := metricSpec["dimensions"]; ok {
@@ -620,7 +620,7 @@ func expandTargetTrackingMetricDataQueries(metricDataQuerySlices []interface{}) 
 			}
 			metricDataQuery.MetricStat = metricStat
 		}
-		if val, ok := metricDataQueryFlat["expression"]; ok && val.(string) != "" {
+		if val, ok := metricDataQueryFlat[names.AttrExpression]; ok && val.(string) != "" {
 			metricDataQuery.Expression = aws.String(val.(string))
 		}
 		if val, ok := metricDataQueryFlat["label"]; ok && val.(string) != "" {
@@ -847,7 +847,7 @@ func flattenCustomizedMetricSpecification(cfg *applicationautoscaling.Customized
 		}
 
 		if v := cfg.MetricName; v != nil {
-			m["metric_name"] = aws.StringValue(v)
+			m[names.AttrMetricName] = aws.StringValue(v)
 		}
 
 		if v := cfg.Namespace; v != nil {
@@ -873,7 +873,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 		rawMetricDataQuery := metricDataQueries[i]
 		metricDataQuery[names.AttrID] = aws.StringValue(rawMetricDataQuery.Id)
 		if rawMetricDataQuery.Expression != nil {
-			metricDataQuery["expression"] = aws.StringValue(rawMetricDataQuery.Expression)
+			metricDataQuery[names.AttrExpression] = aws.StringValue(rawMetricDataQuery.Expression)
 		}
 		if rawMetricDataQuery.Label != nil {
 			metricDataQuery["label"] = aws.StringValue(rawMetricDataQuery.Label)
@@ -894,7 +894,7 @@ func flattenTargetTrackingMetricDataQueries(metricDataQueries []*applicationauto
 				}
 				metricSpec["dimensions"] = dimSpec
 			}
-			metricSpec["metric_name"] = aws.StringValue(rawMetric.MetricName)
+			metricSpec[names.AttrMetricName] = aws.StringValue(rawMetric.MetricName)
 			metricSpec[names.AttrNamespace] = aws.StringValue(rawMetric.Namespace)
 			metricStatSpec["metric"] = []map[string]interface{}{metricSpec}
 			metricStatSpec["stat"] = aws.StringValue(rawMetricStat.Stat)

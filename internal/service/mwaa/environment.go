@@ -135,7 +135,7 @@ func ResourceEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -344,7 +344,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.KmsKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok {
 		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
 	}
 
@@ -446,7 +446,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
-	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
+	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
@@ -510,8 +510,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 
-		if d.HasChange("logging_configuration") {
-			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("max_workers") {

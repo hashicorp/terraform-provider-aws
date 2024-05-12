@@ -91,7 +91,7 @@ func resourceReportDefinition() *schema.Resource {
 				Default:          types.ReportVersioningCreateNewReport,
 				ValidateDiagFunc: enum.Validate[types.ReportVersioning](),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -145,7 +145,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 			RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
 			ReportName:               aws.String(reportName),
 			ReportVersioning:         reportVersioning,
-			S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+			S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
 			S3Prefix:                 aws.String(prefix),
 			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
 			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),
@@ -196,7 +196,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_name", reportName)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
-	d.Set("s3_bucket", reportDefinition.S3Bucket)
+	d.Set(names.AttrS3Bucket, reportDefinition.S3Bucket)
 	d.Set("s3_prefix", reportDefinition.S3Prefix)
 	d.Set("s3_region", reportDefinition.S3Region)
 	d.Set("time_unit", reportDefinition.TimeUnit)
@@ -233,7 +233,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 			RefreshClosedReports:     aws.Bool(d.Get("refresh_closed_reports").(bool)),
 			ReportName:               aws.String(d.Id()),
 			ReportVersioning:         reportVersioning,
-			S3Bucket:                 aws.String(d.Get("s3_bucket").(string)),
+			S3Bucket:                 aws.String(d.Get(names.AttrS3Bucket).(string)),
 			S3Prefix:                 aws.String(prefix),
 			S3Region:                 types.AWSRegion(d.Get("s3_region").(string)),
 			TimeUnit:                 types.TimeUnit(d.Get("time_unit").(string)),

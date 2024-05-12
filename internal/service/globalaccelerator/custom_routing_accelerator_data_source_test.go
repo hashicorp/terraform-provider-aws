@@ -30,7 +30,7 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrEnabled, resourceName, names.AttrEnabled),
-					resource.TestCheckResourceAttrPair(dataSource1Name, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.#", resourceName, "ip_sets.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "ip_sets.0.ip_addresses.#", resourceName, "ip_sets.0.ip_addresses.#"),
@@ -40,7 +40,7 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrEnabled, resourceName, names.AttrEnabled),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrHostedZoneID, resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_sets.#", resourceName, "ip_sets.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_sets.0.ip_addresses.#", resourceName, "ip_sets.0.ip_addresses.#"),

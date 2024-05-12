@@ -53,7 +53,7 @@ func dataSourceCustomerGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	d.Set(names.AttrCertificateARN, cgw.CertificateArn)
 	d.Set(names.AttrDeviceName, cgw.DeviceName)
-	d.Set("ip_address", cgw.IpAddress)
+	d.Set(names.AttrIPAddress, cgw.IpAddress)
 	d.Set(names.AttrType, cgw.Type)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

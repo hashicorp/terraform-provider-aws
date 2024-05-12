@@ -79,7 +79,7 @@ func resourceInstanceFleet() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 									},
-									"properties": {
+									names.AttrProperties: {
 										Type:     schema.TypeMap,
 										Optional: true,
 										ForceNew: true,

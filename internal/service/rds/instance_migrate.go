@@ -358,7 +358,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -535,7 +535,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

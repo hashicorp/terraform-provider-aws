@@ -102,7 +102,7 @@ func resourceDatabase() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]interface{})) > 0 {
 		var props []string
 		for k, v := range v.(map[string]interface{}) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
@@ -177,7 +177,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("comment", db.Description)
 	d.Set(names.AttrName, db.Name)
-	d.Set("properties", db.Parameters)
+	d.Set(names.AttrProperties, db.Parameters)
 
 	return diags
 }

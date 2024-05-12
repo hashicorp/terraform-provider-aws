@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_thing_principal_attachment")
@@ -26,7 +27,7 @@ func ResourceThingPrincipalAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceThingPrincipalAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -44,7 +45,7 @@ func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	thing := d.Get("thing").(string)
 
 	_, err := conn.AttachThingPrincipal(ctx, &iot.AttachThingPrincipalInput{
@@ -83,7 +84,7 @@ func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	thing := d.Get("thing").(string)
 
 	found, err := GetThingPricipalAttachment(ctx, conn, thing, principal)
@@ -104,7 +105,7 @@ func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	principal := d.Get("principal").(string)
+	principal := d.Get(names.AttrPrincipal).(string)
 	thing := d.Get("thing").(string)
 
 	_, err := conn.DetachThingPrincipal(ctx, &iot.DetachThingPrincipalInput{

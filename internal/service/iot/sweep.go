@@ -298,7 +298,7 @@ func sweepThingPrincipalAttachments(region string) error {
 			r := ResourceThingPrincipalAttachment()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s|%s", thingName, v))
-			d.Set("principal", v)
+			d.Set(names.AttrPrincipal, v)
 			d.Set("thing", thingName)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

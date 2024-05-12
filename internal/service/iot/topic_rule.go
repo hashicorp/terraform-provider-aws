@@ -92,7 +92,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -298,7 +298,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -1523,7 +1523,7 @@ func expandCloudWatchMetricAction(tfList []interface{}) *awstypes.CloudwatchMetr
 	apiObject := &awstypes.CloudwatchMetricAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["metric_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 		apiObject.MetricName = aws.String(v)
 	}
 
@@ -2572,7 +2572,7 @@ func flattenCloudWatchMetricAction(apiObject *awstypes.CloudwatchMetricAction) [
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.MetricName; v != nil {
-		tfMap["metric_name"] = aws.ToString(v)
+		tfMap[names.AttrMetricName] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricNamespace; v != nil {
