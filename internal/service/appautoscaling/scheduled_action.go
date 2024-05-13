@@ -285,13 +285,13 @@ func expandScalableTargetAction(l []interface{}) *awstypes.ScalableTargetAction 
 	result := &awstypes.ScalableTargetAction{}
 
 	if v, ok := m["max_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			result.MaxCapacity = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null {
+			result.MaxCapacity = aws.Int32(v)
 		}
 	}
 	if v, ok := m["min_capacity"]; ok {
-		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			result.MinCapacity = aws.Int32(int32(v))
+		if v, null, _ := nullable.Int(v.(string)).ValueInt32(); !null {
+			result.MinCapacity = aws.Int32(v)
 		}
 	}
 
