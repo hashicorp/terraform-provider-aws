@@ -22,6 +22,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -82,22 +83,20 @@ func main() {
 		resource.ProviderNameUpper = serviceRecord.ProviderNameUpper()
 		resource.ProviderPackage = servicePackage
 
-		if resource.GenerateTests {
-			filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
+		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
-			d := g.NewGoFileDestination(filename)
-			templates, err := template.New("taggingtests").Parse(testGoTmpl)
-			if err != nil {
-				g.Fatalf("parsing base Go test template: %w", err)
-			}
+		d := g.NewGoFileDestination(filename)
+		templates, err := template.New("taggingtests").Parse(testGoTmpl)
+		if err != nil {
+			g.Fatalf("parsing base Go test template: %w", err)
+		}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
-				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
-			}
+		if err := d.WriteTemplateSet(templates, resource); err != nil {
+			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
+		}
 
-			if err := d.Write(); err != nil {
-				g.Fatalf("generating file (%s): %s", filename, err)
-			}
+		if err := d.Write(); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
 		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.gtpl", sourceName))
@@ -121,10 +120,8 @@ func main() {
 
 			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", false, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tags0", true, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsNull", false, configTmplFile, configTmpl)
-			generateTestConfig(g, testDirPath, "tagsNull", true, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl)
 		}
 	}
 
@@ -153,9 +150,9 @@ type ResourceDatum struct {
 	Serialize         bool
 	PreCheck          bool
 	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
+	NoRemoveTags      bool
 	GoImports         []goImport
 	GenerateConfig    bool
-	GenerateTests     bool
 }
 
 type goImport struct {
@@ -166,6 +163,7 @@ type goImport struct {
 type ConfigDatum struct {
 	Tags            string
 	WithDefaultTags bool
+	ComputedTag     bool
 }
 
 //go:embed test.go.gtpl
@@ -231,8 +229,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	// Look first for tagging annotations.
 	d := ResourceDatum{
-		FileName:      v.fileName,
-		GenerateTests: true,
+		FileName: v.fileName,
 	}
 	tagged := false
 	skip := false
@@ -295,6 +292,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
+
+					for i, val := range d.ImportIgnore {
+						d.ImportIgnore[i] = names.ConstOrQuote(val)
+					}
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
@@ -324,10 +325,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
 						skip = true
 
-					case "config-only":
-						d.GenerateTests = false
-						v.g.Warnf("Only generating configurations for %s.%s: verify tests manually", v.packageName, v.functionName)
-
 					default:
 						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 						continue
@@ -339,6 +336,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.SkipEmptyTags = b
+					}
+				}
+				if attr, ok := args.Keyword["noRemoveTags"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid noRemoveTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.NoRemoveTags = b
 					}
 				}
 			}
@@ -388,6 +393,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	configData := ConfigDatum{
 		Tags:            test,
 		WithDefaultTags: withDefaults,
+		ComputedTag:     (test == "tagsComputed"),
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

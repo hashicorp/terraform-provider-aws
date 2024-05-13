@@ -38,7 +38,7 @@ func (d *dataSourceService) Metadata(_ context.Context, request datasource.Metad
 func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -49,7 +49,7 @@ func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaReq
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},

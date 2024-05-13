@@ -29,7 +29,7 @@ func TestAccKMSKeyDataSource_byKeyARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -64,7 +64,7 @@ func TestAccKMSKeyDataSource_byKeyID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -99,7 +99,7 @@ func TestAccKMSKeyDataSource_byAliasARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -135,7 +135,7 @@ func TestAccKMSKeyDataSource_byAliasID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "cloud_hsm_cluster_id", ""),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckResourceAttr(dataSourceName, "custom_key_store_id", ""),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
@@ -174,7 +174,7 @@ func TestAccKMSKeyDataSource_grantToken(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -209,7 +209,7 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
@@ -249,7 +249,7 @@ func TestAccKMSKeyDataSource_multiRegionConfigurationByID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "aws_account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrPair(dataSourceName, "customer_master_key_spec", resourceName, "customer_master_key_spec"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "deletion_date"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),

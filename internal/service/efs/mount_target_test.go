@@ -39,9 +39,9 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 					testAccCheckMountTargetExists(ctx, resourceName, &mount),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_target_dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
@@ -57,8 +57,8 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTargetExists(ctx, resourceName, &mount),
 					testAccCheckMountTargetExists(ctx, resourceName2, &mount),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
-					acctest.MatchResourceAttrRegionalHostname(resourceName2, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName2, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 				),
 			},
 		},
@@ -105,7 +105,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 				Config: testAccMountTargetConfig_ipAddress(rName, "10.0.0.100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTargetExists(ctx, resourceName, &mount),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "10.0.0.100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "10.0.0.100"),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 				Config: testAccMountTargetConfig_ipAddressNullIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMountTargetExists(ctx, resourceName, &mount),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 				),
 			},
 			{

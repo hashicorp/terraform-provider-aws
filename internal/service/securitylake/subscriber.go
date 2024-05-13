@@ -102,7 +102,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"source": schema.SetNestedBlock{
+			names.AttrSource: schema.SetNestedBlock{
 				Validators: []validator.Set{
 					setvalidator.IsRequired(),
 					setvalidator.SizeAtLeast(1),
@@ -183,7 +183,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 						"external_id": schema.StringAttribute{
 							Required: true,
 						},
-						"principal": schema.StringAttribute{
+						names.AttrPrincipal: schema.StringAttribute{
 							Required: true,
 						},
 					},

@@ -32,8 +32,8 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"filter": customFiltersSchema(),
-			"group_name": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	)
 
 	input.Filters = append(input.Filters, newCustomFilterList(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -132,14 +132,14 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 	nameSuffix = strings.TrimLeft(nameSuffix, "-")
 
 	d.SetId(aws.StringValue(az.ZoneName))
-	d.Set("group_name", az.GroupName)
+	d.Set(names.AttrGroupName, az.GroupName)
 	d.Set(names.AttrName, az.ZoneName)
 	d.Set("name_suffix", nameSuffix)
 	d.Set("network_border_group", az.NetworkBorderGroup)
 	d.Set("opt_in_status", az.OptInStatus)
 	d.Set("parent_zone_id", az.ParentZoneId)
 	d.Set("parent_zone_name", az.ParentZoneName)
-	d.Set("region", az.RegionName)
+	d.Set(names.AttrRegion, az.RegionName)
 	d.Set(names.AttrState, az.State)
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)

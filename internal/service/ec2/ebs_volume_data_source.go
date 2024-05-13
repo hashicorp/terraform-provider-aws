@@ -39,11 +39,11 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -98,7 +98,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	input := &ec2.DescribeVolumesInput{}
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
-		d.Get("filter").(*schema.Set),
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -142,7 +142,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
-	d.Set("encrypted", volume.Encrypted)
+	d.Set(names.AttrEncrypted, volume.Encrypted)
 	d.Set("iops", volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)

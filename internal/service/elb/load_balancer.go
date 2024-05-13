@@ -49,7 +49,7 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			customdiff.ForceNewIfChange("subnets", func(_ context.Context, o, n, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrSubnets, func(_ context.Context, o, n, meta interface{}) bool {
 				// Force new if removing all current subnets.
 				os := o.(*schema.Set)
 				ns := n.(*schema.Set)
@@ -77,7 +77,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -130,7 +130,7 @@ func ResourceLoadBalancer() *schema.Resource {
 					"strictest",
 				}, false),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(5, 300),
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: ValidHeathCheckTarget,
@@ -252,7 +252,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnets": {
+			names.AttrSubnets: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -300,7 +300,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("subnets"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrSubnets); ok && v.(*schema.Set).Len() > 0 {
 		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -351,7 +351,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("connection_draining", lbAttrs.ConnectionDraining.Enabled)
 	d.Set("connection_draining_timeout", lbAttrs.ConnectionDraining.Timeout)
 	d.Set("cross_zone_load_balancing", lbAttrs.CrossZoneLoadBalancing.Enabled)
-	d.Set("dns_name", lb.DNSName)
+	d.Set(names.AttrDNSName, lb.DNSName)
 	if lbAttrs.ConnectionSettings != nil {
 		d.Set("idle_timeout", lbAttrs.ConnectionSettings.IdleTimeout)
 	}
@@ -365,7 +365,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set(names.AttrSecurityGroups, flex.FlattenStringList(lb.SecurityGroups))
-	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
+	d.Set(names.AttrSubnets, flex.FlattenStringList(lb.Subnets))
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
 	if lb.SourceSecurityGroup != nil {
@@ -554,7 +554,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
 				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
 				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
-				S3BucketPrefix: aws.String(l["bucket_prefix"].(string)),
+				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
 		} else if len(logs) == 0 {
 			// disable access logs
@@ -621,7 +621,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				HealthCheck: &elb.HealthCheck{
 					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
 					Interval:           aws.Int64(int64(check["interval"].(int))),
-					Target:             aws.String(check["target"].(string)),
+					Target:             aws.String(check[names.AttrTarget].(string)),
 					Timeout:            aws.Int64(int64(check["timeout"].(int))),
 					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
 				},
@@ -683,8 +683,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("subnets") {
-		o, n := d.GetChange("subnets")
+	if d.HasChange(names.AttrSubnets) {
+		o, n := d.GetChange(names.AttrSubnets)
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 

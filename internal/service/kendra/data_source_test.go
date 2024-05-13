@@ -308,7 +308,7 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, originalSchedule),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule", originalSchedule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, originalSchedule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccKendraDataSource_schedule(t *testing.T) {
 				Config: testAccDataSourceConfig_schedule(rName, rName2, rName3, rName4, rName5, rName6, updatedSchedule),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schedule", updatedSchedule),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, updatedSchedule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.DataSourceTypeS3)),
 				),
 			},

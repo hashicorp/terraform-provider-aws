@@ -2,12 +2,16 @@
 # SPDX-License-Identifier: MPL-2.0
 
 {{ define "tags" }}
-{{ if eq . "tags0" -}}
-{{- else if eq . "tags" }}
-  tags = var.tags
-{{- else if eq . "tagsNull" }}
+{{ if eq . "tags" }}
+  tags = var.resource_tags
+{{- else if eq . "tagsComputed1"}}
   tags = {
-    (var.tagKey1) = null
+    (var.unknownTagKey) = null_resource.test.id
+  }
+{{- else if eq . "tagsComputed2"}}
+  tags = {
+    (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
   }
 {{- end -}}
 {{ end -}}
@@ -21,30 +25,56 @@ provider "aws" {
 
 {{ end }}
 
+{{- if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
+provider "null" {}
+
+{{ end -}}
+
 {{- block "body" .Tags }}
 Missing block "body" in template
 {{ end }}
+{{ if or (eq .Tags "tagsComputed1") (eq .Tags "tagsComputed2") -}}
+resource "null_resource" "test" {}
+
+{{ end -}}
 
 variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+{{ if eq .Tags "tags" -}}
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}
+{{- else if eq .Tags "tagsComputed1" -}}
+variable "unknownTagKey" {
   type     = string
   nullable = false
 }
-{{ if eq .Tags "tags0" -}}
-{{ else if eq .Tags "tags" }}
-variable "tags" {
-  type     = map(string)
+{{- else if eq .Tags "tagsComputed2" -}}
+variable "unknownTagKey" {
+  type     = string
   nullable = false
 }
-{{ else if eq .Tags "tagsNull" }}
-variable "tagKey1" {
+
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
   type     = string
   nullable = false
 }
 {{- end }}
-
-{{ if .WithDefaultTags -}}
+{{ if .WithDefaultTags }}
 variable "provider_tags" {
   type     = map(string)
   nullable = false
 }
-{{ end -}}
+{{- end }}

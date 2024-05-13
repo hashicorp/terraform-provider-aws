@@ -97,7 +97,7 @@ func resourceBranch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -200,7 +200,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -281,7 +281,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("custom_domains", branch.CustomDomains)
 	d.Set(names.AttrDescription, branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
-	d.Set("display_name", branch.DisplayName)
+	d.Set(names.AttrDisplayName, branch.DisplayName)
 	d.Set("enable_auto_build", branch.EnableAutoBuild)
 	d.Set("enable_basic_auth", branch.EnableBasicAuth)
 	d.Set("enable_notification", branch.EnableNotification)
@@ -326,8 +326,8 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChange(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChange("enable_auto_build") {

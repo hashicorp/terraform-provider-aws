@@ -99,7 +99,7 @@ func resourcePipe() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -109,7 +109,7 @@ func resourcePipe() *schema.Resource {
 				),
 			},
 			"source_parameters": sourceParametersSchema(),
-			"target": {
+			names.AttrTarget: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -133,9 +133,9 @@ func resourcePipeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 		Name:         aws.String(name),
 		RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-		Source:       aws.String(d.Get("source").(string)),
+		Source:       aws.String(d.Get(names.AttrSource).(string)),
 		Tags:         getTagsIn(ctx),
-		Target:       aws.String(d.Get("target").(string)),
+		Target:       aws.String(d.Get(names.AttrTarget).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -202,7 +202,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set(names.AttrRoleARN, output.RoleArn)
-	d.Set("source", output.Source)
+	d.Set(names.AttrSource, output.Source)
 	if v := output.SourceParameters; !types.IsZero(v) {
 		if err := d.Set("source_parameters", []interface{}{flattenPipeSourceParameters(v)}); err != nil {
 			return diag.Errorf("setting source_parameters: %s", err)
@@ -210,7 +210,7 @@ func resourcePipeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set("source_parameters", nil)
 	}
-	d.Set("target", output.Target)
+	d.Set(names.AttrTarget, output.Target)
 	if v := output.TargetParameters; !types.IsZero(v) {
 		if err := d.Set("target_parameters", []interface{}{flattenPipeTargetParameters(v)}); err != nil {
 			return diag.Errorf("setting target_parameters: %s", err)
@@ -231,7 +231,7 @@ func resourcePipeUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			DesiredState: awstypes.RequestedPipeState(d.Get("desired_state").(string)),
 			Name:         aws.String(d.Id()),
 			RoleArn:      aws.String(d.Get(names.AttrRoleARN).(string)),
-			Target:       aws.String(d.Get("target").(string)),
+			Target:       aws.String(d.Get(names.AttrTarget).(string)),
 			// Reset state in case it's a deletion, have to set the input to an empty string otherwise it doesn't get overwritten.
 			TargetParameters: &awstypes.PipeTargetParameters{
 				InputTemplate: aws.String(""),

@@ -63,7 +63,7 @@ func ResourceBucket() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -73,7 +73,7 @@ func ResourceBucket() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,9 +134,9 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("bundle_id", out.BundleId)
 	d.Set(names.AttrCreatedAt, out.CreatedAt.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
-	d.Set("region", out.Location.RegionName)
+	d.Set(names.AttrRegion, out.Location.RegionName)
 	d.Set("support_code", out.SupportCode)
-	d.Set("url", out.Url)
+	d.Set(names.AttrURL, out.Url)
 
 	setTagsOut(ctx, out.Tags)
 

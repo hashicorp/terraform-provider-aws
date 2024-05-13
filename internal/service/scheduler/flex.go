@@ -29,7 +29,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.Capa
 		a.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		a.Weight = int32(v)
 	}
 
@@ -45,7 +45,7 @@ func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrateg
 		m["capacity_provider"] = aws.ToString(v)
 	}
 
-	m["weight"] = apiObject.Weight
+	m[names.AttrWeight] = apiObject.Weight
 
 	return m
 }
@@ -107,7 +107,7 @@ func expandECSParameters(ctx context.Context, tfMap map[string]interface{}) *typ
 		a.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -191,7 +191,7 @@ func flattenECSParameters(ctx context.Context, apiObject *types.EcsParameters) m
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		m["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		m[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.PlacementConstraints; len(v) > 0 {
@@ -266,7 +266,7 @@ func expandEventBridgeParameters(tfMap map[string]interface{}) *types.EventBridg
 		a.DetailType = aws.String(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		a.Source = aws.String(v)
 	}
 
@@ -285,7 +285,7 @@ func flattenEventBridgeParameters(apiObject *types.EventBridgeParameters) map[st
 	}
 
 	if v := apiObject.Source; v != nil {
-		m["source"] = aws.ToString(v)
+		m[names.AttrSource] = aws.ToString(v)
 	}
 
 	return m
@@ -302,7 +302,7 @@ func expandFlexibleTimeWindow(tfMap map[string]interface{}) *types.FlexibleTimeW
 		a.MaximumWindowInMinutes = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["mode"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 		a.Mode = types.FlexibleTimeWindowMode(v)
 	}
 
@@ -321,7 +321,7 @@ func flattenFlexibleTimeWindow(apiObject *types.FlexibleTimeWindow) map[string]i
 	}
 
 	if v := string(apiObject.Mode); v != "" {
-		m["mode"] = v
+		m[names.AttrMode] = v
 	}
 
 	return m
@@ -374,7 +374,7 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 		awsvpcConfig.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		awsvpcConfig.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -402,7 +402,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	}
 
 	if v := apiObject.AwsvpcConfiguration.Subnets; v != nil {
-		m["subnets"] = flex.FlattenStringValueSet(v)
+		m[names.AttrSubnets] = flex.FlattenStringValueSet(v)
 	}
 
 	return m
@@ -415,7 +415,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementCons
 
 	a := types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		a.Expression = aws.String(v)
 	}
 
@@ -430,7 +430,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	m := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		m["expression"] = aws.ToString(v)
+		m[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {

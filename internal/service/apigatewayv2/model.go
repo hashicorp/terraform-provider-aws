@@ -44,7 +44,7 @@ func resourceModel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 256),
@@ -62,7 +62,7 @@ func resourceModel() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must be alphanumeric"),
 				),
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -87,9 +87,9 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get(names.AttrName).(string)
 	input := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
-		ContentType: aws.String(d.Get("content_type").(string)),
+		ContentType: aws.String(d.Get(names.AttrContentType).(string)),
 		Name:        aws.String(name),
-		Schema:      aws.String(d.Get("schema").(string)),
+		Schema:      aws.String(d.Get(names.AttrSchema).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -123,10 +123,10 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Model (%s): %s", d.Id(), err)
 	}
 
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set(names.AttrName, output.Name)
-	d.Set("schema", output.Schema)
+	d.Set(names.AttrSchema, output.Schema)
 
 	return diags
 }
@@ -140,8 +140,8 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ModelId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("content_type") {
-		input.ContentType = aws.String(d.Get("content_type").(string))
+	if d.HasChange(names.AttrContentType) {
+		input.ContentType = aws.String(d.Get(names.AttrContentType).(string))
 	}
 
 	if d.HasChange(names.AttrDescription) {
@@ -152,8 +152,8 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Name = aws.String(d.Get(names.AttrName).(string))
 	}
 
-	if d.HasChange("schema") {
-		input.Schema = aws.String(d.Get("schema").(string))
+	if d.HasChange(names.AttrSchema) {
+		input.Schema = aws.String(d.Get(names.AttrSchema).(string))
 	}
 
 	_, err := conn.UpdateModel(ctx, input)

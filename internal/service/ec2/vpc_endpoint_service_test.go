@@ -46,7 +46,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "service_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),

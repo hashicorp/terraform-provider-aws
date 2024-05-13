@@ -50,7 +50,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -64,12 +64,12 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "profiler"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "tfacctest"),
@@ -91,7 +91,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -150,7 +150,7 @@ func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -185,7 +185,7 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -221,7 +221,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -273,7 +273,7 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -328,7 +328,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -372,7 +372,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -407,7 +407,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -444,7 +444,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -488,7 +488,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -531,7 +531,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -588,7 +588,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -627,7 +627,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -667,7 +667,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -711,7 +711,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -780,7 +780,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
@@ -792,12 +792,12 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "4.0.0"),
 					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "tfacctest"),
@@ -819,7 +819,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",
@@ -863,7 +863,7 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"allow_major_version_upgrade",
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"final_snapshot_identifier",
 					"master_password",
 					"skip_final_snapshot",

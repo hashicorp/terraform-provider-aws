@@ -62,7 +62,9 @@ func expandAutoTuneOptions(tfMap map[string]interface{}) *elasticsearch.AutoTune
 	options.DesiredState = autoTuneOptionsInput.DesiredState
 	options.MaintenanceSchedules = autoTuneOptionsInput.MaintenanceSchedules
 
-	options.RollbackOnDisable = aws.String(tfMap["rollback_on_disable"].(string))
+	if v, ok := tfMap["rollback_on_disable"].(string); ok && v != "" {
+		options.RollbackOnDisable = aws.String(v)
+	}
 
 	return options
 }
@@ -94,7 +96,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.A
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap["duration"].([]interface{}); ok {
+		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
 			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
 		}
 
@@ -109,7 +111,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*elasticsearch.A
 func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *elasticsearch.Duration {
 	autoTuneMaintenanceScheduleDuration := &elasticsearch.Duration{
 		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
-		Unit:  aws.String(tfMap["unit"].(string)),
+		Unit:  aws.String(tfMap[names.AttrUnit].(string)),
 	}
 
 	return autoTuneMaintenanceScheduleDuration
@@ -214,7 +216,7 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*elastic
 
 		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m["duration"] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
 		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
@@ -228,7 +230,7 @@ func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDurat
 	m := map[string]interface{}{}
 
 	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrUnit] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
 }

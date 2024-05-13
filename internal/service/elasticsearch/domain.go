@@ -180,13 +180,13 @@ func ResourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(elasticsearch.TimeUnit_Values(), false),
@@ -441,7 +441,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -813,7 +813,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		d.Set("endpoint", endpoints["vpc"])
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
 
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -821,7 +821,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
@@ -1040,7 +1040,7 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
 func isDedicatedMasterDisabled(k, old, new string, d *schema.ResourceData) bool {

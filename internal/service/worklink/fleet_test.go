@@ -67,14 +67,14 @@ func TestAccWorkLinkFleet_displayName(t *testing.T) {
 				Config: testAccFleetConfig_displayName(suffix, "display1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display1"),
 				),
 			},
 			{
 				Config: testAccFleetConfig_displayName(suffix, "display2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "display2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "display2"),
 				),
 			},
 			{

@@ -53,7 +53,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -69,7 +69,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
-									"encrypted": {
+									names.AttrEncrypted: {
 										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
@@ -851,7 +851,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"group_name": {
+						names.AttrGroupName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -918,7 +918,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ec2.ResourceType_Values(), false),
@@ -1325,7 +1325,7 @@ func expandLaunchTemplateBlockDeviceMappingRequest(tfMap map[string]interface{})
 		apiObject.Ebs = expandLaunchTemplateEBSBlockDeviceRequest(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1377,7 +1377,7 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).ValueBool(); !null {
+	if v, null, _ := nullable.Bool(tfMap[names.AttrEncrypted].(string)).ValueBool(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -2103,7 +2103,7 @@ func expandLaunchTemplatePlacementRequest(tfMap map[string]interface{}) *ec2.Lau
 		apiObject.AvailabilityZone = aws.String(v)
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -2154,7 +2154,7 @@ func expandLaunchTemplateTagSpecificationRequest(ctx context.Context, tfMap map[
 
 	apiObject := &ec2.LaunchTemplateTagSpecificationRequest{}
 
-	if v, ok := tfMap["resource_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrResourceType].(string); ok && v != "" {
 		apiObject.ResourceType = aws.String(v)
 	}
 
@@ -2351,7 +2351,7 @@ func flattenLaunchTemplateBlockDeviceMapping(apiObject *ec2.LaunchTemplateBlockD
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.StringValue(v)
+		tfMap[names.AttrDeviceName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs; v != nil {
@@ -2399,7 +2399,7 @@ func flattenLaunchTemplateEBSBlockDevice(apiObject *ec2.LaunchTemplateEbsBlockDe
 	}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = strconv.FormatBool(aws.BoolValue(v))
+		tfMap[names.AttrEncrypted] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.Iops; v != nil {
@@ -3097,7 +3097,7 @@ func flattenLaunchTemplatePlacement(apiObject *ec2.LaunchTemplatePlacement) map[
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.HostId; v != nil {
@@ -3148,7 +3148,7 @@ func flattenLaunchTemplateTagSpecification(ctx context.Context, apiObject *ec2.L
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ResourceType; v != nil {
-		tfMap["resource_type"] = aws.StringValue(v)
+		tfMap[names.AttrResourceType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {

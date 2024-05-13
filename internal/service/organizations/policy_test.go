@@ -42,7 +42,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
-					resource.TestCheckResourceAttr(resourceName, "content", content1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, organizations.PolicyTypeServiceControlPolicy),
@@ -52,7 +52,7 @@ func testAccPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_required(rName, content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "content", content2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content2),
 				),
 			},
 			{
@@ -197,7 +197,7 @@ func testAccPolicy_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
-					resource.TestCheckResourceAttr(resourceName, "content", content),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),

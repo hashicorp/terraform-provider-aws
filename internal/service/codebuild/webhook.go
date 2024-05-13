@@ -48,7 +48,7 @@ func resourceWebhook() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"filter": {
+						names.AttrFilter: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -88,7 +88,7 @@ func resourceWebhook() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -152,7 +152,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("payload_url", webhook.PayloadUrl)
 	d.Set("project_name", d.Id())
 	d.Set("secret", d.Get("secret").(string))
-	d.Set("url", webhook.Url)
+	d.Set(names.AttrURL, webhook.Url)
 
 	return diags
 }
@@ -235,7 +235,7 @@ func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
 			continue
 		}
 
-		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := tfMap[names.AttrFilter].([]interface{}); ok && len(v) > 0 {
 			apiObjects = append(apiObjects, expandWebhookFilters(v))
 		}
 	}
@@ -299,7 +299,7 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"filter": flattenWebhookFilters(apiObject),
+			names.AttrFilter: flattenWebhookFilters(apiObject),
 		}
 		tfList = append(tfList, tfMap)
 	}

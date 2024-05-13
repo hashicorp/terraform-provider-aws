@@ -124,7 +124,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -162,7 +162,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -183,7 +183,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
 
 	databaseName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	id := tableCreateResourceID(tableName, databaseName)
 	input := &timestreamwrite.CreateTableInput{
 		DatabaseName: aws.String(databaseName),
@@ -199,7 +199,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RetentionProperties = expandRetentionProperties(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -239,13 +239,13 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("setting retention_properties: %s", err)
 	}
 	if table.Schema != nil {
-		if err := d.Set("schema", []interface{}{flattenSchema(table.Schema)}); err != nil {
+		if err := d.Set(names.AttrSchema, []interface{}{flattenSchema(table.Schema)}); err != nil {
 			return diag.Errorf("setting schema: %s", err)
 		}
 	} else {
-		d.Set("schema", nil)
+		d.Set(names.AttrSchema, nil)
 	}
-	d.Set("table_name", table.TableName)
+	d.Set(names.AttrTableName, table.TableName)
 
 	return nil
 }
@@ -272,8 +272,8 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.RetentionProperties = expandRetentionProperties(d.Get("retention_properties").([]interface{}))
 		}
 
-		if d.HasChange("schema") {
-			if v, ok := d.GetOk("schema"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrSchema) {
+			if v, ok := d.GetOk(names.AttrSchema); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Schema = expandSchema(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}

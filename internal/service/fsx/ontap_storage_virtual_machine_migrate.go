@@ -80,13 +80,13 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 										ValidateFunc:  validation.StringLenBetween(1, 2000),
 										ConflictsWith: []string{"active_directory_configuration.0.self_managed_active_directory_configuration.0.organizational_unit_distinguidshed_name"},
 									},
-									"password": {
+									names.AttrPassword: {
 										Type:         schema.TypeString,
 										Sensitive:    true,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -97,7 +97,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -107,7 +107,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -124,7 +124,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -141,7 +141,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -158,7 +158,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -173,7 +173,7 @@ func resourceONTAPStorageVirtualMachineV0() *schema.Resource {
 					},
 				},
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(11, 21),

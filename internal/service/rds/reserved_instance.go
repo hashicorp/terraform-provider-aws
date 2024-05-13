@@ -55,7 +55,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -179,7 +179,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrARN, reservation.ReservedDBInstanceArn)
 	d.Set("currency_code", reservation.CurrencyCode)
 	d.Set("db_instance_class", reservation.DBInstanceClass)
-	d.Set("duration", reservation.Duration)
+	d.Set(names.AttrDuration, reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
 	d.Set("instance_count", reservation.DBInstanceCount)
 	d.Set("lease_id", reservation.LeaseId)

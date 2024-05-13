@@ -103,7 +103,7 @@ func ResourceProject() *schema.Resource {
 											validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
 										),
 									},
-									"prefix": {
+									names.AttrPrefix: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -374,7 +374,7 @@ func expandS3Destination(s3Destination []interface{}) *awstypes.S3DestinationCon
 		result.Bucket = aws.String(v)
 	}
 
-	if v, ok := tfMap["prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		result.Prefix = aws.String(v)
 	}
 
@@ -425,7 +425,7 @@ func flattenS3Destination(s3Destination *awstypes.S3Destination) []interface{} {
 	}
 
 	if s3Destination.Prefix != nil {
-		values["prefix"] = aws.ToString(s3Destination.Prefix)
+		values[names.AttrPrefix] = aws.ToString(s3Destination.Prefix)
 	}
 
 	return []interface{}{values}

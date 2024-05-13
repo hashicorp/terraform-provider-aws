@@ -38,9 +38,9 @@ func TestAccMemoryDBUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", names.AttrPassword),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
@@ -75,7 +75,7 @@ func TestAccMemoryDBUser_authenticationModeIAM(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 				),
 			},
 			{
@@ -257,7 +257,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes["user_name"])
+			_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -287,7 +287,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
 
-		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes["user_name"])
+		_, err := tfmemorydb.FindUserByName(ctx, conn, rs.Primary.Attributes[names.AttrUserName])
 
 		return err
 	}

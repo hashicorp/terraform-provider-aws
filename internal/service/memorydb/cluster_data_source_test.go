@@ -58,7 +58,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "shards.0.nodes.0.endpoint.0.port", resourceName, "shards.0.nodes.0.endpoint.0.port"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "snapshot_retention_limit", resourceName, "snapshot_retention_limit"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "snapshot_window", resourceName, "snapshot_window"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "sns_topic_arn", resourceName, "sns_topic_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSNSTopicARN, resourceName, names.AttrSNSTopicARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_group_name", resourceName, "subnet_group_name"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Test", "test"),

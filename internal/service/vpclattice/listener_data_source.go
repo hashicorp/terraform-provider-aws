@@ -66,7 +66,7 @@ func DataSourceListener() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
@@ -246,7 +246,7 @@ func flattenDefaultActionForwardTargetGroupsDataSource(groups []types.WeightedTa
 	for _, targetGroup := range groups {
 		m := map[string]interface{}{
 			"target_group_identifier": aws.ToString(targetGroup.TargetGroupIdentifier),
-			"weight":                  aws.ToInt32(targetGroup.Weight),
+			names.AttrWeight:          aws.ToInt32(targetGroup.Weight),
 		}
 		targetGroups = append(targetGroups, m)
 	}

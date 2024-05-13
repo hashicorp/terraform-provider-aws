@@ -236,12 +236,12 @@ func ResourceInstance() *schema.Resource {
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -297,7 +297,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
 					return create.StringHashcode(buf.String())
 				},
@@ -331,7 +331,7 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -348,7 +348,7 @@ func ResourceInstance() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 					buf.WriteString(fmt.Sprintf("%s-", m["virtual_name"].(string)))
 					if v, ok := m["no_device"].(bool); ok && v {
 						buf.WriteString(fmt.Sprintf("%t-", v))
@@ -698,11 +698,11 @@ func ResourceInstance() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -1092,7 +1092,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				continue
 			}
 
-			volID := getVolIDByDeviceName(instance, bd["device_name"].(string))
+			volID := getVolIDByDeviceName(instance, bd[names.AttrDeviceName].(string))
 			if volID == "" {
 				continue
 			}
@@ -2342,7 +2342,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["iops"] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
-			bd["encrypted"] = aws.BoolValue(vol.Encrypted)
+			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
 		}
 		if vol.KmsKeyId != nil {
 			bd[names.AttrKMSKeyID] = aws.StringValue(vol.KmsKeyId)
@@ -2351,7 +2351,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["throughput"] = aws.Int64Value(vol.Throughput)
 		}
 		if instanceBd.DeviceName != nil {
-			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
+			bd[names.AttrDeviceName] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
 			if ds {
@@ -2559,7 +2559,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 
@@ -2597,7 +2597,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 			}
 
 			blockDevices = append(blockDevices, &ec2.BlockDeviceMapping{
-				DeviceName: aws.String(bd["device_name"].(string)),
+				DeviceName: aws.String(bd[names.AttrDeviceName].(string)),
 				Ebs:        ebs,
 			})
 		}
@@ -2608,7 +2608,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 		for _, v := range vL {
 			bd := v.(map[string]interface{})
 			bdm := &ec2.BlockDeviceMapping{
-				DeviceName:  aws.String(bd["device_name"].(string)),
+				DeviceName:  aws.String(bd[names.AttrDeviceName].(string)),
 				VirtualName: aws.String(bd["virtual_name"].(string)),
 			}
 			if v, ok := bd["no_device"].(bool); ok && v {
@@ -2633,7 +2633,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["encrypted"].(bool); ok && v {
+			if v, ok := bd[names.AttrEncrypted].(bool); ok && v {
 				ebs.Encrypted = aws.Bool(v)
 			}
 

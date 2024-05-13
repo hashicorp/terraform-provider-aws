@@ -49,7 +49,7 @@ func TestAccGlueCatalogTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_keys.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "partition_index.#", "0"),
 				),
@@ -642,7 +642,7 @@ func TestAccGlueCatalogTable_targetTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target_table.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", "catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.catalog_id", "aws_glue_catalog_table.test2", names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.database_name", "aws_glue_catalog_table.test2", names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "target_table.0.name", "aws_glue_catalog_table.test2", names.AttrName),
 				),

@@ -73,7 +73,7 @@ func ResourceDocument() *schema.Resource {
 								validation.StringLenBetween(3, 128),
 							),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							MinItems: 1,
 							Required: true,
@@ -85,7 +85,7 @@ func ResourceDocument() *schema.Resource {
 					},
 				},
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -141,7 +141,7 @@ func ResourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -226,7 +226,7 @@ func ResourceDocument() *schema.Resource {
 					}
 				}
 
-				if d.HasChange("content") {
+				if d.HasChange(names.AttrContent) {
 					if err := d.SetNewComputed("default_version"); err != nil {
 						return err
 					}
@@ -239,7 +239,7 @@ func ResourceDocument() *schema.Resource {
 					if err := d.SetNewComputed("latest_version"); err != nil {
 						return err
 					}
-					if err := d.SetNewComputed("parameter"); err != nil {
+					if err := d.SetNewComputed(names.AttrParameter); err != nil {
 						return err
 					}
 				}
@@ -256,7 +256,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateDocumentInput{
-		Content:        aws.String(d.Get("content").(string)),
+		Content:        aws.String(d.Get(names.AttrContent).(string)),
 		DocumentFormat: aws.String(d.Get("document_format").(string)),
 		DocumentType:   aws.String(d.Get("document_type").(string)),
 		Name:           aws.String(name),
@@ -347,7 +347,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("latest_version", doc.LatestVersion)
 	d.Set(names.AttrName, doc.Name)
 	d.Set("owner", doc.Owner)
-	if err := d.Set("parameter", flattenDocumentParameters(doc.Parameters)); err != nil {
+	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 	d.Set("platform_types", aws.StringValueSlice(doc.PlatformTypes))
@@ -369,7 +369,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
 		}
 
-		d.Set("content", output.Content)
+		d.Set(names.AttrContent, output.Content)
 	}
 
 	{
@@ -456,9 +456,9 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Update for schema version 1.x is not allowed.
 		isSchemaVersion1, _ := regexp.MatchString(`^1[.][0-9]$`, d.Get("schema_version").(string))
 
-		if d.HasChange("content") || !isSchemaVersion1 {
+		if d.HasChange(names.AttrContent) || !isSchemaVersion1 {
 			input := &ssm.UpdateDocumentInput{
-				Content:         aws.String(d.Get("content").(string)),
+				Content:         aws.String(d.Get(names.AttrContent).(string)),
 				DocumentFormat:  aws.String(d.Get("document_format").(string)),
 				DocumentVersion: aws.String(d.Get("default_version").(string)),
 				Name:            aws.String(d.Id()),
@@ -652,7 +652,7 @@ func expandAttachmentsSource(tfMap map[string]interface{}) *ssm.AttachmentsSourc
 		apiObject.Name = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
 		apiObject.Values = flex.ExpandStringList(v)
 	}
 

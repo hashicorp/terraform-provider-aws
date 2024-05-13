@@ -65,7 +65,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"encryption_configuration": {
+			names.AttrEncryptionConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
@@ -91,7 +91,7 @@ func resourceDatabase() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -102,7 +102,7 @@ func resourceDatabase() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -126,7 +126,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]interface{})) > 0 {
 		var props []string
 		for k, v := range v.(map[string]interface{}) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
@@ -177,7 +177,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("comment", db.Description)
 	d.Set(names.AttrName, db.Name)
-	d.Set("properties", db.Parameters)
+	d.Set(names.AttrProperties, db.Parameters)
 
 	return diags
 }
@@ -187,7 +187,7 @@ func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
 	queryString := fmt.Sprintf("drop database `%s`", d.Id())
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		queryString += " cascade"
 	}
 	queryString += ";"
@@ -239,7 +239,7 @@ func findDatabaseByName(ctx context.Context, conn *athena.Client, name string) (
 func expandResultConfiguration(d *schema.ResourceData) *types.ResultConfiguration {
 	resultConfig := &types.ResultConfiguration{
 		OutputLocation:          aws.String("s3://" + d.Get(names.AttrBucket).(string)),
-		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get("encryption_configuration").([]interface{})),
+		EncryptionConfiguration: expandResultConfigurationEncryptionConfig(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 	}
 
 	if v, ok := d.GetOk("expected_bucket_owner"); ok {

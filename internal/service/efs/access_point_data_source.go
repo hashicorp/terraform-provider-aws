@@ -32,7 +32,7 @@ func DataSourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func DataSourceAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -133,7 +133,7 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 		Service:   "elasticfilesystem",
 	}.String()
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", fsID)
+	d.Set(names.AttrFileSystemID, fsID)
 	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)

@@ -57,7 +57,7 @@ func ResourceDataSource() *schema.Resource {
 		},
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				if configuration, dataSourcetype := diff.Get("configuration").([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if configuration, dataSourcetype := diff.Get(names.AttrConfiguration).([]interface{}), diff.Get(names.AttrType).(string); len(configuration) > 0 && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("configuration must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -65,7 +65,7 @@ func ResourceDataSource() *schema.Resource {
 					return fmt.Errorf("role_arn must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
-				if schedule, dataSourcetype := diff.Get("schedule").(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
+				if schedule, dataSourcetype := diff.Get(names.AttrSchedule).(string), diff.Get(names.AttrType).(string); schedule != "" && dataSourcetype == string(types.DataSourceTypeCustom) {
 					return fmt.Errorf("schedule must not be set when type is %s", string(types.DataSourceTypeCustom))
 				}
 
@@ -78,7 +78,7 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -355,7 +355,7 @@ func ResourceDataSource() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"target": {
+									names.AttrTarget: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -456,7 +456,7 @@ func ResourceDataSource() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -497,7 +497,7 @@ func hookConfigurationSchema() *schema.Schema {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				"s3_bucket": {
+				names.AttrS3Bucket: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -605,7 +605,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Type:        types.DataSourceType(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		input.Configuration = expandDataSourceConfiguration(v.([]interface{}))
 	}
 
@@ -625,7 +625,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
@@ -705,12 +705,12 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("language_code", resp.LanguageCode)
 	d.Set(names.AttrName, resp.Name)
 	d.Set(names.AttrRoleARN, resp.RoleArn)
-	d.Set("schedule", resp.Schedule)
+	d.Set(names.AttrSchedule, resp.Schedule)
 	d.Set(names.AttrStatus, resp.Status)
 	d.Set(names.AttrType, resp.Type)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
-	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenDataSourceConfiguration(resp.Configuration)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -726,7 +726,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	if d.HasChanges("configuration", "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, "schedule") {
+	if d.HasChanges(names.AttrConfiguration, "custom_document_enrichment_configuration", names.AttrDescription, "language_code", names.AttrName, names.AttrRoleARN, names.AttrSchedule) {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -737,8 +737,8 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			IndexId: aws.String(indexId),
 		}
 
-		if d.HasChange("configuration") {
-			input.Configuration = expandDataSourceConfiguration(d.Get("configuration").([]interface{}))
+		if d.HasChange(names.AttrConfiguration) {
+			input.Configuration = expandDataSourceConfiguration(d.Get(names.AttrConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("custom_document_enrichment_configuration") {
@@ -761,8 +761,8 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 
-		if d.HasChange("schedule") {
-			input.Schedule = aws.String(d.Get("schedule").(string))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
@@ -1229,7 +1229,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 			inlineConfigExpanded.DocumentContentDeletion = v
 		}
 
-		if v, ok := data["target"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrTarget].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Target = expandDocumentAttributeTarget(v)
 		}
 
@@ -1278,7 +1278,7 @@ func expandHookConfiguration(tfList []interface{}) *types.HookConfiguration {
 
 	result := &types.HookConfiguration{
 		LambdaArn: aws.String(tfMap["lambda_arn"].(string)),
-		S3Bucket:  aws.String(tfMap["s3_bucket"].(string)),
+		S3Bucket:  aws.String(tfMap[names.AttrS3Bucket].(string)),
 	}
 
 	if v, ok := tfMap["invocation_condition"].([]interface{}); ok && len(v) > 0 {
@@ -1592,7 +1592,7 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Target; v != nil {
-			m["target"] = flattenDocumentAttributeTarget(v)
+			m[names.AttrTarget] = flattenDocumentAttributeTarget(v)
 		}
 
 		inlineConfigurationList = append(inlineConfigurationList, m)
@@ -1627,8 +1627,8 @@ func flattenHookConfiguration(apiObject *types.HookConfiguration) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"lambda_arn": aws.ToString(apiObject.LambdaArn),
-		"s3_bucket":  aws.ToString(apiObject.S3Bucket),
+		"lambda_arn":       aws.ToString(apiObject.LambdaArn),
+		names.AttrS3Bucket: aws.ToString(apiObject.S3Bucket),
 	}
 
 	if v := apiObject.InvocationCondition; v != nil {

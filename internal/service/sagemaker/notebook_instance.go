@@ -149,7 +149,7 @@ func ResourceNotebookInstance() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"url": {
+			names.AttrURL: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -263,7 +263,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("root_access", notebookInstance.RootAccess)
 	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
 	d.Set(names.AttrSubnetID, notebookInstance.SubnetId)
-	d.Set("url", notebookInstance.Url)
+	d.Set(names.AttrURL, notebookInstance.Url)
 	d.Set("volume_size", notebookInstance.VolumeSizeInGB)
 
 	if err := d.Set("instance_metadata_service_configuration", flattenNotebookInstanceMetadataServiceConfiguration(notebookInstance.InstanceMetadataServiceConfiguration)); err != nil {

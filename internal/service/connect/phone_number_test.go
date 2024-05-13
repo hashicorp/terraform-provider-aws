@@ -103,14 +103,14 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestMatchResourceAttr(resourceName, "phone_number", regexache.MustCompile(fmt.Sprintf("\\%s[0-9]{0,10}", prefix))),
-					resource.TestCheckResourceAttr(resourceName, "prefix", prefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrefix, prefix),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"prefix"},
+				ImportStateVerifyIgnore: []string{names.AttrPrefix},
 			},
 		},
 	})

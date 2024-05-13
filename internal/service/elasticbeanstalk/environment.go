@@ -43,7 +43,7 @@ func settingSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"namespace": {
+			names.AttrNamespace: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -386,7 +386,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		m := map[string]interface{}{}
 
 		if optionSetting.Namespace != nil {
-			m["namespace"] = aws.ToString(optionSetting.Namespace)
+			m[names.AttrNamespace] = aws.ToString(optionSetting.Namespace)
 		}
 
 		if optionSetting.OptionName != nil {
@@ -784,7 +784,7 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, 
 // as they become overridden from within the template
 func optionSettingValueHash(v interface{}) int {
 	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
+	namespace := rd[names.AttrNamespace].(string)
 	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
@@ -799,7 +799,7 @@ func optionSettingValueHash(v interface{}) int {
 
 func optionSettingKeyHash(v interface{}) int {
 	rd := v.(map[string]interface{})
-	namespace := rd["namespace"].(string)
+	namespace := rd[names.AttrNamespace].(string)
 	optionName := rd[names.AttrName].(string)
 	var resourceName string
 	if v, ok := rd["resource"].(string); ok {
@@ -822,7 +822,7 @@ func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting 
 	if s != nil {
 		for _, setting := range s.List() {
 			optionSetting := awstypes.ConfigurationOptionSetting{
-				Namespace:  aws.String(setting.(map[string]interface{})["namespace"].(string)),
+				Namespace:  aws.String(setting.(map[string]interface{})[names.AttrNamespace].(string)),
 				OptionName: aws.String(setting.(map[string]interface{})[names.AttrName].(string)),
 				Value:      aws.String(setting.(map[string]interface{})[names.AttrValue].(string)),
 			}

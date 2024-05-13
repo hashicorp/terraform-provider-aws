@@ -72,7 +72,7 @@ func resourceAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +85,7 @@ func resourceAccelerator() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -202,10 +202,10 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("dns_name", accelerator.DnsName)
+	d.Set(names.AttrDNSName, accelerator.DnsName)
 	d.Set("dual_stack_dns_name", accelerator.DualStackDnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
+	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)

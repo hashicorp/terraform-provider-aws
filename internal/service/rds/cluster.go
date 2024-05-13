@@ -77,7 +77,7 @@ func ResourceCluster() *schema.Resource {
 			},
 			// apply_immediately is used to determine when the update modifications take place.
 			// See http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -175,7 +175,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -206,7 +206,7 @@ func ResourceCluster() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -257,7 +257,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -415,7 +415,7 @@ func ResourceCluster() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"bucket_prefix": {
+						names.AttrBucketPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -627,7 +627,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -723,7 +723,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			MasterUsername:      aws.String(d.Get("master_username").(string)),
 			S3BucketName:        aws.String(tfMap[names.AttrBucketName].(string)),
 			S3IngestionRoleArn:  aws.String(tfMap["ingestion_role"].(string)),
-			S3Prefix:            aws.String(tfMap["bucket_prefix"].(string)),
+			S3Prefix:            aws.String(tfMap[names.AttrBucketPrefix].(string)),
 			SourceEngine:        aws.String(tfMap["source_engine"].(string)),
 			SourceEngineVersion: aws.String(tfMap["source_engine_version"].(string)),
 			Tags:                getTagsIn(ctx),
@@ -753,7 +753,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -877,7 +877,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1003,7 +1003,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSystemId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1195,19 +1195,19 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
 		domainMembership := dbc.DomainMemberships[0]
-		d.Set("domain", domainMembership.Domain)
+		d.Set(names.AttrDomain, domainMembership.Domain)
 		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
 	} else {
-		d.Set("domain", nil)
+		d.Set(names.AttrDomain, nil)
 		d.Set("domain_iam_role_name", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
-	d.Set("endpoint", dbc.Endpoint)
+	d.Set(names.AttrEndpoint, dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
 	d.Set("engine_mode", dbc.EngineMode)
 	clusterSetResourceDataEngineVersionFromCluster(d, dbc)
-	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set(names.AttrHostedZoneID, dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
 	var iamRoleARNs []string
 	for _, v := range dbc.AssociatedRoles {
@@ -1298,7 +1298,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterInput{
-			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:    aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
 		}
 
@@ -1343,8 +1343,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		}
 
-		if d.HasChanges("domain", "domain_iam_role_name") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		}
 
@@ -1571,7 +1571,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
-				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
+				if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get(names.AttrApplyImmediately).(bool) {
 					_, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutDelete),
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{

@@ -51,7 +51,7 @@ func ResourceTestGridProject() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -94,7 +94,7 @@ func resourceTestGridProjectCreate(ctx context.Context, d *schema.ResourceData, 
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandTestGridProjectVPCConfig(v.([]interface{}))
 	}
 
@@ -133,7 +133,7 @@ func resourceTestGridProjectRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, project.Name)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, project.Description)
-	if err := d.Set("vpc_config", flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenTestGridProjectVPCConfig(project.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 

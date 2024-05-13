@@ -43,7 +43,7 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T, semaphore tf
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, names.AttrID),
 				),

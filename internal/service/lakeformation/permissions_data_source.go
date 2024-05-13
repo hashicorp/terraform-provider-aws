@@ -29,7 +29,7 @@ func DataSourcePermissions() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePermissionsRead,
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -58,7 +58,7 @@ func DataSourcePermissions() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -77,7 +77,7 @@ func DataSourcePermissions() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -86,14 +86,14 @@ func DataSourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -113,7 +113,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -123,7 +123,7 @@ func DataSourcePermissions() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -142,13 +142,13 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidAccountID,
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MinItems: 1,
@@ -159,7 +159,7 @@ func DataSourcePermissions() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -171,7 +171,7 @@ func DataSourcePermissions() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.ResourceType](),
@@ -193,7 +193,7 @@ func DataSourcePermissions() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validPrincipal,
@@ -205,7 +205,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -235,7 +235,7 @@ func DataSourcePermissions() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -282,12 +282,12 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
+			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
 		Resource: &awstypes.Resource{},
 	}
 
-	if v, ok := d.GetOk("catalog_id"); ok {
+	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
 
@@ -303,7 +303,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		input.Resource.DataLocation = ExpandDataLocationResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -367,7 +367,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[INFO] Resource Lake Formation clean permissions (%d) and all permissions (%d) have different lengths (this is not necessarily a problem): %s", len(cleanPermissions), len(allPermissions), d.Id())
 	}
 
-	d.Set("principal", cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
+	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
 	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
@@ -394,11 +394,11 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if cleanPermissions[0].Resource.Database != nil {
-		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
+		if err := d.Set(names.AttrDatabase, []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
-		d.Set("database", nil)
+		d.Set(names.AttrDatabase, nil)
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {

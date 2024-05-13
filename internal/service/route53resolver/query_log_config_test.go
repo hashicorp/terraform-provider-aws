@@ -36,7 +36,7 @@ func TestAccRoute53ResolverQueryLogConfig_basic(t *testing.T) {
 				Config: testAccQueryLogConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -93,7 +93,7 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				Config: testAccQueryLogConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, cwLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -110,7 +110,7 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				Config: testAccQueryLogConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, cwLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -123,7 +123,7 @@ func TestAccRoute53ResolverQueryLogConfig_tags(t *testing.T) {
 				Config: testAccQueryLogConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", cwLogGroupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, cwLogGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),

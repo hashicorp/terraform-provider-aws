@@ -43,7 +43,7 @@ func testAccSSHKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_transfer_user.test", "user_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_transfer_user.test", names.AttrUserName),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
 				),
 			},

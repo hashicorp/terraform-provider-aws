@@ -460,7 +460,7 @@ func TestAccRDSGlobalCluster_forceDestroy(t *testing.T) {
 				Config: testAccGlobalClusterConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "true"),
 				),
 			},
 		},
@@ -491,7 +491,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
 			},
 		},
 	})
@@ -521,7 +521,7 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source_db_cluster_identifier"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
 			},
 		},
 	})

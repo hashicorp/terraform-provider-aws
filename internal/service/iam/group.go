@@ -48,7 +48,7 @@ func resourceGroup() *schema.Resource {
 					"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -60,7 +60,7 @@ func resourceGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-			if d.HasChanges(names.AttrName, "path") {
+			if d.HasChanges(names.AttrName, names.AttrPath) {
 				return d.SetNewComputed(names.AttrARN)
 			}
 
@@ -76,7 +76,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	name := d.Get(names.AttrName).(string)
 	input := &iam.CreateGroupInput{
 		GroupName: aws.String(name),
-		Path:      aws.String(d.Get("path").(string)),
+		Path:      aws.String(d.Get(names.AttrPath).(string)),
 	}
 
 	output, err := conn.CreateGroup(ctx, input)
@@ -116,7 +116,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrName, group.GroupName)
-	d.Set("path", group.Path)
+	d.Set(names.AttrPath, group.Path)
 	d.Set("unique_id", group.GroupId)
 
 	return diags
@@ -130,7 +130,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &iam.UpdateGroupInput{
 		GroupName:    aws.String(o.(string)),
 		NewGroupName: aws.String(n.(string)),
-		NewPath:      aws.String(d.Get("path").(string)),
+		NewPath:      aws.String(d.Get(names.AttrPath).(string)),
 	}
 
 	_, err := conn.UpdateGroup(ctx, input)

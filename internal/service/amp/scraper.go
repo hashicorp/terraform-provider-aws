@@ -86,7 +86,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"destination": schema.ListNestedBlock{
+			names.AttrDestination: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperDestinationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
@@ -121,7 +121,7 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 					},
 				},
 			},
-			"source": schema.ListNestedBlock{
+			names.AttrSource: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[scraperSourceModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),

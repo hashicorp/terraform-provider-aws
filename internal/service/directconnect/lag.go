@@ -50,7 +50,7 @@ func ResourceLag() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validConnectionBandWidth(),
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -194,7 +194,7 @@ func resourceLagDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if d.Get("force_destroy").(bool) {
+	if d.Get(names.AttrForceDestroy).(bool) {
 		lag, err := FindLagByID(ctx, conn, d.Id())
 
 		if tfresource.NotFound(err) {

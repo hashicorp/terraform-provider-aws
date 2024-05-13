@@ -130,7 +130,7 @@ func resourceCostCategory() *schema.Resource {
 								Required:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.CostCategorySplitChargeMethod](),
 							},
-							"parameter": {
+							names.AttrParameter: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
@@ -140,7 +140,7 @@ func resourceCostCategory() *schema.Resource {
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.CostCategorySplitChargeRuleParameterType](),
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Optional: true,
 											MinItems: 1,
@@ -153,7 +153,7 @@ func resourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							"source": {
+							names.AttrSource: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -200,7 +200,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -230,7 +230,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -259,7 +259,7 @@ func expressionElem(level int) *schema.Resource {
 							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-					"values": {
+					names.AttrValues: {
 						Type:     schema.TypeSet,
 						Optional: true,
 						Elem: &schema.Schema{
@@ -583,7 +583,7 @@ func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCatego
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -605,7 +605,7 @@ func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValu
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -627,7 +627,7 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
 
-	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrValues].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
@@ -637,10 +637,10 @@ func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
 func expandCostCategorySplitChargeRule(tfMap map[string]interface{}) *awstypes.CostCategorySplitChargeRule {
 	apiObject := &awstypes.CostCategorySplitChargeRule{
 		Method:  awstypes.CostCategorySplitChargeMethod(tfMap["method"].(string)),
-		Source:  aws.String(tfMap["source"].(string)),
+		Source:  aws.String(tfMap[names.AttrSource].(string)),
 		Targets: flex.ExpandStringValueSet(tfMap["targets"].(*schema.Set)),
 	}
-	if v, ok := tfMap["parameter"]; ok {
+	if v, ok := tfMap[names.AttrParameter]; ok {
 		apiObject.Parameters = expandCostCategorySplitChargeRuleParameters(v.(*schema.Set).List())
 	}
 
@@ -676,7 +676,7 @@ func expandCostCategorySplitChargeRules(tfList []interface{}) []awstypes.CostCat
 func expandCostCategorySplitChargeRuleParameter(tfMap map[string]interface{}) *awstypes.CostCategorySplitChargeRuleParameter {
 	apiObject := &awstypes.CostCategorySplitChargeRuleParameter{
 		Type:   awstypes.CostCategorySplitChargeRuleParameterType(tfMap[names.AttrType].(string)),
-		Values: flex.ExpandStringValueList(tfMap["values"].([]interface{})),
+		Values: flex.ExpandStringValueList(tfMap[names.AttrValues].([]interface{})),
 	}
 
 	return apiObject
@@ -799,7 +799,7 @@ func flattenCostCategoryValues(apiObject *awstypes.CostCategoryValues) []map[str
 
 	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -816,7 +816,7 @@ func flattenDimensionValues(apiObject *awstypes.DimensionValues) []map[string]in
 
 	tfMap[names.AttrKey] = string(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -833,7 +833,7 @@ func flattenTagValues(apiObject *awstypes.TagValues) []map[string]interface{} {
 
 	tfMap[names.AttrKey] = aws.ToString(apiObject.Key)
 	tfMap["match_options"] = flex.FlattenStringyValueList(apiObject.MatchOptions)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	tfList = append(tfList, tfMap)
 
@@ -847,8 +847,8 @@ func flattenCostCategorySplitChargeRule(apiObject *awstypes.CostCategorySplitCha
 
 	tfMap := map[string]interface{}{}
 	tfMap["method"] = string(apiObject.Method)
-	tfMap["parameter"] = flattenCostCategorySplitChargeRuleParameters(apiObject.Parameters)
-	tfMap["source"] = aws.ToString(apiObject.Source)
+	tfMap[names.AttrParameter] = flattenCostCategorySplitChargeRuleParameters(apiObject.Parameters)
+	tfMap[names.AttrSource] = aws.ToString(apiObject.Source)
 	tfMap["targets"] = apiObject.Targets
 
 	return tfMap
@@ -875,7 +875,7 @@ func flattenCostCategorySplitChargeRuleParameter(apiObject *awstypes.CostCategor
 
 	tfMap := map[string]interface{}{}
 	tfMap[names.AttrType] = string(apiObject.Type)
-	tfMap["values"] = apiObject.Values
+	tfMap[names.AttrValues] = apiObject.Values
 
 	return tfMap
 }

@@ -63,7 +63,7 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"encrypted": {
+			names.AttrEncrypted: {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -220,7 +220,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("data", component.Data)
 	d.Set("date_created", component.DateCreated)
 	d.Set(names.AttrDescription, component.Description)
-	d.Set("encrypted", component.Encrypted)
+	d.Set(names.AttrEncrypted, component.Encrypted)
 	d.Set(names.AttrKMSKeyID, component.KmsKeyId)
 	d.Set(names.AttrName, component.Name)
 	d.Set("owner", component.Owner)

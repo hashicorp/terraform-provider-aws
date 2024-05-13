@@ -58,11 +58,11 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -74,7 +74,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -123,13 +123,13 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 
 	input := &datasync.CreateLocationFsxWindowsInput{
 		FsxFilesystemArn:  aws.String(d.Get("fsx_filesystem_arn").(string)),
-		Password:          aws.String(d.Get("password").(string)),
+		Password:          aws.String(d.Get(names.AttrPassword).(string)),
 		SecurityGroupArns: flex.ExpandStringValueSet(d.Get("security_group_arns").(*schema.Set)),
 		Tags:              getTagsIn(ctx),
 		User:              aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -171,8 +171,8 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 	}
 
 	d.Set(names.AttrARN, output.LocationArn)
-	d.Set("creation_time", output.CreationTime.Format(time.RFC3339))
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrDomain, output.Domain)
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)

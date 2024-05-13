@@ -43,7 +43,7 @@ func ResourceAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceAlias() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -125,7 +125,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, out.StateMachineAliasArn)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("creation_date", aws.TimeValue(out.CreationDate).Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, aws.TimeValue(out.CreationDate).Format(time.RFC3339))
 	d.SetId(aws.StringValue(out.StateMachineAliasArn))
 
 	if err := d.Set("routing_configuration", flattenAliasRoutingConfiguration(out.RoutingConfiguration)); err != nil {
@@ -216,7 +216,7 @@ func flattenAliasRoutingConfigurationItem(apiObject *sfn.RoutingConfigurationLis
 	}
 
 	if v := apiObject.Weight; v != nil {
-		tfMap["weight"] = aws.Int64Value(v)
+		tfMap[names.AttrWeight] = aws.Int64Value(v)
 	}
 
 	return tfMap
@@ -275,7 +275,7 @@ func expandAliasRoutingConfigurationItem(tfMap map[string]interface{}) *sfn.Rout
 		apiObject.StateMachineVersionArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrWeight].(int); ok && v != 0 {
 		apiObject.Weight = aws.Int64(int64(v))
 	}
 

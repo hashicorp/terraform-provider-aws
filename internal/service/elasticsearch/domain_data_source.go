@@ -71,12 +71,12 @@ func DataSourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -257,7 +257,7 @@ func DataSourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -386,7 +386,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, ds.ARN)
 	d.Set("domain_id", ds.DomainId)
-	d.Set("endpoint", ds.Endpoint)
+	d.Set(names.AttrEndpoint, ds.Endpoint)
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
@@ -425,7 +425,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
+		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
@@ -434,7 +434,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {

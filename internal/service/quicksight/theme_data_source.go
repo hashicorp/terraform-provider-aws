@@ -39,7 +39,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+				names.AttrConfiguration: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -251,7 +251,7 @@ func DataSourceTheme() *schema.Resource {
 								Computed: true,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -309,7 +309,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
-	if err := d.Set("configuration", flattenThemeConfiguration(out.Version.Configuration)); err != nil {
+	if err := d.Set(names.AttrConfiguration, flattenThemeConfiguration(out.Version.Configuration)); err != nil {
 		return diag.Errorf("setting configuration: %s", err)
 	}
 

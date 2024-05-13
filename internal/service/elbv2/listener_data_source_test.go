@@ -30,7 +30,7 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "alpn_policy", resourceName, "alpn_policy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "certificate_arn", resourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCertificateARN, resourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.#", resourceName, "default_action.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "load_balancer_arn", resourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "mutual_authentication.#", resourceName, "mutual_authentication.#"),
@@ -40,7 +40,7 @@ func TestAccELBV2ListenerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "alpn_policy", dataSourceName, "alpn_policy"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName2, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "default_action.#", dataSourceName, "default_action.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "load_balancer_arn", dataSourceName, "load_balancer_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "mutual_authentication.#", dataSourceName, "mutual_authentication.#"),

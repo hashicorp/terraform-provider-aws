@@ -44,7 +44,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", fsxResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "username", username),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, username),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -53,7 +53,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"username", "password"},
+				ImportStateVerifyIgnore: []string{names.AttrUsername, names.AttrPassword},
 			},
 		},
 	})
@@ -86,7 +86,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"username", "password"},
+				ImportStateVerifyIgnore: []string{names.AttrUsername, names.AttrPassword},
 			},
 			{
 				Config: testAccFileSystemAssociationConfig_tags2(rName, domainName, username, "key1", "value1updated", "key2", "value2"),
@@ -137,7 +137,7 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"username", "password"},
+				ImportStateVerifyIgnore: []string{names.AttrUsername, names.AttrPassword},
 			},
 			{
 				Config: testAccFileSystemAssociationConfig_cache(rName, domainName, username, 0),
@@ -175,7 +175,7 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"username", "password"},
+				ImportStateVerifyIgnore: []string{names.AttrUsername, names.AttrPassword},
 			},
 			{
 				Config: testAccFileSystemAssociationConfig_auditDisabled(rName, domainName, username),

@@ -84,7 +84,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 2400000),
 						},
-						"mode": {
+						names.AttrMode: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      fsx.DiskIopsConfigurationModeAutomatic,
@@ -93,7 +93,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
 			},
-			"endpoints": {
+			names.AttrEndpoints: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -114,7 +114,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -131,7 +131,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -365,9 +365,9 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
-	d.Set("dns_name", filesystem.DNSName)
+	d.Set(names.AttrDNSName, filesystem.DNSName)
 	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
-	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
+	if err := d.Set(names.AttrEndpoints, flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
@@ -501,7 +501,7 @@ func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfig
 
 	out := fsx.DiskIopsConfiguration{}
 
-	if v, ok := conf["mode"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
 		out.Mode = aws.String(v)
 	}
 	if v, ok := conf["iops"].(int); ok {
@@ -518,7 +518,7 @@ func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []inte
 
 	m := make(map[string]interface{})
 	if rs.Mode != nil {
-		m["mode"] = aws.StringValue(rs.Mode)
+		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 	if rs.Iops != nil {
 		m["iops"] = aws.Int64Value(rs.Iops)
@@ -550,7 +550,7 @@ func flattenOntapFileSystemEndpoint(rs *fsx.FileSystemEndpoint) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m["dns_name"] = aws.StringValue(rs.DNSName)
+		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
 		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)

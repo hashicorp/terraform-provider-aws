@@ -36,7 +36,7 @@ func TestAccImageBuilderContainerRecipeDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dockerfile_template_data", resourceName, "dockerfile_template_data"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "encrypted", resourceName, "encrypted"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEncrypted, resourceName, names.AttrEncrypted),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_configuration.#", resourceName, "instance_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrKMSKeyID, resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),

@@ -44,7 +44,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -73,7 +73,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(glue.Permission_Values(), false),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -105,7 +105,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -131,7 +131,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"catalog_id": {
+						names.AttrCatalogID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -139,7 +139,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -279,7 +279,7 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 	}.String()
 	d.Set(names.AttrARN, databaseArn)
 	d.Set(names.AttrName, database.Name)
-	d.Set("catalog_id", database.CatalogId)
+	d.Set(names.AttrCatalogID, database.CatalogId)
 	d.Set(names.AttrDescription, database.Description)
 	d.Set("location_uri", database.LocationUri)
 	d.Set(names.AttrParameters, aws.StringValueMap(database.Parameters))
@@ -314,7 +314,7 @@ func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabaseWithContext(ctx, &glue.DeleteDatabaseInput{
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		CatalogId: aws.String(d.Get("catalog_id").(string)),
+		CatalogId: aws.String(d.Get(names.AttrCatalogID).(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 		return diags
@@ -335,7 +335,7 @@ func ReadCatalogID(id string) (catalogID string, name string, err error) {
 }
 
 func createCatalogID(d *schema.ResourceData, accountid string) (catalogID string) {
-	if rawCatalogID, ok := d.GetOkExists("catalog_id"); ok {
+	if rawCatalogID, ok := d.GetOkExists(names.AttrCatalogID); ok {
 		catalogID = rawCatalogID.(string)
 	} else {
 		catalogID = accountid
@@ -354,7 +354,7 @@ func expandDatabaseFederatedDatabase(tfMap map[string]interface{}) *glue.Federat
 		apiObject.ConnectionName = aws.String(v)
 	}
 
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		apiObject.Identifier = aws.String(v)
 	}
 
@@ -368,7 +368,7 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 
 	apiObject := &glue.DatabaseIdentifier{}
 
-	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCatalogID].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
 	}
 
@@ -376,7 +376,7 @@ func expandDatabaseTargetDatabase(tfMap map[string]interface{}) *glue.DatabaseId
 		apiObject.DatabaseName = aws.String(v)
 	}
 
-	if v, ok := tfMap["region"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRegion].(string); ok && v != "" {
 		apiObject.Region = aws.String(v)
 	}
 
@@ -395,7 +395,7 @@ func flattenDatabaseFederatedDatabase(apiObject *glue.FederatedDatabase) map[str
 	}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.StringValue(v)
+		tfMap[names.AttrIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -409,7 +409,7 @@ func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap[names.AttrCatalogID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.DatabaseName; v != nil {
@@ -417,7 +417,7 @@ func flattenDatabaseTargetDatabase(apiObject *glue.DatabaseIdentifier) map[strin
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap[names.AttrRegion] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -460,7 +460,7 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.Princ
 		apiObject.Permissions = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["principal"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 
@@ -511,7 +511,7 @@ func flattenDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) ma
 	}
 
 	if v := apiObject.Principal; v != nil {
-		tfMap["principal"] = []interface{}{flattenDatabasePrincipal(v)}
+		tfMap[names.AttrPrincipal] = []interface{}{flattenDatabasePrincipal(v)}
 	}
 
 	return tfMap

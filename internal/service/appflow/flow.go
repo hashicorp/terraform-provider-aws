@@ -112,7 +112,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -176,7 +176,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -213,7 +213,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -258,7 +258,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -284,7 +284,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -300,7 +300,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -337,7 +337,7 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													Computed:     true,
@@ -424,7 +424,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -474,7 +474,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -510,7 +510,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -532,7 +532,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -548,7 +548,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -584,7 +584,7 @@ func resourceFlow() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -656,7 +656,7 @@ func resourceFlow() *schema.Resource {
 																Optional:     true,
 																ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 															},
-															"bucket_prefix": {
+															names.AttrBucketPrefix: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -876,7 +876,7 @@ func resourceFlow() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ForceNew:     true,
@@ -1213,7 +1213,7 @@ func resourceFlow() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IsRFC3339Time,
 												},
-												"schedule_expression": {
+												names.AttrScheduleExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 256),
@@ -1508,7 +1508,7 @@ func expandErrorHandlingConfig(tfMap map[string]interface{}) *types.ErrorHandlin
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1783,7 +1783,7 @@ func expandRedshiftDestinationProperties(tfMap map[string]interface{}) *types.Re
 
 	a := &types.RedshiftDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1813,7 +1813,7 @@ func expandS3DestinationProperties(tfMap map[string]interface{}) *types.S3Destin
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1917,7 +1917,7 @@ func expandSuccessResponseHandlingConfig(tfMap map[string]interface{}) *types.Su
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1931,7 +1931,7 @@ func expandSnowflakeDestinationProperties(tfMap map[string]interface{}) *types.S
 
 	a := &types.SnowflakeDestinationProperties{}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -1961,7 +1961,7 @@ func expandUpsolverDestinationProperties(tfMap map[string]interface{}) *types.Up
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -2251,7 +2251,7 @@ func expandS3SourceProperties(tfMap map[string]interface{}) *types.S3SourcePrope
 		a.BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrBucketPrefix].(string); ok && v != "" {
 		a.BucketPrefix = aws.String(v)
 	}
 
@@ -2604,7 +2604,7 @@ func expandScheduledTriggerProperties(tfMap map[string]interface{}) *types.Sched
 		a.ScheduleEndTime = aws.Time(v)
 	}
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		a.ScheduleExpression = aws.String(v)
 	}
 
@@ -2637,7 +2637,7 @@ func flattenErrorHandlingConfig(errorHandlingConfig *types.ErrorHandlingConfig) 
 	}
 
 	if v := errorHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	m["fail_on_first_destination_error"] = errorHandlingConfig.FailOnFirstDestinationError
@@ -2877,7 +2877,7 @@ func flattenRedshiftDestinationProperties(redshiftDestinationProperties *types.R
 	m := map[string]interface{}{}
 
 	if v := redshiftDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := redshiftDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -2907,7 +2907,7 @@ func flattenS3DestinationProperties(s3DestinationProperties *types.S3Destination
 	}
 
 	if v := s3DestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3DestinationProperties.S3OutputFormatConfig; v != nil {
@@ -3003,7 +3003,7 @@ func flattenSuccessResponseHandlingConfig(successResponseHandlingConfig *types.S
 	}
 
 	if v := successResponseHandlingConfig.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	return m
@@ -3017,7 +3017,7 @@ func flattenSnowflakeDestinationProperties(snowflakeDestinationProperties *types
 	m := map[string]interface{}{}
 
 	if v := snowflakeDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := snowflakeDestinationProperties.ErrorHandlingConfig; v != nil {
@@ -3047,7 +3047,7 @@ func flattenUpsolverDestinationProperties(upsolverDestinationProperties *types.U
 	}
 
 	if v := upsolverDestinationProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := upsolverDestinationProperties.S3OutputFormatConfig; v != nil {
@@ -3331,7 +3331,7 @@ func flattenS3SourceProperties(s3SourceProperties *types.S3SourceProperties) map
 	}
 
 	if v := s3SourceProperties.BucketPrefix; v != nil {
-		m["bucket_prefix"] = aws.ToString(v)
+		m[names.AttrBucketPrefix] = aws.ToString(v)
 	}
 
 	if v := s3SourceProperties.S3InputFormatConfig; v != nil {
@@ -3602,7 +3602,7 @@ func flattenScheduled(scheduledTriggerProperties *types.ScheduledTriggerProperti
 	}
 
 	if v := scheduledTriggerProperties.ScheduleExpression; v != nil {
-		m["schedule_expression"] = aws.ToString(v)
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	}
 
 	if v := scheduledTriggerProperties.ScheduleOffset; v != nil {

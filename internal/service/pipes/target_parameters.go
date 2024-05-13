@@ -225,7 +225,7 @@ func targetParametersSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
-										"weight": {
+										names.AttrWeight: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(0, 1000),
@@ -251,7 +251,7 @@ func targetParametersSchema() *schema.Schema {
 								Optional:         true,
 								ValidateDiagFunc: enum.Validate[types.LaunchType](),
 							},
-							"network_configuration": {
+							names.AttrNetworkConfiguration: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -280,7 +280,7 @@ func targetParametersSchema() *schema.Schema {
 															),
 														},
 													},
-													"subnets": {
+													names.AttrSubnets: {
 														Type:     schema.TypeSet,
 														Optional: true,
 														MaxItems: 16,
@@ -404,7 +404,7 @@ func targetParametersSchema() *schema.Schema {
 												},
 											},
 										},
-										"execution_role_arn": {
+										names.AttrExecutionRoleARN: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: verify.ValidARN,
@@ -414,7 +414,7 @@ func targetParametersSchema() *schema.Schema {
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"device_name": {
+													names.AttrDeviceName: {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
@@ -443,7 +443,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"expression": {
+										names.AttrExpression: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 2000),
@@ -542,7 +542,7 @@ func targetParametersSchema() *schema.Schema {
 									ValidateFunc: verify.ValidARN,
 								},
 							},
-							"source": {
+							names.AttrSource: {
 								Type:     schema.TypeString,
 								Optional: true,
 								ValidateFunc: validation.All(
@@ -674,7 +674,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"database": {
+							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1141,7 +1141,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 		apiObject.LaunchType = types.LaunchType(v)
 	}
 
-	if v, ok := tfMap["network_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrNetworkConfiguration].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkConfiguration = expandNetworkConfiguration(v[0].(map[string]interface{}))
 	}
 
@@ -1201,7 +1201,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) *types.Cap
 		apiObject.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		apiObject.Weight = int32(v)
 	}
 
@@ -1263,7 +1263,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfigura
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1289,7 +1289,7 @@ func expandECSTaskOverride(tfMap map[string]interface{}) *types.EcsTaskOverride 
 		apiObject.EphemeralStorage = expandECSEphemeralStorage(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -1529,7 +1529,7 @@ func expandECSInferenceAcceleratorOverride(tfMap map[string]interface{}) *types.
 
 	apiObject := &types.EcsInferenceAcceleratorOverride{}
 
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -1573,7 +1573,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) *types.PlacementCon
 
 	apiObject := &types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
 
@@ -1673,7 +1673,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 		apiObject.Resources = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["source"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrSource].(string); ok && v != "" {
 		apiObject.Source = aws.String(v)
 	}
 
@@ -1741,7 +1741,7 @@ func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types
 
 	apiObject := &types.PipeTargetRedshiftDataParameters{}
 
-	if v, ok := tfMap["database"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 		apiObject.Database = aws.String(v)
 	}
 
@@ -2133,7 +2133,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.NetworkConfiguration; v != nil {
-		tfMap["network_configuration"] = []interface{}{flattenNetworkConfiguration(v)}
+		tfMap[names.AttrNetworkConfiguration] = []interface{}{flattenNetworkConfiguration(v)}
 	}
 
 	if v := apiObject.Overrides; v != nil {
@@ -2183,8 +2183,8 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 
 func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrategyItem) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"base":   apiObject.Base,
-		"weight": apiObject.Weight,
+		"base":           apiObject.Base,
+		names.AttrWeight: apiObject.Weight,
 	}
 
 	if v := apiObject.CapacityProvider; v != nil {
@@ -2228,7 +2228,7 @@ func flattenECSTaskOverride(apiObject *types.EcsTaskOverride) map[string]interfa
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.ToString(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.InferenceAcceleratorOverrides; v != nil {
@@ -2398,7 +2398,7 @@ func flattenECSInferenceAcceleratorOverride(apiObject types.EcsInferenceAccelera
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
-		tfMap["device_name"] = aws.ToString(v)
+		tfMap[names.AttrDeviceName] = aws.ToString(v)
 	}
 
 	if v := apiObject.DeviceType; v != nil {
@@ -2452,7 +2452,7 @@ func flattenVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]in
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap
@@ -2462,7 +2462,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = aws.ToString(v)
+		tfMap[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
@@ -2534,7 +2534,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.ToString(v)
+		tfMap[names.AttrSource] = aws.ToString(v)
 	}
 
 	if v := apiObject.Time; v != nil {
@@ -2604,7 +2604,7 @@ func flattenPipeTargetRedshiftDataParameters(apiObject *types.PipeTargetRedshift
 	}
 
 	if v := apiObject.Database; v != nil {
-		tfMap["database"] = aws.ToString(v)
+		tfMap[names.AttrDatabase] = aws.ToString(v)
 	}
 
 	if v := apiObject.DbUser; v != nil {

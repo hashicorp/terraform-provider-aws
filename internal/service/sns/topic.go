@@ -87,7 +87,7 @@ var (
 				return json
 			},
 		},
-		"display_name": {
+		names.AttrDisplayName: {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
@@ -216,7 +216,7 @@ var (
 		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
 		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
 		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
-		"display_name":                             topicAttributeNameDisplayName,
+		names.AttrDisplayName:                      topicAttributeNameDisplayName,
 		"fifo_topic":                               topicAttributeNameFIFOTopic,
 		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
 		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,

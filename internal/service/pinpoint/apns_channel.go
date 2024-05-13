@@ -39,7 +39,7 @@ func ResourceAPNSChannel() *schema.Resource {
 				Optional:  true,
 				Sensitive: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -53,7 +53,7 @@ func ResourceAPNSChannel() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:      schema.TypeString,
 				Optional:  true,
 				Sensitive: true,
@@ -79,8 +79,8 @@ func ResourceAPNSChannel() *schema.Resource {
 
 func resourceAPNSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	certificate, certificateOk := d.GetOk("certificate")
-	privateKey, privateKeyOk := d.GetOk("private_key")
+	certificate, certificateOk := d.GetOk(names.AttrCertificate)
+	privateKey, privateKeyOk := d.GetOk(names.AttrPrivateKey)
 
 	bundleId, bundleIdOk := d.GetOk("bundle_id")
 	teamId, teamIdOk := d.GetOk("team_id")

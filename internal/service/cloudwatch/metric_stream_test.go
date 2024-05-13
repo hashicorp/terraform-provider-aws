@@ -46,7 +46,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
-					acctest.CheckResourceAttrRFC3339(resourceName, "creation_date"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", "false"),

@@ -23,7 +23,7 @@ func DataSourceService() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -62,7 +62,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterArn := d.Get("cluster_arn").(string)
-	serviceName := d.Get("service_name").(string)
+	serviceName := d.Get(names.AttrServiceName).(string)
 
 	params := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(clusterArn),
@@ -87,7 +87,7 @@ func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta int
 	service := desc.Services[0]
 	d.SetId(aws.StringValue(service.ServiceArn))
 
-	d.Set("service_name", service.ServiceName)
+	d.Set(names.AttrServiceName, service.ServiceName)
 	d.Set(names.AttrARN, service.ServiceArn)
 	d.Set("cluster_arn", service.ClusterArn)
 	d.Set("desired_count", service.DesiredCount)

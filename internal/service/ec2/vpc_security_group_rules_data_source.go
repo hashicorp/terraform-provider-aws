@@ -44,7 +44,7 @@ func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datas
 			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"filter": customFiltersBlock(),
+			names.AttrFilter: customFiltersBlock(),
 		},
 	}
 }

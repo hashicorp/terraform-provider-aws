@@ -153,7 +153,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      opsworks.CloudWatchLogsInitialPositionStartOfFile,
 									ValidateFunc: validation.StringInSlice(opsworks.CloudWatchLogsInitialPosition_Values(), false),
 								},
-								"log_group_name": {
+								names.AttrLogGroupName: {
 									Type:     schema.TypeString,
 									Required: true,
 								},
@@ -227,7 +227,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"encrypted": {
+					names.AttrEncrypted: {
 						Type:     schema.TypeBool,
 						Optional: true,
 						Default:  false,
@@ -1079,7 +1079,7 @@ func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) *opsworks.Cloud
 		apiObject.InitialPosition = aws.String(v)
 	}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -1178,7 +1178,7 @@ func flattenCloudWatchLogsLogStream(apiObject *opsworks.CloudWatchLogsLogStream)
 	}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MultiLineStartPattern; v != nil {
@@ -1217,7 +1217,7 @@ func expandVolumeConfiguration(tfMap map[string]interface{}) *opsworks.VolumeCon
 
 	apiObject := &opsworks.VolumeConfiguration{}
 
-	if v, ok := tfMap["encrypted"].(bool); ok {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1284,7 +1284,7 @@ func flattenVolumeConfiguration(apiObject *opsworks.VolumeConfiguration) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Encrypted; v != nil {
-		tfMap["encrypted"] = aws.BoolValue(v)
+		tfMap[names.AttrEncrypted] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.Iops; v != nil {

@@ -77,7 +77,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
-							"content_type": {
+							names.AttrContentType: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -97,7 +97,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
 									},
 								},
 							},

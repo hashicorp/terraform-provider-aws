@@ -212,7 +212,7 @@ func ResourceDataSet() *schema.Resource {
 								MaxItems: 20,
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
-							"principal": {
+							names.AttrPrincipal: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 256),
@@ -242,7 +242,7 @@ func ResourceDataSet() *schema.Resource {
 								Optional:     true,
 								ValidateFunc: validation.StringInSlice(quicksight.RowLevelPermissionFormatVersion_Values(), false),
 							},
-							"namespace": {
+							names.AttrNamespace: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 64),
@@ -399,7 +399,7 @@ func logicalTableMapSchema() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -437,7 +437,7 @@ func logicalTableMapSchema() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 128),
 												},
-												"expression": {
+												names.AttrExpression: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 4096),
@@ -577,7 +577,7 @@ func logicalTableMapSchema() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -753,7 +753,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -809,7 +809,7 @@ func physicalTableMapSchema() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1),
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:         schema.TypeString,
 										Computed:     true,
 										Optional:     true,
@@ -1294,7 +1294,7 @@ func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.Logi
 		if v, ok := vMap["alias"].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
-		if v, ok := vMap["source"].([]interface{}); ok {
+		if v, ok := vMap[names.AttrSource].([]interface{}); ok {
 			logicalTable.Source = expandDataSetLogicalTableSource(v[0].(map[string]interface{}))
 		}
 		if v, ok := vMap["data_transforms"].([]interface{}); ok {
@@ -1437,7 +1437,7 @@ func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.Cast
 	if v, ok := tfMap["new_column_type"].(string); ok {
 		castColumnTypeOperation.NewColumnType = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		castColumnTypeOperation.Format = aws.String(v)
 	}
 
@@ -1496,7 +1496,7 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	if v, ok := tfMap["column_name"].(string); ok {
 		calculatedColumn.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok {
+	if v, ok := tfMap[names.AttrExpression].(string); ok {
 		calculatedColumn.Expression = aws.String(v)
 	}
 
@@ -1760,7 +1760,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["schema"].(string); ok {
+	if v, ok := tfMap[names.AttrSchema].(string); ok {
 		relationalTable.Schema = aws.String(v)
 	}
 
@@ -1798,7 +1798,7 @@ func expandDataSetUploadSettings(tfMap map[string]interface{}) *quicksight.Uploa
 	if v, ok := tfMap["delimiter"].(string); ok {
 		uploadSettings.Delimiter = aws.String(v)
 	}
-	if v, ok := tfMap["format"].(string); ok {
+	if v, ok := tfMap[names.AttrFormat].(string); ok {
 		uploadSettings.Format = aws.String(v)
 	}
 	if v, ok := tfMap["start_from_row"].(int); ok {
@@ -1830,7 +1830,7 @@ func expandDataSetRowLevelPermissionDataSet(tfList []interface{}) *quicksight.Ro
 	if v, ok := tfMap["format_version"].(string); ok {
 		rowLevelPermission.FormatVersion = aws.String(v)
 	}
-	if v, ok := tfMap["namespace"].(string); ok {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok {
 		rowLevelPermission.Namespace = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrStatus].(string); ok {
@@ -2148,7 +2148,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
 		}
 		if table.Source != nil {
-			tfMap["source"] = flattenLogicalTableSource(table.Source)
+			tfMap[names.AttrSource] = flattenLogicalTableSource(table.Source)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2205,7 +2205,7 @@ func flattenCastColumnTypeOperation(apiObject *quicksight.CastColumnTypeOperatio
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.NewColumnType != nil {
 		tfMap["new_column_type"] = aws.StringValue(apiObject.NewColumnType)
@@ -2246,7 +2246,7 @@ func flattenCalculatedColumns(apiObject []*quicksight.CalculatedColumn) interfac
 			tfMap["column_name"] = aws.StringValue(column.ColumnName)
 		}
 		if column.Expression != nil {
-			tfMap["expression"] = aws.StringValue(column.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(column.Expression)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -2517,7 +2517,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
-		tfMap["schema"] = aws.StringValue(apiObject.Schema)
+		tfMap[names.AttrSchema] = aws.StringValue(apiObject.Schema)
 	}
 
 	return []interface{}{tfMap}
@@ -2556,7 +2556,7 @@ func flattenUploadSettings(apiObject *quicksight.UploadSettings) []interface{} {
 		tfMap["delimiter"] = aws.StringValue(apiObject.Delimiter)
 	}
 	if apiObject.Format != nil {
-		tfMap["format"] = aws.StringValue(apiObject.Format)
+		tfMap[names.AttrFormat] = aws.StringValue(apiObject.Format)
 	}
 	if apiObject.StartFromRow != nil {
 		tfMap["start_from_row"] = int(aws.Int64Value(apiObject.StartFromRow))
@@ -2581,7 +2581,7 @@ func flattenRowLevelPermissionDataSet(apiObject *quicksight.RowLevelPermissionDa
 		tfMap["format_version"] = aws.StringValue(apiObject.FormatVersion)
 	}
 	if apiObject.Namespace != nil {
-		tfMap["namespace"] = aws.StringValue(apiObject.Namespace)
+		tfMap[names.AttrNamespace] = aws.StringValue(apiObject.Namespace)
 	}
 	if apiObject.PermissionPolicy != nil {
 		tfMap["permission_policy"] = aws.StringValue(apiObject.PermissionPolicy)

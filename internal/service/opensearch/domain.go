@@ -189,13 +189,13 @@ func ResourceDomain() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"unit": {
+												names.AttrUnit: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(opensearchservice.TimeUnit_Values(), false),
@@ -454,7 +454,7 @@ func ResourceDomain() *schema.Resource {
 					},
 				},
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -783,21 +783,21 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] OpenSearch Domain %q created", d.Id())
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
-		log.Printf("[DEBUG] Modifying config for OpenSearch Domain %q", d.Id())
-
 		input := &opensearchservice.UpdateDomainConfigInput{
-			DomainName: aws.String(d.Get(names.AttrDomainName).(string)),
+			DomainName:      aws.String(d.Get(names.AttrDomainName).(string)),
+			AutoTuneOptions: expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{})),
 		}
 
-		input.AutoTuneOptions = expandAutoTuneOptions(v.([]interface{})[0].(map[string]interface{}))
-
+		log.Printf("[DEBUG] Updating OpenSearch Domain config: %s", input)
 		_, err = conn.UpdateDomainConfigWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying config for OpenSearch Domain: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain config: %s", err)
 		}
 
-		log.Printf("[DEBUG] Config for OpenSearch Domain %q modified", d.Id())
+		if err := waitForDomainUpdate(ctx, conn, d.Get(names.AttrDomainName).(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Domain (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceDomainRead(ctx, d, meta)...)
@@ -903,7 +903,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		d.Set("endpoint", endpoints["vpc"])
+		d.Set(names.AttrEndpoint, endpoints["vpc"])
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
@@ -911,7 +911,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	} else {
 		if ds.Endpoint != nil {
-			d.Set("endpoint", ds.Endpoint)
+			d.Set(names.AttrEndpoint, ds.Endpoint)
 			d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
@@ -1176,11 +1176,11 @@ func suppressEquivalentKMSKeyIDs(k, old, new string, d *schema.ResourceData) boo
 }
 
 func getDashboardEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_dashboards"
+	return d.Get(names.AttrEndpoint).(string) + "/_dashboards"
 }
 
 func getKibanaEndpoint(d *schema.ResourceData) string {
-	return d.Get("endpoint").(string) + "/_plugin/kibana/"
+	return d.Get(names.AttrEndpoint).(string) + "/_plugin/kibana/"
 }
 
 func suppressComputedDedicatedMaster(k, old, new string, d *schema.ResourceData) bool {

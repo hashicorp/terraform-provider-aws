@@ -40,7 +40,7 @@ func TestAccImageBuilderInfrastructureConfigurationDataSource_arn(t *testing.T) 
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "resource_tags.%", resourceName, "resource_tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "sns_topic_arn", resourceName, "sns_topic_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSNSTopicARN, resourceName, names.AttrSNSTopicARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSubnetID, resourceName, names.AttrSubnetID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "terminate_instance_on_failure", resourceName, "terminate_instance_on_failure"),

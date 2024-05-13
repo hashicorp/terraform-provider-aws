@@ -50,7 +50,7 @@ func DataSourceAMI() *schema.Resource {
 				Set:      amiBlockDeviceMappingHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -74,7 +74,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": customFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,7 +244,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.ExecutableUsers = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
@@ -310,7 +310,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting block_device_mappings: %s", err)
 	}
 	d.Set("boot_mode", image.BootMode)
-	d.Set("creation_date", image.CreationDate)
+	d.Set(names.AttrCreationDate, image.CreationDate)
 	d.Set("deprecation_time", image.DeprecationTime)
 	d.Set(names.AttrDescription, image.Description)
 	d.Set("ena_support", image.EnaSupport)
@@ -355,14 +355,14 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name":  aws.StringValue(v.DeviceName),
-			"virtual_name": aws.StringValue(v.VirtualName),
+			names.AttrDeviceName: aws.StringValue(v.DeviceName),
+			"virtual_name":       aws.StringValue(v.VirtualName),
 		}
 
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
 				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
-				"encrypted":                   fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
 				"iops":                        fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
 				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
 				"volume_size":                 fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
@@ -425,12 +425,12 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	var buf bytes.Buffer
 	// All keys added in alphabetical order.
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrDeviceName].(string)))
 	if d, ok := m["ebs"]; ok {
 		if len(d.(map[string]interface{})) > 0 {
 			e := d.(map[string]interface{})
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["encrypted"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))

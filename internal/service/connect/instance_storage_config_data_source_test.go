@@ -29,7 +29,7 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_firehose_config.#", resourceName, "storage_config.0.kinesis_firehose_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn", resourceName, "storage_config.0.kinesis_firehose_config.0.firehose_arn"),
@@ -57,7 +57,7 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.#", resourceName, "storage_config.0.kinesis_stream_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_stream_config.0.stream_arn", resourceName, "storage_config.0.kinesis_stream_config.0.stream_arn"),
@@ -84,7 +84,7 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.#", resourceName, "storage_config.0.kinesis_video_stream_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.kinesis_video_stream_config.0.prefix", resourceName, "storage_config.0.kinesis_video_stream_config.0.prefix"),
@@ -116,7 +116,7 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "association_id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttrPair(datasourceName, "resource_type", resourceName, "resource_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrResourceType, resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.#", resourceName, "storage_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.s3_config.#", resourceName, "storage_config.0.s3_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "storage_config.0.s3_config.0.bucket_name", resourceName, "storage_config.0.s3_config.0.bucket_name"),

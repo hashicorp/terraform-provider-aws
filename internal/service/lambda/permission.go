@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
@@ -40,7 +41,7 @@ func resourcePermission() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"action": {
+			names.AttrAction: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -64,7 +65,7 @@ func resourcePermission() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,9 +127,9 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	defer conns.GlobalMutexKV.Unlock(functionName)
 
 	input := &lambda.AddPermissionInput{
-		Action:       aws.String(d.Get("action").(string)),
+		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		FunctionName: aws.String(functionName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -209,16 +210,16 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("function_name", functionName)
 	}
 
-	d.Set("action", statement.Action)
+	d.Set(names.AttrAction, statement.Action)
 	// Check if the principal is a cross-account IAM role
 	if v, ok := statement.Principal.(map[string]interface{}); ok {
 		if _, ok := v["AWS"]; ok {
-			d.Set("principal", v["AWS"])
+			d.Set(names.AttrPrincipal, v["AWS"])
 		} else {
-			d.Set("principal", v["Service"])
+			d.Set(names.AttrPrincipal, v["Service"])
 		}
 	} else if v, ok := statement.Principal.(string); ok {
-		d.Set("principal", v)
+		d.Set(names.AttrPrincipal, v)
 	}
 
 	if v, ok := statement.Condition["StringEquals"]; ok {

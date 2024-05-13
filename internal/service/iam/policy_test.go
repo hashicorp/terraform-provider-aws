@@ -41,7 +41,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "attachment_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
@@ -189,7 +189,7 @@ func TestAccIAMPolicy_path(t *testing.T) {
 				Config: testAccPolicyConfig_path(rName, "/path1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "path", "/path1/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/path1/"),
 				),
 			},
 			{

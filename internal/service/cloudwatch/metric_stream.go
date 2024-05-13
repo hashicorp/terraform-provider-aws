@@ -54,7 +54,7 @@ func resourceMetricStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,7 +71,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -98,7 +98,7 @@ func resourceMetricStream() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 						},
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -178,12 +178,12 @@ func resourceMetricStream() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
-									"namespace": {
+									names.AttrNamespace: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -279,7 +279,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("creation_date", output.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, output.CreationDate.Format(time.RFC3339))
 	if output.ExcludeFilters != nil {
 		if err := d.Set("exclude_filter", flattenMetricStreamFilters(output.ExcludeFilters)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting exclude_filter: %s", err)
@@ -468,7 +468,7 @@ func expandMetricStreamFilters(tfList []interface{}) []types.MetricStreamFilter 
 			apiObject.MetricNames = flex.ExpandStringValueSet(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -496,7 +496,7 @@ func flattenMetricStreamFilters(apiObjects []types.MetricStreamFilter) []interfa
 			}
 
 			if v := apiObject.Namespace; v != nil {
-				tfMap["namespace"] = aws.ToString(v)
+				tfMap[names.AttrNamespace] = aws.ToString(v)
 			}
 
 			tfList = append(tfList, tfMap)
@@ -546,11 +546,11 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface
 
 		apiObject := types.MetricStreamStatisticsMetric{}
 
-		if v, ok := tfMap["metric_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 			apiObject.MetricName = aws.String(v)
 		}
 
-		if v, ok := tfMap["namespace"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 			apiObject.Namespace = aws.String(v)
 		}
 
@@ -599,11 +599,11 @@ func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []type
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.MetricName; v != nil {
-			tfMap["metric_name"] = aws.ToString(v)
+			tfMap[names.AttrMetricName] = aws.ToString(v)
 		}
 
 		if v := apiObject.Namespace; v != nil {
-			tfMap["namespace"] = aws.ToString(v)
+			tfMap[names.AttrNamespace] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)

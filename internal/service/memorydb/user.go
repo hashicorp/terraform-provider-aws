@@ -82,7 +82,7 @@ func ResourceUser() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_name": {
+			names.AttrUserName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -97,7 +97,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
-	userName := d.Get("user_name").(string)
+	userName := d.Get(names.AttrUserName).(string)
 	input := &memorydb.CreateUserInput{
 		AccessString: aws.String(d.Get("access_string").(string)),
 		Tags:         getTagsIn(ctx),
@@ -152,7 +152,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
-	d.Set("user_name", user.Name)
+	d.Set(names.AttrUserName, user.Name)
 
 	return diags
 }
