@@ -132,8 +132,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Resource Data Sync",
 		},
 		{
-			Factory:  ResourceServiceSetting,
+			Factory:  resourceServiceSetting,
 			TypeName: "aws_ssm_service_setting",
+			Name:     "Service Setting",
 		},
 	}
 }

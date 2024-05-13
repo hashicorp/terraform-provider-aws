@@ -16,6 +16,7 @@ var (
 	ResourcePatchBaseline           = resourcePatchBaseline
 	ResourcePatchGroup              = resourcePatchGroup
 	ResourceResourceDataSync        = resourceResourceDataSync
+	ResourceServiceSetting          = resourceServiceSetting
 
 	FindActivationByID                                 = findActivationByID
 	FindAssociationByID                                = findAssociationByID
@@ -29,4 +30,5 @@ var (
 	FindPatchBaselineByID                              = findPatchBaselineByID
 	FindPatchGroupByTwoPartKey                         = findPatchGroupByTwoPartKey
 	FindResourceDataSyncByName                         = findResourceDataSyncByName
+	FindServiceSettingByID                             = findServiceSettingByID
 )
