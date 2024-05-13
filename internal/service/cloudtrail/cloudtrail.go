@@ -80,7 +80,7 @@ func resourceTrail() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(field_Values(), false),
@@ -775,7 +775,7 @@ func expandAdvancedEventSelectorFieldSelector(configured *schema.Set) []types.Ad
 	for _, raw := range configured.List() {
 		data := raw.(map[string]interface{})
 		fieldSelector := types.AdvancedFieldSelector{
-			Field: aws.String(data["field"].(string)),
+			Field: aws.String(data[names.AttrField].(string)),
 		}
 
 		if v, ok := data["equals"].([]interface{}); ok && len(v) > 0 {
@@ -827,7 +827,7 @@ func flattenAdvancedEventSelectorFieldSelector(configured []types.AdvancedFieldS
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["field"] = aws.ToString(raw.Field)
+		item[names.AttrField] = aws.ToString(raw.Field)
 		if raw.Equals != nil {
 			item["equals"] = raw.Equals
 		}
@@ -926,7 +926,7 @@ func resourceTrailV0() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"field": {
+									names.AttrField: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
