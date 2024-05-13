@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +37,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),
@@ -48,7 +48,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
-						"port": "80",
+						names.AttrPort: "80",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
@@ -155,7 +155,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "KERBEROS"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),
@@ -166,7 +166,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
-						"port": "80",
+						names.AttrPort: "80",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
@@ -190,7 +190,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 
 func testAccCheckLocationHDFSDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_hdfs" {
@@ -221,7 +221,7 @@ func testAccCheckLocationHDFSExists(ctx context.Context, n string, v *datasync.D
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationHDFSByARN(ctx, conn, rs.Primary.ID)
 

@@ -24,6 +24,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const BucketACLSeparator = ","
@@ -64,15 +65,15 @@ func resourceBucketACL() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"display_name": {
+												names.AttrDisplayName: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"id": {
+												names.AttrID: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"type": {
+												names.AttrType: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.Type](),
@@ -98,12 +99,12 @@ func resourceBucketACL() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
 									},
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -119,7 +120,7 @@ func resourceBucketACL() *schema.Resource {
 				ExactlyOneOf: []string{"access_control_policy", "acl"},
 				ValidateFunc: validation.StringInSlice(bucketCannedACL_Values(), false),
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -149,7 +150,7 @@ func resourceBucketACL() *schema.Resource {
 func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	acl := d.Get("acl").(string)
 	input := &s3.PutBucketAclInput{
@@ -215,7 +216,7 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting access_control_policy: %s", err)
 	}
 	d.Set("acl", acl)
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 
 	return nil
@@ -351,11 +352,11 @@ func expandACLGrantee(l []interface{}) *types.Grantee {
 		result.EmailAddress = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		result.ID = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		result.Type = types.Type(v)
 	}
 
@@ -378,11 +379,11 @@ func expandOwner(l []interface{}) *types.Owner {
 
 	owner := &types.Owner{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		owner.DisplayName = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		owner.ID = aws.String(v)
 	}
 
@@ -431,11 +432,11 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"type": grantee.Type,
+		names.AttrType: grantee.Type,
 	}
 
 	if grantee.DisplayName != nil {
-		m["display_name"] = aws.ToString(grantee.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(grantee.DisplayName)
 	}
 
 	if grantee.EmailAddress != nil {
@@ -443,7 +444,7 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	if grantee.ID != nil {
-		m["id"] = aws.ToString(grantee.ID)
+		m[names.AttrID] = aws.ToString(grantee.ID)
 	}
 
 	if grantee.URI != nil {
@@ -461,11 +462,11 @@ func flattenOwner(owner *types.Owner) []interface{} {
 	m := make(map[string]interface{})
 
 	if owner.DisplayName != nil {
-		m["display_name"] = aws.ToString(owner.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(owner.DisplayName)
 	}
 
 	if owner.ID != nil {
-		m["id"] = aws.ToString(owner.ID)
+		m[names.AttrID] = aws.ToString(owner.ID)
 	}
 
 	return []interface{}{m}

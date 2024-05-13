@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ssm_resource_data_sync")
@@ -31,7 +32,7 @@ func ResourceResourceDataSync() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -43,22 +44,22 @@ func ResourceResourceDataSync() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"bucket_name": {
+						names.AttrBucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"prefix": {
+						names.AttrPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -80,7 +81,7 @@ func resourceResourceDataSyncCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 
 	input := &ssm.CreateResourceDataSyncInput{
 		S3Destination: expandResourceDataSyncS3Destination(d),
@@ -125,7 +126,7 @@ func resourceResourceDataSyncRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading SSM Resource Data Sync (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", syncItem.SyncName)
+	d.Set(names.AttrName, syncItem.SyncName)
 	d.Set("s3_destination", flattenResourceDataSyncS3Destination(syncItem.S3Destination))
 	return diags
 }
@@ -179,14 +180,14 @@ func FindResourceDataSyncItem(ctx context.Context, conn *ssm.SSM, name string) (
 
 func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destination) []interface{} {
 	result := make(map[string]interface{})
-	result["bucket_name"] = aws.StringValue(dest.BucketName)
-	result["region"] = aws.StringValue(dest.Region)
+	result[names.AttrBucketName] = aws.StringValue(dest.BucketName)
+	result[names.AttrRegion] = aws.StringValue(dest.Region)
 	result["sync_format"] = aws.StringValue(dest.SyncFormat)
 	if dest.AWSKMSKeyARN != nil {
-		result["kms_key_arn"] = aws.StringValue(dest.AWSKMSKeyARN)
+		result[names.AttrKMSKeyARN] = aws.StringValue(dest.AWSKMSKeyARN)
 	}
 	if dest.Prefix != nil {
-		result["prefix"] = aws.StringValue(dest.Prefix)
+		result[names.AttrPrefix] = aws.StringValue(dest.Prefix)
 	}
 	return []interface{}{result}
 }
@@ -194,14 +195,14 @@ func flattenResourceDataSyncS3Destination(dest *ssm.ResourceDataSyncS3Destinatio
 func expandResourceDataSyncS3Destination(d *schema.ResourceData) *ssm.ResourceDataSyncS3Destination {
 	raw := d.Get("s3_destination").([]interface{})[0].(map[string]interface{})
 	s3dest := &ssm.ResourceDataSyncS3Destination{
-		BucketName: aws.String(raw["bucket_name"].(string)),
-		Region:     aws.String(raw["region"].(string)),
+		BucketName: aws.String(raw[names.AttrBucketName].(string)),
+		Region:     aws.String(raw[names.AttrRegion].(string)),
 		SyncFormat: aws.String(raw["sync_format"].(string)),
 	}
-	if v, ok := raw["kms_key_arn"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrKMSKeyARN].(string); ok && v != "" {
 		s3dest.AWSKMSKeyARN = aws.String(v)
 	}
-	if v, ok := raw["prefix"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrPrefix].(string); ok && v != "" {
 		s3dest.Prefix = aws.String(v)
 	}
 	return s3dest

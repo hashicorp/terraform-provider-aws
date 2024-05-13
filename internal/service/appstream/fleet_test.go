@@ -52,9 +52,9 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
@@ -120,10 +120,10 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
@@ -132,10 +132,10 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 				Config: testAccFleetConfig_complete(rName, descriptionUpdated, fleetType, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewDesktop),
 				),
@@ -173,25 +173,25 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
 				),
 			},
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayNameUpdated),
 				),
 			},
 			{
@@ -227,14 +227,14 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -242,14 +242,14 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
 			},
@@ -282,9 +282,9 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, `""`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
@@ -293,9 +293,9 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, "null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.FleetStateRunning),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
 					resource.TestCheckResourceAttr(resourceName, "stream_view", appstream.StreamViewApp),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 				),
@@ -304,6 +304,55 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppStreamFleet_multiSession(t *testing.T) {
+	ctx := acctest.Context(t)
+	var fleetOutput appstream.Fleet
+	resourceName := "aws_appstream_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	instanceType := "stream.standard.small"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "AmazonAppStreamServiceAccess")
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_multiSession(rName, instanceType, 1, 5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "5"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFleetConfig_multiSession(rName, instanceType, 2, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, "max_sessions_per_instance", "10"),
+					resource.TestCheckResourceAttr(resourceName, "compute_capacity.0.desired_sessions", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.FleetStateRunning),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+				),
 			},
 		},
 	})
@@ -515,4 +564,46 @@ resource "aws_appstream_fleet" "test" {
   }
 }
 `, name, instanceType, empty)
+}
+
+func testAccFleetConfig_multiSession(name, instanceType string, desiredSessions, maxSessionsPerInstance int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+}
+
+resource "aws_appstream_fleet" "test" {
+  name      = %[1]q
+  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/AppStream-WinServer2019-01-26-2024"
+
+  compute_capacity {
+    desired_sessions = %[3]d
+  }
+
+  description                        = "Description for a multi-session fleet"
+  idle_disconnect_timeout_in_seconds = 70
+  enable_default_internet_access     = false
+  fleet_type                         = "ON_DEMAND"
+  instance_type                      = %[2]q
+  max_sessions_per_instance          = %[4]d
+  max_user_duration_in_seconds       = 1000
+  stream_view                        = "DESKTOP"
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+`, name, instanceType, desiredSessions, maxSessionsPerInstance))
 }

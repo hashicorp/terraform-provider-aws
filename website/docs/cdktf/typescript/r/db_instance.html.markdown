@@ -69,9 +69,9 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       password: "foobarbaz",
       skipFinalSnapshot: true,
       username: "foo",
@@ -340,10 +340,10 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
       manageMasterUserPassword: true,
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       username: "foo",
     });
   }
@@ -377,11 +377,11 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 10,
       dbName: "mydb",
       engine: "mysql",
-      engineVersion: "5.7",
+      engineVersion: "8.0",
       instanceClass: "db.t3.micro",
       manageMasterUserPassword: true,
       masterUserSecretKmsKeyId: example.keyId,
-      parameterGroupName: "default.mysql5.7",
+      parameterGroupName: "default.mysql8.0",
       username: "foo",
     });
   }
@@ -420,10 +420,11 @@ Defaults to true.
 * `blueGreenUpdate` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
   See [`blueGreenUpdate`](#blue_green_update) below.
 * `caCertIdentifier` - (Optional) The identifier of the CA certificate for the DB instance.
-* `characterSetName` - (Optional) The character set name to use for DB
-encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
-Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
-or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
+* `characterSetName` - (Optional) The character set name to use for DB encoding in Oracle and Microsoft SQL instances (collation).
+  This can't be changed.
+  See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html) or
+  [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
+  Cannot be set  with `replicateSourceDb`, `restoreToPointInTime`, `s3Import`, or `snapshotIdentifier`.
 * `copyTagsToSnapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `customIamInstanceProfile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `dbName` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
@@ -434,6 +435,7 @@ with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
 for additional read replica constraints.
+* `dedicatedLogVolume` - (Optional, boolean) Use a dedicated log volume (DLV) for the DB instance. Requires Provisioned IOPS. See the [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_PIOPS.StorageTypes.html#USER_PIOPS.dlv) for more details.
 * `deleteAutomatedBackups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletionProtection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in. Conflicts with `domainFqdn`, `domainOu`, `domainAuthSecretArn` and a `domainDnsIps`.
@@ -444,7 +446,7 @@ for additional read replica constraints.
 * `domainOu` - (Optional, but required if domain_fqdn is provided) The self managed Active Directory organizational unit for your DB instance to join. Conflicts with `domain` and `domainIamRoleName`.
 * `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
-* `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
+* `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `8.0` (for `8.0.36`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
 when this DB instance is deleted. Must be provided if `skipFinalSnapshot` is
 set to `false`. The value must begin with a letter, only contain alphanumeric characters and hyphens, and not end with a hyphen or contain two consecutive hyphens. Must not be provided when deleting a read replica.
@@ -704,4 +706,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-18a067387bc4a652c2e766b1044b8b68907a5be354ceaba1530d5c03912ed3ee -->
+<!-- cache-key: cdktf-0.20.1 input-b3cc09d8138c80aec20a1609f61064943c765d24c949d975ce7e0ed3c5858a0e -->

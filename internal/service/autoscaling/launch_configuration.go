@@ -10,10 +10,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -21,16 +22,18 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_launch_configuration", name="Launch Configuration")
-func ResourceLaunchConfiguration() *schema.Resource {
+func resourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
 		ReadWithoutTimeout:   resourceLaunchConfigurationRead,
@@ -41,7 +44,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,18 +60,18 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -130,7 +133,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"device_name": {
+						names.AttrDeviceName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -158,7 +161,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -182,7 +185,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataEndpointStateEnabled, autoscaling.InstanceMetadataEndpointStateDisabled}, false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataEndpointStateEnabled, awstypes.InstanceMetadataEndpointStateDisabled), false),
 						},
 						"http_put_response_hop_limit": {
 							Type:         schema.TypeInt,
@@ -196,25 +199,25 @@ func ResourceLaunchConfiguration() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice([]string{autoscaling.InstanceMetadataHttpTokensStateOptional, autoscaling.InstanceMetadataHttpTokensStateRequired}, false),
+							ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceMetadataHttpTokensStateOptional, awstypes.InstanceMetadataHttpTokensStateRequired), false),
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(1, 255),
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(1, 255-id.UniqueIDSuffixLength),
 			},
 			"placement_tenancy": {
@@ -232,13 +235,13 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					// Termination flag on the block device mapping entry for the root
 					// device volume." - bit.ly/ec2bdmap
 					Schema: map[string]*schema.Schema{
-						"delete_on_termination": {
+						names.AttrDeleteOnTermination: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
 							ForceNew: true,
 						},
-						"encrypted": {
+						names.AttrEncrypted: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
@@ -271,7 +274,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"security_groups": {
+			names.AttrSecurityGroups: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				ForceNew: true,
@@ -310,14 +313,14 @@ func ResourceLaunchConfiguration() *schema.Resource {
 
 func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	lcName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := autoscaling.CreateLaunchConfigurationInput{
 		EbsOptimized:            aws.Bool(d.Get("ebs_optimized").(bool)),
 		ImageId:                 aws.String(d.Get("image_id").(string)),
-		InstanceType:            aws.String(d.Get("instance_type").(string)),
+		InstanceType:            aws.String(d.Get(names.AttrInstanceType).(string)),
 		LaunchConfigurationName: aws.String(lcName),
 	}
 
@@ -330,7 +333,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.IamInstanceProfile = aws.String(v.(string))
 	}
 
-	input.InstanceMonitoring = &autoscaling.InstanceMonitoring{
+	input.InstanceMonitoring = &awstypes.InstanceMonitoring{
 		Enabled: aws.Bool(d.Get("enable_monitoring").(bool)),
 	}
 
@@ -346,8 +349,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.PlacementTenancy = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrSecurityGroups); ok && v.(*schema.Set).Len() > 0 {
+		input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("spot_price"); ok {
@@ -367,13 +370,13 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
 
-	var blockDeviceMappings []*autoscaling.BlockDeviceMapping
+	var blockDeviceMappings []awstypes.BlockDeviceMapping
 
 	if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
 		v := expandBlockDeviceMappings(v.(*schema.Set).List(), expandBlockDeviceMappingForEBSBlockDevice)
 
 		for _, v := range v {
-			if aws.StringValue(v.DeviceName) == rootDeviceName {
+			if aws.ToString(v.DeviceName) == rootDeviceName {
 				return sdkdiag.AppendErrorf(diags, "root device (%s) declared as an 'ebs_block_device'. Use 'root_block_device' argument.", rootDeviceName)
 			}
 		}
@@ -398,12 +401,11 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return autoscalingconn.CreateLaunchConfigurationWithContext(ctx, &input)
+			return autoscalingconn.CreateLaunchConfiguration(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeValidationError, "Invalid IamInstanceProfile") ||
@@ -425,10 +427,10 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 
 func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
+	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
@@ -440,7 +442,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", lc.LaunchConfigurationARN)
+	d.Set(names.AttrARN, lc.LaunchConfigurationARN)
 	d.Set("associate_public_ip_address", lc.AssociatePublicIpAddress)
 	d.Set("ebs_optimized", lc.EbsOptimized)
 	if lc.InstanceMonitoring != nil {
@@ -450,7 +452,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("image_id", lc.ImageId)
-	d.Set("instance_type", lc.InstanceType)
+	d.Set(names.AttrInstanceType, lc.InstanceType)
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
@@ -459,12 +461,12 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("metadata_options", nil)
 	}
-	d.Set("name", lc.LaunchConfigurationName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lc.LaunchConfigurationName)))
+	d.Set(names.AttrName, lc.LaunchConfigurationName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lc.LaunchConfigurationName)))
 	d.Set("placement_tenancy", lc.PlacementTenancy)
-	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
+	d.Set(names.AttrSecurityGroups, lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
-	if v := aws.StringValue(lc.UserData); v != "" {
+	if v := aws.ToString(lc.UserData); v != "" {
 		if _, ok := d.GetOk("user_data_base64"); ok {
 			d.Set("user_data_base64", v)
 		} else {
@@ -491,7 +493,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 				continue
 			}
 
-			configuredEBSBlockDevices[tfMap["device_name"].(string)] = tfMap
+			configuredEBSBlockDevices[tfMap[names.AttrDeviceName].(string)] = tfMap
 		}
 	}
 
@@ -512,16 +514,15 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 
 func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenIsA[*awstypes.ResourceInUseFault](ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteLaunchConfigurationWithContext(ctx, &autoscaling.DeleteLaunchConfigurationInput{
+			return conn.DeleteLaunchConfiguration(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
-		},
-		autoscaling.ErrCodeResourceInUseFault)
+		})
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
@@ -534,31 +535,27 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
-	if tfMap == nil {
-		return nil
+func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+	apiObject := awstypes.BlockDeviceMapping{
+		Ebs: &awstypes.Ebs{},
 	}
 
-	apiObject := &autoscaling.BlockDeviceMapping{
-		Ebs: &autoscaling.Ebs{},
-	}
-
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
 	if v, ok := tfMap["no_device"].(bool); ok && v {
 		apiObject.NoDevice = aws.Bool(v)
-	} else if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	} else if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["iops"].(int); ok && v != 0 {
-		apiObject.Ebs.Iops = aws.Int64(int64(v))
+		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["snapshot_id"].(string); ok && v != "" {
@@ -566,11 +563,11 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) *au
 	}
 
 	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
-		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
-		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+		apiObject.Ebs.VolumeSize = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
@@ -580,14 +577,10 @@ func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) *au
 	return apiObject
 }
 
-func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
-	if tfMap == nil {
-		return nil
-	}
+func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+	apiObject := awstypes.BlockDeviceMapping{}
 
-	apiObject := &autoscaling.BlockDeviceMapping{}
-
-	if v, ok := tfMap["device_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDeviceName].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
 	}
 
@@ -602,33 +595,29 @@ func expandBlockDeviceMappingForEphemeralBlockDevice(tfMap map[string]interface{
 	return apiObject
 }
 
-func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
-	if tfMap == nil {
-		return nil
+func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) awstypes.BlockDeviceMapping {
+	apiObject := awstypes.BlockDeviceMapping{
+		Ebs: &awstypes.Ebs{},
 	}
 
-	apiObject := &autoscaling.BlockDeviceMapping{
-		Ebs: &autoscaling.Ebs{},
-	}
-
-	if v, ok := tfMap["delete_on_termination"].(bool); ok {
+	if v, ok := tfMap[names.AttrDeleteOnTermination].(bool); ok {
 		apiObject.Ebs.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(bool); ok && v {
+	if v, ok := tfMap[names.AttrEncrypted].(bool); ok && v {
 		apiObject.Ebs.Encrypted = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["iops"].(int); ok && v != 0 {
-		apiObject.Ebs.Iops = aws.Int64(int64(v))
+		apiObject.Ebs.Iops = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["throughput"].(int); ok && v != 0 {
-		apiObject.Ebs.Throughput = aws.Int64(int64(v))
+		apiObject.Ebs.Throughput = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
-		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
+		apiObject.Ebs.VolumeSize = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
@@ -638,12 +627,12 @@ func expandBlockDeviceMappingForRootBlockDevice(tfMap map[string]interface{}) *a
 	return apiObject
 }
 
-func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interface{}) *autoscaling.BlockDeviceMapping) []*autoscaling.BlockDeviceMapping {
+func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interface{}) awstypes.BlockDeviceMapping) []awstypes.BlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*autoscaling.BlockDeviceMapping
+	var apiObjects []awstypes.BlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -653,18 +642,13 @@ func expandBlockDeviceMappings(tfList []interface{}, fn func(map[string]interfac
 		}
 
 		apiObject := fn(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenBlockDeviceMappings(apiObjects []*autoscaling.BlockDeviceMapping, rootDeviceName string, configuredEBSBlockDevices map[string]map[string]interface{}) ([]interface{}, []interface{}, []interface{}) {
+func flattenBlockDeviceMappings(apiObjects []awstypes.BlockDeviceMapping, rootDeviceName string, configuredEBSBlockDevices map[string]map[string]interface{}) ([]interface{}, []interface{}, []interface{}) {
 	if len(apiObjects) == 0 {
 		return nil, nil, nil
 	}
@@ -672,59 +656,55 @@ func flattenBlockDeviceMappings(apiObjects []*autoscaling.BlockDeviceMapping, ro
 	var tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.NoDevice; v != nil {
-			if v, ok := configuredEBSBlockDevices[aws.StringValue(apiObject.DeviceName)]; ok {
-				tfMap["delete_on_termination"] = v["delete_on_termination"].(bool)
+			if v, ok := configuredEBSBlockDevices[aws.ToString(apiObject.DeviceName)]; ok {
+				tfMap[names.AttrDeleteOnTermination] = v[names.AttrDeleteOnTermination].(bool)
 			} else {
 				// Keep existing value in place to avoid spurious diff.
-				tfMap["delete_on_termination"] = true
+				tfMap[names.AttrDeleteOnTermination] = true
 			}
 		} else if v := apiObject.Ebs; v != nil {
 			if v := v.DeleteOnTermination; v != nil {
-				tfMap["delete_on_termination"] = aws.BoolValue(v)
+				tfMap[names.AttrDeleteOnTermination] = aws.ToBool(v)
 			}
 		}
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.Encrypted; v != nil {
-				tfMap["encrypted"] = aws.BoolValue(v)
+				tfMap[names.AttrEncrypted] = aws.ToBool(v)
 			}
 
 			if v := v.Iops; v != nil {
-				tfMap["iops"] = aws.Int64Value(v)
+				tfMap["iops"] = aws.ToInt32(v)
 			}
 
 			if v := v.Throughput; v != nil {
-				tfMap["throughput"] = aws.Int64Value(v)
+				tfMap["throughput"] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeSize; v != nil {
-				tfMap["volume_size"] = aws.Int64Value(v)
+				tfMap["volume_size"] = aws.ToInt32(v)
 			}
 
 			if v := v.VolumeType; v != nil {
-				tfMap["volume_type"] = aws.StringValue(v)
+				tfMap["volume_type"] = aws.ToString(v)
 			}
 		}
 
-		if v := apiObject.DeviceName; aws.StringValue(v) == rootDeviceName {
+		if v := apiObject.DeviceName; aws.ToString(v) == rootDeviceName {
 			tfListRootBlockDevice = append(tfListRootBlockDevice, tfMap)
 
 			continue
 		}
 
 		if v := apiObject.DeviceName; v != nil {
-			tfMap["device_name"] = aws.StringValue(v)
+			tfMap[names.AttrDeviceName] = aws.ToString(v)
 		}
 
 		if v := apiObject.VirtualName; v != nil {
-			tfMap["virtual_name"] = aws.StringValue(v)
+			tfMap["virtual_name"] = aws.ToString(v)
 
 			tfListEphemeralBlockDevice = append(tfListEphemeralBlockDevice, tfMap)
 
@@ -732,12 +712,12 @@ func flattenBlockDeviceMappings(apiObjects []*autoscaling.BlockDeviceMapping, ro
 		}
 
 		if v := apiObject.NoDevice; v != nil {
-			tfMap["no_device"] = aws.BoolValue(v)
+			tfMap["no_device"] = aws.ToBool(v)
 		}
 
 		if v := apiObject.Ebs; v != nil {
 			if v := v.SnapshotId; v != nil {
-				tfMap["snapshot_id"] = aws.StringValue(v)
+				tfMap["snapshot_id"] = aws.ToString(v)
 			}
 		}
 
@@ -747,23 +727,23 @@ func flattenBlockDeviceMappings(apiObjects []*autoscaling.BlockDeviceMapping, ro
 	return tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice
 }
 
-func expandInstanceMetadataOptions(tfMap map[string]interface{}) *autoscaling.InstanceMetadataOptions {
+func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.InstanceMetadataOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &autoscaling.InstanceMetadataOptions{}
+	apiObject := &awstypes.InstanceMetadataOptions{}
 
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
-		apiObject.HttpEndpoint = aws.String(v)
+		apiObject.HttpEndpoint = awstypes.InstanceMetadataEndpointState(v)
 
-		if v == autoscaling.InstanceMetadataEndpointStateEnabled {
+		if v := awstypes.InstanceMetadataEndpointState(v); v == awstypes.InstanceMetadataEndpointStateEnabled {
 			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
-				apiObject.HttpTokens = aws.String(v)
+				apiObject.HttpTokens = awstypes.InstanceMetadataHttpTokensState(v)
 			}
 
 			if v, ok := tfMap["http_put_response_hop_limit"].(int); ok && v != 0 {
-				apiObject.HttpPutResponseHopLimit = aws.Int64(int64(v))
+				apiObject.HttpPutResponseHopLimit = aws.Int32(int32(v))
 			}
 		}
 	}
@@ -771,24 +751,20 @@ func expandInstanceMetadataOptions(tfMap map[string]interface{}) *autoscaling.In
 	return apiObject
 }
 
-func flattenInstanceMetadataOptions(apiObject *autoscaling.InstanceMetadataOptions) map[string]interface{} {
+func flattenInstanceMetadataOptions(apiObject *awstypes.InstanceMetadataOptions) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.HttpEndpoint; v != nil {
-		tfMap["http_endpoint"] = aws.StringValue(v)
-	}
+	tfMap["http_endpoint"] = string(apiObject.HttpEndpoint)
 
 	if v := apiObject.HttpPutResponseHopLimit; v != nil {
-		tfMap["http_put_response_hop_limit"] = aws.Int64Value(v)
+		tfMap["http_put_response_hop_limit"] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.HttpTokens; v != nil {
-		tfMap["http_tokens"] = aws.StringValue(v)
-	}
+	tfMap["http_tokens"] = string(apiObject.HttpTokens)
 
 	return tfMap
 }
@@ -806,53 +782,37 @@ func userDataHashSum(userData string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func findLaunchConfiguration(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
+func findLaunchConfiguration(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLaunchConfigurationsInput) (*awstypes.LaunchConfiguration, error) {
 	output, err := findLaunchConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLaunchConfigurations(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) ([]*autoscaling.LaunchConfiguration, error) {
-	var output []*autoscaling.LaunchConfiguration
+func findLaunchConfigurations(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeLaunchConfigurationsInput) ([]awstypes.LaunchConfiguration, error) {
+	var output []awstypes.LaunchConfiguration
 
-	err := conn.DescribeLaunchConfigurationsPagesWithContext(ctx, input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := autoscaling.NewDescribeLaunchConfigurationsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.LaunchConfigurations {
-			if v == nil {
-				continue
-			}
-
-			output = append(output, v)
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
+		output = append(output, page.LaunchConfigurations...)
 	}
 
 	return output, nil
 }
 
-func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.AutoScaling, name string) (*autoscaling.LaunchConfiguration, error) {
+func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.LaunchConfiguration, error) {
 	input := &autoscaling.DescribeLaunchConfigurationsInput{
-		LaunchConfigurationNames: aws.StringSlice([]string{name}),
+		LaunchConfigurationNames: []string{name},
 	}
 
 	output, err := findLaunchConfiguration(ctx, conn, input)
@@ -862,7 +822,7 @@ func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.AutoSc
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.LaunchConfigurationName) != name {
+	if aws.ToString(output.LaunchConfigurationName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -879,11 +839,11 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string)
 	}
 
 	// Instance store backed AMIs do not provide a root device name.
-	if aws.StringValue(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
+	if aws.ToString(image.RootDeviceType) == ec2.DeviceTypeInstanceStore {
 		return "", nil
 	}
 
-	rootDeviceName := aws.StringValue(image.RootDeviceName)
+	rootDeviceName := aws.ToString(image.RootDeviceName)
 
 	// Some AMIs have a RootDeviceName like "/dev/sda1" that does not appear as a
 	// DeviceName in the BlockDeviceMapping list (which will instead have
@@ -899,13 +859,13 @@ func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string)
 	rootDeviceInBlockDeviceMappings := false
 
 	for _, v := range image.BlockDeviceMappings {
-		if aws.StringValue(v.DeviceName) == rootDeviceName {
+		if aws.ToString(v.DeviceName) == rootDeviceName {
 			rootDeviceInBlockDeviceMappings = true
 		}
 	}
 
 	if !rootDeviceInBlockDeviceMappings && len(image.BlockDeviceMappings) > 0 {
-		rootDeviceName = aws.StringValue(image.BlockDeviceMappings[0].DeviceName)
+		rootDeviceName = aws.ToString(image.BlockDeviceMappings[0].DeviceName)
 	}
 
 	if rootDeviceName == "" {

@@ -31,7 +31,7 @@ func ResourceRoleAlias() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -40,7 +40,7 @@ func ResourceRoleAlias() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -63,7 +63,7 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	roleAlias := d.Get("alias").(string)
-	roleArn := d.Get("role_arn").(string)
+	roleArn := d.Get(names.AttrRoleARN).(string)
 	credentialDuration := d.Get("credential_duration").(int)
 
 	_, err := conn.CreateRoleAliasWithContext(ctx, &iot.CreateRoleAliasInput{
@@ -115,9 +115,9 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
-	d.Set("arn", roleAliasDescription.RoleAliasArn)
+	d.Set(names.AttrARN, roleAliasDescription.RoleAliasArn)
 	d.Set("alias", roleAliasDescription.RoleAlias)
-	d.Set("role_arn", roleAliasDescription.RoleArn)
+	d.Set(names.AttrRoleARN, roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)
 
 	return diags
@@ -155,10 +155,10 @@ func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("role_arn") {
+	if d.HasChange(names.AttrRoleARN) {
 		roleAliasInput := &iot.UpdateRoleAliasInput{
 			RoleAlias: aws.String(d.Id()),
-			RoleArn:   aws.String(d.Get("role_arn").(string)),
+			RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 		_, err := conn.UpdateRoleAliasWithContext(ctx, roleAliasInput)
 		if err != nil {

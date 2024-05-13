@@ -35,8 +35,8 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("placement-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 				),
@@ -135,7 +135,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 				Config: testAccPlacementGroupConfig_partitionCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 				),
@@ -165,7 +165,7 @@ func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
 				Config: testAccPlacementGroupConfig_defaultSpreadLevel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", "rack"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
 				),
@@ -195,7 +195,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 				Config: testAccPlacementGroupConfig_hostSpreadLevel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", "host"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
 				),

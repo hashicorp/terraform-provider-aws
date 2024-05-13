@@ -41,7 +41,7 @@ func ResourceRecoveryGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func resourceRecoveryGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Recovery Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.RecoveryGroupArn)
+	d.Set(names.AttrARN, resp.RecoveryGroupArn)
 	d.Set("recovery_group_name", resp.RecoveryGroupName)
 	d.Set("cells", resp.Cells)
 
@@ -120,7 +120,7 @@ func resourceRecoveryGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateRecoveryGroupInput{
 			RecoveryGroupName: aws.String(d.Id()),
 			Cells:             flex.ExpandStringList(d.Get("cells").([]interface{})),

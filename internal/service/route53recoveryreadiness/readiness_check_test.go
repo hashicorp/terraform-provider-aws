@@ -45,7 +45,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 				Config: testAccReadinessCheckConfig_basic(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 				Config: testAccReadinessCheckConfig_timeout(rName, rSetName, cwArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReadinessCheckExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`readiness-check/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_set_name", rSetName),
 				),
 			},

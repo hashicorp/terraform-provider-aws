@@ -28,7 +28,7 @@ func TestAccRDSCertificateDataSource_id(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_id(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", "data.aws_rds_certificate.latest", "id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, "data.aws_rds_certificate.latest", names.AttrID),
 				),
 			},
 		},
@@ -48,11 +48,11 @@ func TestAccRDSCertificateDataSource_latestValidTill(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_latestValidTill(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "rds", regexache.MustCompile(`cert:rds-ca-[-0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "certificate_type", "CA"),
 					resource.TestCheckResourceAttr(dataSourceName, "customer_override", "false"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "customer_override_valid_till"),
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^rds-ca-[-0-9a-z]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "thumbprint", regexache.MustCompile(`^[0-9a-f]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "valid_from", regexache.MustCompile(acctest.RFC3339RegexPattern)),
 					resource.TestMatchResourceAttr(dataSourceName, "valid_till", regexache.MustCompile(acctest.RFC3339RegexPattern)),

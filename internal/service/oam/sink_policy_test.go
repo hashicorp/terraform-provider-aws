@@ -47,8 +47,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/+.`)),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",
@@ -71,7 +71,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
 				),
 			},
 			{
@@ -106,8 +106,8 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "oam", regexache.MustCompile(`sink/+.`)),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/+.`)),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",
@@ -130,15 +130,15 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
 				),
 			},
 			{
 				Config: testAccSinkPolicyConfigUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", "id"),
-					resource.TestCheckResourceAttrWith(resourceName, "policy", func(value string) error {
+					resource.TestCheckResourceAttrPair(resourceName, "sink_identifier", "aws_oam_sink.test", names.AttrID),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
 	"Version": "2012-10-17",

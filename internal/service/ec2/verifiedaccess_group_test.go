@@ -40,9 +40,9 @@ func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) 
 				Config: testAccVerifiedAccessGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
@@ -84,7 +84,7 @@ func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
@@ -121,9 +121,9 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
@@ -143,7 +143,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_kms(rName, policyDoc),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "true"),
@@ -260,7 +260,7 @@ func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore)
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
@@ -297,7 +297,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},
@@ -311,7 +311,7 @@ func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Sema
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDocUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocUpdate),
 				),
 			},
@@ -346,9 +346,9 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttr(resourceName, "deletion_time", ""),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
@@ -368,7 +368,7 @@ func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semapho
 				Config: testAccVerifiedAccessGroupConfig_policy(rName, description, policyDoc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
 				),
 			},

@@ -36,8 +36,8 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 5"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"), // Computed.
 				),
@@ -51,8 +51,8 @@ func TestAccXRayGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", regexache.MustCompile(`group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter_expression", "responsetime > 10"),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 				),
@@ -186,55 +186,6 @@ resource "aws_xray_group" "test" {
   filter_expression = %[2]q
 }
 `, rName, expression)
-}
-
-func testAccGroupConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_group" "test" {
-  group_name        = %[1]q
-  filter_expression = "responsetime > 5"
-}
-`, rName)
-}
-
-func testAccGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_group" "test" {
-  group_name        = %[1]q
-  filter_expression = "responsetime > 5"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_group" "test" {
-  group_name        = %[1]q
-  filter_expression = "responsetime > 5"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccGroupConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-resource "aws_xray_group" "test" {
-  group_name        = %[1]q
-  filter_expression = "responsetime > 5"
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
 
 func testAccGroupConfig_basicInsights(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {

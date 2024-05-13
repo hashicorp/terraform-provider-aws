@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -20,7 +20,7 @@ import (
 
 func TestAccACMPCAPermission_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var permission acmpca.Permission
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
@@ -38,8 +38,8 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "GetCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "IssueCertificate"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "acm.amazonaws.com"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "acm.amazonaws.com"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 
 func TestAccACMPCAPermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var permission acmpca.Permission
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
@@ -73,7 +73,7 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 
 func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var permission acmpca.Permission
+	var permission types.Permission
 	resourceName := "aws_acmpca_permission.test"
 	commonName := acctest.RandomDomainName()
 
@@ -96,20 +96,14 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 
 func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_permission" {
 				continue
 			}
 
-			caARN, principal, sourceAccount, err := tfacmpca.PermissionParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfacmpca.FindPermission(ctx, conn, caARN, principal, sourceAccount)
+			_, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -126,26 +120,16 @@ func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPermissionExists(ctx context.Context, n string, v *acmpca.Permission) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string, v *types.Permission) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ACM PCA Permission ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		caARN, principal, sourceAccount, err := tfacmpca.PermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
-
-		output, err := tfacmpca.FindPermission(ctx, conn, caARN, principal, sourceAccount)
+		output, err := tfacmpca.FindPermissionByThreePartKey(ctx, conn, rs.Primary.Attributes["certificate_authority_arn"], rs.Primary.Attributes[names.AttrPrincipal], rs.Primary.Attributes["source_account"])
 
 		if err != nil {
 			return err

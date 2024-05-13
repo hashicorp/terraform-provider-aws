@@ -33,7 +33,7 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{

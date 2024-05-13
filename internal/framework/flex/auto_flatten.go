@@ -17,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	"github.com/shopspring/decimal"
 )
 
 // Flatten = AWS --> TF
@@ -29,11 +31,7 @@ import (
 // suitable target data type) are copied.
 func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOptionsFunc) diag.Diagnostics {
 	var diags diag.Diagnostics
-	flattener := &autoFlattener{}
-
-	for _, optFn := range optFns {
-		optFn(flattener)
-	}
+	flattener := newAutoFlattener(optFns)
 
 	diags.Append(autoFlexConvert(ctx, apiObject, tfObject, flattener)...)
 	if diags.HasError() {
@@ -44,7 +42,29 @@ func Flatten(ctx context.Context, apiObject, tfObject any, optFns ...AutoFlexOpt
 	return diags
 }
 
-type autoFlattener struct{}
+type autoFlattener struct {
+	Options AutoFlexOptions
+}
+
+// newAutoFlattener initializes an auto-flattener with defaults that can be overridden
+// via functional options
+func newAutoFlattener(optFns []AutoFlexOptionsFunc) *autoFlattener {
+	o := AutoFlexOptions{
+		ignoredFieldNames: DefaultIgnoredFieldNames,
+	}
+
+	for _, optFn := range optFns {
+		optFn(&o)
+	}
+
+	return &autoFlattener{
+		Options: o,
+	}
+}
+
+func (flattener autoFlattener) getOptions() AutoFlexOptions {
+	return flattener.Options
+}
 
 // convert converts a single AWS API value to its Plugin Framework equivalent.
 func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.Value) diag.Diagnostics {
@@ -88,6 +108,10 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
+		return diags
+
+	case reflect.Interface:
+		diags.Append(flattener.interface_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
 	}
 
@@ -138,7 +162,13 @@ func (flattener autoFlattener) float(ctx context.Context, vFrom reflect.Value, i
 	case basetypes.Float64Typable:
 		float64Value := types.Float64Null()
 		if !isNullFrom {
-			float64Value = types.Float64Value(vFrom.Float())
+			switch from := vFrom.Interface().(type) {
+			// Avoid loss of equivalence.
+			case float32:
+				float64Value = types.Float64Value(decimal.NewFromFloat32(from).InexactFloat64())
+			default:
+				float64Value = types.Float64Value(vFrom.Float())
+			}
 		}
 		v, d := tTo.ValueFromFloat64(ctx, float64Value)
 		diags.Append(d...)
@@ -287,6 +317,44 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vElem, isNilFrom, tTo, vTo)...)
+		return diags
+	}
+
+	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
+		"from": vFrom.Kind(),
+		"to":   tTo,
+	})
+
+	return diags
+}
+
+func (flattener autoFlattener) interface_(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch tTo := tTo.(type) {
+	case basetypes.StringTypable:
+		stringValue := types.StringNull()
+		if !isNullFrom {
+			//
+			// JSONStringer -> types.String-ish.
+			//
+			if vFrom.Type().Implements(reflect.TypeOf((*smithyjson.JSONStringer)(nil)).Elem()) {
+				doc := vFrom.Interface().(smithyjson.JSONStringer)
+				b, err := doc.MarshalSmithyDocument()
+				if err != nil {
+					diags.AddError("AutoFlEx", err.Error())
+					return diags
+				}
+				stringValue = types.StringValue(string(b))
+			}
+		}
+		v, d := tTo.ValueFromString(ctx, stringValue)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		vTo.Set(reflect.ValueOf(v))
 		return diags
 	}
 
@@ -494,6 +562,10 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -568,6 +640,88 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 
 				vTo.Set(reflect.ValueOf(to))
 				return diags
+			}
+
+		case reflect.Map:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]map[string]string -> types.Map(OfMap[types.String]).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				switch tMapElem.Elem().Kind() {
+				case reflect.String:
+					from := vFrom.Interface().(map[string]map[string]string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
+					}
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+
+				case reflect.Ptr:
+					from := vFrom.Interface().(map[string]map[string]*string)
+					elements := make(map[string]attr.Value, len(from))
+					for k, v := range from {
+						innerElements := make(map[string]attr.Value, len(v))
+						for ik, iv := range v {
+							innerElements[ik] = types.StringValue(*iv)
+						}
+						innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+						diags.Append(d...)
+						if diags.HasError() {
+							return diags
+						}
+
+						elements[k] = innerMap
+					}
+					map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					to, d := tTo.ValueFromMap(ctx, map_.MapValue)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
 			}
 
 		case reflect.Ptr:

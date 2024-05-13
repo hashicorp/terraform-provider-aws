@@ -1,26 +1,31 @@
-AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientTypeName,SkipClientGenerate,ClientSDKV1,ClientSDKV2,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,NotImplemented,EndpointOnly,AllowedSubcategory,DeprecatedEnvVar,TfAwsEnvVar,SdkId,EndpointAPICall,EndpointAPIParams,Note
+AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageActual,ProviderPackageCorrect,SplitPackageRealPackage,Aliases,ProviderNameUpper,GoV1ClientTypeName,SkipClientGenerate,ClientSDKV1,ClientSDKV2,ResourcePrefixActual,ResourcePrefixCorrect,FilePrefix,DocPrefix,HumanFriendly,Brand,Exclude,NotImplemented,EndpointOnly,AllowedSubcategory,DeprecatedEnvVar,TFAWSEnvVar,SDKID,EndpointAPICall,EndpointAPIParams,Note
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,,2,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,,,AccessAnalyzer,ListAnalyzers,,
 account,account,account,account,,account,,,Account,Account,,,2,,aws_account_,,account_,Account Management,AWS,,,,,,,Account,ListRegions,,
 acm,acm,acm,acm,,acm,,,ACM,ACM,,,2,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,,,ACM,ListCertificates,,
-acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,,,ACM PCA,ListCertificateAuthorities,,
+acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,,2,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,,,ACM PCA,ListCertificateAuthorities,,
 alexaforbusiness,alexaforbusiness,alexaforbusiness,alexaforbusiness,,alexaforbusiness,,,AlexaForBusiness,AlexaForBusiness,,1,,,aws_alexaforbusiness_,,alexaforbusiness_,Alexa for Business,,,x,,,,,Alexa For Business,,,
 amp,amp,prometheusservice,amp,,amp,,prometheus;prometheusservice,AMP,PrometheusService,,,2,aws_prometheus_,aws_amp_,,prometheus_,AMP (Managed Prometheus),Amazon,,,,,,,amp,ListScrapers,,
-amplify,amplify,amplify,amplify,,amplify,,,Amplify,Amplify,,1,,,aws_amplify_,,amplify_,Amplify,AWS,,,,,,,Amplify,ListApps,,
+amplify,amplify,amplify,amplify,,amplify,,,Amplify,Amplify,,,2,,aws_amplify_,,amplify_,Amplify,AWS,,,,,,,Amplify,ListApps,,
 amplifybackend,amplifybackend,amplifybackend,amplifybackend,,amplifybackend,,,AmplifyBackend,AmplifyBackend,,1,,,aws_amplifybackend_,,amplifybackend_,Amplify Backend,AWS,,x,,,,,AmplifyBackend,,,
 amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,,amplifyuibuilder,,,AmplifyUIBuilder,AmplifyUIBuilder,,1,,,aws_amplifyuibuilder_,,amplifyuibuilder_,Amplify UI Builder,AWS,,x,,,,,AmplifyUIBuilder,,,
 ,,,,,,,,,,,,,,,,,Apache MXNet on AWS,AWS,x,,,,,,,,,Documentation
-apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,,1,,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,API Gateway,GetAccount,,
+apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,x,,2,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,API Gateway,GetAccount,,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,ApiGatewayManagementApi,,,
-apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,1,,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
+apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,,2,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
 appfabric,appfabric,appfabric,appfabric,,appfabric,,,AppFabric,AppFabric,,,2,,aws_appfabric_,,appfabric_,AppFabric,AWS,,,,,,,AppFabric,ListAppBundles,,
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,App Mesh,ListMeshes,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,AppRunner,ListConnections,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,,,,No SDK support
-appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,AppConfig,ListApplications,,
+appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,AppConfig,ListApplications,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,AppConfigData,,,
 appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,,2,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,Appflow,ListFlows,,
+<<<<<<< HEAD
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,AppIntegrations,ListApplications,,
 application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,,2,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,Application Auto Scaling,DescribeScalableTargets,ServiceNamespace: awstypes.ServiceNamespaceEcs,
+=======
+appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,,2,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,AppIntegrations,ListApplications,,
+application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,1,,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,Application Auto Scaling,DescribeScalableTargets,,
+>>>>>>> main
 applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,,applicationcostprofiler,,,ApplicationCostProfiler,ApplicationCostProfiler,,1,,,aws_applicationcostprofiler_,,applicationcostprofiler_,Application Cost Profiler,AWS,,x,,,,,ApplicationCostProfiler,,,
 discovery,discovery,applicationdiscoveryservice,applicationdiscoveryservice,,discovery,,applicationdiscovery;applicationdiscoveryservice,Discovery,ApplicationDiscoveryService,,1,,,aws_discovery_,,discovery_,Application Discovery,AWS,,x,,,,,Application Discovery Service,,,
 mgn,mgn,mgn,mgn,,mgn,,,Mgn,Mgn,,1,,,aws_mgn_,,mgn_,Application Migration (Mgn),AWS,,x,,,,,mgn,,,
@@ -29,18 +34,19 @@ appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,ap
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,,,,,,No SDK support
 athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,,Athena,ListDataCatalogs,,
 auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,,,AuditManager,GetAccountStatus,,
-autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
-autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,1,,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
+autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,,2,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
+autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,,2,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,,Backup Gateway,,,
 batch,batch,batch,batch,,batch,,,Batch,Batch,,1,2,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
 bedrock,bedrock,bedrock,bedrock,,bedrock,,,Bedrock,Bedrock,,,2,,aws_bedrock_,,bedrock_,Amazon Bedrock,Amazon,,,,,,,Bedrock,ListFoundationModels,,
-bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgent,BedrockAgent,,,2,,aws_bedrockagent_,,bedrock_agent_,Agents for Amazon Bedrock,Amazon,,,,,,,Bedrock Agent,ListAgents,,
+bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgent,BedrockAgent,,,2,,aws_bedrockagent_,,bedrockagent_,Agents for Amazon Bedrock,Amazon,,,,,,,Bedrock Agent,ListAgents,,
+bcmdataexports,bcmdataexports,bcmdataexports,bcmdataexports,,bcmdataexports,,,BCMDataExports,BCMDataExports,,,2,,aws_bcmdataexports_,,bcmdataexports_,BCM Data Exports,Amazon,,,,,,,BCM Data Exports,ListExports,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,,Braket,,,
-ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
-,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,,,,No SDK support
+ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,,2,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
+chatbot,chatbot,chatbot,chatbot,,chatbot,,,Chatbot,,x,,2,,aws_chatbot_,,chatbot_,Chatbot,AWS,,,,,,,Chatbot,GetAccountPreferences,,
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,Chime,ListAccounts,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,Chime SDK Identity,,,
 chime-sdk-mediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,chimesdkmediapipelines,,chimesdkmediapipelines,,,ChimeSDKMediaPipelines,ChimeSDKMediaPipelines,,,2,,aws_chimesdkmediapipelines_,,chimesdkmediapipelines_,Chime SDK Media Pipelines,Amazon,,,,,,,Chime SDK Media Pipelines,ListMediaPipelines,,
@@ -60,9 +66,9 @@ cloudcontrol,cloudcontrol,cloudcontrolapi,cloudcontrol,,cloudcontrol,,cloudcontr
 clouddirectory,clouddirectory,clouddirectory,clouddirectory,,clouddirectory,,,CloudDirectory,CloudDirectory,,1,,,aws_clouddirectory_,,clouddirectory_,Cloud Directory,Amazon,,x,,,,,CloudDirectory,,,
 servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,1,,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
-cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
-cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
-cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
+cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,x,,2,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,"StackSetName: aws_sdkv2.String(""test"")",
+cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
+cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfrontkeyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
 cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
@@ -103,12 +109,13 @@ wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,C
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,
 cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,x,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
-cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
+cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,x,,2,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
 datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
-datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,,2,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Deep Learning Containers,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,DeepComposer,AWS,x,,,,,,,,,No SDK support
@@ -124,7 +131,7 @@ docdb,docdb,docdb,docdb,,docdb,,,DocDB,DocDB,,1,,,aws_docdb_,,docdb_,DocumentDB,
 docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElastic,DocDBElastic,,,2,,aws_docdbelastic_,,docdbelastic_,DocumentDB Elastic,Amazon,,,,,,,DocDB Elastic,ListClusters,,
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,x,,,,,drs,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,
-dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
+dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,x,,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
 dax,dax,dax,dax,,dax,,,DAX,DAX,,,2,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,,DynamoDB Streams,,,
 ,,,,,ec2ebs,ec2,,EC2EBS,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,,,x,,,,,,Part of EC2
@@ -132,7 +139,7 @@ ebs,ebs,ebs,ebs,,ebs,,,EBS,EBS,,1,,,aws_ebs_,,changewhenimplemented,EBS (Elastic
 ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,2,aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot),aws_ec2_,ec2_,ami;availability_zone;ec2_availability_;ec2_capacity_;ec2_fleet;ec2_host;ec2_image_;ec2_instance_;ec2_public_ipv4_pool;ec2_serial_;ec2_spot_;ec2_tag;eip;instance;key_pair;launch_template;placement_group;spot_,EC2 (Elastic Compute Cloud),Amazon,,,,,,,EC2,DescribeVpcs,,
 imagebuilder,imagebuilder,imagebuilder,imagebuilder,,imagebuilder,,,ImageBuilder,Imagebuilder,,1,,,aws_imagebuilder_,,imagebuilder_,EC2 Image Builder,Amazon,,,,,,,imagebuilder,ListImages,,
 ec2-instance-connect,ec2instanceconnect,ec2instanceconnect,ec2instanceconnect,,ec2instanceconnect,,,EC2InstanceConnect,EC2InstanceConnect,,1,,,aws_ec2instanceconnect_,,ec2instanceconnect_,EC2 Instance Connect,AWS,,x,,,,,EC2 Instance Connect,,,
-ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,2,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,,ECR,DescribeRepositories,,
+ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,,2,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,,ECR,DescribeRepositories,,
 ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,,2,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,,ECR PUBLIC,DescribeRepositories,,
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,2,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,,ECS,ListClusters,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,,EFS,DescribeFileSystems,,
@@ -157,19 +164,19 @@ emr,emr,emr,emr,,emr,,,EMR,EMR,,1,2,,aws_emr_,,emr_,EMR,Amazon,,,,,,,EMR,ListClu
 emr-containers,emrcontainers,emrcontainers,emrcontainers,,emrcontainers,,,EMRContainers,EMRContainers,,1,,,aws_emrcontainers_,,emrcontainers_,EMR Containers,Amazon,,,,,,,EMR containers,ListVirtualClusters,,
 emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRServerless,EMRServerless,,,2,,aws_emrserverless_,,emrserverless_,EMR Serverless,Amazon,,,,,,,EMR Serverless,ListApplications,,
 ,,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,,,,,,No SDK support
-events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,,,EventBridge,ListEventBuses,,
+events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,,2,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,,,EventBridge,ListEventBuses,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,,,schemas,ListRegistries,,
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,,,fis,ListExperiments,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,,,finspace,ListEnvironments,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,x,,,,,finspace data,,,
-fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,,
+fms,fms,fms,fms,,fms,,,FMS,FMS,x,,2,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,MaxResults: aws_sdkv2.Int32(1),
 forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,ForecastService,,1,,,aws_forecast_,,forecast_,Forecast,Amazon,,x,,,,,forecast,,,
 forecastquery,forecastquery,forecastqueryservice,forecastquery,,forecastquery,,forecastqueryservice,ForecastQuery,ForecastQueryService,,1,,,aws_forecastquery_,,forecastquery_,Forecast Query,Amazon,,x,,,,,forecastquery,,,
 frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDetector,FraudDetector,,1,,,aws_frauddetector_,,frauddetector_,Fraud Detector,Amazon,,x,,,,,FraudDetector,,,
 ,,,,,,,,,,,,,,,,,FreeRTOS,,x,,,,,,,,,No SDK support
 fsx,fsx,fsx,fsx,,fsx,,,FSx,FSx,,1,,,aws_fsx_,,fsx_,FSx,Amazon,,,,,,,FSx,DescribeFileSystems,,
 gamelift,gamelift,gamelift,gamelift,,gamelift,,,GameLift,GameLift,,1,,,aws_gamelift_,,gamelift_,GameLift,Amazon,,,,,,,GameLift,ListGameServerGroups,,
-globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,1,,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,Global Accelerator,ListAccelerators,,
+globalaccelerator,globalaccelerator,globalaccelerator,globalaccelerator,,globalaccelerator,,,GlobalAccelerator,GlobalAccelerator,x,,2,,aws_globalaccelerator_,,globalaccelerator_,Global Accelerator,AWS,,,,,,,Global Accelerator,ListAccelerators,,
 glue,glue,glue,glue,,glue,,,Glue,Glue,,1,,,aws_glue_,,glue_,Glue,AWS,,,,,,,Glue,ListRegistries,,
 databrew,databrew,gluedatabrew,databrew,,databrew,,gluedatabrew,DataBrew,GlueDataBrew,,1,,,aws_databrew_,,databrew_,Glue DataBrew,AWS,,x,,,,,DataBrew,,,
 groundstation,groundstation,groundstation,groundstation,,groundstation,,,GroundStation,GroundStation,,,2,,aws_groundstation_,,groundstation_,Ground Station,AWS,,,,,,,GroundStation,ListConfigs,,
@@ -177,7 +184,7 @@ guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,,,aw
 health,health,health,health,,health,,,Health,Health,,1,,,aws_health_,,health_,Health,AWS,,x,,,,,Health,,,
 healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,,,2,,aws_healthlake_,,healthlake_,HealthLake,Amazon,,,,,,,HealthLake,ListFHIRDatastores,,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,x,,,,,Honeycode,,,
-iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
+iam,iam,iam,iam,,iam,,,IAM,IAM,,,2,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
 inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector Classic,Amazon,,,,,,,Inspector,ListRulesPackages,,
 inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,,,Inspector2,ListAccountPermissions,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,x,,,,,IoT 1Click Devices Service,,,
@@ -214,9 +221,9 @@ kinesisvideo,kinesisvideo,kinesisvideo,kinesisvideo,,kinesisvideo,,,KinesisVideo
 kinesis-video-archived-media,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,,kinesisvideoarchivedmedia,,,KinesisVideoArchivedMedia,KinesisVideoArchivedMedia,,1,,,aws_kinesisvideoarchivedmedia_,,kinesisvideoarchivedmedia_,Kinesis Video Archived Media,Amazon,,x,,,,,Kinesis Video Archived Media,,,
 kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kinesisvideomedia,,,KinesisVideoMedia,KinesisVideoMedia,,1,,,aws_kinesisvideomedia_,,kinesisvideomedia_,Kinesis Video Media,Amazon,,x,,,,,Kinesis Video Media,,,
 kinesis-video-signaling,kinesisvideosignaling,kinesisvideosignalingchannels,kinesisvideosignaling,,kinesisvideosignaling,,kinesisvideosignalingchannels,KinesisVideoSignaling,KinesisVideoSignalingChannels,,1,,,aws_kinesisvideosignaling_,,kinesisvideosignaling_,Kinesis Video Signaling,Amazon,,x,,,,,Kinesis Video Signaling,,,
-kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,KMS,ListKeys,,
+kms,kms,kms,kms,,kms,,,KMS,KMS,,,2,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,KMS,ListKeys,,
 lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,,2,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,,,LakeFormation,ListResources,,
-lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,,Lambda,ListFunctions,,
+lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,,Lambda,ListFunctions,,
 launch-wizard,launchwizard,launchwizard,launchwizard,,launchwizard,,,LaunchWizard,LaunchWizard,,,2,,aws_launchwizard_,,launchwizard_,Launch Wizard,AWS,,,,,,,Launch Wizard,ListWorkloads,,
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,,,Lex Model Building Service,GetBots,,
 lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexv2models,,lexmodelsv2,LexV2Models,LexModelsV2,,,2,,aws_lexv2models_,,lexv2models_,Lex V2 Models,Amazon,,,,,,,Lex Models V2,ListBots,,
@@ -258,6 +265,7 @@ mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,mq,ListBrokers,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,MTurk,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,,2,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,Neptune,DescribeDBClusters,,
+neptune-graph,neptunegraph,,neptunegraph,,neptunegraph,,,NeptuneGraph,,,,2,,aws_neptunegraph_,,neptunegraph_,Neptune Analytics,Amazon,,,,,,,Neptune Graph,ListGraphs,,
 network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewall,,,NetworkFirewall,NetworkFirewall,,1,,,aws_networkfirewall_,,networkfirewall_,Network Firewall,AWS,,,,,,,Network Firewall,ListFirewalls,,
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,,,NetworkManager,ListCoreNetworks,,
 ,,,,,,,,,,,,,,,,,NICE DCV,,x,,,,,,,,,No SDK support
@@ -273,6 +281,7 @@ outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outpo
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
 ,,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,,,,,,No SDK support
+payment-cryptography,paymentcryptography,paymentcryptography,paymentcryptography,,paymentcryptography,,,PaymentCryptography,PaymentCryptography,,,2,,aws_paymentcryptography_,,paymentcryptography_,Payment Cryptography Control Plane,AWS,,,,,,,PaymentCryptography,ListKeys,,
 pca-connector-ad,pcaconnectorad,pcaconnectorad,pcaconnectorad,,pcaconnectorad,,,PCAConnectorAD,PcaConnectorAd,,,2,,aws_pcaconnectorad_,,pcaconnectorad_,Private CA Connector for Active Directory,AWS,,,,,,,Pca Connector Ad,ListConnectors,,
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,,aws_personalize_,,personalize_,Personalize,Amazon,,x,,,,,Personalize,,,
 personalize-events,personalizeevents,personalizeevents,personalizeevents,,personalizeevents,,,PersonalizeEvents,PersonalizeEvents,,1,,,aws_personalizeevents_,,personalizeevents_,Personalize Events,Amazon,,x,,,,,Personalize Events,,,
@@ -307,6 +316,7 @@ robomaker,robomaker,robomaker,robomaker,,robomaker,,,RoboMaker,RoboMaker,,1,,,aw
 rolesanywhere,rolesanywhere,rolesanywhere,rolesanywhere,,rolesanywhere,,,RolesAnywhere,RolesAnywhere,,,2,,aws_rolesanywhere_,,rolesanywhere_,Roles Anywhere,AWS,,,,,,,RolesAnywhere,ListProfiles,,
 route53,route53,route53,route53,,route53,,,Route53,Route53,x,1,,aws_route53_(?!resolver_),aws_route53_,,route53_cidr_;route53_delegation_;route53_health_;route53_hosted_;route53_key_;route53_query_;route53_record;route53_traffic_;route53_vpc_;route53_zone,Route 53,Amazon,,,,,,,Route 53,ListHostedZones,,
 route53domains,route53domains,route53domains,route53domains,,route53domains,,,Route53Domains,Route53Domains,x,,2,,aws_route53domains_,,route53domains_,Route 53 Domains,Amazon,,,,,,,Route 53 Domains,ListDomains,,
+route53profiles,route53profiles,route53profiles,route53profiles,,route53profiles,,,Route53Profiles,Route53Profiles,,,2,,aws_route53profiles_,,route53profiles_,Route 53 Profiles,Amazon,,,,,,,Route 53 Profiles,ListProfiles,,
 route53-recovery-cluster,route53recoverycluster,route53recoverycluster,route53recoverycluster,,route53recoverycluster,,,Route53RecoveryCluster,Route53RecoveryCluster,,1,,,aws_route53recoverycluster_,,route53recoverycluster_,Route 53 Recovery Cluster,Amazon,,x,,,,,Route53 Recovery Cluster,,,
 route53-recovery-control-config,route53recoverycontrolconfig,route53recoverycontrolconfig,route53recoverycontrolconfig,,route53recoverycontrolconfig,,,Route53RecoveryControlConfig,Route53RecoveryControlConfig,x,1,,,aws_route53recoverycontrolconfig_,,route53recoverycontrolconfig_,Route 53 Recovery Control Config,Amazon,,,,,,,Route53 Recovery Control Config,ListClusters,,
 route53-recovery-readiness,route53recoveryreadiness,route53recoveryreadiness,route53recoveryreadiness,,route53recoveryreadiness,,,Route53RecoveryReadiness,Route53RecoveryReadiness,x,1,,,aws_route53recoveryreadiness_,,route53recoveryreadiness_,Route 53 Recovery Readiness,Amazon,,,,,,,Route53 Recovery Readiness,ListCells,,
@@ -373,9 +383,9 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,ipam,ec2,,IPAM,,,,,aws_vpc_ipam,aws_ipam_,ipam_,vpc_ipam,VPC IPAM (IP Address Manager),Amazon,x,,,x,,,,,,Part of EC2
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
-wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,1,,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,,
-waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
-waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
+wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
+waf,waf,waf,waf,,waf,,,WAF,WAF,,,2,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
+waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,,2,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support
 ,,,,,wavelength,ec2,,Wavelength,,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,,,x,,,,,,Part of EC2
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,,2,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,,,Budgets,DescribeBudgets,"AccountId: aws_sdkv2.String(""012345678901"")",
@@ -385,7 +395,7 @@ worklink,worklink,worklink,worklink,,worklink,,,WorkLink,WorkLink,,1,,,aws_workl
 workmail,workmail,workmail,workmail,,workmail,,,WorkMail,WorkMail,,1,,,aws_workmail_,,workmail_,WorkMail,Amazon,,x,,,,,WorkMail,,,
 workmailmessageflow,workmailmessageflow,workmailmessageflow,workmailmessageflow,,workmailmessageflow,,,WorkMailMessageFlow,WorkMailMessageFlow,,1,,,aws_workmailmessageflow_,,workmailmessageflow_,WorkMail Message Flow,Amazon,,x,,,,,WorkMailMessageFlow,,,
 workspaces,workspaces,workspaces,workspaces,,workspaces,,,WorkSpaces,WorkSpaces,,,2,,aws_workspaces_,,workspaces_,WorkSpaces,Amazon,,,,,,,WorkSpaces,DescribeWorkspaces,,
-workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSpacesWeb,WorkSpacesWeb,,1,,,aws_workspacesweb_,,workspacesweb_,WorkSpaces Web,Amazon,,x,,,,,WorkSpaces Web,,,
+workspaces-web,workspacesweb,workspacesweb,workspacesweb,,workspacesweb,,,WorkSpacesWeb,WorkSpacesWeb,,,2,,aws_workspacesweb_,,workspacesweb_,WorkSpaces Web,Amazon,,,,,,,WorkSpaces Web,ListPortals,,
 xray,xray,xray,xray,,xray,,,XRay,XRay,,,2,,aws_xray_,,xray_,X-Ray,AWS,,,,,,,XRay,ListResourcePolicies,,
 verifiedpermissions,verifiedpermissions,verifiedpermissions,verifiedpermissions,,verifiedpermissions,,,VerifiedPermissions,VerifiedPermissions,,,2,,aws_verifiedpermissions_,,verifiedpermissions_,Verified Permissions,Amazon,,,,,,,VerifiedPermissions,ListPolicyStores,,
 codecatalyst,codecatalyst,codecatalyst,codecatalyst,,codecatalyst,,,CodeCatalyst,CodeCatalyst,,,2,,aws_codecatalyst_,,codecatalyst_,CodeCatalyst,Amazon,,,,,,,CodeCatalyst,ListAccessTokens,,

@@ -44,7 +44,7 @@ func resourceVPNConnection() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func resourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				RequiredWith: []string{"transit_gateway_id"},
+				RequiredWith: []string{names.AttrTransitGatewayID},
 			},
 			"local_ipv4_network_cidr": {
 				Type:         schema.TypeString,
@@ -111,11 +111,11 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"source": {
+						names.AttrSource: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -130,11 +130,11 @@ func resourceVPNConnection() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_attachment_id": {
+			names.AttrTransitGatewayAttachmentID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"transit_gateway_id": {
+			names.AttrTransitGatewayID: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"vpn_gateway_id"},
@@ -582,7 +582,7 @@ func resourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -597,7 +597,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"certificate_arn": {
+						names.AttrCertificateARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -609,7 +609,7 @@ func resourceVPNConnection() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -623,7 +623,7 @@ func resourceVPNConnection() *schema.Resource {
 			"vpn_gateway_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"transit_gateway_id"},
+				ConflictsWith: []string{names.AttrTransitGatewayID},
 			},
 		},
 
@@ -682,10 +682,10 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		CustomerGatewayId: aws.String(d.Get("customer_gateway_id").(string)),
 		Options:           expandVPNConnectionOptionsSpecification(d),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeVpnConnection),
-		Type:              aws.String(d.Get("type").(string)),
+		Type:              aws.String(d.Get(names.AttrType).(string)),
 	}
 
-	if v, ok := d.GetOk("transit_gateway_id"); ok {
+	if v, ok := d.GetOk(names.AttrTransitGatewayID); ok {
 		input.TransitGatewayId = aws.String(v.(string))
 	}
 
@@ -732,11 +732,11 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpn-connection/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("core_network_arn", vpnConnection.CoreNetworkArn)
 	d.Set("core_network_attachment_arn", vpnConnection.CoreNetworkAttachmentArn)
 	d.Set("customer_gateway_id", vpnConnection.CustomerGatewayId)
-	d.Set("type", vpnConnection.Type)
+	d.Set(names.AttrType, vpnConnection.Type)
 	d.Set("vpn_gateway_id", vpnConnection.VpnGatewayId)
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
@@ -754,11 +754,11 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Connection (%s) Transit Gateway Attachment: %s", d.Id(), err)
 		}
 
-		d.Set("transit_gateway_attachment_id", output.TransitGatewayAttachmentId)
-		d.Set("transit_gateway_id", v)
+		d.Set(names.AttrTransitGatewayAttachmentID, output.TransitGatewayAttachmentId)
+		d.Set(names.AttrTransitGatewayID, v)
 	} else {
-		d.Set("transit_gateway_attachment_id", nil)
-		d.Set("transit_gateway_id", nil)
+		d.Set(names.AttrTransitGatewayAttachmentID, nil)
+		d.Set(names.AttrTransitGatewayID, nil)
 	}
 
 	if err := d.Set("routes", flattenVPNStaticRoutes(vpnConnection.Routes)); err != nil {
@@ -850,7 +850,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
+	if d.HasChanges("customer_gateway_id", names.AttrTransitGatewayID, "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -859,7 +859,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.CustomerGatewayId = aws.String(d.Get("customer_gateway_id").(string))
 		}
 
-		if hasChange, v := d.HasChange("transit_gateway_id"), d.Get("transit_gateway_id").(string); hasChange && v != "" {
+		if hasChange, v := d.HasChange(names.AttrTransitGatewayID), d.Get(names.AttrTransitGatewayID).(string); hasChange && v != "" {
 			input.TransitGatewayId = aws.String(v)
 		}
 
@@ -911,7 +911,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
-		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+"address").(string); options != nil && address != "" {
+		if options, address := expandModifyVPNTunnelOptionsSpecification(d, prefix), d.Get(prefix+names.AttrAddress).(string); options != nil && address != "" {
 			input := &ec2.ModifyVpnTunnelOptionsInput{
 				TunnelOptions:             options,
 				VpnConnectionId:           aws.String(d.Id()),
@@ -1441,11 +1441,11 @@ func flattenVPNStaticRoute(apiObject *ec2.VpnStaticRoute) map[string]interface{}
 	}
 
 	if v := apiObject.Source; v != nil {
-		tfMap["source"] = aws.StringValue(v)
+		tfMap[names.AttrSource] = aws.StringValue(v)
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
+		tfMap[names.AttrState] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -1521,7 +1521,7 @@ func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	}
 
 	if v := apiObject.CertificateArn; v != nil {
-		tfMap["certificate_arn"] = aws.StringValue(v)
+		tfMap[names.AttrCertificateARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LastStatusChange; v != nil {
@@ -1533,7 +1533,7 @@ func flattenVGWTelemetry(apiObject *ec2.VgwTelemetry) map[string]interface{} {
 	}
 
 	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+		tfMap[names.AttrStatus] = aws.StringValue(v)
 	}
 
 	if v := apiObject.StatusMessage; v != nil {

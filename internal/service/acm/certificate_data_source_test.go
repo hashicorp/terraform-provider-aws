@@ -51,9 +51,9 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.CertificateStatusIssued)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -61,9 +61,9 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.CertificateStatusIssued)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -71,8 +71,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -80,8 +80,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -89,8 +89,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -98,8 +98,8 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCertificate),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
@@ -151,21 +151,21 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				Config: testAccCertificateDataSourceConfig_mostRecent(domain, true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
+					resource.TestMatchResourceAttr(resourceName, names.AttrARN, arnRe),
 				),
 			},
 		},
@@ -229,8 +229,8 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 			{
 				Config: testAccCertificateDataSourceConfig_keyTypes(acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},

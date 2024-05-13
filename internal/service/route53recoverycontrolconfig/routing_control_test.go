@@ -34,8 +34,8 @@ func testAccRoutingControl_basic(t *testing.T) {
 				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 				),
 			},
 			{
@@ -88,8 +88,8 @@ func testAccRoutingControl_nonDefaultControlPanel(t *testing.T) {
 				Config: testAccRoutingControlConfig_inNonDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "DEPLOYED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
 				),
 			},
 		},

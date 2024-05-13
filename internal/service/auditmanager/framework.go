@@ -51,11 +51,11 @@ func (r *resourceFramework) Metadata(_ context.Context, request resource.Metadat
 func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compliance_type": schema.StringAttribute{
 				Optional: true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"framework_type": schema.StringAttribute{
@@ -64,8 +64,8 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -78,8 +78,8 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"id": framework.IDAttribute(),
-						"name": schema.StringAttribute{
+						names.AttrID: framework.IDAttribute(),
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 						},
 					},
@@ -90,7 +90,7 @@ func (r *resourceFramework) Schema(ctx context.Context, req resource.SchemaReque
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
+									names.AttrID: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -273,7 +273,7 @@ func (r *resourceFramework) Delete(ctx context.Context, req resource.DeleteReque
 }
 
 func (r *resourceFramework) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceFramework) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -330,13 +330,13 @@ func FindFrameworkByID(ctx context.Context, conn *auditmanager.Client, id string
 
 var (
 	frameworkControlSetsAttrTypes = map[string]attr.Type{
-		"controls": types.SetType{ElemType: types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}},
-		"id":       types.StringType,
-		"name":     types.StringType,
+		"controls":     types.SetType{ElemType: types.ObjectType{AttrTypes: frameworkControlSetsControlsAttrTypes}},
+		names.AttrID:   types.StringType,
+		names.AttrName: types.StringType,
 	}
 
 	frameworkControlSetsControlsAttrTypes = map[string]attr.Type{
-		"id": types.StringType,
+		names.AttrID: types.StringType,
 	}
 )
 
@@ -449,9 +449,9 @@ func flattenFrameworkControlSets(ctx context.Context, apiObject []awstypes.Contr
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
-			"controls": controls,
-			"id":       flex.StringToFramework(ctx, item.Id),
-			"name":     flex.StringToFramework(ctx, item.Name),
+			"controls":     controls,
+			names.AttrID:   flex.StringToFramework(ctx, item.Id),
+			names.AttrName: flex.StringToFramework(ctx, item.Name),
 		}
 		objVal, d := types.ObjectValue(frameworkControlSetsAttrTypes, obj)
 		diags.Append(d...)
@@ -475,7 +475,7 @@ func flattenFrameworkControlSetsControls(ctx context.Context, apiObject []awstyp
 	elems := []attr.Value{}
 	for _, item := range apiObject {
 		obj := map[string]attr.Value{
-			"id": flex.StringToFramework(ctx, item.Id),
+			names.AttrID: flex.StringToFramework(ctx, item.Id),
 		}
 		objVal, d := types.ObjectValue(frameworkControlSetsControlsAttrTypes, obj)
 		diags.Append(d...)

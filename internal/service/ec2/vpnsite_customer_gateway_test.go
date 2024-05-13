@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,13 +38,13 @@ func TestAccSiteVPNCustomerGateway_basic(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_basic(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`customer-gateway/cgw-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(rBgpAsn)),
-					resource.TestCheckResourceAttr(resourceName, "certificate_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "device_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", "172.0.0.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateARN, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, "172.0.0.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "ipsec.1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ipsec.1"),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccSiteVPNCustomerGateway_deviceName(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_deviceName(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttr(resourceName, "device_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, "test"),
 				),
 			},
 			{
@@ -184,8 +184,8 @@ func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway ec2.CustomerGateway
-	var caRoot acmpca.CertificateAuthority
-	var caSubordinate acmpca.CertificateAuthority
+	var caRoot acmpca_types.CertificateAuthority
+	var caSubordinate acmpca_types.CertificateAuthority
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"
@@ -216,8 +216,8 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayExists(ctx, resourceName, &gateway),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, acmCertificateResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddress, ""),
 				),
 			},
 			{

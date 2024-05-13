@@ -19,6 +19,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func newFilter(name string, values []string) *ec2_sdkv1.Filter {
@@ -61,6 +62,12 @@ func newTagFilterList(tags []*ec2_sdkv1.Tag) []*ec2_sdkv1.Filter {
 	})
 }
 
+func newTagFilterListV2(tags []awstypes.Tag) []awstypes.Filter {
+	return tfslices.ApplyToAll(tags, func(tag awstypes.Tag) awstypes.Filter {
+		return newFilterV2("tag:"+aws_sdkv2.ToString(tag.Key), []string{aws_sdkv2.ToString(tag.Value)})
+	})
+}
+
 // attributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
 //
 // The keys of the specified map are the resource attributes names used in the filter - see the documentation
@@ -85,11 +92,7 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
 
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
 func tagFilters(ctx context.Context) []awstypes.Filter {
-	tags := getTagsIn(ctx)
-
-	return tfslices.ApplyToAll(tags, func(tag *ec2_sdkv1.Tag) awstypes.Filter {
-		return newFilterV2("tag:"+aws_sdkv1.StringValue(tag.Key), []string{aws_sdkv1.StringValue(tag.Value)})
-	})
+	return newTagFilterListV2(getTagsInV2(ctx))
 }
 
 // customFiltersSchema returns a *schema.Schema that represents
@@ -113,11 +116,11 @@ func customFiltersSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -135,11 +138,11 @@ func customRequiredFiltersSchema() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -156,10 +159,10 @@ func customFiltersBlock() datasourceschema.Block {
 	return datasourceschema.SetNestedBlock{
 		NestedObject: datasourceschema.NestedBlockObject{
 			Attributes: map[string]datasourceschema.Attribute{
-				"name": datasourceschema.StringAttribute{
+				names.AttrName: datasourceschema.StringAttribute{
 					Required: true,
 				},
-				"values": datasourceschema.SetAttribute{
+				names.AttrValues: datasourceschema.SetAttribute{
 					ElementType: types.StringType,
 					Required:    true,
 				},
@@ -190,7 +193,7 @@ func newCustomFilterList(s *schema.Set) []*ec2_sdkv1.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *ec2_sdkv1.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilter(tfMap["name"].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+		return newFilter(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 
@@ -210,7 +213,7 @@ func newCustomFilterListV2(s *schema.Set) []awstypes.Filter {
 
 	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
 		tfMap := tfList.(map[string]interface{})
-		return newFilterV2(tfMap["name"].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+		return newFilterV2(tfMap[names.AttrName].(string), flex.ExpandStringValueSet(tfMap[names.AttrValues].(*schema.Set)))
 	})
 }
 

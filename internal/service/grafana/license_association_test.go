@@ -37,7 +37,7 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 					testAccCheckLicenseAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "free_trial_expiration"),
 					resource.TestCheckResourceAttr(resourceName, "license_type", managedgrafana.LicenseTypeEnterpriseFreeTrial),
-					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},
 			{

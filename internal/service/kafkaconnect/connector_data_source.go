@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_mskconnect_connector")
@@ -21,19 +22,19 @@ func DataSourceConnector() *schema.Resource {
 		ReadWithoutTimeout: dataSourceConnectorRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,7 +47,7 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
-	name := d.Get("name")
+	name := d.Get(names.AttrName)
 	var output []*kafkaconnect.ConnectorSummary
 
 	err := conn.ListConnectorsPagesWithContext(ctx, &kafkaconnect.ListConnectorsInput{}, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
@@ -81,10 +82,10 @@ func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(connector.ConnectorArn))
 
-	d.Set("arn", connector.ConnectorArn)
-	d.Set("description", connector.ConnectorDescription)
-	d.Set("name", connector.ConnectorName)
-	d.Set("version", connector.CurrentVersion)
+	d.Set(names.AttrARN, connector.ConnectorArn)
+	d.Set(names.AttrDescription, connector.ConnectorDescription)
+	d.Set(names.AttrName, connector.ConnectorName)
+	d.Set(names.AttrVersion, connector.CurrentVersion)
 
 	return diags
 }

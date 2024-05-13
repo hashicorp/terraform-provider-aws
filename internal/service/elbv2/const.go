@@ -33,6 +33,7 @@ const (
 
 	// The following attributes are supported by only Application Load Balancers:
 	loadBalancerAttributeIdleTimeoutTimeoutSeconds                       = "idle_timeout.timeout_seconds"
+	loadBalancerAttributeClientKeepAliveSeconds                          = "client_keep_alive.seconds"
 	loadBalancerAttributeConnectionLogsS3Enabled                         = "connection_logs.s3.enabled"
 	loadBalancerAttributeConnectionLogsS3Bucket                          = "connection_logs.s3.bucket"
 	loadBalancerAttributeConnectionLogsS3Prefix                          = "connection_logs.s3.prefix"

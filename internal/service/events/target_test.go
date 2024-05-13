@@ -12,8 +12,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,9 +23,176 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestTargetParseImportID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName      string
+		InputID       string
+		ExpectedError bool
+		ExpectedPart0 string
+		ExpectedPart1 string
+		ExpectedPart2 string
+	}{
+		{
+			TestName:      "empty ID",
+			InputID:       "",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "single part",
+			InputID:       "TestRule",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "two parts",
+			InputID:       "TestTarget/TestRule",
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestTarget",
+			ExpectedPart2: "TestRule",
+		},
+		{
+			TestName:      "three parts",
+			InputID:       "TestEventBus/TestRule/TestTarget",
+			ExpectedPart0: "TestEventBus",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "three parts with default event bus",
+			InputID:       tfevents.DefaultEventBusName + "/TestRule/TestTarget",
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "empty two parts",
+			InputID:       "/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty three parts",
+			InputID:       "//",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first part of two",
+			InputID:       "/TestTarget",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty second part of two",
+			InputID:       "TestRule/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first part of three",
+			InputID:       "/TestRule/TestTarget",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty second part of three",
+			InputID:       "TestEventBus//TestTarget",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty third part of three",
+			InputID:       "TestEventBus/TestRule/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first two of three parts",
+			InputID:       "//TestTarget",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first and third of three parts",
+			InputID:       "/TestRule/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty final two of three parts",
+			InputID:       "TestEventBus//",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "partner event bus",
+			InputID:       "aws.partner/example.com/Test/TestRule/TestTarget",
+			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "ARN event bus",
+			InputID:       "arn:aws:events:us-east-2:123456789012:event-bus/default/TestRule/TestTarget", //lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",                     //lintignore:AWSAT003,AWSAT005
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule/TestTarget",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
+			ExpectedPart1: "TestRule",
+			ExpectedPart2: "TestTarget",
+		},
+		{
+			TestName:      "empty partner event rule and target",
+			InputID:       "aws.partner/example.com/Test//",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "four parts",
+			InputID:       "aws.partner/example.com/Test/TestRule",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "five parts",
+			InputID:       "abc.partner/example.com/Test/TestRule/TestTarget",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "six parts",
+			InputID:       "test/aws.partner/example.com/Test/TestRule/TestTarget",
+			ExpectedError: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			gotPart0, gotPart1, gotPart2, err := tfevents.TargetParseImportID(testCase.InputID)
+
+			if err == nil && testCase.ExpectedError {
+				t.Fatalf("expected error, got no error")
+			}
+
+			if err != nil && !testCase.ExpectedError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if gotPart0 != testCase.ExpectedPart0 {
+				t.Errorf("got part 0 %s, expected %s", gotPart0, testCase.ExpectedPart0)
+			}
+
+			if gotPart1 != testCase.ExpectedPart1 {
+				t.Errorf("got part 1 %s, expected %s", gotPart1, testCase.ExpectedPart1)
+			}
+
+			if gotPart2 != testCase.ExpectedPart2 {
+				t.Errorf("got part 2 %s, expected %s", gotPart2, testCase.ExpectedPart2)
+			}
+		})
+	}
+}
+
 func TestAccEventsTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -41,7 +207,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "dead_letter_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "0"),
@@ -53,7 +219,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kinesis_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
@@ -62,16 +228,18 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetNoBusNameImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetNoBusNameImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config:   testAccTargetConfig_defaultBusName(rName),
@@ -83,7 +251,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 
 func TestAccEventsTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -107,7 +275,7 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 
 func TestAccEventsTarget_eventBusName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -127,10 +295,11 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -138,13 +307,7 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 
 func TestAccEventsTarget_eventBusARN(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("EventBridge Target EventBus ARNs are not supported in %s partition", got)
-	}
-
-	var v eventbridge.Target
+	var v types.Target
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-test-rule")
 	targetID := sdkacctest.RandomWithPrefix("tf-acc-test-target")
 	originEventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -152,7 +315,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
@@ -162,16 +325,17 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -179,7 +343,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 
 func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-missing-target-id")
 	snsTopicName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_cloudwatch_event_target.test"
@@ -196,15 +360,16 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -212,7 +377,7 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 
 func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	kinesisStreamResourceName := "aws_kinesis_stream.test"
@@ -230,19 +395,20 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_event_age_in_seconds", "60"),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.0.maximum_retry_attempts", "5"),
-					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", queueResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "dead_letter_config.0.arn", queueResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -250,7 +416,7 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 
 func TestAccEventsTarget_full(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	ruleName := sdkacctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
 	ssmDocumentName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
 	targetID := sdkacctest.RandomWithPrefix("tf-acc-cw-target-full")
@@ -269,16 +435,17 @@ func TestAccEventsTarget_full(t *testing.T) {
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", kinesisStreamResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
 					resource.TestCheckResourceAttr(resourceName, "input_path", ""),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -286,7 +453,7 @@ func TestAccEventsTarget_full(t *testing.T) {
 
 func TestAccEventsTarget_ssmDocument(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_ssm_Document")
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -307,10 +474,11 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -318,7 +486,7 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 
 func TestAccEventsTarget_http(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_http_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -342,10 +510,11 @@ func TestAccEventsTarget_http(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -354,7 +523,7 @@ func TestAccEventsTarget_http(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/23805
 func TestAccEventsTarget_http_params(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_http_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -379,10 +548,11 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_httpParameterUpdated(rName),
@@ -405,7 +575,7 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 
 func TestAccEventsTarget_ecs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -421,10 +591,10 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 				Config: testAccTargetConfig_ecs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
@@ -432,10 +602,11 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -443,7 +614,7 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 
 func TestAccEventsTarget_redshift(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -464,10 +635,11 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -478,7 +650,7 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16078
 func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -494,20 +666,21 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 				Config: testAccTargetConfig_ecsNoLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecs(rName),
@@ -517,10 +690,11 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecsNoLaunchType(rName),
@@ -539,7 +713,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -555,20 +729,21 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 				Config: testAccTargetConfig_ecsBlankLaunchType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.task_count", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ecs_target.0.task_definition_arn", ecsTaskDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.launch_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ecs_target.0.network_configuration.0.subnets.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecs(rName),
@@ -578,10 +753,11 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecsBlankLaunchType(rName),
@@ -596,7 +772,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 
 func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -615,10 +791,11 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -626,7 +803,7 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 
 func TestAccEventsTarget_ecsFull(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -653,10 +830,11 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -664,7 +842,7 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 
 func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -687,10 +865,11 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -698,7 +877,7 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 
 func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -722,10 +901,11 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -733,7 +913,7 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 
 func TestAccEventsTarget_batch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_batch_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 	batchJobDefinitionResourceName := "aws_batch_job_definition.test"
@@ -749,15 +929,16 @@ func TestAccEventsTarget_batch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "batch_target.0.job_definition", batchJobDefinitionResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "batch_target.0.job_definition", batchJobDefinitionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "batch_target.0.job_name", rName),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -765,7 +946,7 @@ func TestAccEventsTarget_batch(t *testing.T) {
 
 func TestAccEventsTarget_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_kinesis_target")
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -784,9 +965,11 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName), ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -794,7 +977,7 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 
 func TestAccEventsTarget_sqs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -813,10 +996,11 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -824,7 +1008,7 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 
 func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -838,20 +1022,21 @@ func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 				Config: testAccTargetConfig_sageMakerPipeline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sagemaker_pipeline.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, "aws_sagemaker_pipeline.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sagemaker_pipeline_target.0.pipeline_parameter_list.*", map[string]string{
-						"name":  "key",
-						"value": "value",
+						names.AttrName:  names.AttrKey,
+						names.AttrValue: names.AttrValue,
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -860,7 +1045,7 @@ func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 func TestAccEventsTarget_Input_transformer(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_target.test"
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix("tf_input_transformer")
 
 	tooManyInputPaths := make([]string, 101)
@@ -893,7 +1078,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
-				ExpectError: regexache.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
+				ExpectError: regexache.MustCompile(`Map must contain at most \d+ elements: length=\d+`),
 			},
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
@@ -906,10 +1091,11 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -917,7 +1103,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 
 func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -949,7 +1135,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 	snsTopicResourceName := "aws_sns_topic.test"
@@ -967,14 +1153,15 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule", rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -982,7 +1169,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 
 func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v eventbridge.Target
+	var v types.Target
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_target.test"
 
@@ -1003,23 +1190,24 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccTargetImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
 }
 
-func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Target) resource.TestCheckFunc {
+func testAccCheckTargetExists(ctx context.Context, n string, v *types.Target) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
 
@@ -1035,7 +1223,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *eventbridge.Targ
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_target" {
@@ -1953,22 +2141,13 @@ resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
-    managed_termination_protection = "DISABLED"
-    managed_draining               = "ENABLED"
-
-    managed_scaling {
-      maximum_scaling_step_size = 1
-      minimum_scaling_step_size = 1
-      status                    = "ENABLED"
-      target_capacity           = 1
-    }
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "test" {
   cluster_name       = aws_ecs_cluster.test.name
-  capacity_providers = ["%[1]s"]
+  capacity_providers = [%[1]q]
 
   default_capacity_provider_strategy {
     capacity_provider = %[1]q

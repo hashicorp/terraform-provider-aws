@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_guardduty_organization_configuration_feature", name="Organization Configuration Feature")
@@ -40,7 +41,7 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(guardduty.OrgFeatureStatus_Values(), false),
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -59,7 +60,7 @@ func ResourceOrganizationConfigurationFeature() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -86,7 +87,7 @@ func resourceOrganizationConfigurationFeaturePut(ctx context.Context, d *schema.
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Configuration (%s): %s", detectorID, err)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	feature := &guardduty.OrganizationFeatureConfiguration{
 		AutoEnable: aws.String(d.Get("auto_enable").(string)),
 		Name:       aws.String(name),
@@ -141,7 +142,7 @@ func resourceOrganizationConfigurationFeatureRead(ctx context.Context, d *schema
 	}
 	d.Set("auto_enable", feature.AutoEnable)
 	d.Set("detector_id", detectorID)
-	d.Set("name", feature.Name)
+	d.Set(names.AttrName, feature.Name)
 
 	return diags
 }
@@ -188,7 +189,7 @@ func expandOrganizationAdditionalConfiguration(tfMap map[string]interface{}) *gu
 		apiObject.AutoEnable = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -233,7 +234,7 @@ func flattenOrganizationAdditionalConfigurationResult(apiObject *guardduty.Organ
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	return tfMap

@@ -18,8 +18,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -55,11 +56,11 @@ func ResourceSlotType() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "",
@@ -81,7 +82,7 @@ func ResourceSlotType() *schema.Resource {
 								ValidateFunc: validation.StringLenBetween(1, 140),
 							},
 						},
-						"value": {
+						names.AttrValue: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 140),
@@ -89,11 +90,11 @@ func ResourceSlotType() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -108,7 +109,7 @@ func ResourceSlotType() *schema.Resource {
 				Default:      lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue,
 				ValidateFunc: validation.StringInSlice(lexmodelbuildingservice.SlotValueSelectionStrategy_Values(), false),
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -120,14 +121,14 @@ func ResourceSlotType() *schema.Resource {
 func updateComputedAttributesOnSlotTypeCreateVersion(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	createVersion := d.Get("create_version").(bool)
 	if createVersion && hasSlotTypeConfigChanges(d) {
-		d.SetNewComputed("version")
+		d.SetNewComputed(names.AttrVersion)
 	}
 	return nil
 }
 
-func hasSlotTypeConfigChanges(d verify.ResourceDiffer) bool {
+func hasSlotTypeConfigChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
-		"description",
+		names.AttrDescription,
 		"enumeration_value",
 		"value_selection_strategy",
 	} {
@@ -142,10 +143,10 @@ func resourceSlotTypeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Name:                   aws.String(name),
 		ValueSelectionStrategy: aws.String(d.Get("value_selection_strategy").(string)),
 	}
@@ -192,10 +193,10 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("checksum", output.Checksum)
-	d.Set("created_date", output.CreatedDate.Format(time.RFC3339))
-	d.Set("description", output.Description)
-	d.Set("last_updated_date", output.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", output.Name)
+	d.Set(names.AttrCreatedDate, output.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrLastUpdatedDate, output.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrName, output.Name)
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 
 	if output.EnumerationValues != nil {
@@ -208,7 +209,7 @@ func resourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Lex Slot Type (%s) latest version: %s", d.Id(), err)
 	}
 
-	d.Set("version", version)
+	d.Set(names.AttrVersion, version)
 
 	return diags
 }
@@ -220,7 +221,7 @@ func resourceSlotTypeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &lexmodelbuildingservice.PutSlotTypeInput{
 		Checksum:               aws.String(d.Get("checksum").(string)),
 		CreateVersion:          aws.Bool(d.Get("create_version").(bool)),
-		Description:            aws.String(d.Get("description").(string)),
+		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Name:                   aws.String(d.Id()),
 		ValueSelectionStrategy: aws.String(d.Get("value_selection_strategy").(string)),
 	}
@@ -271,8 +272,8 @@ func resourceSlotTypeDelete(ctx context.Context, d *schema.ResourceData, meta in
 func flattenEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) (flattened []map[string]interface{}) {
 	for _, value := range values {
 		flattened = append(flattened, map[string]interface{}{
-			"synonyms": flex.FlattenStringList(value.Synonyms),
-			"value":    aws.StringValue(value.Value),
+			"synonyms":      flex.FlattenStringList(value.Synonyms),
+			names.AttrValue: aws.StringValue(value.Value),
 		})
 	}
 
@@ -289,7 +290,7 @@ func expandEnumerationValues(rawValues []interface{}) []*lexmodelbuildingservice
 
 		enums = append(enums, &lexmodelbuildingservice.EnumerationValue{
 			Synonyms: flex.ExpandStringSet(value["synonyms"].(*schema.Set)),
-			Value:    aws.String(value["value"].(string)),
+			Value:    aws.String(value[names.AttrValue].(string)),
 		})
 	}
 	return enums

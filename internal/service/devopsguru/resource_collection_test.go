@@ -38,6 +38,7 @@ func testAccResourceCollection_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,7 +48,7 @@ func testAccResourceCollection_basic(t *testing.T) {
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.ResourceCollectionTypeAwsService)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsService)),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.0.stack_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.0.stack_names.0", "*"),
@@ -71,6 +72,7 @@ func testAccResourceCollection_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -99,6 +101,7 @@ func testAccResourceCollection_cloudformation(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -108,10 +111,10 @@ func testAccResourceCollection_cloudformation(t *testing.T) {
 				Config: testAccResourceCollectionConfig_cloudformation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.ResourceCollectionTypeAwsCloudFormation)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsCloudFormation)),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudformation.0.stack_names.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cloudformation.0.stack_names.0", cfnStackResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudformation.0.stack_names.0", cfnStackResourceName, names.AttrName),
 				),
 			},
 			{
@@ -134,6 +137,7 @@ func testAccResourceCollection_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -143,7 +147,7 @@ func testAccResourceCollection_tags(t *testing.T) {
 				Config: testAccResourceCollectionConfig_tags(appBoundaryKey, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.ResourceCollectionTypeAwsTags)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsTags)),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.app_boundary_key", appBoundaryKey),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.tag_values.#", "1"),
@@ -170,6 +174,7 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.DevOpsGuruEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsGuruServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -179,7 +184,7 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 				Config: testAccResourceCollectionConfig_tags(appBoundaryKey, tagValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					resource.TestCheckResourceAttr(resourceName, "type", string(types.ResourceCollectionTypeAwsTags)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceCollectionTypeAwsTags)),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.app_boundary_key", appBoundaryKey),
 					resource.TestCheckResourceAttr(resourceName, "tags.0.tag_values.#", "1"),
@@ -197,7 +202,7 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 
 func resourceCollectionDisappearsStateFunc() func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
 	return func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("id"), is.Attributes["id"])); err != nil {
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrID), is.Attributes[names.AttrID])); err != nil {
 			return err
 		}
 

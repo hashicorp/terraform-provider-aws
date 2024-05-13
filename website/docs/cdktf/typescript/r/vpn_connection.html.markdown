@@ -199,7 +199,7 @@ This resource supports the following arguments:
 * `localIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
 * `outsideIpAddressType` - (Optional, Default `PublicIpv4`) Indicates if a Public S2S VPN or Private S2S VPN over AWS Direct Connect. Valid values are `PublicIpv4 | PrivateIpv4`
 * `remoteIpv4NetworkCidr` - (Optional, Default `0.0.0.0/0`) The IPv4 CIDR on the AWS side of the VPN connection.
-* `remoteIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the customer gateway (on-premises) side of the VPN connection.
+* `remoteIpv6NetworkCidr` - (Optional, Default `::/0`) The IPv6 CIDR on the AWS side of the VPN connection.
 * `transportTransitGatewayAttachmentId` - (Required when outside_ip_address_type is set to `PrivateIpv4`). The attachment ID of the Transit Gateway attachment to Direct Connect Gateway. The ID is obtained through a data source only.
 * `tunnelInsideIpVersion` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `tunnel1InsideCidr` - (Optional) The CIDR block of the inside IP addresses for the first VPN tunnel. Valid value is a size /30 CIDR block from the 169.254.0.0/16 range.
@@ -333,4 +333,4 @@ Using `terraform import`, import VPN Connections using the VPN connection `id`. 
 % terraform import aws_vpn_connection.testvpnconnection vpn-40f41529
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3d90dfa10b9036a076f1ef132a7b8d5011c2699fea5ecbd9ed76a20dc1755eae -->
+<!-- cache-key: cdktf-0.20.1 input-6d4c651206d8de0b5ebbb8296bd6fe1204e1e62a8b678542649a4c1ea7d11c9f -->

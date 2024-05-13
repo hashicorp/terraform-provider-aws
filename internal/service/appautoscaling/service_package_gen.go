@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_appautoscaling_target",
 			Name:     "Target",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -52,6 +52,7 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppAutoScaling
 }
 
+<<<<<<< HEAD
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*applicationautoscaling_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
@@ -61,6 +62,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
+=======
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*applicationautoscaling_sdkv1.ApplicationAutoScaling, error) {
+	sess := config[names.AttrSession].(*session_sdkv1.Session)
+
+	return applicationautoscaling_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config[names.AttrEndpoint].(string))})), nil
+>>>>>>> main
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

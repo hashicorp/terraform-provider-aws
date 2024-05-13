@@ -11,12 +11,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
@@ -40,7 +41,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 									Type: schema.TypeString,
 								},
 							},
-							"type": {
+							names.AttrType: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -60,6 +61,10 @@ func dataSourcePolicyDocument() *schema.Resource {
 
 			return map[string]*schema.Schema{
 				"json": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"minified_json": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -112,7 +117,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 											Type:     schema.TypeString,
 											Required: true,
 										},
-										"values": {
+										names.AttrValues: {
 											Type:     schema.TypeList,
 											Required: true,
 											Elem: &schema.Schema{
@@ -144,7 +149,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 						},
 					},
 				},
-				"version": {
+				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  "2012-10-17",
@@ -198,7 +203,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 
 	// process the current document
 	doc := &IAMPolicyDoc{
-		Version: d.Get("version").(string),
+		Version: d.Get(names.AttrVersion).(string),
 	}
 
 	if policyID, hasPolicyID := d.GetOk("policy_id"); hasPolicyID {
@@ -308,6 +313,16 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	jsonString := string(jsonDoc)
 
 	d.Set("json", jsonString)
+
+	jsonMinDoc, err := json.Marshal(mergedDoc)
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "writing IAM Policy Document: formatting JSON: %s", err)
+	}
+	jsonMinString := string(jsonMinDoc)
+
+	d.Set("minified_json", jsonMinString)
+
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags
@@ -344,7 +359,7 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.StringValueSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item[names.AttrValues].([]interface{}))),
 			version,
 		)
 		if err != nil {
@@ -364,7 +379,7 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 		var err error
 		item := itemI.(map[string]interface{})
 		out[i] = IAMPolicyStatementPrincipal{
-			Type: item["type"].(string),
+			Type: item[names.AttrType].(string),
 		}
 		out[i].Identifiers, err = dataSourcePolicyDocumentReplaceVarsInList(
 			policyDecodeConfigStringList(

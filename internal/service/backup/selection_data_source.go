@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_backup_selection")
@@ -32,7 +33,7 @@ func DataSourceSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +62,7 @@ func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(resp.SelectionId))
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
-	d.Set("name", resp.BackupSelection.SelectionName)
+	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
 
 	if resp.BackupSelection.Resources != nil {
 		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {

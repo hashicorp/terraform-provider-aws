@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2ImageBlockPublicAccess_serial(t *testing.T) {
@@ -33,13 +34,13 @@ func testAccImageBlockPublicAccess_basic(t *testing.T) {
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("unblocked"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "state", "unblocked"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "unblocked"),
 				),
 			},
 			{
 				Config: testAccImageBlockPublicAccessConfig_basic("block-new-sharing"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "state", "block-new-sharing"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "block-new-sharing"),
 				),
 			},
 		},

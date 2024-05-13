@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodeArtifact_serial(t *testing.T) {
@@ -14,16 +15,16 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AuthorizationTokenDataSource": {
-			"basic":    testAccAuthorizationTokenDataSource_basic,
-			"duration": testAccAuthorizationTokenDataSource_duration,
-			"owner":    testAccAuthorizationTokenDataSource_owner,
+			"basic":            testAccAuthorizationTokenDataSource_basic,
+			names.AttrDuration: testAccAuthorizationTokenDataSource_duration,
+			"owner":            testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
 			"basic":                         testAccDomain_basic,
 			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
 			"disappears":                    testAccDomain_disappears,
 			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
-			"tags":                          testAccDomain_tags,
+			names.AttrTags:                  testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
 			"basic":            testAccDomainPermissionsPolicy_basic,
@@ -33,13 +34,13 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"ignoreEquivalent": testAccDomainPermissionsPolicy_ignoreEquivalent,
 		},
 		"Repository": {
-			"basic":              testAccRepository_basic,
-			"description":        testAccRepository_description,
-			"disappears":         testAccRepository_disappears,
-			"externalConnection": testAccRepository_externalConnection,
-			"owner":              testAccRepository_owner,
-			"tags":               testAccRepository_tags,
-			"upstreams":          testAccRepository_upstreams,
+			"basic":               testAccRepository_basic,
+			names.AttrDescription: testAccRepository_description,
+			"disappears":          testAccRepository_disappears,
+			"externalConnection":  testAccRepository_externalConnection,
+			"owner":               testAccRepository_owner,
+			names.AttrTags:        testAccRepository_tags,
+			"upstreams":           testAccRepository_upstreams,
 		},
 		"RepositoryEndpointDataSource": {
 			"basic": testAccRepositoryEndpointDataSource_basic,

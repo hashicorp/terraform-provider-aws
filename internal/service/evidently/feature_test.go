@@ -41,21 +41,21 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 				Config: testAccFeatureConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("project/%s/feature/%s", rName, rName2)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/feature/%s", rName, rName2)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_rules.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", string(awstypes.FeatureEvaluationStrategyAllRules)),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
-					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.FeatureStatusAvailable)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
+					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.FeatureStatusAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 "Variation1",
+						names.AttrName:         "Variation1",
 						"value.#":              "1",
 						"value.0.string_value": "test",
 					}),
@@ -135,7 +135,7 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 				Config: testAccFeatureConfig_description(rName, rName2, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 				Config: testAccFeatureConfig_description(rName, rName2, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 				),
 			},
 		},
@@ -180,12 +180,12 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName1,
+						names.AttrName:         variationName1,
 						"value.#":              "1",
 						"value.0.string_value": "testval1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName2,
+						names.AttrName:         variationName2,
 						"value.#":              "1",
 						"value.0.string_value": "testval2",
 					}),
@@ -204,12 +204,12 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName2),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test2", variationName1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName1,
+						names.AttrName:         variationName1,
 						"value.#":              "1",
 						"value.0.string_value": "testval1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName2,
+						names.AttrName:         variationName2,
 						"value.#":              "1",
 						"value.0.string_value": "testval2",
 					}),
@@ -292,7 +292,7 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeBoolean)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               originalVariationName1,
+						names.AttrName:       originalVariationName1,
 						"value.#":            "1",
 						"value.0.bool_value": strconv.FormatBool(originalVariationBoolVal1),
 					}),
@@ -311,12 +311,12 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeBoolean)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               updatedVariationName1,
+						names.AttrName:       updatedVariationName1,
 						"value.#":            "1",
 						"value.0.bool_value": strconv.FormatBool(updatedVariationBoolVal1),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               variationName2,
+						names.AttrName:       variationName2,
 						"value.#":            "1",
 						"value.0.bool_value": strconv.FormatBool(variationBoolVal2),
 					}),
@@ -357,7 +357,7 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeDouble)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 originalVariationName1,
+						names.AttrName:         originalVariationName1,
 						"value.#":              "1",
 						"value.0.double_value": strconv.FormatFloat(originalVariationDoubleVal1, 'f', -1, 64),
 					}),
@@ -376,12 +376,12 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeDouble)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 updatedVariationName1,
+						names.AttrName:         updatedVariationName1,
 						"value.#":              "1",
 						"value.0.double_value": strconv.FormatFloat(updatedVariationDoubleVal1, 'f', -1, 64),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName2,
+						names.AttrName:         variationName2,
 						"value.#":              "1",
 						"value.0.double_value": strconv.FormatFloat(float64(variationDoubleVal2), 'f', -1, 64),
 					}),
@@ -422,7 +422,7 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeLong)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               originalVariationName1,
+						names.AttrName:       originalVariationName1,
 						"value.#":            "1",
 						"value.0.long_value": strconv.Itoa(originalVariationLongVal1),
 					}),
@@ -441,12 +441,12 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeLong)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               updatedVariationName1,
+						names.AttrName:       updatedVariationName1,
 						"value.#":            "1",
 						"value.0.long_value": strconv.Itoa(updatedVariationLongVal1),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":               variationName2,
+						names.AttrName:       variationName2,
 						"value.#":            "1",
 						"value.0.long_value": strconv.Itoa(variationLongVal2),
 					}),
@@ -488,7 +488,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 originalVariationName1,
+						names.AttrName:         originalVariationName1,
 						"value.#":              "1",
 						"value.0.string_value": originalVariationStringVal1,
 					}),
@@ -507,12 +507,12 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 updatedVariationName1,
+						names.AttrName:         updatedVariationName1,
 						"value.#":              "1",
 						"value.0.string_value": updatedVariationStringVal1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName2,
+						names.AttrName:         variationName2,
 						"value.#":              "1",
 						"value.0.string_value": variationStringVal2,
 					}),
@@ -526,12 +526,12 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 updatedVariationName1,
+						names.AttrName:         updatedVariationName1,
 						"value.#":              "1",
 						"value.0.string_value": updatedVariationStringVal1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
-						"name":                 variationName2,
+						names.AttrName:         variationName2,
 						"value.#":              "1",
 						"value.0.string_value": updatedVariationStringVal2, // test empty string
 					}),

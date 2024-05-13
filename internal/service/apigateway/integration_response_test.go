@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.IntegrationResponse
+	var conf apigateway.GetIntegrationResponseOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
@@ -70,7 +70,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 
 func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.IntegrationResponse
+	var conf apigateway.GetIntegrationResponseOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
@@ -92,18 +92,14 @@ func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *apigateway.IntegrationResponse) resource.TestCheckFunc {
+func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *apigateway.GetIntegrationResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Integration Response ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
 
@@ -119,7 +115,7 @@ func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *api
 
 func testAccCheckIntegrationResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_integration_response" {

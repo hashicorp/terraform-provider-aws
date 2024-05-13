@@ -44,7 +44,7 @@ func (r *resourceEventSourcesConfig) Metadata(_ context.Context, req resource.Me
 func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"event_sources": schema.ListNestedBlock{
@@ -61,7 +61,7 @@ func (r *resourceEventSourcesConfig) Schema(ctx context.Context, req resource.Sc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"status": schema.StringAttribute{
+									names.AttrStatus: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.EventSourceOptInStatus](),
 										Required:   true,
 										PlanModifiers: []planmodifier.String{
@@ -164,7 +164,7 @@ func (r *resourceEventSourcesConfig) Delete(ctx context.Context, req resource.De
 }
 
 func (r *resourceEventSourcesConfig) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func findEventSourcesConfig(ctx context.Context, conn *devopsguru.Client) (*devopsguru.DescribeEventSourcesConfigOutput, error) {

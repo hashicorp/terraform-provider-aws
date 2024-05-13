@@ -33,9 +33,9 @@ func TestAccIoTThingType_basic(t *testing.T) {
 				Config: testAccThingTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingTypeExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "deprecated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},

@@ -40,7 +40,7 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -48,7 +48,7 @@ func ResourcePlaybackKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -81,17 +81,17 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 		Tags:              getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
 	out, err := conn.ImportPlaybackKeyPairWithContext(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.KeyPair == nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNamePlaybackKeyPair, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.KeyPair.Arn))
@@ -120,8 +120,8 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNamePlaybackKeyPair, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("name", out.Name)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrName, out.Name)
 	d.Set("fingerprint", out.Fingerprint)
 
 	return diags

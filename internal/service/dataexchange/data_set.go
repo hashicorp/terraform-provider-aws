@@ -34,7 +34,7 @@ func ResourceDataSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,12 +44,12 @@ func ResourceDataSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(dataexchange.AssetType_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 16348),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -65,9 +65,9 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
 	input := &dataexchange.CreateDataSetInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		AssetType:   aws.String(d.Get("asset_type").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -98,9 +98,9 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("asset_type", dataSet.AssetType)
-	d.Set("name", dataSet.Name)
-	d.Set("description", dataSet.Description)
-	d.Set("arn", dataSet.Arn)
+	d.Set(names.AttrName, dataSet.Name)
+	d.Set(names.AttrDescription, dataSet.Description)
+	d.Set(names.AttrARN, dataSet.Arn)
 
 	setTagsOut(ctx, dataSet.Tags)
 
@@ -111,17 +111,17 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dataexchange.UpdateDataSetInput{
 			DataSetId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		log.Printf("[DEBUG] Updating DataExchange DataSet: %s", d.Id())

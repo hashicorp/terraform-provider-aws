@@ -43,7 +43,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
 				),
@@ -84,7 +84,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
 			},

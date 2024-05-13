@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -205,7 +206,7 @@ func TestAccEC2Instance_basic(t *testing.T) {
 				Config: testAccInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "instance_initiated_shutdown_behavior", "stop"),
 				),
 			},
@@ -372,7 +373,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
 				),
 			},
 			{
@@ -415,9 +416,9 @@ func TestAccEC2Instance_EBSBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"encrypted": "true",
+						names.AttrEncrypted: "true",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "ebs_block_device.*.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -505,7 +506,7 @@ func TestAccEC2Instance_RootBlockDevice_kmsKeyARN(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "root_block_device.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -788,47 +789,47 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdb",
-						"volume_size": "9",
-						"volume_type": "gp2",
+						names.AttrDeviceName: "/dev/sdb",
+						"volume_size":        "9",
+						"volume_type":        "gp2",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdc",
-						"volume_size": "10",
-						"volume_type": "io1",
-						"iops":        "100",
+						names.AttrDeviceName: "/dev/sdc",
+						"volume_size":        "10",
+						"volume_type":        "io1",
+						"iops":               "100",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdf",
-						"volume_size": "10",
-						"volume_type": "gp3",
-						"throughput":  "300",
+						names.AttrDeviceName: "/dev/sdf",
+						"volume_size":        "10",
+						"volume_type":        "gp3",
+						"throughput":         "300",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdg",
-						"volume_size": "10",
-						"volume_type": "gp3",
-						"throughput":  "300",
-						"iops":        "4000",
+						names.AttrDeviceName: "/dev/sdg",
+						"volume_size":        "10",
+						"volume_type":        "gp3",
+						"throughput":         "300",
+						"iops":               "4000",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"device_name": "/dev/sdd",
-						"encrypted":   "true",
-						"volume_size": "12",
+						names.AttrDeviceName: "/dev/sdd",
+						names.AttrEncrypted:  "true",
+						"volume_size":        "12",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
 					}),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name":  "/dev/sde",
-						"virtual_name": "ephemeral0",
+						names.AttrDeviceName: "/dev/sde",
+						"virtual_name":       "ephemeral0",
 					}),
 					testCheck(),
 				),
@@ -923,12 +924,12 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name": "/dev/sdb",
-						"no_device":   "true",
+						names.AttrDeviceName: "/dev/sdb",
+						"no_device":          "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
-						"device_name": "/dev/sdc",
-						"no_device":   "true",
+						names.AttrDeviceName: "/dev/sdc",
+						"no_device":          "true",
 					}),
 					testCheck(),
 				),
@@ -1189,7 +1190,7 @@ func TestAccEC2Instance_outpost(t *testing.T) {
 				Config: testAccInstanceConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2259,10 +2260,10 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_smallType(rName),
+				Config: testAccInstanceConfig_type(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 				),
 			},
 			{
@@ -2272,11 +2273,43 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_updateType(rName),
+				Config: testAccInstanceConfig_type(rName, "t2.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before ec2.Instance
+	var after ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_typeReplace(rName, "m5.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m5.2xlarge"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_typeReplace(rName, "m6g.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckInstanceRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m6g.2xlarge"),
 				),
 			},
 		},
@@ -2304,7 +2337,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
 				),
 			},
@@ -2312,7 +2345,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
 				),
 			},
@@ -2342,7 +2375,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserDataBase64(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
 				),
 			},
@@ -2350,7 +2383,7 @@ func TestAccEC2Instance_changeInstanceTypeAndUserDataBase64(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserDataBase64(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "bmV3IHdvcmxk"),
 				),
 			},
@@ -2834,28 +2867,28 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdd",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						names.AttrDeviceName:          "/dev/sdd",
+						names.AttrEncrypted:           "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdc",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						names.AttrDeviceName:          "/dev/sdc",
+						names.AttrEncrypted:           "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sdb",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
+						names.AttrDeleteOnTermination: "true",
+						names.AttrDeviceName:          "/dev/sdb",
+						names.AttrEncrypted:           "false",
+						"iops":                        "100",
+						"volume_size":                 "10",
+						"volume_type":                 "gp2",
 					}),
 				),
 			},
@@ -2923,7 +2956,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance ec2.Instance
-	var eni ec2.NetworkInterface
+	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2995,7 +3028,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance ec2.Instance
-	var eni ec2.NetworkInterface
+	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3028,8 +3061,8 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before ec2.Instance
 	var after ec2.Instance
-	var eniPrimary ec2.NetworkInterface
-	var eniSecondary ec2.NetworkInterface
+	var eniPrimary awstypes.NetworkInterface
+	var eniSecondary awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniPrimaryResourceName := "aws_network_interface.primary"
 	eniSecondaryResourceName := "aws_network_interface.secondary"
@@ -3515,11 +3548,11 @@ func TestAccEC2Instance_LaunchTemplate_basic(t *testing.T) {
 				Config: testAccInstanceConfig_templateBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
-					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, instanceTypeDataSourceName, names.AttrInstanceType),
 				),
 			},
 		},
@@ -3545,9 +3578,9 @@ func TestAccEC2Instance_LaunchTemplate_overrideTemplate(t *testing.T) {
 				Config: testAccInstanceConfig_templateOverrideTemplate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", instanceTypeDataSourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "ami", amiDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceType, instanceTypeDataSourceName, names.AttrInstanceType),
 				),
 			},
 		},
@@ -3571,7 +3604,7 @@ func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 				Config: testAccInstanceConfig_templateBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
 				),
 			},
@@ -3580,7 +3613,7 @@ func TestAccEC2Instance_LaunchTemplate_setSpecificVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
 			},
@@ -3605,7 +3638,7 @@ func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T
 				Config: testAccInstanceConfig_templateBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
 				),
 			},
@@ -3614,7 +3647,7 @@ func TestAccEC2Instance_LaunchTemplateModifyTemplate_defaultVersion(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "$Default"),
 				),
 			},
@@ -3639,7 +3672,7 @@ func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 				Config: testAccInstanceConfig_templateSpecificVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
 			},
@@ -3648,7 +3681,7 @@ func TestAccEC2Instance_LaunchTemplate_updateTemplateVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
 			},
@@ -3673,8 +3706,8 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 				Config: testAccInstanceConfig_templateBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, names.AttrName),
 				),
 			},
 			{
@@ -3682,8 +3715,8 @@ func TestAccEC2Instance_LaunchTemplate_swapIDAndName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", launchTemplateResourceName, names.AttrName),
 				),
 			},
 		},
@@ -3707,7 +3740,7 @@ func TestAccEC2Instance_LaunchTemplate_iamInstanceProfile(t *testing.T) {
 				Config: testAccInstanceConfig_templateWithIAMInstanceProfile(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_instance_profile", launchTemplateResourceName, "iam_instance_profile.0.name"),
 				),
 			},
@@ -3732,7 +3765,7 @@ func TestAccEC2Instance_LaunchTemplate_spotAndStop(t *testing.T) {
 				Config: testAccInstanceConfig_templateSpotAndStop(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 				),
 			},
 		},
@@ -3756,7 +3789,7 @@ func TestAccEC2Instance_LaunchTemplate_vpcSecurityGroup(t *testing.T) {
 				Config: testAccInstanceConfig_templateWithVPCSecurityGroups(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", launchTemplateResourceName, names.AttrID),
 				),
 			},
 		},
@@ -5236,7 +5269,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
@@ -5260,11 +5293,11 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", names.AttrEnabled),
 				),
 			},
 			{
@@ -5272,7 +5305,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", "disabled"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
@@ -5676,8 +5709,8 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 
 				r := tfec2.ResourceVolumeAttachment()
 				d := r.Data(nil)
-				d.Set("device_name", deviceName)
-				d.Set("instance_id", instanceID)
+				d.Set(names.AttrDeviceName, deviceName)
+				d.Set(names.AttrInstanceID, instanceID)
 				d.Set("volume_id", volumeID)
 
 				if err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta()); err != nil {
@@ -6195,7 +6228,7 @@ resource "aws_instance" "test" {
 `, rName, filename))
 }
 
-func testAccInstanceConfig_smallType(rName string) string {
+func testAccInstanceConfig_type(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -6204,31 +6237,41 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "t2.medium"
+  instance_type = %[1]q
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
   }
 }
-`, rName))
+`, instanceType, rName))
 }
 
-func testAccInstanceConfig_updateType(rName string) string {
+func testAccInstanceConfig_typeReplace(rName, instanceType string) string {
+	arch := acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI()
+	archs := "x86_64"
+	if strings.HasPrefix(instanceType, "m6g.") {
+		arch = acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI()
+		archs = "arm64"
+	}
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		arch,
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-%[3]s.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "t2.large"
+  instance_type = %[1]q
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
+  }
+
+  lifecycle {
+    ignore_changes = [ami]
   }
 }
-`, rName))
+`, instanceType, rName, archs))
 }
 
 func testAccInstanceConfig_typeAndUserData(rName, instanceType, userData string) string {

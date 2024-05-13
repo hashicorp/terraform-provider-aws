@@ -38,9 +38,9 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Config: testAccBucketMetricConfig_noFilter(rName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", metricName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
 				),
 			},
 			{

@@ -36,16 +36,16 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{
 				Config: testAccSubnetGroupConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "description", "update"),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", names.AttrDescription, "update"),
 					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "3"),
-					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
+					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},
 			{

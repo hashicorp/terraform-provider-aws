@@ -5,27 +5,36 @@ package iam_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -33,6 +42,13 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -41,7 +57,14 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -50,6 +73,14 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -58,7 +89,13 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key2", "value2"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -66,6 +103,13 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -74,13 +118,20 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -94,24 +145,33 @@ func TestAccIAMVirtualMFADevice_tags(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tagsNull(rName, "key1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull/"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tagsNull/"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -120,7 +180,10 @@ func TestAccIAMVirtualMFADevice_tags_null(t *testing.T) {
 				},
 			},
 			{
-				Config:             testAccVirtualMFADeviceConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -130,25 +193,34 @@ func TestAccIAMVirtualMFADevice_tags_null(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -156,6 +228,13 @@ func TestAccIAMVirtualMFADevice_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -169,18 +248,24 @@ func TestAccIAMVirtualMFADevice_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -188,6 +273,13 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -196,13 +288,20 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags0(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -216,18 +315,24 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -235,7 +340,14 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags2(rName, "key1", "value1", "key2", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -244,6 +356,14 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+						"key2": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -252,7 +372,13 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -260,6 +386,13 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -273,18 +406,24 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -292,7 +431,13 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", ""),
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -300,6 +445,13 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -313,21 +465,24 @@ func TestAccIAMVirtualMFADevice_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -336,6 +491,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -344,10 +507,15 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -357,6 +525,15 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1updated"),
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -365,10 +542,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -377,6 +558,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key2": config.StringVariable("value2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -385,10 +574,11 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -396,6 +586,11 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -409,21 +604,27 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVirtualMFADeviceConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -434,6 +635,17 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -442,10 +654,18 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
-					testAccVirtualMFADeviceConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -458,6 +678,18 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1updated"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"resourcekey1": config.StringVariable("resourcevalue1updated"),
+						"resourcekey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -466,10 +698,11 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -477,6 +710,11 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -490,21 +728,27 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVirtualMFADeviceConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -514,6 +758,17 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -522,10 +777,19 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccVirtualMFADeviceConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -537,6 +801,19 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+						"overlapkey2": config.StringVariable("providervalue2"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue1"),
+						"overlapkey2": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -545,10 +822,17 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccVirtualMFADeviceConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -558,6 +842,17 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("providervalue1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"overlapkey1": config.StringVariable("resourcevalue2"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -571,18 +866,24 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -592,10 +893,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -604,6 +909,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -617,21 +930,24 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToProviderOnly(t *testing
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVirtualMFADeviceConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags0_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -640,7 +956,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToResourceOnly(t *testing
 				),
 			},
 			{
-				Config: testAccVirtualMFADeviceConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -650,6 +973,14 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToResourceOnly(t *testing
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -663,21 +994,27 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_updateToResourceOnly(t *testing
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccVirtualMFADeviceConfig_tags1(rName, "key1", ""),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -687,6 +1024,17 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable(""),
+					}),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -700,21 +1048,25 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
-					testAccVirtualMFADeviceConfig_tagsNull(rName, "key1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -723,6 +1075,15 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullOverlappingResourceTag(t *t
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -736,21 +1097,25 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullOverlappingResourceTag(t *t
 
 func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v iam.VirtualMFADevice
+	var v types.VirtualMFADevice
 	resourceName := "aws_iam_virtual_mfa_device.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualMFADeviceDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccVirtualMFADeviceConfig_tagsNull(rName, "resourcekey1"),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -759,6 +1124,212 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullNonOverlappingResourceTag(t
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsNull_defaults/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					"provider_tags": config.MapVariable(map[string]config.Variable{
+						"providerkey1": config.StringVariable("providervalue1"),
+					}),
+					"tagKey1": config.StringVariable("resourcekey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"base_32_string_seed", "qr_code_png",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMVirtualMFADevice_tags_ComputedTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VirtualMFADevice
+	resourceName := "aws_iam_virtual_mfa_device.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"base_32_string_seed", "qr_code_png",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMVirtualMFADevice_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VirtualMFADevice
+	resourceName := "aws_iam_virtual_mfa_device.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed2/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("computedkey1"),
+					"knownTagKey":   config.StringVariable("key1"),
+					"knownTagValue": config.StringVariable("value1"),
+				},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"base_32_string_seed", "qr_code_png",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMVirtualMFADevice_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.VirtualMFADevice
+	resourceName := "aws_iam_virtual_mfa_device.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckVirtualMFADeviceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tags/"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+					names.AttrTags: config.MapVariable(map[string]config.Variable{
+						"key1": config.StringVariable("value1"),
+					}),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags)),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigDirectory:          config.StaticDirectory("testdata/VirtualMFADevice/tagsComputed1/"),
+				ConfigVariables: config.Variables{
+					"rName":         config.StringVariable(rName),
+					"unknownTagKey": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

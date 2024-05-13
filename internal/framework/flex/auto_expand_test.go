@@ -259,13 +259,13 @@ func TestExpand(t *testing.T) {
 		},
 		{
 			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 		},
 		{
 			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 		},
@@ -287,6 +287,18 @@ func TestExpand(t *testing.T) {
 			Target: &TestFlexTimeAWS02{},
 			WantTarget: &TestFlexTimeAWS02{
 				CreationDateTime: testTimeTime,
+			},
+		},
+		{
+			TestName: "string Source to interface Target",
+			Source:   &TestFlexTF20{Field1: fwtypes.SmithyJSONValue(`{"field1": "a"}`, newTestJSONDocument)},
+			Target:   &TestFlexAWS19{},
+			WantTarget: &TestFlexAWS19{
+				Field1: &testJSONDocument{
+					Value: map[string]any{
+						"field1": "a",
+					},
+				},
 			},
 		},
 	}
@@ -434,6 +446,42 @@ func TestExpandGeneric(t *testing.T) {
 			WantTarget: &TestFlexAWS13{
 				FieldInner: map[string]string{
 					"x": "y",
+				},
+			},
+		},
+		{
+			TestName: "map of map of string",
+			Source: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS21{},
+			WantTarget: &TestFlexAWS21{
+				Field1: map[string]map[string]string{
+					"x": {
+						"y": "z",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map of map of string pointer",
+			Source: &TestFlexTF21{
+				Field1: fwtypes.NewMapValueOfMust[fwtypes.MapValueOf[types.String]](ctx, map[string]attr.Value{
+					"x": fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
+						"y": types.StringValue("z"),
+					}),
+				}),
+			},
+			Target: &TestFlexAWS22{},
+			WantTarget: &TestFlexAWS22{
+				Field1: map[string]map[string]*string{
+					"x": {
+						"y": aws.String("z"),
+					},
 				},
 			},
 		},
@@ -731,6 +779,74 @@ func TestExpandStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.ListNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.SetNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 
@@ -797,13 +913,96 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandOptions(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Bool                       `tfsdk:"field1"`
+		Tags   fwtypes.MapValueOf[types.String] `tfsdk:"tags"`
+	}
+	type aws01 struct {
+		Field1 bool
+		Tags   map[string]string
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "empty source with tags",
+			Source:     &tf01{},
+			Target:     &aws01{},
+			WantTarget: &aws01{},
+		},
+		{
+			TestName: "ignore tags by default",
+			Source: &tf01{
+				Field1: types.BoolValue(true),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+			Target:     &aws01{},
+			WantTarget: &aws01{Field1: true},
+		},
+		{
+			TestName: "include tags with option override",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{})
+				},
+			},
+			Source: &tf01{
+				Field1: types.BoolValue(true),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+			Target: &aws01{},
+			WantTarget: &aws01{
+				Field1: true,
+				Tags:   map[string]string{"foo": "bar"},
+			},
+		},
+		{
+			TestName: "ignore custom field",
+			Options: []AutoFlexOptionsFunc{
+				func(opts *AutoFlexOptions) {
+					opts.SetIgnoredFields([]string{"Field1"})
+				},
+			},
+			Source: &tf01{
+				Field1: types.BoolValue(true),
+				Tags: fwtypes.NewMapValueOfMust[types.String](
+					ctx,
+					map[string]attr.Value{
+						"foo": types.StringValue("bar"),
+					},
+				),
+			},
+			Target: &aws01{},
+			WantTarget: &aws01{
+				Tags: map[string]string{"foo": "bar"},
+			},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
+	Options    []AutoFlexOptionsFunc
 	TestName   string
 	Source     any
 	Target     any
 	WantErr    bool
 	WantTarget any
+	WantDiff   bool
 }
 
 type autoFlexTestCases []autoFlexTestCase
@@ -821,7 +1020,7 @@ func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFle
 				testCtx = testCase.Context
 			}
 
-			err := Expand(testCtx, testCase.Source, testCase.Target)
+			err := Expand(testCtx, testCase.Source, testCase.Target, testCase.Options...)
 			gotErr := err != nil
 
 			if gotErr != testCase.WantErr {

@@ -24,7 +24,7 @@ func testAccDataLakeSettingsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 					resource.TestCheckResourceAttr(resourceName, "allow_external_data_filtering", "false"),
@@ -49,7 +49,7 @@ func testAccDataLakeSettingsDataSource_readOnlyAdmins(t *testing.T) {
 			{
 				Config: testAccDataLakeSettingsDataSourceConfig_readOnlyAdmins,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCatalogID, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "read_only_admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "read_only_admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),

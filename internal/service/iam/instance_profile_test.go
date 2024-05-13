@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIAMInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,9 +36,9 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 
 func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,7 +81,7 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 
 func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -95,8 +95,8 @@ func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 				Config: testAccInstanceProfileConfig_nameGenerated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 
 func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -124,8 +124,8 @@ func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 				Config: testAccInstanceProfileConfig_namePrefix(rName, "tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 
 func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -163,7 +163,7 @@ func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 
 func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -185,9 +185,80 @@ func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 	})
 }
 
+func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.InstanceProfile
+	resourceName := "aws_iam_instance_profile.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceProfileConfig_launchConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_instance_profile" {
@@ -211,7 +282,7 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *iam.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *awstypes.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -222,7 +293,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *iam.Ins
 			return fmt.Errorf("No IAM Instance Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindInstanceProfileByName(ctx, conn, rs.Primary.ID)
 
@@ -297,51 +368,21 @@ resource "aws_iam_instance_profile" "test" {
 `, namePrefix))
 }
 
-func testAccInstanceProfileConfig_tags0(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
+func testAccInstanceProfileConfig_launchConfiguration(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceProfileConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_launch_configuration" "test" {
+  name                 = %[1]q
+  iam_instance_profile = aws_iam_instance_profile.test.name
+  image_id             = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type        = "t2.micro"
+}
+
 resource "aws_iam_instance_profile" "test" {
   name = %[1]q
   role = aws_iam_role.test.name
 }
 `, rName))
-}
-
-func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccInstanceProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = "test-%[1]s"
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccInstanceProfileConfig_tagsNull(rName, tagKey1 string) string {
-	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_instance_profile" "test" {
-  name = %[1]q
-  role = aws_iam_role.test.name
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1))
 }

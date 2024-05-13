@@ -31,7 +31,7 @@ resource "aws_acmpca_certificate" "example" {
 }
 
 resource "aws_acmpca_certificate_authority" "example" {
-  private_certificate_configuration {
+  certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
 
@@ -48,7 +48,6 @@ resource "tls_private_key" "key" {
 }
 
 resource "tls_cert_request" "csr" {
-  key_algorithm   = "RSA"
   private_key_pem = tls_private_key.key.private_key_pem
 
   subject {

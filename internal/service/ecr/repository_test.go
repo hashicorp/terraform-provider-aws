@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func TestAccECRRepository_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecr.Repository
+	var v types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -38,12 +38,12 @@ func TestAccECRRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ecr", fmt.Sprintf("repository/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecr", fmt.Sprintf("repository/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					testAccCheckRepositoryRegistryID(resourceName),
 					testAccCheckRepositoryRepositoryURL(resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeAes256),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccECRRepository_basic(t *testing.T) {
 
 func TestAccECRRepository_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecr.Repository
+	var v types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -82,7 +82,7 @@ func TestAccECRRepository_disappears(t *testing.T) {
 
 func TestAccECRRepository_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ecr.Repository
+	var v1, v2 types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -128,7 +128,7 @@ func TestAccECRRepository_tags(t *testing.T) {
 
 func TestAccECRRepository_immutability(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ecr.Repository
+	var v types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -142,7 +142,7 @@ func TestAccECRRepository_immutability(t *testing.T) {
 				Config: testAccRepositoryConfig_immutability(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "image_tag_mutability", "IMMUTABLE"),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccECRRepository_immutability(t *testing.T) {
 
 func TestAccECRRepository_Image_scanning(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ecr.Repository
+	var v1, v2 types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -171,7 +171,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
 				),
@@ -208,7 +208,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 
 func TestAccECRRepository_Encryption_kms(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ecr.Repository
+	var v1, v2 types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 	kmsKeyDataSourceName := "aws_kms_key.test"
@@ -224,7 +224,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexache.MustCompile(fmt.Sprintf("key/%s$", verify.UUIDRegexPattern))),
 				),
@@ -240,8 +240,8 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeKms),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, names.AttrARN),
 				),
 			},
 			{
@@ -255,7 +255,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 
 func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ecr.Repository
+	var v1, v2 types.Repository
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_repository.test"
 
@@ -278,7 +278,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", ecr.EncryptionTypeAes256),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 				),
 			},
@@ -298,8 +298,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 
 func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
-
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_repository" {
 				continue
@@ -322,7 +321,7 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRepositoryExists(ctx context.Context, n string, v *ecr.Repository) resource.TestCheckFunc {
+func testAccCheckRepositoryExists(ctx context.Context, n string, v *types.Repository) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -333,7 +332,7 @@ func testAccCheckRepositoryExists(ctx context.Context, n string, v *ecr.Reposito
 			return fmt.Errorf("No ECR Repository ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		output, err := tfecr.FindRepositoryByName(ctx, conn, rs.Primary.ID)
 
@@ -361,9 +360,9 @@ func testAccCheckRepositoryRepositoryURL(resourceName, repositoryName string) re
 	}
 }
 
-func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
+func testAccCheckRepositoryRecreated(i, j *types.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
+		if aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was not recreated")
 		}
 
@@ -371,9 +370,9 @@ func testAccCheckRepositoryRecreated(i, j *ecr.Repository) resource.TestCheckFun
 	}
 }
 
-func testAccCheckRepositoryNotRecreated(i, j *ecr.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
+func testAccCheckRepositoryNotRecreated(i, j *types.Repository) resource.TestCheckFunc { // nosemgrep:ci.ecr-in-func-name
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedAt).Equal(aws.TimeValue(j.CreatedAt)) {
+		if !aws.ToTime(i.CreatedAt).Equal(aws.ToTime(j.CreatedAt)) {
 			return fmt.Errorf("ECR repository was recreated")
 		}
 

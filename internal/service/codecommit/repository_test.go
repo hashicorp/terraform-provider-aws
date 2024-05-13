@@ -36,12 +36,12 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codecommit", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codecommit", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_http"),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_ssh"),
 					resource.TestCheckNoResourceAttr(resourceName, "default_branch"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "repository_id"),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -73,7 +73,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
 				),
 			},
 			{
@@ -81,7 +81,7 @@ func TestAccCodeCommitRepository_withChanges(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description - with changes"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description - with changes"),
 					resource.TestCheckResourceAttr(resourceName, "repository_name", rNameUpdated),
 				),
 			},
@@ -277,7 +277,7 @@ func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
 				Config: testAccRepositoryConfig_kmsKey(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test.1", names.AttrARN),
 				),
 			},
 		},

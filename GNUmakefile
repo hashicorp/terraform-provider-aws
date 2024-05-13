@@ -75,6 +75,21 @@ default: build
 
 # Please keep targets in alphabetical order
 
+awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
+	@echo "Applying patch for $(PKG)..."
+	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+
+awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
+	@if [ "$(PKG)" = "" ]; then \
+		echo "PKG must be set. Try again like:" ; \
+		echo "PKG=foo make awssdkpatch-gen" ; \
+		exit 1 ; \
+	fi
+	@awssdkpatch -service $(PKG)
+
+awssdkpatch: prereq-go ## Install awssdkpatch
+	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
+
 build: prereq-go fmtcheck ## Build provider
 	$(GO_VER) install
 	@echo "make: build complete"
@@ -107,6 +122,7 @@ cleantidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
+	cd tools/awssdkpatch && $$gover mod tidy && cd ../.. ; \
 	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
@@ -171,6 +187,7 @@ gen: prereq-go ## Run all Go generators
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/service/**/*_gen_test.go
+	rm -f internal/service/**/*_gen.tf
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -320,6 +337,7 @@ semall: semgrep-validate ## Run semgrep on all files
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -341,6 +359,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -358,6 +377,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 semgrep-validate: ## Validate semgrep configuration files
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-constants.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
 		--config .ci/.semgrep-service-name0.yml \
@@ -368,7 +388,7 @@ semgrep-validate: ## Validate semgrep configuration files
 
 semgrep: semgrep-validate ## Run semgrep
 	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml .ci/.semgrep-constants.yml
 
 skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
@@ -381,7 +401,7 @@ sweep: prereq-go ## Run sweepers
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
 t: prereq-go fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -441,6 +461,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && $(GO_VER) install github.com/uber-go/gopatch
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 	@echo "make: tools installed"
 

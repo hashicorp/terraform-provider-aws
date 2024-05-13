@@ -41,12 +41,12 @@ func testAccClientVPNRoute_basic(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "origin", "add-route"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "type", "Nat"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "Nat"),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func testAccClientVPNRoute_description(t *testing.T, semaphore tfsync.Semaphore)
 				Config: testAccClientVPNRouteConfig_description(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test client VPN route"),
 				),
 			},
 			{

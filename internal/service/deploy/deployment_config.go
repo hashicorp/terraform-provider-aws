@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codedeploy_deployment_config", name="Deployment Config")
@@ -33,7 +34,7 @@ func resourceDeploymentConfig() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,13 +61,13 @@ func resourceDeploymentConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsType](),
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -123,7 +124,7 @@ func resourceDeploymentConfig() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ForceNew:         true,
@@ -184,7 +185,7 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("compute_platform", deploymentConfig.ComputePlatform)
 	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
 	d.Set("deployment_config_name", deploymentConfigName)
@@ -247,8 +248,8 @@ func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHost
 	host := hosts.([]interface{})[0].(map[string]interface{})
 
 	minimumHealthyHost := types.MinimumHealthyHosts{
-		Type:  types.MinimumHealthyHostsType(host["type"].(string)),
-		Value: int32(host["value"].(int)),
+		Type:  types.MinimumHealthyHostsType(host[names.AttrType].(string)),
+		Value: int32(host[names.AttrValue].(int)),
 	}
 
 	return &minimumHealthyHost
@@ -262,7 +263,7 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 	config := block.([]interface{})[0].(map[string]interface{})
 	trafficRoutingConfig := types.TrafficRoutingConfig{}
 
-	if trafficType, ok := config["type"]; ok {
+	if trafficType, ok := config[names.AttrType]; ok {
 		trafficRoutingConfig.Type = types.TrafficRoutingType(trafficType.(string))
 	}
 	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
@@ -307,8 +308,8 @@ func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]in
 
 	item := make(map[string]interface{})
 
-	item["type"] = string(hosts.Type)
-	item["value"] = hosts.Value
+	item[names.AttrType] = string(hosts.Type)
+	item[names.AttrValue] = hosts.Value
 
 	return append(result, item)
 }
@@ -321,7 +322,7 @@ func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[strin
 
 	item := make(map[string]interface{})
 
-	item["type"] = string(config.Type)
+	item[names.AttrType] = string(config.Type)
 	item["time_based_canary"] = flattenTimeBasedCanary(config.TimeBasedCanary)
 	item["time_based_linear"] = flattenTimeBasedLinear(config.TimeBasedLinear)
 

@@ -24,7 +24,7 @@ func DataSourceAuthPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAuthPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
+			names.AttrPolicy: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -32,7 +32,7 @@ func DataSourceAuthPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -56,11 +56,11 @@ func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(resourceID)
 
-	d.Set("policy", out.Policy)
+	d.Set(names.AttrPolicy, out.Policy)
 	d.Set("resource_identifier", resourceID)
 
 	// TIP: Setting a JSON string to avoid errorneous diffs.
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
 	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameAuthPolicy, d.Id(), err)
 	}
@@ -70,7 +70,7 @@ func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, d.Id(), err)
 	}
 
-	d.Set("policy", p)
+	d.Set(names.AttrPolicy, p)
 
 	return nil
 }

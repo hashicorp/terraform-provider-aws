@@ -42,7 +42,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Acceptance Test"),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
@@ -60,7 +60,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},

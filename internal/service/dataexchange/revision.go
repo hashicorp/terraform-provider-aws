@@ -36,7 +36,7 @@ func ResourceRevision() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -104,7 +104,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("data_set_id", revision.DataSetId)
 	d.Set("comment", revision.Comment)
-	d.Set("arn", revision.Arn)
+	d.Set(names.AttrARN, revision.Arn)
 	d.Set("revision_id", revision.Id)
 
 	setTagsOut(ctx, revision.Tags)
@@ -116,7 +116,7 @@ func resourceRevisionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataExchangeConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dataexchange.UpdateRevisionInput{
 			RevisionId: aws.String(d.Get("revision_id").(string)),
 			DataSetId:  aws.String(d.Get("data_set_id").(string)),

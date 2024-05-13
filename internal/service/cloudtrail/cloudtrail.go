@@ -124,7 +124,7 @@ func resourceTrail() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -132,7 +132,7 @@ func resourceTrail() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,12 +168,12 @@ func resourceTrail() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(resourceType_Values(), false),
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
@@ -233,18 +233,18 @@ func resourceTrail() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
-			"s3_bucket_name": {
+			names.AttrS3BucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -269,11 +269,11 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudtrail.CreateTrailInput{
 		IncludeGlobalServiceEvents: aws.Bool(d.Get("include_global_service_events").(bool)),
 		Name:                       aws.String(name),
-		S3BucketName:               aws.String(d.Get("s3_bucket_name").(string)),
+		S3BucketName:               aws.String(d.Get(names.AttrS3BucketName).(string)),
 		TagsList:                   getTagsIn(ctx),
 	}
 
@@ -297,7 +297,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IsOrganizationTrail = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -377,7 +377,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	trail := outputRaw.(*types.Trail)
 	arn := aws.ToString(trail.TrailARN)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("cloud_watch_logs_group_arn", trail.CloudWatchLogsLogGroupArn)
 	d.Set("cloud_watch_logs_role_arn", trail.CloudWatchLogsRoleArn)
 	d.Set("enable_log_file_validation", trail.LogFileValidationEnabled)
@@ -385,9 +385,9 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("include_global_service_events", trail.IncludeGlobalServiceEvents)
 	d.Set("is_multi_region_trail", trail.IsMultiRegionTrail)
 	d.Set("is_organization_trail", trail.IsOrganizationTrail)
-	d.Set("kms_key_id", trail.KmsKeyId)
-	d.Set("name", trail.Name)
-	d.Set("s3_bucket_name", trail.S3BucketName)
+	d.Set(names.AttrKMSKeyID, trail.KmsKeyId)
+	d.Set(names.AttrName, trail.Name)
+	d.Set(names.AttrS3BucketName, trail.S3BucketName)
 	d.Set("s3_key_prefix", trail.S3KeyPrefix)
 	d.Set("sns_topic_name", trail.SnsTopicName)
 
@@ -442,7 +442,7 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudTrailClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "insight_selector", "advanced_event_selector", "event_selector", "enable_logging") {
 		input := &cloudtrail.UpdateTrailInput{
 			Name: aws.String(d.Id()),
 		}
@@ -469,12 +469,12 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.IsOrganizationTrail = aws.Bool(d.Get("is_organization_trail").(bool))
 		}
 
-		if d.HasChange("kms_key_id") {
-			input.KmsKeyId = aws.String(d.Get("kms_key_id").(string))
+		if d.HasChange(names.AttrKMSKeyID) {
+			input.KmsKeyId = aws.String(d.Get(names.AttrKMSKeyID).(string))
 		}
 
-		if d.HasChange("s3_bucket_name") {
-			input.S3BucketName = aws.String(d.Get("s3_bucket_name").(string))
+		if d.HasChange(names.AttrS3BucketName) {
+			input.S3BucketName = aws.String(d.Get(names.AttrS3BucketName).(string))
 		}
 
 		if d.HasChange("s3_key_prefix") {
@@ -693,8 +693,8 @@ func expandEventSelectorDataResource(configured []interface{}) []types.DataResou
 		data := raw.(map[string]interface{})
 
 		dataResource := types.DataResource{
-			Type:   aws.String(data["type"].(string)),
-			Values: flex.ExpandStringValueList(data["values"].([]interface{})),
+			Type:   aws.String(data[names.AttrType].(string)),
+			Values: flex.ExpandStringValueList(data[names.AttrValues].([]interface{})),
 		}
 
 		dataResources = append(dataResources, dataResource)
@@ -729,8 +729,8 @@ func flattenEventSelectorDataResource(configured []types.DataResource) []map[str
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["type"] = aws.ToString(raw.Type)
-		item["values"] = raw.Values
+		item[names.AttrType] = aws.ToString(raw.Type)
+		item[names.AttrValues] = raw.Values
 
 		dataResources = append(dataResources, item)
 	}
@@ -759,7 +759,7 @@ func expandAdvancedEventSelector(configured []interface{}) []types.AdvancedEvent
 		fieldSelectors := expandAdvancedEventSelectorFieldSelector(data["field_selector"].(*schema.Set))
 
 		aes := types.AdvancedEventSelector{
-			Name:           aws.String(data["name"].(string)),
+			Name:           aws.String(data[names.AttrName].(string)),
 			FieldSelectors: fieldSelectors,
 		}
 
@@ -813,7 +813,7 @@ func flattenAdvancedEventSelector(configured []types.AdvancedEventSelector) []ma
 
 	for _, raw := range configured {
 		item := make(map[string]interface{})
-		item["name"] = aws.ToString(raw.Name)
+		item[names.AttrName] = aws.ToString(raw.Name)
 		item["field_selector"] = flattenAdvancedEventSelectorFieldSelector(raw.FieldSelectors)
 
 		advancedEventSelectors = append(advancedEventSelectors, item)
@@ -965,14 +965,14 @@ func resourceTrailV0() *schema.Resource {
 								},
 							},
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1006,11 +1006,11 @@ func resourceTrailV0() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 250,
@@ -1068,16 +1068,16 @@ func resourceTrailV0() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"s3_bucket_name": {
+			names.AttrS3BucketName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -1100,8 +1100,8 @@ func trailUpgradeV0(_ context.Context, rawState map[string]interface{}, meta int
 		rawState = map[string]interface{}{}
 	}
 
-	if !arn.IsARN(rawState["id"].(string)) {
-		rawState["id"] = rawState["arn"]
+	if !arn.IsARN(rawState[names.AttrID].(string)) {
+		rawState[names.AttrID] = rawState[names.AttrARN]
 	}
 
 	return rawState, nil

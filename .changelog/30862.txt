@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ce_cost_category: Allow up to 3 levels of `and`, `not` and `or` operand nesting for the `rule` argument
+```

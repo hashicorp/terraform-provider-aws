@@ -47,7 +47,7 @@ func TestAccElasticBeanstalkEnvironment_basic(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticbeanstalk", fmt.Sprintf("environment/%s/%s", rName, rName)),
 					resource.TestMatchResourceAttr(resourceName, "autoscaling_groups.0", beanstalkAsgNameRegexp),
 					resource.TestMatchResourceAttr(resourceName, "endpoint_url", beanstalkEndpointURL),
 					resource.TestMatchResourceAttr(resourceName, "instances.0", beanstalkInstancesNameRegexp),
@@ -615,7 +615,7 @@ func testAccCheckEnvironmentConfigValue(ctx context.Context, n string, expectedV
 
 		resp, err := conn.DescribeConfigurationOptions(ctx, &elasticbeanstalk.DescribeConfigurationOptionsInput{
 			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
-			EnvironmentName: aws.String(rs.Primary.Attributes["name"]),
+			EnvironmentName: aws.String(rs.Primary.Attributes[names.AttrName]),
 			Options: []awstypes.OptionSpecification{
 				{
 					Namespace:  aws.String("aws:elasticbeanstalk:application:environment"),

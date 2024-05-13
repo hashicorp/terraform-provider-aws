@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -31,7 +32,7 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicName(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 				),
@@ -65,6 +66,8 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 				),
 			},
 			{
@@ -123,7 +126,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
-					resource.TestCheckResourceAttr(dataSourceName, "type", "container"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "container"),
 				),
 			},
 		},

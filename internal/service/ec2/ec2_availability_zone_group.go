@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ec2_availability_zone_group")
@@ -29,7 +30,7 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +51,7 @@ func resourceAvailabilityZoneGroupCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 	availabilityZone, err := FindAvailabilityZoneGroupByName(ctx, conn, groupName)
 
 	if err != nil {
@@ -82,7 +83,7 @@ func resourceAvailabilityZoneGroupRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "unnecessary handling of EC2 Availability Zone Group (%s), status: %s", d.Id(), ec2.AvailabilityZoneOptInStatusOptInNotRequired)
 	}
 
-	d.Set("group_name", availabilityZone.GroupName)
+	d.Set(names.AttrGroupName, availabilityZone.GroupName)
 	d.Set("opt_in_status", availabilityZone.OptInStatus)
 
 	return diags

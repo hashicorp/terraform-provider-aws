@@ -48,10 +48,10 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cognito-idp", regexache.MustCompile(`userpool/.+`)),
-					resource.TestMatchResourceAttr(resourceName, "endpoint", regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
@@ -101,7 +101,7 @@ func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 				Config: testAccUserPoolConfig_deletionProtection(rName, "ACTIVE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "ACTIVE"),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccCognitoIDPUserPool_deletionProtection(t *testing.T) {
 			{
 				Config: testAccUserPoolConfig_deletionProtection(rName, "INACTIVE"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "INACTIVE"),
 				),
 			},
@@ -137,12 +137,12 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 				Config: testAccUserPoolConfig_accountRecoverySingle(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						"name":     "verified_email",
-						"priority": "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -155,16 +155,16 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 				Config: testAccUserPoolConfig_accountRecoveryMulti(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						"name":     "verified_email",
-						"priority": "1",
+						names.AttrName:     "verified_email",
+						names.AttrPriority: "1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						"name":     "verified_phone_number",
-						"priority": "2",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "2",
 					}),
 				),
 			},
@@ -172,12 +172,12 @@ func TestAccCognitoIDPUserPool_recovery(t *testing.T) {
 				Config: testAccUserPoolConfig_accountRecoveryUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.0.recovery_mechanism.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "account_recovery_setting.0.recovery_mechanism.*", map[string]string{
-						"name":     "verified_phone_number",
-						"priority": "1",
+						names.AttrName:     "verified_phone_number",
+						names.AttrPriority: "1",
 					}),
 				),
 			},
@@ -391,7 +391,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
@@ -414,7 +414,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
@@ -442,7 +442,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "false"),
 				),
@@ -458,7 +458,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", "true"),
 				),
@@ -495,7 +495,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
@@ -599,7 +599,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
@@ -664,7 +664,7 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -685,7 +685,7 @@ func TestAccCognitoIDPUserPool_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -712,7 +712,7 @@ func TestAccCognitoIDPUserPool_SMS_snsRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.sns_region", acctest.Region()),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -744,7 +744,7 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -758,7 +758,7 @@ func TestAccCognitoIDPUserPool_SMS_externalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test2"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -785,7 +785,7 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -799,7 +799,7 @@ func TestAccCognitoIDPUserPool_SMS_snsCallerARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -900,7 +900,7 @@ func TestAccCognitoIDPUserPool_withEmailSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "DEVELOPER"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.source_arn", sourceARN),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.from_email_address", emailTo),
-					resource.TestCheckResourceAttrPair(resourceName, "email_configuration.0.configuration_set", resourceName2, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "email_configuration.0.configuration_set", resourceName2, names.AttrName),
 				),
 			},
 		},
@@ -1134,16 +1134,16 @@ func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1155,16 +1155,16 @@ func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 				Config: testAccUserPoolConfig_lambdaUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaUpdatedResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.create_auth_challenge", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_message", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.define_auth_challenge", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_authentication", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.post_confirmation", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_authentication", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_sign_up", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.user_migration", lambdaUpdatedResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.verify_auth_challenge_response", lambdaUpdatedResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1198,7 +1198,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
@@ -1213,7 +1213,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
@@ -1251,7 +1251,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
 				),
 			},
@@ -1266,7 +1266,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
 				),
 			},
@@ -1303,7 +1303,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
 				),
 			},
@@ -1318,7 +1318,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
 				),
 			},
@@ -1352,13 +1352,13 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
-						"attribute_data_type":            "String",
-						"developer_only_attribute":       "false",
-						"mutable":                        "false",
-						"name":                           "email",
-						"number_attribute_constraints.#": "0",
-						"required":                       "true",
-						"string_attribute_constraints.#": "1",
+						"attribute_data_type":                       "String",
+						"developer_only_attribute":                  "false",
+						"mutable":                                   "false",
+						names.AttrName:                              "email",
+						"number_attribute_constraints.#":            "0",
+						"required":                                  "true",
+						"string_attribute_constraints.#":            "1",
 						"string_attribute_constraints.0.min_length": "5",
 						"string_attribute_constraints.0.max_length": "10",
 					}),
@@ -1366,7 +1366,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"attribute_data_type":            "Boolean",
 						"developer_only_attribute":       "true",
 						"mutable":                        "false",
-						"name":                           "mybool",
+						names.AttrName:                   "mybool",
 						"number_attribute_constraints.#": "0",
 						"required":                       "false",
 						"string_attribute_constraints.#": "0",
@@ -1380,13 +1380,13 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 					testAccCheckUserPoolNotRecreated(&pool1, &pool2),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
-						"attribute_data_type":            "String",
-						"developer_only_attribute":       "false",
-						"mutable":                        "false",
-						"name":                           "email",
-						"number_attribute_constraints.#": "0",
-						"required":                       "true",
-						"string_attribute_constraints.#": "1",
+						"attribute_data_type":                       "String",
+						"developer_only_attribute":                  "false",
+						"mutable":                                   "false",
+						names.AttrName:                              "email",
+						"number_attribute_constraints.#":            "0",
+						"required":                                  "true",
+						"string_attribute_constraints.#":            "1",
 						"string_attribute_constraints.0.min_length": "5",
 						"string_attribute_constraints.0.max_length": "10",
 					}),
@@ -1394,21 +1394,21 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"attribute_data_type":            "Boolean",
 						"developer_only_attribute":       "true",
 						"mutable":                        "false",
-						"name":                           "mybool",
+						names.AttrName:                   "mybool",
 						"number_attribute_constraints.#": "0",
 						"required":                       "false",
 						"string_attribute_constraints.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
-						"attribute_data_type":            "Number",
-						"developer_only_attribute":       "false",
-						"mutable":                        "true",
-						"name":                           "mynondevnumber",
-						"number_attribute_constraints.#": "1",
+						"attribute_data_type":                      "Number",
+						"developer_only_attribute":                 "false",
+						"mutable":                                  "true",
+						names.AttrName:                             "mynondevnumber",
+						"number_attribute_constraints.#":           "1",
 						"number_attribute_constraints.0.min_value": "2",
 						"number_attribute_constraints.0.max_value": "6",
-						"required":                       "false",
-						"string_attribute_constraints.#": "0",
+						"required":                                 "false",
+						"string_attribute_constraints.#":           "0",
 					}),
 				),
 			},
@@ -1500,6 +1500,12 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
+	emailMessage := "foo {####} bar"
+	emailMessageByLink := "{##foobar##}"
+	emailSubject := "foobar {####}"
+	emailSubjectByLink := "foobar"
+	smsMessage := "{####} baz"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
@@ -1507,22 +1513,22 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_verificationMessageTemplate(rName),
+				Config: testAccUserPoolConfig_verificationMessageTemplate(rName, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "foo {####} bar"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", "{##foobar##}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "foobar {####}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", "foobar"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} baz"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", emailMessageByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", emailSubjectByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
 
 					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
 					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
 					*/
-					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "foo {####} bar"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "foobar {####}"),
-					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} baz"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
 				),
 			},
 			{
@@ -1531,19 +1537,81 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName),
+				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName, emailMessage, emailSubject, smsMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "{####} Baz"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "BazBaz {####}"),
-					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} BazBazBar?"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
 
 					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
 					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
 					*/
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "{####} Baz"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "BazBaz {####}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} BazBazBar?"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPool_withVerificationMessageTemplateUTF8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool cognitoidentityprovider.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	emailMessage := "{####}" + strings.Repeat("あ", 994)             // = 1000
+	emailMessageByLink := "{##foobar##}" + strings.Repeat("い", 988) // = 1000
+	emailSubject := strings.Repeat("う", 140)
+	emailSubjectByLink := strings.Repeat("え", 140)
+	smsMessage := "{####}" + strings.Repeat("お", 134) // = 140
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_verificationMessageTemplate(rName, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", emailMessageByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", emailSubjectByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
+
+					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
+					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName, emailMessage, emailSubject, smsMessage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
+
+					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
+					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
 				),
 			},
 		},
@@ -2657,7 +2725,7 @@ resource "aws_cognito_user_pool" "test" {
 `, name)
 }
 
-func testAccUserPoolConfig_verificationMessageTemplate(name string) string {
+func testAccUserPoolConfig_verificationMessageTemplate(name, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -2668,30 +2736,30 @@ resource "aws_cognito_user_pool" "test" {
 
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "foo {####} bar"
-    email_message_by_link = "{##foobar##}"
-    email_subject         = "foobar {####}"
-    email_subject_by_link = "foobar"
-    sms_message           = "{####} baz"
+    email_message         = %[2]q
+    email_message_by_link = %[3]q
+    email_subject         = %[4]q
+    email_subject_by_link = %[5]q
+    sms_message           = %[6]q
   }
 }
-`, name)
+`, name, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage)
 }
 
-func testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(name string) string {
+func testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(name, emailVerificationMessage, emailVerificationSubject, smsVerificationMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
-  email_verification_message = "{####} Baz"
-  email_verification_subject = "BazBaz {####}"
-  sms_verification_message   = "{####} BazBazBar?"
+  email_verification_message = %[2]q
+  email_verification_subject = %[3]q
+  sms_verification_message   = %[4]q
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
   }
 }
-`, name)
+`, name, emailVerificationMessage, emailVerificationSubject, smsVerificationMessage)
 }
 
 func testAccUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {

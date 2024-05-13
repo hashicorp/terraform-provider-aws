@@ -123,15 +123,17 @@ This resource supports the following arguments:
 * `snapshot_cluster_identifier` - (Optional) The name of the cluster the source snapshot was created from.
 * `owner_account` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
 * `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
-* `logging` - (Optional) Logging, documented below.
+* `logging` - (Optional, **Deprecated**) Logging, documented below.
 * `maintenance_track_name` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manual_snapshot_retention_period` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
-* `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
+* `snapshot_copy` - (Optional, **Deprecated**) Configuration of automatic copy of snapshots from one region to another. Documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Blocks
 
 #### `logging`
+
+~> The `logging` argument is deprecated. Use the [`aws_redshift_logging`](./redshift_logging.html.markdown) resource instead. This argument will be removed in a future major version.
 
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
 * `bucket_name` - (Optional, required when `enable` is `true` and `log_destination_type` is `s3`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
@@ -141,6 +143,8 @@ For more information on the permissions required for the bucket, please read the
 * `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.
 
 #### `snapshot_copy`
+
+~> The `snapshot_copy` argument is deprecated. Use the [`aws_redshift_snapshot_copy`](./redshift_snapshot_copy.html.markdown) resource instead. This argument will be removed in a future major version.
 
 * `destination_region` - (Required) The destination region that you want to copy snapshots to.
 * `retention_period` - (Optional) The number of days to retain automated snapshots in the destination region after they are copied from the source region. Defaults to `7`.
@@ -213,4 +217,4 @@ Using `terraform import`, import Redshift Clusters using the `cluster_identifier
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c11ae9197def7f55cfd89a1e9dfeb03f0c0cf2850ac38ee4859936641ee9bfd8 -->
+<!-- cache-key: cdktf-0.20.1 input-256317dde5b7df14e079cdaf9e10b363bf1abfa16c1fe6bf54c640647f4810cf -->

@@ -108,7 +108,7 @@ func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 
 func testAccCheckPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy_attachment" {
@@ -139,7 +139,7 @@ func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, _, _, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 
@@ -154,7 +154,7 @@ func testAccCheckPolicyAttachmentCounts(ctx context.Context, n string, wantGroup
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		groups, roles, users, err := tfiam.FindEntitiesForPolicyByARN(ctx, conn, rs.Primary.Attributes["policy_arn"])
 

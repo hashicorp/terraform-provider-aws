@@ -47,7 +47,7 @@ func testAccInstanceAccessControlAttributes_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func testAccInstanceAccessControlAttributes_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ENABLED"),
 				),
 			},
 			{

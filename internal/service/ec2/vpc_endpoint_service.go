@@ -50,11 +50,11 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -96,26 +96,26 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						names.AttrState: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +123,7 @@ func ResourceVPCEndpointService() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -227,8 +227,8 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("availability_zones", aws.StringValueSlice(svcCfg.AvailabilityZones))
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrAvailabilityZones, aws.StringValueSlice(svcCfg.AvailabilityZones))
 	d.Set("base_endpoint_dns_names", aws.StringValueSlice(svcCfg.BaseEndpointDnsNames))
 	d.Set("gateway_load_balancer_arns", aws.StringValueSlice(svcCfg.GatewayLoadBalancerArns))
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
@@ -242,13 +242,13 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	} else {
 		d.Set("private_dns_name_configuration", nil)
 	}
-	d.Set("service_name", svcCfg.ServiceName)
+	d.Set(names.AttrServiceName, svcCfg.ServiceName)
 	if len(svcCfg.ServiceType) > 0 {
 		d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
 	} else {
 		d.Set("service_type", nil)
 	}
-	d.Set("state", svcCfg.ServiceState)
+	d.Set(names.AttrState, svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", aws.StringValueSlice(svcCfg.SupportedIpAddressTypes))
 
 	setTagsOut(ctx, svcCfg.Tags)
@@ -375,19 +375,19 @@ func flattenPrivateDNSNameConfiguration(apiObject *ec2.PrivateDnsNameConfigurati
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.StringValue(v)
+		tfMap[names.AttrState] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Value; v != nil {
-		tfMap["value"] = aws.StringValue(v)
+		tfMap[names.AttrValue] = aws.StringValue(v)
 	}
 
 	return tfMap

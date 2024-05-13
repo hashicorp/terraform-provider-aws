@@ -5,26 +5,32 @@ package apigateway
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_resource")
-func DataSourceResource() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_resource", name="Resource")
+func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
+
 		Schema: map[string]*schema.Schema{
-			"rest_api_id": {
+			"parent_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -32,9 +38,9 @@ func DataSourceResource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_id": {
+			"rest_api_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
 			},
 		},
 	}
@@ -42,34 +48,62 @@ func DataSourceResource() *schema.Resource {
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restApiId := d.Get("rest_api_id").(string)
-	target := d.Get("path").(string)
-	params := &apigateway.GetResourcesInput{RestApiId: aws.String(restApiId)}
+	path := d.Get(names.AttrPath).(string)
+	input := &apigateway.GetResourcesInput{
+		RestApiId: aws.String(d.Get("rest_api_id").(string)),
+	}
 
-	var match *apigateway.Resource
-	log.Printf("[DEBUG] Reading API Gateway Resources: %s", params)
-	err := conn.GetResourcesPagesWithContext(ctx, params, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
-		for _, resource := range page.Items {
-			if aws.StringValue(resource.Path) == target {
-				match = resource
-				return false
-			}
-		}
-		return !lastPage
+	match, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+		return aws.ToString(v.Path) == path
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing API Gateway Resources: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("API Gateway Resource", err))
 	}
 
-	if match == nil {
-		return sdkdiag.AppendErrorf(diags, "no Resources with path %q found for rest api %q", target, restApiId)
-	}
-
-	d.SetId(aws.StringValue(match.Id))
-	d.Set("path_part", match.PathPart)
+	d.SetId(aws.ToString(match.Id))
 	d.Set("parent_id", match.ParentId)
+	d.Set("path_part", match.PathPart)
 
 	return diags
+}
+
+func findResource(ctx context.Context, conn *apigateway.Client, input *apigateway.GetResourcesInput, filter tfslices.Predicate[*types.Resource]) (*types.Resource, error) {
+	output, err := findResources(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findResources(ctx context.Context, conn *apigateway.Client, input *apigateway.GetResourcesInput, filter tfslices.Predicate[*types.Resource]) ([]types.Resource, error) {
+	var output []types.Resource
+
+	pages := apigateway.NewGetResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

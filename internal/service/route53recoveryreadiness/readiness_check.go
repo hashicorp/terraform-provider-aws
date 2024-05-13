@@ -40,7 +40,7 @@ func ResourceReadinessCheck() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -106,7 +106,7 @@ func resourceReadinessCheckRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Recovery Readiness Readiness Check (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.ReadinessCheckArn)
+	d.Set(names.AttrARN, resp.ReadinessCheckArn)
 	d.Set("readiness_check_name", resp.ReadinessCheckName)
 	d.Set("resource_set_name", resp.ResourceSet)
 
@@ -117,7 +117,7 @@ func resourceReadinessCheckUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53RecoveryReadinessConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &route53recoveryreadiness.UpdateReadinessCheckInput{
 			ReadinessCheckName: aws.String(d.Get("readiness_check_name").(string)),
 			ResourceSetName:    aws.String(d.Get("resource_set_name").(string)),

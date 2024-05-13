@@ -36,9 +36,9 @@ func TestAccQuickSightNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					resource.TestCheckResourceAttr(resourceName, "namespace", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					resource.TestCheckResourceAttr(resourceName, "identity_store", quicksight.IdentityStoreQuicksight),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("namespace/%[1]s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("namespace/%[1]s", rName)),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Config: testAccNamespaceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					resource.TestCheckResourceAttr(resourceName, "namespace", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -104,7 +104,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Config: testAccNamespaceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					resource.TestCheckResourceAttr(resourceName, "namespace", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -114,7 +114,7 @@ func TestAccQuickSightNamespace_tags(t *testing.T) {
 				Config: testAccNamespaceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
-					resource.TestCheckResourceAttr(resourceName, "namespace", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

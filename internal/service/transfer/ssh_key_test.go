@@ -42,8 +42,8 @@ func testAccSSHKey_basic(t *testing.T) {
 				Config: testAccSSHKeyConfig_basic(rName, publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSSHKeyExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", "aws_transfer_user.test", "user_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, "aws_transfer_user.test", names.AttrUserName),
 					resource.TestCheckResourceAttr(resourceName, "body", publicKey),
 				),
 			},
@@ -64,7 +64,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
+			return fmt.Errorf("Transfer SSH Public Key ID not set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
@@ -89,7 +89,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 			}
 		}
 
-		return fmt.Errorf("Transfer Ssh Public Key doesn't exists.")
+		return fmt.Errorf("Transfer SSH Public Key does not exist")
 	}
 }
 

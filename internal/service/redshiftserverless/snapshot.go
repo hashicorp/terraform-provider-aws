@@ -16,10 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshiftserverless_snapshot")
-func ResourceSnapshot() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_snapshot", name="Snapshot")
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,
@@ -49,11 +50,11 @@ func ResourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -116,7 +117,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindSnapshotByName(ctx, conn, d.Id())
+	out, err := findSnapshotByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -127,13 +128,13 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Snapshot (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.SnapshotArn)
+	d.Set(names.AttrARN, out.SnapshotArn)
 	d.Set("snapshot_name", out.SnapshotName)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set("namespace_arn", out.NamespaceArn)
 	d.Set("retention_period", out.SnapshotRetentionPeriod)
 	d.Set("admin_username", out.AdminUsername)
-	d.Set("kms_key_id", out.KmsKeyId)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set("owner_account", out.OwnerAccount)
 	d.Set("accounts_with_provisioned_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))
 	d.Set("accounts_with_restore_access", flex.FlattenStringSet(out.AccountsWithRestoreAccess))

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_delegated_administrator")
@@ -34,13 +35,13 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +61,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +71,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +83,7 @@ func resourceDelegatedAdministratorCreate(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	accountID := d.Get("account_id").(string)
+	accountID := d.Get(names.AttrAccountID).(string)
 	servicePrincipal := d.Get("service_principal").(string)
 	id := DelegatedAdministratorCreateResourceID(accountID, servicePrincipal)
 	input := &organizations.RegisterDelegatedAdministratorInput{
@@ -123,15 +124,15 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Administrator (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
-	d.Set("arn", delegatedAccount.Arn)
+	d.Set(names.AttrAccountID, accountID)
+	d.Set(names.AttrARN, delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
 	d.Set("email", delegatedAccount.Email)
 	d.Set("joined_method", delegatedAccount.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
-	d.Set("name", delegatedAccount.Name)
+	d.Set(names.AttrName, delegatedAccount.Name)
 	d.Set("service_principal", servicePrincipal)
-	d.Set("status", delegatedAccount.Status)
+	d.Set(names.AttrStatus, delegatedAccount.Status)
 
 	return diags
 }

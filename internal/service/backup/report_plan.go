@@ -39,11 +39,11 @@ func ResourceReportPlan() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -51,12 +51,12 @@ func ResourceReportPlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -76,7 +76,7 @@ func ResourceReportPlan() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(reportDeliveryChannelFormat_Values(), false),
 							},
 						},
-						"s3_bucket_name": {
+						names.AttrS3BucketName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -147,7 +147,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &backup.CreateReportPlanInput{
 		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
@@ -156,7 +156,7 @@ func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.ReportPlanDescription = aws.String(v.(string))
 	}
 
@@ -192,11 +192,11 @@ func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", reportPlan.ReportPlanArn)
-	d.Set("creation_time", reportPlan.CreationTime.Format(time.RFC3339))
+	d.Set(names.AttrARN, reportPlan.ReportPlanArn)
+	d.Set(names.AttrCreationTime, reportPlan.CreationTime.Format(time.RFC3339))
 	d.Set("deployment_status", reportPlan.DeploymentStatus)
-	d.Set("description", reportPlan.ReportPlanDescription)
-	d.Set("name", reportPlan.ReportPlanName)
+	d.Set(names.AttrDescription, reportPlan.ReportPlanDescription)
+	d.Set(names.AttrName, reportPlan.ReportPlanName)
 
 	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting report_delivery_channel: %s", err)
@@ -213,11 +213,11 @@ func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &backup.UpdateReportPlanInput{
 			IdempotencyToken:      aws.String(id.UniqueId()),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
-			ReportPlanDescription: aws.String(d.Get("description").(string)),
+			ReportPlanDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			ReportPlanName:        aws.String(d.Id()),
 			ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 		}
@@ -268,7 +268,7 @@ func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.Re
 	}
 
 	result := &backup.ReportDeliveryChannel{
-		S3BucketName: aws.String(tfMap["s3_bucket_name"].(string)),
+		S3BucketName: aws.String(tfMap[names.AttrS3BucketName].(string)),
 	}
 
 	if v, ok := tfMap["formats"]; ok && v.(*schema.Set).Len() > 0 {
@@ -325,7 +325,7 @@ func flattenReportDeliveryChannel(reportDeliveryChannel *backup.ReportDeliveryCh
 	}
 
 	values := map[string]interface{}{
-		"s3_bucket_name": aws.StringValue(reportDeliveryChannel.S3BucketName),
+		names.AttrS3BucketName: aws.StringValue(reportDeliveryChannel.S3BucketName),
 	}
 
 	if reportDeliveryChannel.Formats != nil && len(reportDeliveryChannel.Formats) > 0 {
