@@ -235,7 +235,7 @@ func TestValidateKeyARN(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			aWs, aEs := validateKeyARN(testcase.in, "field")
+			aWs, aEs := validateKeyARN(testcase.in, names.AttrField)
 			if len(aWs) != 0 {
 				t.Errorf("expected no warnings, got %v", aWs)
 			}
