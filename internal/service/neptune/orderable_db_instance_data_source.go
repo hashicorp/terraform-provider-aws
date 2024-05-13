@@ -111,7 +111,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -142,7 +142,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.LicenseModel = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc"); ok {
+	if v, ok := d.GetOk(names.AttrVPC); ok {
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
@@ -197,7 +197,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("supports_iops", orderableDBInstance.SupportsIops)
 	d.Set("supports_performance_insights", orderableDBInstance.SupportsPerformanceInsights)
 	d.Set("supports_storage_encryption", orderableDBInstance.SupportsStorageEncryption)
-	d.Set("vpc", orderableDBInstance.Vpc)
+	d.Set(names.AttrVPC, orderableDBInstance.Vpc)
 
 	return diags
 }
