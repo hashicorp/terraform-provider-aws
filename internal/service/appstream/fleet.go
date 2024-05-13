@@ -85,7 +85,7 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,7 +139,7 @@ func ResourceFleet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appstream.FleetType_Values(), false),
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -265,7 +265,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
@@ -370,7 +370,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("compute_capacity", nil)
 	}
 
-	d.Set("created_time", aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.TimeValue(fleet.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, fleet.Description)
 	d.Set(names.AttrDisplayName, fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
@@ -386,7 +386,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
 	d.Set("enable_default_internet_access", fleet.EnableDefaultInternetAccess)
 	d.Set("fleet_type", fleet.FleetType)
-	d.Set("iam_role_arn", fleet.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, fleet.IamRoleArn)
 	d.Set("image_name", fleet.ImageName)
 	d.Set("image_arn", fleet.ImageArn)
 	d.Set(names.AttrInstanceType, fleet.InstanceType)
@@ -416,7 +416,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", "iam_role_arn", names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
+	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", names.AttrIAMRoleARN, names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
 		shouldStop = true
 	}
 
@@ -469,8 +469,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageArn = aws.String(d.Get("image_arn").(string))
 	}
 
-	if d.HasChange("iam_role_arn") {
-		input.IamRoleArn = aws.String(d.Get("iam_role_arn").(string))
+	if d.HasChange(names.AttrIAMRoleARN) {
+		input.IamRoleArn = aws.String(d.Get(names.AttrIAMRoleARN).(string))
 	}
 
 	if d.HasChange("stream_view") {

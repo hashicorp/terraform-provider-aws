@@ -90,7 +90,7 @@ func ResourceStack() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -340,7 +340,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
 	}
 	d.Set(names.AttrARN, stack.Arn)
-	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, stack.Description)
 	d.Set(names.AttrDisplayName, stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
