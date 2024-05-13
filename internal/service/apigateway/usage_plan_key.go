@@ -38,14 +38,14 @@ func resourceUsagePlanKey() *schema.Resource {
 				usagePlanId := idParts[0]
 				usagePlanKeyId := idParts[1]
 				d.Set("usage_plan_id", usagePlanId)
-				d.Set("key_id", usagePlanKeyId)
+				d.Set(names.AttrKeyID, usagePlanKeyId)
 				d.SetId(usagePlanKeyId)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
 
 		Schema: map[string]*schema.Schema{
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,7 +77,7 @@ func resourceUsagePlanKeyCreate(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.CreateUsagePlanKeyInput{
-		KeyId:       aws.String(d.Get("key_id").(string)),
+		KeyId:       aws.String(d.Get(names.AttrKeyID).(string)),
 		KeyType:     aws.String(d.Get("key_type").(string)),
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 	}
@@ -97,7 +97,7 @@ func resourceUsagePlanKeyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	upk, err := findUsagePlanKeyByTwoPartKey(ctx, conn, d.Get("usage_plan_id").(string), d.Get("key_id").(string))
+	upk, err := findUsagePlanKeyByTwoPartKey(ctx, conn, d.Get("usage_plan_id").(string), d.Get(names.AttrKeyID).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Usage Plan Key (%s) not found, removing from state", d.Id())
@@ -122,7 +122,7 @@ func resourceUsagePlanKeyDelete(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan Key: %s", d.Id())
 	_, err := conn.DeleteUsagePlanKey(ctx, &apigateway.DeleteUsagePlanKeyInput{
-		KeyId:       aws.String(d.Get("key_id").(string)),
+		KeyId:       aws.String(d.Get(names.AttrKeyID).(string)),
 		UsagePlanId: aws.String(d.Get("usage_plan_id").(string)),
 	})
 

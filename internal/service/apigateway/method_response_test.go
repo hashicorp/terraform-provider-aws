@@ -98,7 +98,7 @@ func testAccCheckMethodResponseExists(ctx context.Context, n string, v *apigatew
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+		output, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
 
 		if err != nil {
 			return err
@@ -119,7 +119,7 @@ func testAccCheckMethodResponseDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+			_, err := tfapigateway.FindMethodResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -143,7 +143,7 @@ func testAccMethodResponseImportStateIdFunc(resourceName string) resource.Import
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
+		return fmt.Sprintf("%s/%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"], rs.Primary.Attributes["status_code"]), nil
 	}
 }
 
