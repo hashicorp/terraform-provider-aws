@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -61,7 +60,7 @@ func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.Metad
 }
 
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]{0,2048}$`)
+	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$`)
 	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesis:([a-z\d-]+):\d{12}:.+$)`)
@@ -77,7 +76,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 2048),
-					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]{0,2048}$"),
+					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$"),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
@@ -92,10 +91,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				Description: "The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor.",
-				CustomType:  fwtypes.ARNType,
-				Required:    true,
+				// CustomType:  fwtypes.ARNType,
+				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"),
 				},
@@ -111,24 +110,31 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"opt_in": schema.BoolAttribute{
 						Description: "Do you want to share data with Rekognition to improve model performance.",
 						Optional:    true,
-						Default:     booldefault.StaticBool(false),
 					},
 				},
 			},
 			"input": schema.SingleNestedBlock{
 				CustomType:  fwtypes.NewObjectTypeOf[inputModel](ctx),
 				Description: "Information about the source streaming video.",
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
 				Blocks: map[string]schema.Block{
 					"kinesis_video_stream": schema.SingleNestedBlock{
+						Validators: []validator.Object{
+							objectvalidator.IsRequired(),
+						},
 						CustomType:  fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
 						Description: "Kinesis video stream stream that provides the source streaming video for a Amazon Rekognition Video stream processor.",
 						Attributes: map[string]schema.Attribute{
-							"kinesis_video_stream_arn": schema.StringAttribute{
+							"arn": schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the Kinesis video stream stream that streams the source video.",
-								Optional:    true,
+								Required:    true,
 								Validators: []validator.String{
-									stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"),
+									stringvalidator.All(
+										stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"),
+									),
 								},
 							},
 						},
@@ -142,7 +148,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"sns_topic_arn": schema.StringAttribute{
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
-						Required:    true,
+						Optional:    true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"),
 						},
@@ -257,6 +263,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			"settings": schema.SingleNestedBlock{
 				CustomType:  fwtypes.NewObjectTypeOf[settingsModel](ctx),
 				Description: "Input parameters used in a streaming video analyzed by a stream processor.",
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
 				Blocks: map[string]schema.Block{
 					"connected_home": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
@@ -264,8 +273,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Attributes: map[string]schema.Attribute{
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
+								CustomType:  fwtypes.ListOfStringType,
 								ElementType: fwtypes.StringEnumType[labelSettings](),
-								Required:    true,
+								Optional:    true,
+								//TODO: validation for label values
 							},
 							"min_confidence": schema.Int64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
@@ -295,6 +306,11 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -374,7 +390,7 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -577,7 +593,7 @@ type resourceStreamProcessorDataModel struct {
 	Name                  types.String                                           `tfsdk:"name"`
 	Output                fwtypes.ObjectValueOf[outputModel]                     `tfsdk:"output"`
 	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel] `tfsdk:"regions_of_interest"`
-	RoleARN               fwtypes.ARN                                            `tfsdk:"role_arn"`
+	RoleARN               types.String                                           `tfsdk:"role_arn"` //TODO ARN types?
 	Settings              fwtypes.ObjectValueOf[settingsModel]                   `tfsdk:"settings"`
 	Tags                  types.Map                                              `tfsdk:"tags"`
 	TagsAll               types.Map                                              `tfsdk:"tags_all"`
@@ -620,15 +636,15 @@ type regionOfInterestModel struct {
 }
 
 type boundingBoxModel struct {
-	Height types.Number `tfsdk:"height"`
-	Left   types.Number `tfsdk:"left"`
-	Top    types.Number `tfsdk:"top"`
-	Width  types.Number `tfsdk:"width"`
+	Height types.Float64 `tfsdk:"height"`
+	Left   types.Float64 `tfsdk:"left"`
+	Top    types.Float64 `tfsdk:"top"`
+	Width  types.Float64 `tfsdk:"width"`
 }
 
 type polygonModel struct {
-	X types.Number `tfsdk:"x"`
-	Y types.Number `tfsdk:"y"`
+	X types.Float64 `tfsdk:"x"`
+	Y types.Float64 `tfsdk:"y"`
 }
 
 type settingsModel struct {
@@ -637,13 +653,13 @@ type settingsModel struct {
 }
 
 type connectedHomeModel struct {
-	Labels        types.List   `tfsdk:"labels"`
-	MinConfidence types.Number `tfsdk:"min_confidence"`
+	Labels        fwtypes.ListValueOf[types.String] `tfsdk:"labels"`
+	MinConfidence types.Int64                       `tfsdk:"min_confidence"`
 }
 
 type faceSearchModel struct {
 	CollectionId       types.String `tfsdk:"collection_id"`
-	FaceMatchThreshold types.Number `tfsdk:"face_match_threshold"`
+	FaceMatchThreshold types.Int64  `tfsdk:"face_match_threshold"`
 }
 
 /*
