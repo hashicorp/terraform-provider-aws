@@ -47,7 +47,7 @@ func ResourceMetricsDestination() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -69,7 +69,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 		input.DestinationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
@@ -104,7 +104,7 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("app_monitor_name", d.Id())
 	d.Set(names.AttrDestination, dest.Destination)
 	d.Set(names.AttrDestinationARN, dest.DestinationArn)
-	d.Set("iam_role_arn", dest.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, dest.IamRoleArn)
 
 	return nil
 }
