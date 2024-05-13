@@ -132,7 +132,7 @@ func resourceFunction() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -531,7 +531,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.EphemeralStorage = &awstypes.EphemeralStorage{
-			Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
+			Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})[names.AttrSize].(int))),
 		}
 	}
 
@@ -834,7 +834,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("ephemeral_storage") {
 			if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.EphemeralStorage = &awstypes.EphemeralStorage{
-					Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
+					Size: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})[names.AttrSize].(int))),
 				}
 			}
 		}
@@ -1503,7 +1503,7 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []interface{}
 	}
 
 	tfMap := make(map[string]interface{})
-	tfMap["size"] = aws.ToInt32(apiObject.Size)
+	tfMap[names.AttrSize] = aws.ToInt32(apiObject.Size)
 
 	return []interface{}{tfMap}
 }
