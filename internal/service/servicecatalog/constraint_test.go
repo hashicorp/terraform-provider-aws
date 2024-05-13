@@ -42,7 +42,7 @@ func TestAccServiceCatalogConstraint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "NOTIFICATION"),
 					resource.TestCheckResourceAttrPair(resourceName, "portfolio_id", "aws_servicecatalog_portfolio.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, "owner"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameters),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
