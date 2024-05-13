@@ -44,7 +44,7 @@ func ResourceSigningJob() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
@@ -79,7 +79,7 @@ func ResourceSigningJob() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Required: true,
 							ForceNew: true,
@@ -173,7 +173,7 @@ func ResourceSigningJob() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -363,7 +363,7 @@ func flattenSigningJobSource(apiObject *types.Source) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"s3": flattenSigningJobS3Source(apiObject.S3),
+		names.AttrS3: flattenSigningJobS3Source(apiObject.S3),
 	}
 
 	return []interface{}{tfMap}
@@ -402,7 +402,7 @@ func expandSigningJobSource(tfList []interface{}) *types.Source {
 	}
 
 	var source *types.Source
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		source = &types.Source{
 			S3: expandSigningJobS3Source(v),
 		}
@@ -448,7 +448,7 @@ func expandSigningJobDestination(tfList []interface{}) *types.Destination {
 	}
 
 	var destination *types.Destination
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		destination = &types.Destination{
 			S3: expandSigningJobS3Destination(v),
 		}
@@ -482,7 +482,7 @@ func flattenSigningJobSignedObject(apiObject *types.SignedObject) []interface{} 
 	}
 
 	tfMap := map[string]interface{}{
-		"s3": flattenSigningJobS3SignedObject(apiObject.S3),
+		names.AttrS3: flattenSigningJobS3SignedObject(apiObject.S3),
 	}
 
 	return []interface{}{tfMap}

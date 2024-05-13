@@ -91,7 +91,7 @@ func DataSourceSigningJob() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -115,7 +115,7 @@ func DataSourceSigningJob() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
