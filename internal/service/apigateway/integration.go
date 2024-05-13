@@ -150,7 +150,7 @@ func resourceIntegration() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.IntegrationType](),
 			},
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -219,7 +219,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.TlsConfig = expandTLSConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("uri"); ok {
+	if v, ok := d.GetOk(names.AttrURI); ok {
 		input.Uri = aws.String(v.(string))
 	}
 
@@ -270,7 +270,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("request_templates", requestTemplates)
 	d.Set("timeout_milliseconds", integration.TimeoutInMillis)
 	d.Set(names.AttrType, integration.Type)
-	d.Set("uri", integration.Uri)
+	d.Set(names.AttrURI, integration.Uri)
 
 	if err := d.Set("tls_config", flattenTLSConfig(integration.TlsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
@@ -399,11 +399,11 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// The documentation https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/ says
 	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
 	// resources, it means that the uri can always be updated
-	if d.HasChange("uri") {
+	if d.HasChange(names.AttrURI) {
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/uri"),
-			Value: aws.String(d.Get("uri").(string)),
+			Value: aws.String(d.Get(names.AttrURI).(string)),
 		})
 	}
 
