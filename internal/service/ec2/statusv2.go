@@ -108,3 +108,19 @@ func statusVPCEndpointStateV2(ctx context.Context, conn *ec2.Client, id string) 
 		return output, string(output.State), nil
 	}
 }
+
+func statusRouteV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := routeFinder(ctx, conn, routeTableID, destination)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, RouteStatusReady, nil
+	}
+}

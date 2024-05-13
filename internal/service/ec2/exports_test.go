@@ -41,6 +41,9 @@ var (
 	FindKeyPairByName                         = findKeyPairByName
 	FindNetworkACLByIDV2                      = findNetworkACLByIDV2
 	FindNetworkInterfaceByIDV2                = findNetworkInterfaceByIDV2
+	FindRouteByIPv4DestinationV2              = findRouteByIPv4DestinationV2
+	FindRouteByIPv6DestinationV2              = findRouteByIPv6DestinationV2
+	FindRouteByPrefixListIDDestinationV2      = findRouteByPrefixListIDDestinationV2
 	FindVolumeAttachmentInstanceByID          = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                     = findVPCEndpointByIDV2
 	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses

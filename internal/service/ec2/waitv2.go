@@ -238,3 +238,40 @@ func waitVPCEndpointDeletedV2(ctx context.Context, conn *ec2.Client, vpcEndpoint
 
 	return nil, err
 }
+
+func waitRouteDeletedV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{RouteStatusReady},
+		Target:                    []string{},
+		Refresh:                   statusRouteV2(ctx, conn, routeFinder, routeTableID, destination),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Route); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteReadyV2(ctx context.Context, conn *ec2.Client, routeFinder routeFinderV2, routeTableID, destination string, timeout time.Duration) (*types.Route, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{},
+		Target:                    []string{RouteStatusReady},
+		Refresh:                   statusRouteV2(ctx, conn, routeFinder, routeTableID, destination),
+		Timeout:                   timeout,
+		NotFoundChecks:            RouteNotFoundChecks,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Route); ok {
+		return output, err
+	}
+
+	return nil, err
+}

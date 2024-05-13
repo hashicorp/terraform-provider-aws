@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -603,4 +604,67 @@ func findRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID st
 	}
 
 	return findRouteTableV2(ctx, conn, input)
+}
+
+// routeFinderV2 returns the route corresponding to the specified destination.
+// Returns NotFoundError if no route is found.
+type routeFinderV2 func(context.Context, *ec2.Client, string, string) (*awstypes.Route, error)
+
+// findRouteByIPv4DestinationV2 returns the route corresponding to the specified IPv4 destination.
+// Returns NotFoundError if no route is found.
+func findRouteByIPv4DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationCidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if types.CIDRBlocksEqual(aws.ToString(route.DestinationCidrBlock), destinationCidr) {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv4 destination (%s) not found", routeTableID, destinationCidr),
+	}
+}
+
+// findRouteByIPv6DestinationV2 returns the route corresponding to the specified IPv6 destination.
+// Returns NotFoundError if no route is found.
+func findRouteByIPv6DestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, destinationIpv6Cidr string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if types.CIDRBlocksEqual(aws.ToString(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with IPv6 destination (%s) not found", routeTableID, destinationIpv6Cidr),
+	}
+}
+
+// findRouteByPrefixListIDDestinationV2 returns the route corresponding to the specified prefix list destination.
+// Returns NotFoundError if no route is found.
+func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client, routeTableID, prefixListID string) (*awstypes.Route, error) {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if aws.ToString(route.DestinationPrefixListId) == prefixListID {
+			return &route, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{
+		LastError: fmt.Errorf("Route in Route Table (%s) with Prefix List ID destination (%s) not found", routeTableID, prefixListID),
+	}
 }
