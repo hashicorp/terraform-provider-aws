@@ -64,7 +64,7 @@ func resourceDomain() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,7 +137,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("created_time", domain.CreatedTime.Format(time.RFC3339))
 	d.Set(names.AttrDomain, domain.Name)
 	d.Set("encryption_key", domain.EncryptionKey)
-	d.Set("owner", domain.Owner)
+	d.Set(names.AttrOwner, domain.Owner)
 	d.Set("repository_count", domain.RepositoryCount)
 	d.Set("s3_bucket_arn", domain.S3BucketArn)
 
