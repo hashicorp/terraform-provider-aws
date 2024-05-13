@@ -28,11 +28,13 @@ const (
 	AttrCertificateARN             = "certificate_arn"
 	AttrClientID                   = "client_id"
 	AttrClusterIdentifier          = "cluster_identifier"
+	AttrComment                    = "comment"
 	AttrConfiguration              = "configuration"
 	AttrContent                    = "content"
 	AttrContentType                = "content_type"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
+	AttrCreatedTime                = "created_time"
 	AttrCreationDate               = "creation_date"
 	AttrCreationTime               = "creation_time"
 	AttrDNSName                    = "dns_name"
@@ -63,7 +65,9 @@ const (
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
 	AttrGroupName                  = "group_name"
+	AttrHeader                     = "header"
 	AttrHostedZoneID               = "hosted_zone_id"
+	AttrIAMRoleARN                 = "iam_role_arn"
 	AttrID                         = "id"
 	AttrIDs                        = "ids"
 	AttrIOPS                       = "iops"
@@ -74,13 +78,16 @@ const (
 	AttrInstanceType               = "instance_type"
 	AttrIssuer                     = "issuer"
 	AttrJSON                       = "json"
+	AttrKMSKey                     = "kms_key"
 	AttrKMSKeyARN                  = "kms_key_arn"
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
+	AttrKeyID                      = "key_id"
 	AttrLastUpdatedDate            = "last_updated_date"
 	AttrLogGroupName               = "log_group_name"
 	AttrLoggingConfiguration       = "logging_configuration"
 	AttrMax                        = "max"
+	AttrMessage                    = "message"
 	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
 	AttrMode                       = "mode"
@@ -95,6 +102,7 @@ const (
 	AttrParameters                 = "parameters"
 	AttrPassword                   = "password"
 	AttrPath                       = "path"
+	AttrPermissions                = "permissions"
 	AttrPolicy                     = "policy"
 	AttrPort                       = "port"
 	AttrPreferredMaintenanceWindow = "preferred_maintenance_window"
@@ -105,9 +113,11 @@ const (
 	AttrProfile                    = "profile"
 	AttrProperties                 = "properties"
 	AttrProtocol                   = "protocol"
+	AttrPublicKey                  = "public_key"
 	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
 	AttrResourceARN                = "resource_arn"
+	AttrResourceID                 = "resource_id"
 	AttrResourceType               = "resource_type"
 	AttrRoleARN                    = "role_arn"
 	AttrRule                       = "rule"
@@ -128,6 +138,7 @@ const (
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
 	AttrSource                     = "source"
+	AttrStartTime                  = "start_time"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
 	AttrSubnetID                   = "subnet_id"
@@ -137,6 +148,7 @@ const (
 	AttrTags                       = "tags"
 	AttrTagsAll                    = "tags_all"
 	AttrTarget                     = "target"
+	AttrTimeout                    = "timeout"
 	AttrTimeouts                   = "timeouts"
 	AttrTransitGatewayAttachmentID = "transit_gateway_attachment_id"
 	AttrTransitGatewayID           = "transit_gateway_id"
@@ -153,6 +165,8 @@ const (
 	AttrValue                      = "value"
 	AttrValues                     = "values"
 	AttrVersion                    = "version"
+	AttrVolumeSize                 = "volume_size"
+	AttrVolumeType                 = "volume_type"
 	AttrWeight                     = "weight"
 )
 
@@ -180,11 +194,13 @@ func ConstOrQuote(constant string) string {
 		"certificate_arn":               "AttrCertificateARN",
 		"client_id":                     "AttrClientID",
 		"cluster_identifier":            "AttrClusterIdentifier",
+		"comment":                       "AttrComment",
 		"configuration":                 "AttrConfiguration",
 		"content":                       "AttrContent",
 		"content_type":                  "AttrContentType",
 		"created_at":                    "AttrCreatedAt",
 		"created_date":                  "AttrCreatedDate",
+		"created_time":                  "AttrCreatedTime",
 		"creation_date":                 "AttrCreationDate",
 		"creation_time":                 "AttrCreationTime",
 		"dns_name":                      "AttrDNSName",
@@ -215,7 +231,9 @@ func ConstOrQuote(constant string) string {
 		"force_destroy":                 "AttrForceDestroy",
 		"format":                        "AttrFormat",
 		"group_name":                    "AttrGroupName",
+		"header":                        "AttrHeader",
 		"hosted_zone_id":                "AttrHostedZoneID",
+		"iam_role_arn":                  "AttrIAMRoleARN",
 		"id":                            "AttrID",
 		"ids":                           "AttrIDs",
 		"iops":                          "AttrIOPS",
@@ -226,13 +244,16 @@ func ConstOrQuote(constant string) string {
 		"instance_type":                 "AttrInstanceType",
 		"issuer":                        "AttrIssuer",
 		"json":                          "AttrJSON",
+		"kms_key":                       "AttrKMSKey",
 		"kms_key_arn":                   "AttrKMSKeyARN",
 		"kms_key_id":                    "AttrKMSKeyID",
 		"key":                           "AttrKey",
+		"key_id":                        "AttrKeyID",
 		"last_updated_date":             "AttrLastUpdatedDate",
 		"log_group_name":                "AttrLogGroupName",
 		"logging_configuration":         "AttrLoggingConfiguration",
 		"max":                           "AttrMax",
+		"message":                       "AttrMessage",
 		"metric_name":                   "AttrMetricName",
 		"min":                           "AttrMin",
 		"mode":                          "AttrMode",
@@ -247,6 +268,7 @@ func ConstOrQuote(constant string) string {
 		"parameters":                    "AttrParameters",
 		"password":                      "AttrPassword",
 		"path":                          "AttrPath",
+		"permissions":                   "AttrPermissions",
 		"policy":                        "AttrPolicy",
 		"port":                          "AttrPort",
 		"preferred_maintenance_window":  "AttrPreferredMaintenanceWindow",
@@ -257,9 +279,11 @@ func ConstOrQuote(constant string) string {
 		"profile":                       "AttrProfile",
 		"properties":                    "AttrProperties",
 		"protocol":                      "AttrProtocol",
+		"public_key":                    "AttrPublicKey",
 		"publicly_accessible":           "AttrPubliclyAccessible",
 		"region":                        "AttrRegion",
 		"resource_arn":                  "AttrResourceARN",
+		"resource_id":                   "AttrResourceID",
 		"resource_type":                 "AttrResourceType",
 		"role_arn":                      "AttrRoleARN",
 		"rule":                          "AttrRule",
@@ -280,6 +304,7 @@ func ConstOrQuote(constant string) string {
 		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
 		"skip_requesting_account_id":    "AttrSkipRequestingAccountID",
 		"source":                        "AttrSource",
+		"start_time":                    "AttrStartTime",
 		"state":                         "AttrState",
 		"status":                        "AttrStatus",
 		"subnet_id":                     "AttrSubnetID",
@@ -289,6 +314,7 @@ func ConstOrQuote(constant string) string {
 		"tags":                          "AttrTags",
 		"tags_all":                      "AttrTagsAll",
 		"target":                        "AttrTarget",
+		"timeout":                       "AttrTimeout",
 		"timeouts":                      "AttrTimeouts",
 		"transit_gateway_attachment_id": "AttrTransitGatewayAttachmentID",
 		"transit_gateway_id":            "AttrTransitGatewayID",
@@ -305,6 +331,8 @@ func ConstOrQuote(constant string) string {
 		"value":                         "AttrValue",
 		"values":                        "AttrValues",
 		"version":                       "AttrVersion",
+		"volume_size":                   "AttrVolumeSize",
+		"volume_type":                   "AttrVolumeType",
 		"weight":                        "AttrWeight",
 	}
 
