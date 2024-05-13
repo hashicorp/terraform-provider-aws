@@ -552,7 +552,7 @@ var codeHookResource = &schema.Resource{
 			Required:     true,
 			ValidateFunc: validation.StringLenBetween(1, 5),
 		},
-		"uri": {
+		names.AttrURI: {
 			Type:         schema.TypeString,
 			Required:     true,
 			ValidateFunc: verify.ValidARN,
@@ -623,7 +623,7 @@ func flattenCodeHook(hook *lexmodelbuildingservice.CodeHook) (flattened []map[st
 	return []map[string]interface{}{
 		{
 			"message_version": aws.StringValue(hook.MessageVersion),
-			"uri":             aws.StringValue(hook.Uri),
+			names.AttrURI:     aws.StringValue(hook.Uri),
 		},
 	}
 }
@@ -633,7 +633,7 @@ func expandCodeHook(rawObject interface{}) (hook *lexmodelbuildingservice.CodeHo
 
 	return &lexmodelbuildingservice.CodeHook{
 		MessageVersion: aws.String(m["message_version"].(string)),
-		Uri:            aws.String(m["uri"].(string)),
+		Uri:            aws.String(m[names.AttrURI].(string)),
 	}
 }
 
