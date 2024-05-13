@@ -214,7 +214,6 @@ Baselines:
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("SSM Patch Baseline", err))
-
 	}
 
 	id := aws.ToString(baseline.BaselineId)
