@@ -88,7 +88,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		arn := arn.ARN{
 			Partition: awsClient.Partition,
-			Service:   "s3",
+			Service:   names.AttrS3,
 			Resource:  bucket,
 		}.String()
 		d.Set(names.AttrARN, arn)

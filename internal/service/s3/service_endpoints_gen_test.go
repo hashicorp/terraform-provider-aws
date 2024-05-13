@@ -66,10 +66,10 @@ const (
 )
 
 const (
-	packageName      = "s3"
+	packageName      = names.AttrS3
 	awsEnvVar        = "AWS_ENDPOINT_URL_S3"
 	baseEnvVar       = "AWS_ENDPOINT_URL"
-	configParam      = "s3"
+	configParam      = names.AttrS3
 	tfAwsEnvVar      = "TF_AWS_S3_ENDPOINT"
 	deprecatedEnvVar = "AWS_S3_ENDPOINT"
 	aliasName0       = "s3api"
@@ -458,7 +458,7 @@ func withAliasName0EndpointInConfig(setup *caseSetup) {
 func conflictsWith(e caseExpectations) caseExpectations {
 	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
 		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
-		packageName,
+		names.AttrS3,
 		aliasName0,
 	))
 	return e
@@ -697,7 +697,7 @@ services = endpoint-test
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, names.AttrS3, serviceConfigFileEndpoint))
 	}
 
 	return buf.String()

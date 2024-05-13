@@ -51,7 +51,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", rName),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", names.AttrS3, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),

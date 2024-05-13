@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestNewObjectARN_GeneralPurposeBucket(t *testing.T) {
@@ -14,7 +15,7 @@ func TestNewObjectARN_GeneralPurposeBucket(t *testing.T) {
 
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Resource:  "test-bucket/test-key",
 	}
 
@@ -31,7 +32,7 @@ func TestNewObjectARN_GeneralPurposeBucket_AccessPointInBucketName(t *testing.T)
 
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Resource:  "test-accesspoint-bucket/test-key",
 	}
 
@@ -48,7 +49,7 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint/test-key",
@@ -56,7 +57,7 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 
 	apARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint",
@@ -75,14 +76,14 @@ func TestNewObjectARN_MultiRegionAccessPoint(t *testing.T) {
 
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
 	}
 
 	mrapARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-multi-region-accesspoint",
 	}
@@ -126,7 +127,7 @@ func TestParseObjectARN_GeneralPurposeBucket(t *testing.T) {
 	expectedObjectARN := objectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
-			Service:   "s3",
+			Service:   names.AttrS3,
 			Resource:  "test-bucket/test-key",
 		},
 		Bucket: "test-bucket",
@@ -149,7 +150,7 @@ func TestParseObjectARN_GeneralPurposeBucket_AccessPointBucketName(t *testing.T)
 	expectedObjectARN := objectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
-			Service:   "s3",
+			Service:   names.AttrS3,
 			Resource:  "accesspoint/test-key",
 		},
 		Bucket: "accesspoint",
@@ -172,7 +173,7 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 	expectedObjectARN := objectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
-			Service:   "s3",
+			Service:   names.AttrS3,
 			Region:    "us-west-2", //lintignore:AWSAT003
 			AccountID: "123456789012",
 			Resource:  "accesspoint/test-accesspoint/test-key",
@@ -183,7 +184,7 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 
 	apARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint",
@@ -205,7 +206,7 @@ func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 	expectedObjectARN := objectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
-			Service:   "s3",
+			Service:   names.AttrS3,
 			AccountID: "123456789012",
 			Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
 		},
@@ -215,7 +216,7 @@ func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 
 	mrapARN := arn.ARN{
 		Partition: "test-partition",
-		Service:   "s3",
+		Service:   names.AttrS3,
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-multi-region-accesspoint",
 	}

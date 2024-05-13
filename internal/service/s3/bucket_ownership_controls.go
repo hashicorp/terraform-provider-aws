@@ -42,7 +42,7 @@ func resourceBucketOwnershipControls() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -69,7 +69,7 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
 		OwnershipControls: &types.OwnershipControls{
-			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 
@@ -113,7 +113,7 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 	}
 
 	d.Set(names.AttrBucket, d.Id())
-	if err := d.Set("rule", flattenOwnershipControlsRules(oc.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenOwnershipControlsRules(oc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -127,7 +127,7 @@ func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.Resour
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(d.Id()),
 		OwnershipControls: &types.OwnershipControls{
-			Rules: expandOwnershipControlsRules(d.Get("rule").([]interface{})),
+			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 

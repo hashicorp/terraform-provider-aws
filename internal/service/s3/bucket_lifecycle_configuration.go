@@ -59,7 +59,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -260,7 +260,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 
 	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{
@@ -347,7 +347,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output)); err != nil {
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -362,7 +362,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 
-	rules := expandLifecycleRules(ctx, d.Get("rule").([]interface{}))
+	rules := expandLifecycleRules(ctx, d.Get(names.AttrRule).([]interface{}))
 	input := &s3.PutBucketLifecycleConfigurationInput{
 		Bucket: aws.String(bucket),
 		LifecycleConfiguration: &types.BucketLifecycleConfiguration{

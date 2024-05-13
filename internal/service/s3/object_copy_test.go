@@ -39,7 +39,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", fmt.Sprintf("%s/%s", rNameTarget, names.AttrTarget)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, names.AttrS3, fmt.Sprintf("%s/%s", rNameTarget, names.AttrTarget)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rNameTarget),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
@@ -296,7 +296,7 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": "1",
 						names.AttrType:  "Group",
-						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
+						names.AttrURI:   "http://acs.amazonaws.com/groups/global/AllUsers",
 					}),
 				),
 			},
@@ -524,7 +524,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName2, names.AttrTarget))),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, names.AttrS3, regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName2, names.AttrTarget))),
 					resource.TestMatchResourceAttr(resourceName, names.AttrBucket, regexache.MustCompile(fmt.Sprintf(`^%s--[-a-z0-9]+--x-s3$`, rName2))),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),

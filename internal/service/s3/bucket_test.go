@@ -67,7 +67,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acceleration_status", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, names.AttrS3, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
@@ -78,7 +78,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": "1",
 						names.AttrType:  "CanonicalUser",
-						"uri":           "",
+						names.AttrURI:   "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),

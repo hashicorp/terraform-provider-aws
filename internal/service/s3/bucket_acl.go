@@ -78,7 +78,7 @@ func resourceBucketACL() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.Type](),
 												},
-												"uri": {
+												names.AttrURI: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -93,7 +93,7 @@ func resourceBucketACL() *schema.Resource {
 								},
 							},
 						},
-						"owner": {
+						names.AttrOwner: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -304,7 +304,7 @@ func expandAccessControlPolicy(l []interface{}) *types.AccessControlPolicy {
 		result.Grants = expandGrants(v.List())
 	}
 
-	if v, ok := tfMap["owner"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrOwner].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.Owner = expandOwner(v)
 	}
 
@@ -360,7 +360,7 @@ func expandACLGrantee(l []interface{}) *types.Grantee {
 		result.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		result.URI = aws.String(v)
 	}
 
@@ -402,7 +402,7 @@ func flattenBucketACL(apiObject *s3.GetBucketAclOutput) []interface{} {
 	}
 
 	if apiObject.Owner != nil {
-		m["owner"] = flattenOwner(apiObject.Owner)
+		m[names.AttrOwner] = flattenOwner(apiObject.Owner)
 	}
 
 	return []interface{}{m}
@@ -448,7 +448,7 @@ func flattenACLGrantee(grantee *types.Grantee) []interface{} {
 	}
 
 	if grantee.URI != nil {
-		m["uri"] = aws.ToString(grantee.URI)
+		m[names.AttrURI] = aws.ToString(grantee.URI)
 	}
 
 	return []interface{}{m}

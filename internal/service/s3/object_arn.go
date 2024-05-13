@@ -9,6 +9,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func newObjectARN(partition string, bucket, key string) (arn.ARN, error) {
@@ -22,7 +23,7 @@ func newObjectARN(partition string, bucket, key string) (arn.ARN, error) {
 	}
 	return arn.ARN{
 		Partition: partition,
-		Service:   "s3",
+		Service:   names.AttrS3,
 		Resource:  fmt.Sprintf("%s/%s", bucket, key),
 	}, nil
 }
