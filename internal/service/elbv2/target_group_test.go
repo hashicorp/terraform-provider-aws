@@ -484,7 +484,7 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "ip"),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv6"),
 				),
 			},
 			{
@@ -3654,7 +3654,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrPort),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 					resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
@@ -3684,7 +3684,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-				resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+				resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrPort),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),
@@ -3695,7 +3695,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 			PostCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 				resource.TestCheckResourceAttr(resourceName, "target_type", elbv2.TargetTypeEnumLambda),
-				resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+				resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrPort),
 				resource.TestCheckNoResourceAttr(resourceName, names.AttrProtocol),
 				resource.TestCheckNoResourceAttr(resourceName, "protocol_version"),

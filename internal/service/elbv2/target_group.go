@@ -145,7 +145,7 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -392,7 +392,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 
 		if targetType == elbv2.TargetTypeEnumIp {
-			if v, ok := d.GetOk("ip_address_type"); ok {
+			if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 				input.IpAddressType = aws.String(v.(string))
 			}
 		}
@@ -540,7 +540,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
-	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set(names.AttrIPAddressType, targetGroup.IpAddressType)
 	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
