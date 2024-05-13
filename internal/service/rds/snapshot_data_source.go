@@ -68,7 +68,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set("iops", snapshot.Iops)
+	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)

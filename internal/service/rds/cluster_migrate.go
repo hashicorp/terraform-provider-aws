@@ -176,7 +176,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
