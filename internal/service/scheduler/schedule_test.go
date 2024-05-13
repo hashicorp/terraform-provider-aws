@@ -1030,8 +1030,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 						names.AttrExpression: "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						names.AttrType: "binpack",
-						"field":        "cpu",
+						names.AttrType:  "binpack",
+						names.AttrField: "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", "TASK_DEFINITION"),
@@ -1073,8 +1073,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 						names.AttrType: "distinctInstance",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
-						names.AttrType: "spread",
-						"field":        "cpu",
+						names.AttrType:  "spread",
+						names.AttrField: "cpu",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "1.1.0"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),

@@ -261,7 +261,7 @@ func resourceSchedule() *schema.Resource {
 										Set:      placementStrategyHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"field": {
+												names.AttrField: {
 													Type:     schema.TypeString,
 													Optional: true,
 													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -739,7 +739,7 @@ func placementStrategyHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
-	if v, ok := m["field"]; ok {
+	if v, ok := m[names.AttrField]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
