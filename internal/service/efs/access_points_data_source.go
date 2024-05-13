@@ -32,7 +32,7 @@ func DataSourceAccessPoints() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringIsNotEmpty,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -65,7 +65,7 @@ func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(fileSystemID)
 	d.Set(names.AttrARNs, arns)
-	d.Set("ids", accessPointIDs)
+	d.Set(names.AttrIDs, accessPointIDs)
 
 	return diags
 }
