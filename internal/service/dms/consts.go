@@ -5,6 +5,8 @@ package dms
 
 import (
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -58,7 +60,7 @@ const (
 	engineNameRedis                      = "redis"
 	engineNameRedshift                   = "redshift"
 	engineNameRedshiftServerless         = "redshift-serverless"
-	engineNameS3                         = "s3"
+	engineNameS3                         = names.AttrS3
 	engineNameSQLServer                  = "sqlserver"
 	engineNameSybase                     = "sybase"
 )
@@ -90,7 +92,7 @@ func engineName_Values() []string {
 		engineNameRedis,
 		engineNameRedshift,
 		engineNameRedshiftServerless,
-		engineNameS3,
+		names.AttrS3,
 		engineNameSQLServer,
 		engineNameSybase,
 	}
