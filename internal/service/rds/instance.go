@@ -258,7 +258,7 @@ func ResourceInstance() *schema.Resource {
 				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MinItems: 2,
 				MaxItems: 2,
@@ -1185,8 +1185,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1442,8 +1442,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1618,8 +1618,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringList(v.([]interface{}))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -2254,8 +2254,8 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
-		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
-			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && len(v.([]interface{})) > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueList(v.([]interface{}))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
