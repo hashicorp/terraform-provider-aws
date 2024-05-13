@@ -13,6 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -61,6 +63,11 @@ func (r *resourceStreamProcessor) Metadata(_ context.Context, req resource.Metad
 func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]{0,2048}$`)
 	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
+	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
+	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesis:([a-z\d-]+):\d{12}:.+$)`)
+	s3bucketRegex := regexache.MustCompile(`[0-9A-Za-z\.\-_]*`)
+	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)
+	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -69,7 +76,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Description: "The identifier for your AWS Key Management Service key (AWS KMS key). You can supply the Amazon Resource Name (ARN) of your KMS key, the ID of your KMS key, an alias for your KMS key, or an alias ARN.",
 				Optional:    true,
 				Validators: []validator.String{
-					stringvalidator.LengthAtMost(2048),
+					stringvalidator.LengthBetween(1, 2048),
 					stringvalidator.RegexMatches(kmsKeyIdRegex, "must conform to: ^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]{0,2048}$"),
 				},
 			},
@@ -89,6 +96,9 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				Description: "The Amazon Resource Number (ARN) of the IAM role that allows access to the stream processor.",
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(roleArnRegex, "must conform to: arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"),
+				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -108,9 +118,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			"input": schema.SingleNestedBlock{
 				CustomType:  fwtypes.NewObjectTypeOf[inputModel](ctx),
 				Description: "Information about the source streaming video.",
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
-				},
 				Blocks: map[string]schema.Block{
 					"kinesis_video_stream": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
@@ -119,7 +126,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"kinesis_video_stream_arn": schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the Kinesis video stream stream that streams the source video.",
-								Required:    true,
+								Optional:    true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesisvideo:([a-z\\d-]+):\\d{12}:.+$)"),
+								},
 							},
 						},
 					},
@@ -132,7 +142,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					"sns_topic_arn": schema.StringAttribute{
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
-						Optional:    true,
+						Required:    true,
+						Validators: []validator.String{
+							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"),
+						},
 					},
 				},
 			},
@@ -148,18 +161,48 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
 									Description: "The box representing a region of interest on screen.",
 									Attributes: map[string]schema.Attribute{
-										"height": schema.NumberAttribute{},
-										"left":   schema.NumberAttribute{},
-										"top":    schema.NumberAttribute{},
-										"width":  schema.NumberAttribute{},
+										"height": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
+										"left": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
+										"top": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
+										"width": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
 									},
 								},
 								"polygon": schema.SingleNestedBlock{
 									CustomType:  fwtypes.NewObjectTypeOf[polygonModel](ctx),
 									Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
 									Attributes: map[string]schema.Attribute{
-										"x": schema.NumberAttribute{},
-										"y": schema.NumberAttribute{},
+										"x": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
+										"y": schema.Float64Attribute{
+											Optional: true,
+											Validators: []validator.Float64{
+												float64validator.Between(0.0, 1.0),
+											},
+										},
 									},
 								},
 							},
@@ -181,7 +224,10 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							"arn": schema.StringAttribute{
 								CustomType:  fwtypes.ARNType,
 								Description: "ARN of the output Amazon Kinesis Data Streams stream.",
-								Required:    true,
+								Optional:    true,
+								Validators: []validator.String{
+									stringvalidator.RegexMatches(kinesisStreamArnRegex, "must conform to: (^arn:([a-z\\d-]+):kinesis:([a-z\\d-]+):\\d{12}:.+$)"),
+								},
 							},
 						},
 					},
@@ -192,10 +238,17 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							names.AttrBucket: schema.StringAttribute{
 								Description: "The name of the Amazon S3 bucket you want to associate with the streaming video project.",
 								Optional:    true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 255),
+									stringvalidator.RegexMatches(s3bucketRegex, "must conform to: [0-9A-Za-z\\.\\-_]*"),
+								},
 							},
 							"key_prefix": schema.StringAttribute{
 								Description: "The prefix value of the location within the bucket that you want the information to be published to.",
 								Optional:    true,
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(1024),
+								},
 							},
 						},
 					},
@@ -204,9 +257,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			"settings": schema.SingleNestedBlock{
 				CustomType:  fwtypes.NewObjectTypeOf[settingsModel](ctx),
 				Description: "Input parameters used in a streaming video analyzed by a stream processor.",
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
-				},
 				Blocks: map[string]schema.Block{
 					"connected_home": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
@@ -214,10 +264,13 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Attributes: map[string]schema.Attribute{
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
-								ElementType: types.StringType,
+								ElementType: types.StringType, //TODO: THIS SHOULD BE A CUSTOM ENUM TYPE "PERSON", "PET", "PACKAGE", and "ALL".
+								Required:    true,
 							},
-							"min_confidence": schema.NumberAttribute{
+							"min_confidence": schema.Int64Attribute{
 								Description: "The minimum confidence required to label an object in the video.",
+								Validators:  []validator.Int64{int64validator.Between(0, 100)},
+								Optional:    true,
 							},
 						},
 					},
@@ -227,9 +280,16 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Attributes: map[string]schema.Attribute{
 							"collection_id": schema.StringAttribute{
 								Description: "The ID of a collection that contains faces that you want to search for.",
+								Validators: []validator.String{
+									stringvalidator.LengthAtMost(2048),
+									stringvalidator.RegexMatches(collectionIdRegex, "must conform to: [a-zA-Z0-9_.\\-]+"),
+								},
+								Optional: true,
 							},
-							"face_match_threshold": schema.NumberAttribute{
+							"face_match_threshold": schema.Int64Attribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
+								Validators:  []validator.Int64{int64validator.Between(0, 100)},
+								Optional:    true,
 							},
 						},
 					},
