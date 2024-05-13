@@ -35,7 +35,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 				Config: testAccFieldLevelEncryptionProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
-					resource.TestCheckResourceAttr(resourceName, "comment", "some comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some comment"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),
@@ -57,7 +57,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 				Config: testAccFieldLevelEncryptionProfileConfig_extended(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionProfileExists(ctx, resourceName, &profile),
-					resource.TestCheckResourceAttr(resourceName, "comment", "some other comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "some other comment"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_entities.0.items.#", "1"),

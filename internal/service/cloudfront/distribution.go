@@ -64,7 +64,7 @@ func resourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 128),
@@ -904,7 +904,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, output.Distribution.ARN)
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if aws.ToString(distributionConfig.Comment) != "" {
-		d.Set("comment", distributionConfig.Comment)
+		d.Set(names.AttrComment, distributionConfig.Comment)
 	}
 	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
 	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
@@ -1273,7 +1273,7 @@ func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConf
 	apiObject := &awstypes.DistributionConfig{
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
 		CallerReference:              aws.String(id.UniqueId()),
-		Comment:                      aws.String(d.Get("comment").(string)),
+		Comment:                      aws.String(d.Get(names.AttrComment).(string)),
 		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
 		CustomErrorResponses:         expandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set).List()),
 		DefaultCacheBehavior:         expandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),

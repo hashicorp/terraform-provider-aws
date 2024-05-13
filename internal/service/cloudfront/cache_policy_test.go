@@ -33,7 +33,7 @@ func TestAccCloudFrontCachePolicy_basic(t *testing.T) {
 				Config: testAccCachePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "86400"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "0"),
@@ -100,7 +100,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				Config: testAccCachePolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "50"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "1"),
@@ -138,7 +138,7 @@ func TestAccCloudFrontCachePolicy_Items(t *testing.T) {
 				Config: testAccCachePolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "51"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "10"),
@@ -182,7 +182,7 @@ func TestAccCloudFrontCachePolicy_ZeroTTLs(t *testing.T) {
 				Config: testAccCachePolicyConfig_zeroTTLs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachePolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_ttl", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, "min_ttl", "0"),
