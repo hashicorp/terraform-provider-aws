@@ -80,7 +80,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
@@ -120,7 +120,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
