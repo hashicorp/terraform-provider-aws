@@ -122,8 +122,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePatchGroup,
+			Factory:  resourcePatchGroup,
 			TypeName: "aws_ssm_patch_group",
+			Name:     "Patch Group",
 		},
 		{
 			Factory:  ResourceResourceDataSync,

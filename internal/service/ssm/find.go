@@ -13,35 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindPatchGroup returns matching SSM Patch Group by Patch Group and BaselineId.
-func FindPatchGroup(ctx context.Context, conn *ssm.SSM, patchGroup, baselineId string) (*ssm.PatchGroupPatchBaselineMapping, error) {
-	input := &ssm.DescribePatchGroupsInput{}
-	var result *ssm.PatchGroupPatchBaselineMapping
-
-	err := conn.DescribePatchGroupsPagesWithContext(ctx, input, func(page *ssm.DescribePatchGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, mapping := range page.Mappings {
-			if mapping == nil {
-				continue
-			}
-
-			if aws.StringValue(mapping.PatchGroup) == patchGroup {
-				if mapping.BaselineIdentity != nil && aws.StringValue(mapping.BaselineIdentity.BaselineId) == baselineId {
-					result = mapping
-					return false
-				}
-			}
-		}
-
-		return !lastPage
-	})
-
-	return result, err
-}
-
 func FindServiceSettingByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.ServiceSetting, error) {
 	input := &ssm.GetServiceSettingInput{
 		SettingId: aws.String(id),
