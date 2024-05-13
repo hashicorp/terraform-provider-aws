@@ -5,14 +5,16 @@ package ssm
 
 // Exports for use in tests only.
 var (
-	ResourceActivation           = resourceActivation
-	ResourceAssociation          = resourceAssociation
-	ResourceDefaultPatchBaseline = resourceDefaultPatchBaseline
-	ResourceDocument             = resourceDocument
-	ResourcePatchBaseline        = resourcePatchBaseline
+	ResourceActivation              = resourceActivation
+	ResourceAssociation             = resourceAssociation
+	ResourceDefaultPatchBaseline    = resourceDefaultPatchBaseline
+	ResourceDocument                = resourceDocument
+	ResourceMaintenanceWindowTarget = resourceMaintenanceWindowTarget
+	ResourcePatchBaseline           = resourcePatchBaseline
 
-	FindActivationByID    = findActivationByID
-	FindAssociationByID   = findAssociationByID
-	FindDocumentByName    = findDocumentByName
-	FindPatchBaselineByID = findPatchBaselineByID
+	FindActivationByID              = findActivationByID
+	FindAssociationByID             = findAssociationByID
+	FindDocumentByName              = findDocumentByName
+	FindMaintenanceWindowTargetByID = findMaintenanceWindowTargetByID
+	FindPatchBaselineByID           = findPatchBaselineByID
 )
