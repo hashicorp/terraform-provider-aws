@@ -81,7 +81,7 @@ func TestAccStorageGatewayStorediSCSIVolume_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
 					resource.TestCheckResourceAttr(resourceName, "kms_encrypted", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key", keyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, keyResourceName, names.AttrARN),
 				),
 			},
 			{
