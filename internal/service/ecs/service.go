@@ -414,7 +414,7 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"timeout": {
+									names.AttrTimeout: {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
@@ -453,7 +453,7 @@ func ResourceService() *schema.Resource {
 														},
 													},
 												},
-												"kms_key": {
+												names.AttrKMSKey: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1492,7 +1492,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
-		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := raw[names.AttrTimeout].([]interface{}); ok && len(v) > 0 {
 			config.Timeout = expandTimeout(v)
 		}
 
@@ -1538,7 +1538,7 @@ func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
 		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
 	}
-	if v, ok := raw["kms_key"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrKMSKey].(string); ok && v != "" {
 		tlsConfig.KmsKey = aws.String(v)
 	}
 	if v, ok := raw[names.AttrRoleARN].(string); ok && v != "" {
