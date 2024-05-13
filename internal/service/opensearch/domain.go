@@ -420,11 +420,11 @@ func ResourceDomain() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.IntAtLeast(125),
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
