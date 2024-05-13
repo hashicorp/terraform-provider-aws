@@ -189,7 +189,7 @@ func TestValidateKeyOrAlias(t *testing.T) {
 		t.Run(tc.Value, func(t *testing.T) {
 			t.Parallel()
 
-			_, errors := ValidateKeyOrAlias(tc.Value, "key_id")
+			_, errors := ValidateKeyOrAlias(tc.Value, names.AttrKeyID)
 			if (len(errors) == 0) != tc.valid {
 				t.Errorf("%q ValidateKMSKeyOrAlias failed: %v", tc.Value, errors)
 			}
