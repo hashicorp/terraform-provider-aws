@@ -45,7 +45,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
 						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
