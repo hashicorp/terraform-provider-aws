@@ -13,14 +13,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	setQuotaServiceCode = "vpc"
+	setQuotaServiceCode = names.AttrVPC
 	setQuotaQuotaCode   = "L-F678F1CE"
 	setQuotaQuotaName   = "VPCs per Region"
 
-	unsetQuotaServiceCode = "s3"
+	unsetQuotaServiceCode = names.AttrS3
 	unsetQuotaQuotaCode   = "L-FAABEEBA"
 	unsetQuotaQuotaName   = "Access Points"
 

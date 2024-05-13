@@ -27,7 +27,7 @@ func TestAccServiceQuotasServiceDataSource_serviceName(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_name("Amazon Virtual Private Cloud (Amazon VPC)"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "service_code", "vpc"),
+					resource.TestCheckResourceAttr(dataSourceName, "service_code", names.AttrVPC),
 				),
 			},
 		},
