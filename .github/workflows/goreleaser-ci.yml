@@ -55,7 +55,7 @@ jobs:
   build-32-bit:
     # Run a single compiler check for 32-bit architecture (FreeBSD/ARM)
     # Ref: https://github.com/hashicorp/terraform-provider-aws/issues/8988
-    runs-on: [custom, linux, small]
+    runs-on: custom-linux-small
     steps:
       - uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b # v4.1.5
       - uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
