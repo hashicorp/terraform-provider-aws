@@ -19,7 +19,7 @@ func encryptionConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"key_id": {
+				names.AttrKeyID: {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
@@ -37,7 +37,7 @@ func expandEncryptionConfiguration(tfList []interface{}) *networkfirewall.Encryp
 	ec := &networkfirewall.EncryptionConfiguration{Type: aws.String(networkfirewall.EncryptionTypeAwsOwnedKmsKey)}
 	if len(tfList) == 1 && tfList[0] != nil {
 		tfMap := tfList[0].(map[string]interface{})
-		if v, ok := tfMap["key_id"].(string); ok {
+		if v, ok := tfMap[names.AttrKeyID].(string); ok {
 			ec.KeyId = aws.String(v)
 		}
 		if v, ok := tfMap[names.AttrType].(string); ok {
@@ -57,8 +57,8 @@ func flattenEncryptionConfiguration(apiObject *networkfirewall.EncryptionConfigu
 	}
 
 	m := map[string]interface{}{
-		"key_id":       aws.StringValue(apiObject.KeyId),
-		names.AttrType: aws.StringValue(apiObject.Type),
+		names.AttrKeyID: aws.StringValue(apiObject.KeyId),
+		names.AttrType:  aws.StringValue(apiObject.Type),
 	}
 
 	return []interface{}{m}
