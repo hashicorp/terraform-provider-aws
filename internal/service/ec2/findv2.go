@@ -447,3 +447,36 @@ func FindEBSVolumeV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeV
 
 	return tfresource.AssertSingleValueResult(output)
 }
+
+func findPrefixListV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) (*awstypes.PrefixList, error) {
+	output, err := findPrefixListsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribePrefixListsInput) ([]awstypes.PrefixList, error) {
+	var output []awstypes.PrefixList
+
+	paginator := ec2.NewDescribePrefixListsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidPrefixListIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.PrefixLists...)
+	}
+
+	return output, nil
+}
