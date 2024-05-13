@@ -54,7 +54,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -236,7 +236,7 @@ func flattenDestinationConfiguration(apiObject *ivs.DestinationConfiguration) []
 	m := map[string]interface{}{}
 
 	if v := apiObject.S3; v != nil {
-		m["s3"] = flattenS3DestinationConfiguration(v)
+		m[names.AttrS3] = flattenS3DestinationConfiguration(v)
 	}
 
 	return []interface{}{m}
@@ -281,7 +281,7 @@ func expandDestinationConfiguration(vSettings []interface{}) *ivs.DestinationCon
 	tfMap := vSettings[0].(map[string]interface{})
 	a := &ivs.DestinationConfiguration{}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		a.S3 = expandS3DestinationConfiguration(v)
 	}
 
