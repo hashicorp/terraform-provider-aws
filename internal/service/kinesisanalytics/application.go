@@ -294,7 +294,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -463,7 +463,7 @@ func ResourceApplication() *schema.Resource {
 							Computed: true,
 						},
 
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -560,7 +560,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -1621,7 +1621,7 @@ func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFor
 			recordFormat.RecordFormatType = aws.String(kinesisanalytics.RecordFormatTypeCsv)
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &kinesisanalytics.JSONMappingParameters{}
 
 			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
@@ -1654,7 +1654,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource[names.AttrS3].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSource := &kinesisanalytics.S3ReferenceDataSource{}
 
 		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
@@ -1696,7 +1696,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
-	if vS3ReferenceDataSource, ok := mReferenceDataSource["s3"].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
+	if vS3ReferenceDataSource, ok := mReferenceDataSource[names.AttrS3].([]interface{}); ok && len(vS3ReferenceDataSource) > 0 && vS3ReferenceDataSource[0] != nil {
 		s3ReferenceDataSourceUpdate := &kinesisanalytics.S3ReferenceDataSourceUpdate{}
 
 		mS3ReferenceDataSource := vS3ReferenceDataSource[0].(map[string]interface{})
@@ -1909,7 +1909,7 @@ func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*k
 			names.AttrRoleARN: aws.StringValue(s3ReferenceDataSource.ReferenceRoleARN),
 		}
 
-		mReferenceDataSource["s3"] = []interface{}{mS3ReferenceDataSource}
+		mReferenceDataSource[names.AttrS3] = []interface{}{mS3ReferenceDataSource}
 	}
 
 	return []interface{}{mReferenceDataSource}
@@ -1964,7 +1964,7 @@ func flattenSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interfac
 					"record_row_path": aws.StringValue(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters["json"] = []interface{}{mJsonMappingParameters}
+				mMappingParameters[names.AttrJSON] = []interface{}{mJsonMappingParameters}
 			}
 
 			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}
