@@ -911,9 +911,9 @@ planned_limit {
 	testCheckFuncs := make([]resource.TestCheckFunc, len(startTimes))
 	for i := 0; i < len(startTimes); i++ {
 		testCheckFuncs[i] = resource.TestCheckTypeSetElemNestedAttrs(resourceName, "planned_limit.*", map[string]string{
-			"start_time":   tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
-			"amount":       amount,
-			names.AttrUnit: "USD",
+			names.AttrStartTime: tfbudgets.TimePeriodTimestampToString(&startTimes[i]),
+			"amount":            amount,
+			names.AttrUnit:      "USD",
 		})
 	}
 
