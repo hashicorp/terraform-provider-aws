@@ -38,7 +38,7 @@ func TestAccQLDBLedger_basic(t *testing.T) {
 					testAccCheckLedgerExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "qldb", regexache.MustCompile(`ledger/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "permissions_mode", "ALLOW_ALL"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -166,7 +166,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 				Config: testAccLedgerConfig_kmsKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key", kmsKeyResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -178,7 +178,7 @@ func TestAccQLDBLedger_kmsKey(t *testing.T) {
 				Config: testAccLedgerConfig_kmsKeyUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "kms_key", "AWS_OWNED_KMS_KEY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKey, "AWS_OWNED_KMS_KEY"),
 				),
 			},
 		},
