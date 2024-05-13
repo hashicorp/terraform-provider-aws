@@ -55,7 +55,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 						return nil
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
 					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
 				),
