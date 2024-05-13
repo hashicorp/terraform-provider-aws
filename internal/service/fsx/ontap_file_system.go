@@ -78,7 +78,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -504,7 +504,7 @@ func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfig
 	if v, ok := conf[names.AttrMode].(string); ok && len(v) > 0 {
 		out.Mode = aws.String(v)
 	}
-	if v, ok := conf["iops"].(int); ok {
+	if v, ok := conf[names.AttrIOPS].(int); ok {
 		out.Iops = aws.Int64(int64(v))
 	}
 
@@ -521,7 +521,7 @@ func flattenOntapFileDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []inte
 		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 	if rs.Iops != nil {
-		m["iops"] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
 	}
 
 	return []interface{}{m}
