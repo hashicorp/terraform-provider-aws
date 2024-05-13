@@ -69,7 +69,7 @@ const (
 	packageName = "logs"
 	awsEnvVar   = "AWS_ENDPOINT_URL_CLOUDWATCH_LOGS"
 	baseEnvVar  = "AWS_ENDPOINT_URL"
-	configParam = "cloudwatch_logs"
+	configParam = names.AttrCloudWatchLogs
 
 	aliasName0 = "cloudwatchlog"
 	aliasName1 = "cloudwatchlogs"
@@ -623,7 +623,7 @@ services = endpoint-test
 [services endpoint-test]
 %[1]s =
   endpoint_url = %[2]s
-`, configParam, serviceConfigFileEndpoint))
+`, names.AttrCloudWatchLogs, serviceConfigFileEndpoint))
 	}
 
 	return buf.String()
