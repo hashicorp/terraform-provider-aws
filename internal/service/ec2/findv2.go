@@ -594,3 +594,13 @@ func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Clien
 
 	return output, nil
 }
+
+// findRouteTableByIDV2 returns the route table corresponding to the specified identifier.
+// Returns NotFoundError if no route table is found.
+func findRouteTableByIDV2(ctx context.Context, conn *ec2.Client, routeTableID string) (*awstypes.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		RouteTableIds: []string{routeTableID},
+	}
+
+	return findRouteTableV2(ctx, conn, input)
+}
