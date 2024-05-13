@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	smithy "github.com/aws/smithy-go"
 )
 
 func unsuccessfulItemErrorV2(apiObject *awstypes.UnsuccessfulItemError) error {
@@ -17,7 +17,10 @@ func unsuccessfulItemErrorV2(apiObject *awstypes.UnsuccessfulItemError) error {
 		return nil
 	}
 
-	return awserr.New(aws.ToString(apiObject.Code), aws.ToString(apiObject.Message), nil)
+	return &smithy.GenericAPIError{
+		Code:    aws.ToString(apiObject.Code),
+		Message: aws.ToString(apiObject.Message),
+	}
 }
 
 func unsuccessfulItemsErrorV2(apiObjects []awstypes.UnsuccessfulItem) error {
