@@ -130,7 +130,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -406,7 +406,7 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.HealthyThresholdCount = aws.Int64(int64(tfMap["healthy_threshold"].(int)))
 		input.UnhealthyThresholdCount = aws.Int64(int64(tfMap["unhealthy_threshold"].(int)))
 
-		if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+		if v, ok := tfMap[names.AttrTimeout].(int); ok && v != 0 {
 			input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 		}
 
@@ -604,7 +604,7 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 				UnhealthyThresholdCount:    aws.Int64(int64(tfMap["unhealthy_threshold"].(int))),
 			}
 
-			if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+			if v, ok := tfMap[names.AttrTimeout].(int); ok && v != 0 {
 				input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 			}
 
@@ -1102,7 +1102,7 @@ func flattenTargetGroupHealthCheck(apiObject *elbv2.TargetGroup) []interface{} {
 		"interval":            int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
 		names.AttrPort:        aws.StringValue(apiObject.HealthCheckPort),
 		names.AttrProtocol:    aws.StringValue(apiObject.HealthCheckProtocol),
-		"timeout":             int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
+		names.AttrTimeout:     int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
 		"unhealthy_threshold": int(aws.Int64Value(apiObject.UnhealthyThresholdCount)),
 	}
 
