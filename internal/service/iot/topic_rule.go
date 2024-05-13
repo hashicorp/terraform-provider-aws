@@ -66,7 +66,7 @@ func ResourceTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"cloudwatch_logs": {
+			names.AttrCloudWatchLogs: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -269,7 +269,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -668,7 +668,7 @@ func ResourceTopicRule() *schema.Resource {
 							},
 							ExactlyOneOf: topicRuleErrorActionExactlyOneOf,
 						},
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -1039,7 +1039,7 @@ func ResourceTopicRule() *schema.Resource {
 					},
 				},
 			},
-			"s3": {
+			names.AttrS3: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -1283,7 +1283,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_alarm: %s", err)
 	}
 
-	if err := d.Set("cloudwatch_logs", flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
+	if err := d.Set(names.AttrCloudWatchLogs, flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logs: %s", err)
 	}
 
@@ -1335,7 +1335,7 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting republish: %s", err)
 	}
 
-	if err := d.Set("s3", flattenS3Actions(output.Rule.Actions)); err != nil {
+	if err := d.Set(names.AttrS3, flattenS3Actions(output.Rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3: %s", err)
 	}
 
@@ -2014,7 +2014,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	}
 
 	// Legacy root attribute handling
-	for _, tfMapRaw := range d.Get("cloudwatch_logs").(*schema.Set).List() {
+	for _, tfMapRaw := range d.Get(names.AttrCloudWatchLogs).(*schema.Set).List() {
 		action := expandCloudWatchLogsAction([]interface{}{tfMapRaw})
 
 		if action == nil {
@@ -2157,7 +2157,7 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	}
 
 	// Legacy root attribute handling
-	for _, tfMapRaw := range d.Get("s3").(*schema.Set).List() {
+	for _, tfMapRaw := range d.Get(names.AttrS3).(*schema.Set).List() {
 		action := expandS3Action([]interface{}{tfMapRaw})
 
 		if action == nil {
@@ -3335,7 +3335,7 @@ func flattenErrorAction(errorAction *iot.Action) []map[string]interface{} {
 		return results
 	}
 	if errorAction.CloudwatchLogs != nil {
-		results = append(results, map[string]interface{}{"cloudwatch_logs": flattenCloudWatchLogsActions(input)})
+		results = append(results, map[string]interface{}{names.AttrCloudWatchLogs: flattenCloudWatchLogsActions(input)})
 		return results
 	}
 	if errorAction.CloudwatchMetric != nil {
@@ -3387,7 +3387,7 @@ func flattenErrorAction(errorAction *iot.Action) []map[string]interface{} {
 		return results
 	}
 	if errorAction.S3 != nil {
-		results = append(results, map[string]interface{}{"s3": flattenS3Actions(input)})
+		results = append(results, map[string]interface{}{names.AttrS3: flattenS3Actions(input)})
 		return results
 	}
 	if errorAction.Sns != nil {
