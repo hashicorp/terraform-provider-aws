@@ -133,22 +133,26 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 			"regions_of_interest": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
 				NestedObject: schema.NestedBlockObject{
-					CustomType: fwtypes.NewObjectTypeOf[regionOfInterestModel](ctx),
 					Blocks: map[string]schema.Block{
-						"bounding_box": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								"height": schema.NumberAttribute{},
-								"left":   schema.NumberAttribute{},
-								"top":    schema.NumberAttribute{},
-								"width":  schema.NumberAttribute{},
-							},
-						},
-						"polygon": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
-							Attributes: map[string]schema.Attribute{
-								"x": schema.NumberAttribute{},
-								"y": schema.NumberAttribute{},
+						"region": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[regionOfInterestModel](ctx),
+							Blocks: map[string]schema.Block{
+								"bounding_box": schema.SingleNestedBlock{
+									CustomType: fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+									Attributes: map[string]schema.Attribute{
+										"height": schema.NumberAttribute{},
+										"left":   schema.NumberAttribute{},
+										"top":    schema.NumberAttribute{},
+										"width":  schema.NumberAttribute{},
+									},
+								},
+								"polygon": schema.SingleNestedBlock{
+									CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
+									Attributes: map[string]schema.Attribute{
+										"x": schema.NumberAttribute{},
+										"y": schema.NumberAttribute{},
+									},
+								},
 							},
 						},
 					},
