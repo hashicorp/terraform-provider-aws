@@ -60,7 +60,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 			}
 
 			return map[string]*schema.Schema{
-				"json": {
+				names.AttrJSON: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -312,7 +312,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 
 	jsonMinDoc, err := json.Marshal(mergedDoc)
 	if err != nil {
