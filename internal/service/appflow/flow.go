@@ -1394,6 +1394,36 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating AppFlow Flow (%s): %s", d.Id(), err)
 		}
+
+		if input.TriggerConfig.TriggerType == types.TriggerTypeScheduled || input.TriggerConfig.TriggerType == types.TriggerTypeEvent {
+			if v, ok := d.GetOk("flow_status"); ok && d.HasChange("flow_status") {
+				flowStatus := types.FlowStatus(v.(string))
+				switch flowStatus {
+				case types.FlowStatusActive:
+					resourceFlowStart(ctx, d, meta)
+				case types.FlowStatusSuspended:
+					resourceFlowStop(ctx, d, meta)
+				}
+			}
+		}
+	}
+
+	return append(diags, resourceFlowRead(ctx, d, meta)...)
+}
+
+func resourceFlowStop(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	name := d.Get(names.AttrName).(string)
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	stopFlowInput := &appflow.StopFlowInput{
+		FlowName: aws.String(name),
+	}
+
+	_, err := conn.StopFlow(ctx, stopFlowInput)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "Suspending AppFlow Flow (%s): %s", name, err)
 	}
 
 	return append(diags, resourceFlowRead(ctx, d, meta)...)
