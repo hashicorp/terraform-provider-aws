@@ -16,10 +16,10 @@ Terraform resource for managing an AWS AppFabric App Authorization.
 
 ```terraform
 resource "aws_appfabric_app_authorization" "example" {
-  app             		      = "TERRAFORMCLOUD"
-  app_bundle_identifier     = aws_appfabric_app_bundle.arn
-  auth_type 			          = "apiKey"
-  
+  app                   = "TERRAFORMCLOUD"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  auth_type             = "apiKey"
+
   credential {
     api_key_credential {
       api_key = "exampleapikeytoken"
