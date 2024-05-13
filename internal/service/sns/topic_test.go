@@ -69,7 +69,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
