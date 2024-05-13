@@ -55,7 +55,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"instance_class"},
 			},
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -86,7 +86,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 		input.LicenseModel = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc"); ok {
+	if v, ok := d.GetOk(names.AttrVPC); ok {
 		input.Vpc = aws.Bool(v.(bool))
 	}
 
@@ -127,7 +127,7 @@ func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceDa
 	d.Set(names.AttrEngineVersion, orderableDBInstance.EngineVersion)
 	d.Set("instance_class", orderableDBInstance.DBInstanceClass)
 	d.Set("license_model", orderableDBInstance.LicenseModel)
-	d.Set("vpc", orderableDBInstance.Vpc)
+	d.Set(names.AttrVPC, orderableDBInstance.Vpc)
 
 	return diags
 }
