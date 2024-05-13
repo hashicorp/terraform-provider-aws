@@ -181,7 +181,7 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, iniStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", iniStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, iniStartTime),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, updStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", updStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, updStartTime),
 				),
 			},
 		},
