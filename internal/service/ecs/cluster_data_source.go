@@ -25,9 +25,34 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"capacity_providers": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"default_capacity_provider_strategy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"base": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"capacity_provider": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"weight": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"pending_tasks_count": {
 				Type:     schema.TypeInt,
@@ -101,6 +126,22 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	tags := KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	if cluster.DefaultCapacityProviderStrategy != nil {
+		if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
+		}
+	} else {
+		d.Set("default_capacity_provider_strategy", nil)
+	}
+
+	if cluster.CapacityProviders != nil {
+		if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
+		}
+	} else {
+		d.Set("capacity_providers", nil)
 	}
 
 	if cluster.ServiceConnectDefaults != nil {
