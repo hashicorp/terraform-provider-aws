@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package wafregional
+package waf
 
 // Exports for use in tests only.
 var (
@@ -16,7 +16,6 @@ var (
 	ResourceSizeConstraintSet    = resourceSizeConstraintSet
 	ResourceSQLInjectionMatchSet = resourceSQLInjectionMatchSet
 	ResourceWebACL               = resourceWebACL
-	ResourceWebACLAssociation    = resourceWebACLAssociation
 	ResourceXSSMatchSet          = resourceXSSMatchSet
 
 	FindByteMatchSetByID         = findByteMatchSetByID
@@ -30,7 +29,6 @@ var (
 	FindSizeConstraintSetByID    = findSizeConstraintSetByID
 	FindSQLInjectionMatchSetByID = findSQLInjectionMatchSetByID
 	FindWebACLByID               = findWebACLByID
-	FindWebACLByResourceARN      = findWebACLByResourceARN
 	FindXSSMatchSetByID          = findXSSMatchSetByID
 	FlattenFieldToMatch          = flattenFieldToMatch
 	RegexMatchSetTupleHash       = regexMatchSetTupleHash

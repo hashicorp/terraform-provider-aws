@@ -1,14 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package wafregional
+package waf
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/wafregional"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/wafregional/types"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_wafregional_subscribed_rule_group", name="Subscribed Rule Group")
+// @SDKDataSource("aws_waf_subscribed_rule_group", name="Subscribed Rule Group")
 func dataSourceSubscribedRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
@@ -40,7 +40,7 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 
 func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	var filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]
 
@@ -64,21 +64,21 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	input := &wafregional.ListSubscribedRuleGroupsInput{}
+	input := &waf.ListSubscribedRuleGroupsInput{}
 	output, err := findSubscribedRuleGroup(ctx, conn, input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Regional Subscribed Rule Group", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WAF Subscribed Rule Group", err))
 	}
 
 	d.SetId(aws.ToString(output.RuleGroupId))
 	d.Set(names.AttrMetricName, output.MetricName)
 	d.Set(names.AttrName, output.Name)
 
-	return nil
+	return diags
 }
 
-func findSubscribedRuleGroup(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) (*awstypes.SubscribedRuleGroupSummary, error) {
+func findSubscribedRuleGroup(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) (*awstypes.SubscribedRuleGroupSummary, error) {
 	output, err := findSubscribedRuleGroups(ctx, conn, input, filter)
 
 	if err != nil {
@@ -88,10 +88,10 @@ func findSubscribedRuleGroup(ctx context.Context, conn *wafregional.Client, inpu
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findSubscribedRuleGroups(ctx context.Context, conn *wafregional.Client, input *wafregional.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) ([]awstypes.SubscribedRuleGroupSummary, error) {
+func findSubscribedRuleGroups(ctx context.Context, conn *waf.Client, input *waf.ListSubscribedRuleGroupsInput, filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]) ([]awstypes.SubscribedRuleGroupSummary, error) {
 	var output []awstypes.SubscribedRuleGroupSummary
 
-	err := listSubscribedRuleGroupsPages(ctx, conn, input, func(page *wafregional.ListSubscribedRuleGroupsOutput, lastPage bool) bool {
+	err := listSubscribedRuleGroupsPages(ctx, conn, input, func(page *waf.ListSubscribedRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
