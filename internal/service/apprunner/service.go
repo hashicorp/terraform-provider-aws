@@ -190,7 +190,7 @@ func resourceService() *schema.Resource {
 								},
 							},
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.IpAddressTypeIpv4,
@@ -840,7 +840,7 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		result.IpAddressType = types.IpAddressType(v)
 	}
 
@@ -1202,7 +1202,7 @@ func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface
 	m := map[string]interface{}{
 		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
 		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
-		"ip_address_type":       config.IpAddressType,
+		names.AttrIPAddressType: config.IpAddressType,
 	}
 
 	return []interface{}{m}
