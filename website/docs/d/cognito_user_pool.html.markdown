@@ -1,11 +1,9 @@
 ---
-
 subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_user_pool"
 description: |-
   Terraform data source for managing an AWS Cognito User Pool.
-
 ---
 
 # Data Source: aws_cognito_user_pool

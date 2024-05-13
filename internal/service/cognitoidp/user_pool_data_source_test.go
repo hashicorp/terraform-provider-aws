@@ -4,7 +4,6 @@
 package cognitoidp_test
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -40,7 +39,7 @@ func TestAccCognitoIDPUserPoolDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.*`)),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -57,7 +56,6 @@ func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.CognitoIDPServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -68,21 +66,14 @@ func TestAccCognitoIDPUserPoolDataSource_schemaAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, dataSourceName, &userpool),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					testSchemaAttributes(ctx, dataSourceName),
+					testSchemaAttributes(dataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func testStateAttribute(atts map[string]string, attribute string, value string) bool {
-	if atts[attribute] != value {
-		return false
-	}
-	return true
-}
-
-func testSchemaAttributes(ctx context.Context, n string) resource.TestCheckFunc {
+func testSchemaAttributes(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -111,7 +102,7 @@ func testSchemaAttributes(ctx context.Context, n string) resource.TestCheckFunc 
 				return fmt.Errorf("attribute not found at %s", name)
 			}
 			if name == "email" {
-				if !testStateAttribute(rs.Primary.Attributes, fmt.Sprintf("schema_attributes.%d.mutable", i), "false") {
+				if rs.Primary.Attributes[fmt.Sprintf("schema_attributes.%d.mutable", i)] != "false" {
 					return fmt.Errorf("mutable is not false for attribute %v", name)
 				}
 				checksCompleted["email"] = true
