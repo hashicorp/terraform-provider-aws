@@ -129,7 +129,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "dualstack",
@@ -194,7 +194,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		in.UserData = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
@@ -266,7 +266,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("ram_size", out.Hardware.RamSizeInGb)
 
 	d.Set("ipv6_addresses", out.Ipv6Addresses)
-	d.Set("ip_address_type", out.IpAddressType)
+	d.Set(names.AttrIPAddressType, out.IpAddressType)
 	d.Set("is_static_ip", out.IsStaticIp)
 	d.Set("private_ip_address", out.PrivateIpAddress)
 	d.Set("public_ip_address", out.PublicIpAddress)
@@ -307,11 +307,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
 			ResourceType:  types.ResourceTypeInstance,
-			IpAddressType: types.IpAddressType(d.Get("ip_address_type").(string)),
+			IpAddressType: types.IpAddressType(d.Get(names.AttrIPAddressType).(string)),
 		})
 
 		if err != nil {
