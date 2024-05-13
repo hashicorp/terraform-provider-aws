@@ -54,12 +54,12 @@ func TestAccKeyspacesTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName2),
@@ -367,12 +367,12 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 				),
@@ -391,7 +391,7 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -404,7 +404,7 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 				),
@@ -434,7 +434,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -447,7 +447,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 				),
@@ -466,12 +466,12 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.partition_key.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.partition_key.*", map[string]string{
-						names.AttrName: "message",
+						names.AttrName: names.AttrMessage,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "0"),
 				),
