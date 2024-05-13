@@ -688,7 +688,7 @@ func ResourceChannel() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
-				"vpc": {
+				names.AttrVPC: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
@@ -773,7 +773,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		in.RoleArn = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrVPC); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandChannelVPC(v.([]interface{}))
 	}
 
@@ -843,7 +843,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
-	if err := d.Set("vpc", flattenChannelVPC(out.Vpc)); err != nil {
+	if err := d.Set(names.AttrVPC, flattenChannelVPC(out.Vpc)); err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 

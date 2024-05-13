@@ -151,7 +151,7 @@ func ResourceInput() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.InputType](),
 			},
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -221,7 +221,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		in.Sources = expandSources(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("vpc"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrVPC); ok && len(v.([]interface{})) > 0 {
 		in.Vpc = expandVPC(v.([]interface{}))
 	}
 
