@@ -116,7 +116,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, names.AttrKeyID),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, names.AttrARN),
