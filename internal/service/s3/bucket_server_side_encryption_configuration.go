@@ -47,7 +47,7 @@ func resourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -89,7 +89,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
-			Rules: expandServerSideEncryptionRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -143,7 +143,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 
 	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("rule", flattenServerSideEncryptionRules(sse.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenServerSideEncryptionRules(sse.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -161,7 +161,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
-			Rules: expandServerSideEncryptionRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandServerSideEncryptionRules(d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 	if expectedBucketOwner != "" {

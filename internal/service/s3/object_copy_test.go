@@ -296,7 +296,7 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": "1",
 						names.AttrType:  "Group",
-						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
+						names.AttrURI:   "http://acs.amazonaws.com/groups/global/AllUsers",
 					}),
 				),
 			},
