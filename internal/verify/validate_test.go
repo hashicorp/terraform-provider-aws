@@ -179,7 +179,8 @@ func TestValidARN(t *testing.T) {
 
 	v := ""
 	_, errors := ValidARN(v, "arn")
-	if len(errors) != 0 {
+	// Expected output "Error: arn cannot be empty"
+	if len(errors) == 0 {
 		t.Fatalf("%q should not be validated as an ARN: %q", v, errors)
 	}
 
