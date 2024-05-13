@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_ssm_maintenance_window_task: Add plan-time validation of `task_arn`
 ```
+
+```release-note:enhancement
+resource/aws_ssm_resource_data_sync: Add plan-time validation of `s3_destination.kms_key_arn`, `s3_destination.region` and `s3_destination.sync_format`
+```

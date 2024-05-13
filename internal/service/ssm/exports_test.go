@@ -15,6 +15,7 @@ var (
 	ResourceParameter               = resourceParameter
 	ResourcePatchBaseline           = resourcePatchBaseline
 	ResourcePatchGroup              = resourcePatchGroup
+	ResourceResourceDataSync        = resourceResourceDataSync
 
 	FindActivationByID                                 = findActivationByID
 	FindAssociationByID                                = findAssociationByID
@@ -27,4 +28,5 @@ var (
 	FindParameterByName                                = findParameterByName
 	FindPatchBaselineByID                              = findPatchBaselineByID
 	FindPatchGroupByTwoPartKey                         = findPatchGroupByTwoPartKey
+	FindResourceDataSyncByName                         = findResourceDataSyncByName
 )
