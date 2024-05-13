@@ -38,7 +38,7 @@ func DataSourceAMIIDs() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -130,7 +130,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
-	d.Set("ids", imageIDs)
+	d.Set(names.AttrIDs, imageIDs)
 
 	return diags
 }

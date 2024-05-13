@@ -43,7 +43,7 @@ func testAccVerifiedAccessEndpoint_basic(t *testing.T, semaphore tfsync.Semaphor
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
-					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", names.AttrVPC),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),
@@ -93,7 +93,7 @@ func testAccVerifiedAccessEndpoint_networkInterface(t *testing.T, semaphore tfsy
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "application_domain"),
-					resource.TestCheckResourceAttr(resourceName, "attachment_type", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", names.AttrVPC),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "example"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_domain_prefix", "example"),

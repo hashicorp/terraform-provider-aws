@@ -23,7 +23,7 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -66,7 +66,7 @@ func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", prefixListIDs)
+	d.Set(names.AttrIDs, prefixListIDs)
 
 	return diags
 }

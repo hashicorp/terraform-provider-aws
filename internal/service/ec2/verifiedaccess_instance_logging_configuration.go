@@ -44,7 +44,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:             schema.TypeList,
 							MaxItems:         1,
 							Optional:         true,
@@ -90,7 +90,7 @@ func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"s3": {
+						names.AttrS3: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							MaxItems:         1,
@@ -278,7 +278,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 
 	result := &types.VerifiedAccessLogOptions{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		result.CloudWatchLogs = expandVerifiedAccessLogCloudWatchLogs(v)
 	}
 
@@ -294,7 +294,7 @@ func expandVerifiedAccessInstanceAccessLogs(accessLogs []interface{}) *types.Ver
 		result.LogVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		result.S3 = expandVerifiedAccessLogS3(v)
 	}
 
@@ -380,7 +380,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenVerifiedAccessLogCloudWatchLogs(v)
+		tfMap[names.AttrCloudWatchLogs] = flattenVerifiedAccessLogCloudWatchLogs(v)
 	}
 
 	if v := apiObject.IncludeTrustContext; v != nil {
@@ -396,7 +396,7 @@ func flattenVerifiedAccessInstanceAccessLogs(apiObject *types.VerifiedAccessLogs
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = flattenVerifiedAccessLogS3(v)
+		tfMap[names.AttrS3] = flattenVerifiedAccessLogS3(v)
 	}
 
 	return []interface{}{tfMap}

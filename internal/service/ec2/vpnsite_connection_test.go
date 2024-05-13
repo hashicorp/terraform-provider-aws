@@ -368,7 +368,7 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_group_arn", "aws_cloudwatch_log_group.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel1_log_options.0.cloudwatch_log_options.0.log_output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tunnel2_log_options.0.cloudwatch_log_options.0.log_enabled", "false"),

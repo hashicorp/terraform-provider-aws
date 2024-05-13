@@ -88,7 +88,7 @@ func resourceEIP() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.DomainType](),
-				ConflictsWith:    []string{"vpc"},
+				ConflictsWith:    []string{names.AttrVPC},
 			},
 			"instance": {
 				Type:     schema.TypeString,
@@ -134,7 +134,7 @@ func resourceEIP() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
+			names.AttrVPC: {
 				Type:          schema.TypeBool,
 				Optional:      true,
 				ForceNew:      true,
@@ -166,7 +166,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Domain = types.DomainType(v.(string))
 	}
 
-	if v := d.Get("vpc"); v != nil && v.(bool) {
+	if v := d.Get(names.AttrVPC); v != nil && v.(bool) {
 		input.Domain = types.DomainTypeVpc
 	}
 
@@ -251,7 +251,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if v := aws.ToString(address.PublicIp); v != "" {
 		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
-	d.Set("vpc", address.Domain == types.DomainTypeVpc)
+	d.Set(names.AttrVPC, address.Domain == types.DomainTypeVpc)
 
 	// Force ID to be an Allocation ID if we're on a VPC.
 	// This allows users to import the EIP based on the IP if they are in a VPC.

@@ -97,7 +97,7 @@ func WriteV1BlockDevice(
 	case "ephemeral_block_device":
 		delete(oldBd, names.AttrDeleteOnTermination)
 		delete(oldBd, names.AttrEncrypted)
-		delete(oldBd, "iops")
+		delete(oldBd, names.AttrIOPS)
 		delete(oldBd, "volume_size")
 		delete(oldBd, "volume_type")
 	}

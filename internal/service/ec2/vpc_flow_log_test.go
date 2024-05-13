@@ -281,7 +281,7 @@ func TestAccVPCFlowLog_LogDestinationType_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 				),
 			},
@@ -330,7 +330,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_plainText(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
 				),
@@ -362,7 +362,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOPlainText_hiveCompatible(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "plain-text"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
@@ -396,7 +396,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DO_parquet(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 				),
@@ -428,7 +428,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquet_hiveCompatible(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),
@@ -461,7 +461,7 @@ func TestAccVPCFlowLog_LogDestinationTypeS3DOParquetHiveCompatible_perHour(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "log_destination", s3ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", names.AttrS3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLogGroupName, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.file_format", "parquet"),
 					resource.TestCheckResourceAttr(resourceName, "destination_options.0.hive_compatible_partitions", "true"),

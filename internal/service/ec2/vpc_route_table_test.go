@@ -464,7 +464,7 @@ func TestAccVPCRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrVPCEndpointID, vpceResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),

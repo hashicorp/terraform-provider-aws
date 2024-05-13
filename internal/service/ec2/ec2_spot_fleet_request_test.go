@@ -1411,7 +1411,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/xvdcz",
-						"iops":               "4000",
+						names.AttrIOPS:       "4000",
 						"throughput":         "500",
 						"volume_size":        "15",
 						"volume_type":        "gp3",
@@ -1450,10 +1450,10 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
-						"iops":        "4000",
-						"throughput":  "500",
-						"volume_size": "15",
-						"volume_type": "gp3",
+						names.AttrIOPS: "4000",
+						"throughput":   "500",
+						"volume_size":  "15",
+						"volume_type":  "gp3",
 					}),
 				),
 			},

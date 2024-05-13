@@ -547,7 +547,7 @@ var networkInsightsAnalysisPathComponentsSchema = &schema.Schema{
 					},
 				},
 			},
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -1300,7 +1300,7 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 					},
 				},
 			},
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -1989,7 +1989,7 @@ func flattenExplanation(apiObject *ec2.Explanation) map[string]interface{} {
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrVPC] = []interface{}{flattenAnalysisComponent(v)}
 	}
 
 	if v := apiObject.VpcEndpoint; v != nil {
@@ -2089,7 +2089,7 @@ func flattenPathComponent(apiObject *ec2.PathComponent) map[string]interface{} {
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenAnalysisComponent(v)}
+		tfMap[names.AttrVPC] = []interface{}{flattenAnalysisComponent(v)}
 	}
 
 	return tfMap
