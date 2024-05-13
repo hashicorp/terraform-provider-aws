@@ -97,7 +97,7 @@ func ResourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -340,7 +340,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.EnvironmentClass = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KmsKey = aws.String(v.(string))
 	}
 
@@ -442,7 +442,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set(names.AttrExecutionRoleARN, environment.ExecutionRoleArn)
-	d.Set("kms_key", environment.KmsKey)
+	d.Set(names.AttrKMSKey, environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}

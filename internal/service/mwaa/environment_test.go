@@ -267,7 +267,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
 					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.medium"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrExecutionRoleARN, "iam", "role/service-role/"+rName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.dag_processing_logs.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.dag_processing_logs.0.cloud_watch_log_group_arn"),
