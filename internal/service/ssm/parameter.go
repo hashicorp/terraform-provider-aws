@@ -76,7 +76,7 @@ func ResourceParameter() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"insecure_value", names.AttrValue},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -176,7 +176,7 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Description = aws.String(v.(string))
 	}
 
-	if keyID, ok := d.GetOk("key_id"); ok && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
+	if keyID, ok := d.GetOk(names.AttrKeyID); ok && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
 		input.SetKeyId(keyID.(string))
 	}
 
@@ -291,7 +291,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	detail := describeResp.Parameters[0]
-	d.Set("key_id", detail.KeyId)
+	d.Set(names.AttrKeyID, detail.KeyId)
 	d.Set(names.AttrDescription, detail.Description)
 	d.Set("tier", detail.Tier)
 	d.Set("allowed_pattern", detail.AllowedPattern)
@@ -333,8 +333,8 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			paramInput.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("key_id") && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
-			paramInput.SetKeyId(d.Get("key_id").(string))
+		if d.HasChange(names.AttrKeyID) && d.Get(names.AttrType).(string) == ssm.ParameterTypeSecureString {
+			paramInput.SetKeyId(d.Get(names.AttrKeyID).(string))
 		}
 
 		_, err := conn.PutParameterWithContext(ctx, paramInput)
