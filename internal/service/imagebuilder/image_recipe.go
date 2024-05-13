@@ -97,13 +97,13 @@ func ResourceImageRecipe() *schema.Resource {
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(125, 1000),
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -503,11 +503,11 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 		apiObject.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.VolumeType = aws.String(v)
 	}
 
@@ -686,11 +686,11 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *imagebuilder.EbsInsta
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
+		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.VolumeType; v != nil {
-		tfMap["volume_type"] = aws.StringValue(v)
+		tfMap[names.AttrVolumeType] = aws.StringValue(v)
 	}
 
 	return tfMap
