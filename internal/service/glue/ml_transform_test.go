@@ -54,7 +54,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.data_type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.name", "my_column_1"),
@@ -309,14 +309,14 @@ func TestAccGlueMlTransform_timeout(t *testing.T) {
 				Config: testAccMLTransformConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
 			},
 			{
 				Config: testAccMLTransformConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{

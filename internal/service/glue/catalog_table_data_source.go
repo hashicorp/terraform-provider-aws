@@ -87,7 +87,7 @@ func DataSourceCatalogTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -129,7 +129,7 @@ func DataSourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
