@@ -55,7 +55,7 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
-						"ip_address_type": networkfirewall.IPAddressTypeIpv4,
+						names.AttrIPAddressType: networkfirewall.IPAddressTypeIpv4,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
@@ -104,7 +104,7 @@ func TestAccNetworkFirewallFirewall_dualstackSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_mapping.*", map[string]string{
-						"ip_address_type": networkfirewall.IPAddressTypeDualstack,
+						names.AttrIPAddressType: networkfirewall.IPAddressTypeDualstack,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
