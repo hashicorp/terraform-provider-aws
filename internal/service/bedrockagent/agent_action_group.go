@@ -122,13 +122,13 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.ConflictsWith(
-									path.MatchRelative().AtParent().AtName("s3"),
+									path.MatchRelative().AtParent().AtName(names.AttrS3),
 								),
 							},
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"s3": schema.ListNestedBlock{
+						names.AttrS3: schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[s3IdentifierModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
