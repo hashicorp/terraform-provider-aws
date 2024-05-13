@@ -601,7 +601,9 @@ func findPipelineByName(ctx context.Context, conn *codepipeline.Client, name str
 	return output, nil
 }
 
-func pipelineValidateActionProvider(i interface{}, path cty.Path) (diags diag.Diagnostics) {
+func pipelineValidateActionProvider(i interface{}, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
 		return sdkdiag.AppendErrorf(diags, "expected type to be string")
