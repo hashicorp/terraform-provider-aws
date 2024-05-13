@@ -15,9 +15,9 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AuthorizationTokenDataSource": {
-			"basic":    testAccAuthorizationTokenDataSource_basic,
-			"duration": testAccAuthorizationTokenDataSource_duration,
-			"owner":    testAccAuthorizationTokenDataSource_owner,
+			"basic":            testAccAuthorizationTokenDataSource_basic,
+			names.AttrDuration: testAccAuthorizationTokenDataSource_duration,
+			"owner":            testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
 			"basic":                         testAccDomain_basic,

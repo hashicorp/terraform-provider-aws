@@ -190,6 +190,16 @@ rules:
       - pattern: '"configuration"'
     severity: ERROR
     fix: "names.AttrConfiguration"
+  - id: literal-content-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrContent` for the string literal "content"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"content"'
+    severity: ERROR
+    fix: "names.AttrContent"
   - id: literal-content_type-string-constant
     languages: [go]
     message: Use the constant `names.AttrContentType` for the string literal "content_type"
@@ -240,6 +250,26 @@ rules:
       - pattern: '"creation_time"'
     severity: ERROR
     fix: "names.AttrCreationTime"
+  - id: literal-dns_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDNSName` for the string literal "dns_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"dns_name"'
+    severity: ERROR
+    fix: "names.AttrDNSName"
+  - id: literal-database-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDatabase` for the string literal "database"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"database"'
+    severity: ERROR
+    fix: "names.AttrDatabase"
   - id: literal-database_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrDatabaseName` for the string literal "database_name"
@@ -310,6 +340,16 @@ rules:
       - pattern: '"display_name"'
     severity: ERROR
     fix: "names.AttrDisplayName"
+  - id: literal-domain-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDomain` for the string literal "domain"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"domain"'
+    severity: ERROR
+    fix: "names.AttrDomain"
   - id: literal-domain_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrDomainName` for the string literal "domain_name"
@@ -320,6 +360,16 @@ rules:
       - pattern: '"domain_name"'
     severity: ERROR
     fix: "names.AttrDomainName"
+  - id: literal-duration-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDuration` for the string literal "duration"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"duration"'
+    severity: ERROR
+    fix: "names.AttrDuration"
   - id: literal-enabled-string-constant
     languages: [go]
     message: Use the constant `names.AttrEnabled` for the string literal "enabled"
@@ -570,6 +620,16 @@ rules:
       - pattern: '"log_group_name"'
     severity: ERROR
     fix: "names.AttrLogGroupName"
+  - id: literal-logging_configuration-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLoggingConfiguration` for the string literal "logging_configuration"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"logging_configuration"'
+    severity: ERROR
+    fix: "names.AttrLoggingConfiguration"
   - id: literal-max-string-constant
     languages: [go]
     message: Use the constant `names.AttrMax` for the string literal "max"
@@ -860,6 +920,16 @@ rules:
       - pattern: '"role_arn"'
     severity: ERROR
     fix: "names.AttrRoleARN"
+  - id: literal-s3_bucket-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrS3Bucket` for the string literal "s3_bucket"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"s3_bucket"'
+    severity: ERROR
+    fix: "names.AttrS3Bucket"
   - id: literal-s3_bucket_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrS3BucketName` for the string literal "s3_bucket_name"
@@ -900,6 +970,16 @@ rules:
       - pattern: '"schedule_expression"'
     severity: ERROR
     fix: "names.AttrScheduleExpression"
+  - id: literal-schema-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSchema` for the string literal "schema"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"schema"'
+    severity: ERROR
+    fix: "names.AttrSchema"
   - id: literal-secret_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrSecretKey` for the string literal "secret_key"
@@ -1030,6 +1110,16 @@ rules:
       - pattern: '"subnet_ids"'
     severity: ERROR
     fix: "names.AttrSubnetIDs"
+  - id: literal-subnets-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSubnets` for the string literal "subnets"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"subnets"'
+    severity: ERROR
+    fix: "names.AttrSubnets"
   - id: literal-table_name-string-constant
     languages: [go]
     message: Use the constant `names.AttrTableName` for the string literal "table_name"
@@ -1210,3 +1300,13 @@ rules:
       - pattern: '"version"'
     severity: ERROR
     fix: "names.AttrVersion"
+  - id: literal-weight-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrWeight` for the string literal "weight"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"weight"'
+    severity: ERROR
+    fix: "names.AttrWeight"

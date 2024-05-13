@@ -246,7 +246,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
@@ -255,7 +255,7 @@ func ResourceInstance() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
 				Type:     schema.TypeSet,
@@ -266,13 +266,13 @@ func ResourceInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPAddress,
 				},
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_fqdn": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"domain_iam_role_name": {
 				Type:          schema.TypeString,
@@ -282,7 +282,7 @@ func ResourceInstance() *schema.Resource {
 			"domain_ou": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+				ConflictsWith: []string{names.AttrDomain, "domain_iam_role_name"},
 			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
@@ -1177,7 +1177,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1422,7 +1422,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1610,7 +1610,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DedicatedLogVolume = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1853,14 +1853,14 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
 		v := v.DomainMemberships[0]
-		d.Set("domain", v.Domain)
+		d.Set(names.AttrDomain, v.Domain)
 		d.Set("domain_auth_secret_arn", v.AuthSecretArn)
 		d.Set("domain_dns_ips", aws.StringValueSlice(v.DnsIps))
 		d.Set("domain_fqdn", v.FQDN)
 		d.Set("domain_iam_role_name", v.IAMRoleName)
 		d.Set("domain_ou", v.OU)
 	} else {
-		d.Set("domain", nil)
+		d.Set(names.AttrDomain, nil)
 		d.Set("domain_auth_secret_arn", nil)
 		d.Set("domain_dns_ips", nil)
 		d.Set("domain_fqdn", nil)
@@ -2247,9 +2247,9 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
 	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
-	if d.HasChanges("domain", "domain_iam_role_name") {
+	if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
 		needsModify = true
-		input.Domain = aws.String(d.Get("domain").(string))
+		input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
 		needsModify = true

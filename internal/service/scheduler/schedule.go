@@ -184,7 +184,7 @@ func resourceSchedule() *schema.Resource {
 													Required:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 255)),
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:             schema.TypeInt,
 													Optional:         true,
 													ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(0, 1000)),
@@ -226,7 +226,7 @@ func resourceSchedule() *schema.Resource {
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
-												"subnets": {
+												names.AttrSubnets: {
 													Type:     schema.TypeSet,
 													Required: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -713,7 +713,7 @@ func capacityProviderHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 
-	if v, ok := m["weight"].(int); ok {
+	if v, ok := m[names.AttrWeight].(int); ok {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 

@@ -319,7 +319,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		vm := v.(map[string]interface{})
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
-			Content:     aws.String(vm["content"].(string)),
+			Content:     aws.String(vm[names.AttrContent].(string)),
 			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
@@ -1814,7 +1814,7 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	for key, body := range b {
 		out[i] = map[string]interface{}{
 			names.AttrKey:         key,
-			"content":             aws.ToString(body.Content),
+			names.AttrContent:     aws.ToString(body.Content),
 			names.AttrContentType: string(body.ContentType),
 		}
 		i += 1

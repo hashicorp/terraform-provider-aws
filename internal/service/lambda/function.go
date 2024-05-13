@@ -167,7 +167,7 @@ func resourceFunction() *schema.Resource {
 			"filename": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 			},
 			"function_name": {
 				Type:         schema.TypeString,
@@ -206,7 +206,7 @@ func resourceFunction() *schema.Resource {
 			"image_uri": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 			},
 			"invoke_arn": {
 				Type:     schema.TypeString,
@@ -321,16 +321,16 @@ func resourceFunction() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Runtime](),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				ExactlyOneOf: []string{"filename", "image_uri", names.AttrS3Bucket},
 				RequiredWith: []string{"s3_key"},
 			},
 			"s3_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				RequiredWith: []string{"s3_bucket"},
+				RequiredWith: []string{names.AttrS3Bucket},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
@@ -496,7 +496,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	} else if v, ok := d.GetOk("image_uri"); ok {
 		input.Code.ImageUri = aws.String(v.(string))
 	} else {
-		input.Code.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+		input.Code.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 		input.Code.S3Key = aws.String(d.Get("s3_key").(string))
 		if v, ok := d.GetOk("s3_object_version"); ok {
 			input.Code.S3ObjectVersion = aws.String(v.(string))
@@ -961,7 +961,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		} else if v, ok := d.GetOk("image_uri"); ok {
 			input.ImageUri = aws.String(v.(string))
 		} else {
-			input.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+			input.S3Bucket = aws.String(d.Get(names.AttrS3Bucket).(string))
 			input.S3Key = aws.String(d.Get("s3_key").(string))
 			if v, ok := d.GetOk("s3_object_version"); ok {
 				input.S3ObjectVersion = aws.String(v.(string))
@@ -973,7 +973,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Error occurred while GetObject.") {
 				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
-				for _, key := range []string{"s3_bucket", "s3_key", "s3_object_version"} {
+				for _, key := range []string{names.AttrS3Bucket, "s3_key", "s3_object_version"} {
 					old, _ := d.GetChange(key)
 					d.Set(key, old)
 				}
@@ -1283,7 +1283,7 @@ func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff
 func needsFunctionCodeUpdate(d sdkv2.ResourceDiffer) bool {
 	return d.HasChange("filename") ||
 		d.HasChange("source_code_hash") ||
-		d.HasChange("s3_bucket") ||
+		d.HasChange(names.AttrS3Bucket) ||
 		d.HasChange("s3_key") ||
 		d.HasChange("s3_object_version") ||
 		d.HasChange("image_uri") ||

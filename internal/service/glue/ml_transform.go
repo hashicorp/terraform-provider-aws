@@ -164,7 +164,7 @@ func ResourceMLTransform() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -287,7 +287,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
-	if err := d.Set("schema", flattenMLTransformSchemaColumns(output.Schema)); err != nil {
+	if err := d.Set(names.AttrSchema, flattenMLTransformSchemaColumns(output.Schema)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 

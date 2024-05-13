@@ -85,7 +85,7 @@ func testAccLoadBalancer_basic(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_path", "/"),
 					resource.TestCheckResourceAttr(resourceName, "instance_port", "80"),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 				),
 			},
 			{

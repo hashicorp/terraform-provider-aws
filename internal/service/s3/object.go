@@ -110,7 +110,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{names.AttrSource, "content_base64"},
@@ -118,7 +118,7 @@ func resourceObject() *schema.Resource {
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{names.AttrSource, "content"},
+				ConflictsWith: []string{names.AttrSource, names.AttrContent},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -224,7 +224,7 @@ func resourceObject() *schema.Resource {
 			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
+				ConflictsWith: []string{names.AttrContent, "content_base64"},
 			},
 			"source_hash": {
 				Type:     schema.TypeString,
@@ -481,7 +481,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		body = strings.NewReader(v.(string))
 	} else if v, ok := d.GetOk("content_base64"); ok {
 		// We can't do streaming decoding here (with base64.NewDecoder) because
@@ -652,7 +652,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"content_encoding",
 		"content_language",
 		names.AttrContentType,
-		"content",
+		names.AttrContent,
 		"etag",
 		names.AttrKMSKeyID,
 		"metadata",

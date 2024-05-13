@@ -56,7 +56,7 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			}
 
 			if v.Resource.Database != nil {
-				d.Set("database", []any{flattenDatabaseResource(v.Resource.Database)})
+				d.Set(names.AttrDatabase, []any{flattenDatabaseResource(v.Resource.Database)})
 			}
 
 			if v.Resource.DataCellsFilter != nil {

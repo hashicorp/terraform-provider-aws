@@ -29,7 +29,7 @@ func dataSourceDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	} else {
 		d.Set(names.AttrARN, name)
 	}
-	d.Set("content", output.Content)
+	d.Set(names.AttrContent, output.Content)
 	d.Set("document_format", output.DocumentFormat)
 	d.Set("document_type", output.DocumentType)
 	d.Set("document_version", output.DocumentVersion)

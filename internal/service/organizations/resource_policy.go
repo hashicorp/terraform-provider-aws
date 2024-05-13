@@ -42,7 +42,7 @@ func ResourceResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -65,7 +65,7 @@ func resourceResourcePolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("content").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrContent).(string))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -105,10 +105,10 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrARN, policy.ResourcePolicySummary.Arn)
-	if policyToSet, err := verify.PolicyToSet(d.Get("content").(string), aws.StringValue(policy.Content)); err != nil {
+	if policyToSet, err := verify.PolicyToSet(d.Get(names.AttrContent).(string), aws.StringValue(policy.Content)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
-		d.Set("content", policyToSet)
+		d.Set(names.AttrContent, policyToSet)
 	}
 
 	return diags
@@ -119,7 +119,7 @@ func resourceResourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		policy, err := structure.NormalizeJsonString(d.Get("content").(string))
+		policy, err := structure.NormalizeJsonString(d.Get(names.AttrContent).(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

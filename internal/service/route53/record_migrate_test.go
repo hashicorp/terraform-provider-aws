@@ -77,8 +77,8 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				"weight":   "0",
-				"failover": "PRIMARY",
+				names.AttrWeight: "0",
+				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
 				"weighted_routing_policy.#":        "1",
@@ -90,7 +90,7 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_2": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"weight": "-1",
+				names.AttrWeight: "-1",
 			},
 			Expected: map[string]string{},
 		},

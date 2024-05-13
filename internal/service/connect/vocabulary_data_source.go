@@ -29,7 +29,7 @@ func DataSourceVocabulary() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	vocabulary := resp.Vocabulary
 
 	d.Set(names.AttrARN, vocabulary.Arn)
-	d.Set("content", vocabulary.Content)
+	d.Set(names.AttrContent, vocabulary.Content)
 	d.Set("failure_reason", vocabulary.FailureReason)
 	d.Set(names.AttrInstanceID, instanceID)
 	d.Set("language_code", vocabulary.LanguageCode)

@@ -184,7 +184,7 @@ func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terr
 		log.Printf("[WARN] %s", err)
 	}
 
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrDatabase), lfdata.Database)); err != nil {
 		log.Printf("[WARN] %s", err)
 	}
 

@@ -26,7 +26,7 @@ func dataSourceApprovalRuleTemplate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func dataSourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.ToString(result.ApprovalRuleTemplateName))
 	d.Set("approval_rule_template_id", result.ApprovalRuleTemplateId)
-	d.Set("content", result.ApprovalRuleTemplateContent)
+	d.Set(names.AttrContent, result.ApprovalRuleTemplateContent)
 	d.Set(names.AttrCreationDate, result.CreationDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, result.ApprovalRuleTemplateDescription)
 	d.Set("last_modified_date", result.LastModifiedDate.Format(time.RFC3339))

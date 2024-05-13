@@ -753,7 +753,7 @@ func physicalTableMapSchema() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -1760,7 +1760,7 @@ func expandDataSetRelationalTable(tfMap map[string]interface{}) *quicksight.Rela
 	if v, ok := tfMap[names.AttrName].(string); ok {
 		relationalTable.Name = aws.String(v)
 	}
-	if v, ok := tfMap["schema"].(string); ok {
+	if v, ok := tfMap[names.AttrSchema].(string); ok {
 		relationalTable.Schema = aws.String(v)
 	}
 
@@ -2517,7 +2517,7 @@ func flattenRelationalTable(apiObject *quicksight.RelationalTable) []interface{}
 		tfMap[names.AttrName] = aws.StringValue(apiObject.Name)
 	}
 	if apiObject.Schema != nil {
-		tfMap["schema"] = aws.StringValue(apiObject.Schema)
+		tfMap[names.AttrSchema] = aws.StringValue(apiObject.Schema)
 	}
 
 	return []interface{}{tfMap}

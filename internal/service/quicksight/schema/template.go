@@ -98,7 +98,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
 									},
 								},
 							},
@@ -1431,7 +1431,7 @@ func flattenTextBoxes(apiObject []*quicksight.SheetTextBox) []interface{} {
 			"sheet_text_box_id": aws.StringValue(config.SheetTextBoxId),
 		}
 		if config.Content != nil {
-			tfMap["content"] = aws.StringValue(config.Content)
+			tfMap[names.AttrContent] = aws.StringValue(config.Content)
 		}
 		tfList = append(tfList, tfMap)
 	}

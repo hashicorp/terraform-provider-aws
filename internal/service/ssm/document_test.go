@@ -526,7 +526,7 @@ mainSteps:
 				Config: testAccDocumentConfig_formatYAML(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content", content1+"\n"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
 			},
@@ -539,7 +539,7 @@ mainSteps:
 				Config: testAccDocumentConfig_formatYAML(rName, content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content", content2+"\n"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content2+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
 			},

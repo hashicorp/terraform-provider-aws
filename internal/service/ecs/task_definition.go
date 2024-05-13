@@ -404,7 +404,7 @@ func ResourceTaskDefinition() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"domain": {
+												names.AttrDomain: {
 													Type:     schema.TypeString,
 													ForceNew: true,
 													Required: true,
@@ -745,7 +745,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 			if v, ok := m["credentials_parameter"]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
-			if v, ok := m["domain"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrDomain]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
 		}
@@ -1038,7 +1038,7 @@ func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSx
 		auth.CredentialsParameter = aws.String(v)
 	}
 
-	if v, ok := authconfig["domain"].(string); ok && v != "" {
+	if v, ok := authconfig[names.AttrDomain].(string); ok && v != "" {
 		auth.Domain = aws.String(v)
 	}
 
@@ -1174,7 +1174,7 @@ func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 			m["credentials_parameter"] = aws.StringValue(v)
 		}
 		if v := config.Domain; v != nil {
-			m["domain"] = aws.StringValue(v)
+			m[names.AttrDomain] = aws.StringValue(v)
 		}
 	}
 

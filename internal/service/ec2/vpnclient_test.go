@@ -42,7 +42,7 @@ func TestAccClientVPNEndpoint_serial(t *testing.T) {
 		"AuthorizationRule": {
 			"basic":              testAccClientVPNAuthorizationRule_basic,
 			"groups":             testAccClientVPNAuthorizationRule_groups,
-			"subnets":            testAccClientVPNAuthorizationRule_subnets,
+			names.AttrSubnets:    testAccClientVPNAuthorizationRule_subnets,
 			"disappears":         testAccClientVPNAuthorizationRule_disappears,
 			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
 		},

@@ -62,7 +62,7 @@ func resourceWorkspace() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -114,7 +114,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "waiting for Prometheus Workspace (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &amp.CreateLoggingConfigurationInput{
 			LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
@@ -160,11 +160,11 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	loggingConfiguration, err := findLoggingConfigurationByWorkspaceID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		d.Set("logging_configuration", nil)
+		d.Set(names.AttrLoggingConfiguration, nil)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
 	} else {
-		if err := d.Set("logging_configuration", []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
+		if err := d.Set(names.AttrLoggingConfiguration, []interface{}{flattenLoggingConfigurationMetadata(loggingConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 		}
 	}
@@ -193,11 +193,11 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("logging_configuration") {
-		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if d.HasChange(names.AttrLoggingConfiguration) {
+		if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			if o, _ := d.GetChange("logging_configuration"); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
+			if o, _ := d.GetChange(names.AttrLoggingConfiguration); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
 				input := &amp.CreateLoggingConfigurationInput{
 					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
 					WorkspaceId: aws.String(d.Id()),

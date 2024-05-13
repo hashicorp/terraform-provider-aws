@@ -88,7 +88,7 @@ func resourceDocument() *schema.Resource {
 					},
 				},
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -229,7 +229,7 @@ func resourceDocument() *schema.Resource {
 					}
 				}
 
-				if d.HasChange("content") {
+				if d.HasChange(names.AttrContent) {
 					if err := d.SetNewComputed("default_version"); err != nil {
 						return err
 					}
@@ -259,7 +259,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get(names.AttrName).(string)
 	input := &ssm.CreateDocumentInput{
-		Content:        aws.String(d.Get("content").(string)),
+		Content:        aws.String(d.Get(names.AttrContent).(string)),
 		DocumentFormat: awstypes.DocumentFormat(d.Get("document_format").(string)),
 		DocumentType:   awstypes.DocumentType(d.Get("document_type").(string)),
 		Name:           aws.String(name),
@@ -372,7 +372,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) content: %s", d.Id(), err)
 		}
 
-		d.Set("content", output.Content)
+		d.Set(names.AttrContent, output.Content)
 	}
 
 	{
@@ -459,9 +459,9 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Update for schema version 1.x is not allowed.
 		isSchemaVersion1, _ := regexp.MatchString(`^1[.][0-9]$`, d.Get("schema_version").(string))
 
-		if d.HasChange("content") || !isSchemaVersion1 {
+		if d.HasChange(names.AttrContent) || !isSchemaVersion1 {
 			input := &ssm.UpdateDocumentInput{
-				Content:         aws.String(d.Get("content").(string)),
+				Content:         aws.String(d.Get(names.AttrContent).(string)),
 				DocumentFormat:  awstypes.DocumentFormat(d.Get("document_format").(string)),
 				DocumentVersion: aws.String(d.Get("default_version").(string)),
 				Name:            aws.String(d.Id()),

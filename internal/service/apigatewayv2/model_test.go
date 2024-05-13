@@ -53,7 +53,7 @@ func TestAccAPIGatewayV2Model_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema),
 				),
 			},
 			{
@@ -152,7 +152,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{
@@ -162,7 +162,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema2),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema2),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func TestAccAPIGatewayV2Model_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "text/x-json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "schema", schema1),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, names.AttrSchema, schema1),
 				),
 			},
 			{

@@ -32,7 +32,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_format", resourceName, "document_format"),
 					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "content", resourceName, "content"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContent, resourceName, names.AttrContent),
 				),
 			},
 			{
@@ -43,7 +43,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "document_format", "YAML"),
 					resource.TestCheckResourceAttr(dataSourceName, "document_version", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "document_type", resourceName, "document_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "content"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrContent),
 				),
 			},
 		},
