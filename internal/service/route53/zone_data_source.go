@@ -33,7 +33,7 @@ func DataSourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -180,7 +180,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
 	d.Set(names.AttrName, NormalizeZoneName(aws.StringValue(hostedZoneFound.Name)))
-	d.Set("comment", hostedZoneFound.Config.Comment)
+	d.Set(names.AttrComment, hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)
 	d.Set("resource_record_set_count", hostedZoneFound.ResourceRecordSetCount)
