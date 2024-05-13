@@ -234,7 +234,7 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -496,7 +496,7 @@ func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		endpoints := flex.FlattenStringMap(ds.Endpoints)
-		if err := d.Set(names.AttrEndpoint, endpoints["vpc"]); err != nil {
+		if err := d.Set(names.AttrEndpoint, endpoints[names.AttrVPC]); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
