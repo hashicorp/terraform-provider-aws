@@ -12,6 +12,7 @@ var (
 	ResourceMaintenanceWindow       = resourceMaintenanceWindow
 	ResourceMaintenanceWindowTarget = resourceMaintenanceWindowTarget
 	ResourceMaintenanceWindowTask   = resourceMaintenanceWindowTask
+	ResourceParameter               = resourceParameter
 	ResourcePatchBaseline           = resourcePatchBaseline
 
 	FindActivationByID                    = findActivationByID
@@ -20,5 +21,6 @@ var (
 	FindMaintenanceWindowByID             = findMaintenanceWindowByID
 	FindMaintenanceWindowTargetByID       = findMaintenanceWindowTargetByID
 	FindMaintenanceWindowTaskByTwoPartKey = findMaintenanceWindowTaskByTwoPartKey
+	FindParameterByName                   = findParameterByName
 	FindPatchBaselineByID                 = findPatchBaselineByID
 )

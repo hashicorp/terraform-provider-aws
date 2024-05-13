@@ -101,7 +101,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Maintenance Window Task",
 		},
 		{
-			Factory:  ResourceParameter,
+			Factory:  resourceParameter,
 			TypeName: "aws_ssm_parameter",
 			Name:     "Parameter",
 			Tags: &types.ServicePackageResourceTags{
