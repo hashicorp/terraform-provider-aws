@@ -23,7 +23,7 @@ func dataSourceONTAPStorageVirtualMachines() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: storageVirtualMachineFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -53,7 +53,7 @@ func dataSourceONTAPStorageVirtualMachinesRead(ctx context.Context, d *schema.Re
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(svms, func(svm *fsx.StorageVirtualMachine) string {
 		return aws.StringValue(svm.StorageVirtualMachineId)
 	}))
 

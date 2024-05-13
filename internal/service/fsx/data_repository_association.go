@@ -100,7 +100,7 @@ func resourceDataRepositoryAssociation() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(1, 512000),
 			},
-			"s3": {
+			names.AttrS3: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -181,7 +181,7 @@ func resourceDataRepositoryAssociationCreate(ctx context.Context, d *schema.Reso
 		input.ImportedFileChunkSize = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("s3"); ok {
+	if v, ok := d.GetOk(names.AttrS3); ok {
 		input.S3 = expandDataRepositoryAssociationS3(v.([]interface{}))
 	}
 
@@ -222,7 +222,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 	d.Set(names.AttrFileSystemID, association.FileSystemId)
 	d.Set("file_system_path", association.FileSystemPath)
 	d.Set("imported_file_chunk_size", association.ImportedFileChunkSize)
-	if err := d.Set("s3", flattenDataRepositoryAssociationS3(association.S3)); err != nil {
+	if err := d.Set(names.AttrS3, flattenDataRepositoryAssociationS3(association.S3)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3: %s", err)
 	}
 
@@ -245,8 +245,8 @@ func resourceDataRepositoryAssociationUpdate(ctx context.Context, d *schema.Reso
 			input.ImportedFileChunkSize = aws.Int64(int64(d.Get("imported_file_chunk_size").(int)))
 		}
 
-		if d.HasChange("s3") {
-			input.S3 = expandDataRepositoryAssociationS3(d.Get("s3").([]interface{}))
+		if d.HasChange(names.AttrS3) {
+			input.S3 = expandDataRepositoryAssociationS3(d.Get(names.AttrS3).([]interface{}))
 		}
 
 		_, err := conn.UpdateDataRepositoryAssociationWithContext(ctx, input)
