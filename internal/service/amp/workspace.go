@@ -41,14 +41,14 @@ func resourceWorkspace() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			// Once set, alias cannot be unset.
-			customdiff.ForceNewIfChange("alias", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrAlias, func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != "" && new.(string) == ""
 			}),
 			verify.SetTagsDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -94,7 +94,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags: getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		input.Alias = aws.String(v.(string))
 	}
 
@@ -151,7 +151,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Prometheus Workspace (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alias", ws.Alias)
+	d.Set(names.AttrAlias, ws.Alias)
 	arn := aws.ToString(ws.Arn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrKMSKeyARN, ws.KmsKeyArn)
@@ -176,9 +176,9 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
-	if d.HasChange("alias") {
+	if d.HasChange(names.AttrAlias) {
 		input := &amp.UpdateWorkspaceAliasInput{
-			Alias:       aws.String(d.Get("alias").(string)),
+			Alias:       aws.String(d.Get(names.AttrAlias).(string)),
 			WorkspaceId: aws.String(d.Id()),
 		}
 

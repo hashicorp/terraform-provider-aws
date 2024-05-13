@@ -137,7 +137,7 @@ func ResourceTargetGroup() *schema.Resource {
 							},
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -429,7 +429,7 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"ip_address_type":                apiObject.IpAddressType,
+		names.AttrIPAddressType:          apiObject.IpAddressType,
 		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
 		names.AttrProtocol:               apiObject.Protocol,
 		"protocol_version":               apiObject.ProtocolVersion,
@@ -518,7 +518,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 

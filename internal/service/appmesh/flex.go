@@ -1038,7 +1038,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 					mFormat := vFormat[0].(map[string]interface{})
 
-					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+					if vJsonFormatRefs, ok := mFormat[names.AttrJSON].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
 						jsonFormatRefs := []*appmesh.JsonFormatRef{}
 						for _, vJsonFormatRef := range vJsonFormatRefs {
 							mJsonFormatRef := &appmesh.JsonFormatRef{
@@ -1864,7 +1864,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 							vJsons = append(vJsons, mJson)
 						}
 
-						mFormat["json"] = vJsons
+						mFormat[names.AttrJSON] = vJsons
 					}
 
 					if text := format.Text; text != nil {

@@ -80,7 +80,7 @@ func resourceEventDataStore() *schema.Resource {
 											ValidateFunc: validation.StringLenBetween(1, 2048),
 										},
 									},
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,

@@ -27,7 +27,7 @@ func DataSourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				StateFunc: func(v interface{}) string {
@@ -42,11 +42,11 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn(ctx)
 
-	email := d.Get("email").(string)
+	email := d.Get(names.AttrEmail).(string)
 	email = strings.TrimSuffix(email, ".")
 
 	d.SetId(email)
-	d.Set("email", email)
+	d.Set(names.AttrEmail, email)
 
 	readOpts := &ses.GetIdentityVerificationAttributesInput{
 		Identities: []*string{

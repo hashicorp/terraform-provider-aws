@@ -220,7 +220,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "redshift_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "retry_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "run_command_targets.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sagemaker_pipeline_target.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_target.#", "0"),
@@ -289,7 +289,7 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 				Config: testAccTargetConfig_busName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 				),
@@ -324,7 +324,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				Config: testAccTargetConfig_busARN(ruleName, originEventBusName, targetID, destinationEventBusName, sdkacctest.RandomWithPrefix("tf-acc-test-target"), sdkacctest.RandomWithPrefix("tf-acc-test-target")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", destinationEventBusName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "event_bus_name", "events", regexache.MustCompile(fmt.Sprintf("event-bus/%s", originEventBusName))),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
@@ -359,7 +359,7 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 				Config: testAccTargetConfig_missingID(ruleName, snsTopicName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "target_id"),
 				),
@@ -393,7 +393,7 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 				Config: testAccTargetConfig_retryPolicyDlc(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
@@ -433,7 +433,7 @@ func TestAccEventsTarget_full(t *testing.T) {
 				Config: testAccTargetConfig_full(ruleName, targetID, ssmDocumentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", targetID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, kinesisStreamResourceName, names.AttrARN),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "input", `{"source": ["aws.cloudtrail"]}`),
@@ -1150,7 +1150,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 				Config: testAccTargetConfig_partnerBus(rName, busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRule, rName),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 					resource.TestCheckResourceAttr(resourceName, "target_id", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, snsTopicResourceName, names.AttrARN),
@@ -1209,7 +1209,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *types.Target) re
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+		output, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
 		if err != nil {
 			return err
@@ -1230,7 +1230,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"])
+			_, err := tfevents.FindTargetByThreePartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1254,7 +1254,7 @@ func testAccTargetImportStateIdFunc(resourceName string) resource.ImportStateIdF
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"]), nil
 	}
 }
 
@@ -1265,7 +1265,7 @@ func testAccTargetNoBusNameImportStateIdFunc(resourceName string) resource.Impor
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["rule"], rs.Primary.Attributes["target_id"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrRule], rs.Primary.Attributes["target_id"]), nil
 	}
 }
 

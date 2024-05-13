@@ -61,7 +61,7 @@ func DataSourceProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -114,7 +114,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("distributor", pvs.Distributor)
 	d.Set("has_default_path", pvs.HasDefaultPath)
 	d.Set(names.AttrName, pvs.Name)
-	d.Set("owner", pvs.Owner)
+	d.Set(names.AttrOwner, pvs.Owner)
 	d.Set(names.AttrStatus, output.ProductViewDetail.Status)
 	d.Set("support_description", pvs.SupportDescription)
 	d.Set("support_email", pvs.SupportEmail)

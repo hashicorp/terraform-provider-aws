@@ -172,7 +172,7 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdc",
-						"iops":               "100",
+						names.AttrIOPS:       "100",
 						"volume_size":        "10",
 						"volume_type":        "io1",
 					}),

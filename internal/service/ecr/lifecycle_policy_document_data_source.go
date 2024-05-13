@@ -37,12 +37,12 @@ func (d *lifecyclePolicyDocumentDataSource) Metadata(_ context.Context, request 
 func (d *lifecyclePolicyDocumentDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"json": schema.StringAttribute{
+			names.AttrJSON: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"rule": schema.ListNestedBlock{
+			names.AttrRule: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[lifecyclePolicyDocumentRule](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),

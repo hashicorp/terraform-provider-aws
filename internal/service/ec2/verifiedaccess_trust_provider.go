@@ -91,13 +91,13 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 							Required:  true,
 							Sensitive: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:         schema.TypeString,
 							ForceNew:     true,
 							Optional:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
 						},
-						"scope": {
+						names.AttrScope: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -305,10 +305,10 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []int
 		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 	if v := apiObject.Issuer; v != nil {
-		tfMap["issuer"] = aws.ToString(v)
+		tfMap[names.AttrIssuer] = aws.ToString(v)
 	}
 	if v := apiObject.Scope; v != nil {
-		tfMap["scope"] = aws.ToString(v)
+		tfMap[names.AttrScope] = aws.ToString(v)
 	}
 	if v := apiObject.TokenEndpoint; v != nil {
 		tfMap["token_endpoint"] = aws.ToString(v)
@@ -350,10 +350,10 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 	if v, ok := tfMap["client_secret"].(string); ok && v != "" {
 		apiObject.ClientSecret = aws.String(v)
 	}
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		apiObject.Issuer = aws.String(v)
 	}
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
 	if v, ok := tfMap["token_endpoint"].(string); ok && v != "" {
@@ -373,7 +373,7 @@ func expandModifyVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 
 	apiObject := &types.ModifyVerifiedAccessTrustProviderOidcOptions{}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		apiObject.Scope = aws.String(v)
 	}
 

@@ -406,7 +406,7 @@ func TestAccWAFRegionalWebACL_logging(t *testing.T) {
 // Calculates the index which isn't static because ruleId is generated as part of the test
 func computeWebACLRuleIndex(ruleId **string, priority int, ruleType string, actionType string, idx *int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		ruleResource := tfwafregional.ResourceWebACL().SchemaMap()["rule"].Elem.(*schema.Resource)
+		ruleResource := tfwafregional.ResourceWebACL().SchemaMap()[names.AttrRule].Elem.(*schema.Resource)
 		actionMap := map[string]interface{}{
 			names.AttrType: actionType,
 		}

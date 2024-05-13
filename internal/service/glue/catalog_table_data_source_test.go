@@ -34,7 +34,7 @@ func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDatabaseName, resourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, "owner", resourceName, "owner"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrOwner, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrParameters, resourceName, names.AttrParameters),
 					resource.TestCheckResourceAttrPair(datasourceName, "partition_keys", resourceName, "partition_keys"),
 					resource.TestCheckResourceAttrPair(datasourceName, "retention", resourceName, "retention"),

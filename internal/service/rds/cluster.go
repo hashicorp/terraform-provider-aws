@@ -271,7 +271,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -1039,7 +1039,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists("iops"); ok {
+		if v, ok := d.GetOkExists(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -1214,7 +1214,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		iamRoleARNs = append(iamRoleARNs, aws.StringValue(v.RoleArn))
 	}
 	d.Set("iam_roles", iamRoleARNs)
-	d.Set("iops", dbc.Iops)
+	d.Set(names.AttrIOPS, dbc.Iops)
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 
 	// Note: the following attributes are not returned by the API
@@ -1386,8 +1386,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
 
-		if d.HasChange("iops") {
-			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		if d.HasChange(names.AttrIOPS) {
+			input.Iops = aws.Int64(int64(d.Get(names.AttrIOPS).(int)))
 		}
 
 		if d.HasChange("manage_master_user_password") {

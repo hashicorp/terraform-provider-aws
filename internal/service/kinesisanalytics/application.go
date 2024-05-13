@@ -294,7 +294,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -560,7 +560,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -1621,7 +1621,7 @@ func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFor
 			recordFormat.RecordFormatType = aws.String(kinesisanalytics.RecordFormatTypeCsv)
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &kinesisanalytics.JSONMappingParameters{}
 
 			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
@@ -1964,7 +1964,7 @@ func flattenSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interfac
 					"record_row_path": aws.StringValue(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters["json"] = []interface{}{mJsonMappingParameters}
+				mMappingParameters[names.AttrJSON] = []interface{}{mJsonMappingParameters}
 			}
 
 			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}

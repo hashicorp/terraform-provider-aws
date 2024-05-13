@@ -235,7 +235,7 @@ func labelMatchStatementSchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric, underscore, hyphen, and colon characters"),
 					),
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.LabelMatchScope](),
@@ -299,7 +299,7 @@ func sizeConstraintSchema() *schema.Schema {
 					ValidateDiagFunc: enum.Validate[awstypes.ComparisonOperator](),
 				},
 				"field_to_match": fieldToMatchSchema(),
-				"size": {
+				names.AttrSize: {
 					Type:         schema.TypeInt,
 					Required:     true,
 					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
@@ -1516,7 +1516,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"json": {
+				names.AttrJSON: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,

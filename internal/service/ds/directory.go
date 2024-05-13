@@ -56,7 +56,7 @@ func ResourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -157,7 +157,7 @@ func ResourceDirectory() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"size": {
+			names.AttrSize: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -259,7 +259,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendFromErr(diags, fmt.Errorf("creating Directory Service %s Directory (%s): %w", creator.TypeName(), name, err))
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		if err := createAlias(ctx, conn, d.Id(), v.(string)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -297,7 +297,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set("access_url", dir.AccessUrl)
-	d.Set("alias", dir.Alias)
+	d.Set(names.AttrAlias, dir.Alias)
 	if dir.ConnectSettings != nil {
 		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
@@ -321,7 +321,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta int
 		d.Set("security_group_id", dir.VpcSettings.SecurityGroupId)
 	}
 	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
+	d.Set(names.AttrSize, dir.Size)
 	d.Set(names.AttrType, dir.Type)
 	if dir.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
@@ -411,7 +411,7 @@ func (c adConnectorCreator) Create(ctx context.Context, conn *directoryservice.D
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("size"); ok {
+	if v, ok := d.GetOk(names.AttrSize); ok {
 		input.Size = aws.String(v.(string))
 	} else {
 		// Matching previous behavior of Default: "Large" for Size attribute.
@@ -490,7 +490,7 @@ func (c simpleADCreator) Create(ctx context.Context, conn *directoryservice.Dire
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("size"); ok {
+	if v, ok := d.GetOk(names.AttrSize); ok {
 		input.Size = aws.String(v.(string))
 	} else {
 		// Matching previous behavior of Default: "Large" for Size attribute.

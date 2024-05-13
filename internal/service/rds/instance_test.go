@@ -77,7 +77,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "0"),
 					resource.TestCheckResourceAttr(resourceName, "license_model", "general-public-license"),
 					resource.TestCheckResourceAttr(resourceName, "listener_endpoint.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
@@ -1258,7 +1258,7 @@ func TestAccRDSInstance_ReplicateSourceDB_iops(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -1290,7 +1290,7 @@ func TestAccRDSInstance_ReplicateSourceDB_allocatedStorageAndIops(t *testing.T) 
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "220"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "2200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "2200"),
 				),
 			},
 		},
@@ -2620,7 +2620,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -2653,7 +2653,7 @@ func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
 				),
 			},
 		},
@@ -5829,7 +5829,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5852,7 +5852,7 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5882,7 +5882,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5905,7 +5905,7 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5935,7 +5935,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5958,7 +5958,7 @@ func TestAccRDSInstance_Storage_gp3SQLServer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5988,7 +5988,7 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -5997,7 +5997,7 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6027,7 +6027,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6036,7 +6036,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "600"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6066,7 +6066,7 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6075,7 +6075,7 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "13000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6105,7 +6105,7 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 125),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6114,7 +6114,7 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 				Config: testAccInstanceConfig_Storage_throughputSSE(rName, 4201, 126),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "4201"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "4201"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "126"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),
@@ -6144,7 +6144,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "200"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp2"),
 				),
@@ -6167,7 +6167,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "300"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "3000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
 				),

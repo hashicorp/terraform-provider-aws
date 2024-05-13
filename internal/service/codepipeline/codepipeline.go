@@ -172,7 +172,7 @@ func resourcePipeline() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"owner": {
+									names.AttrOwner: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.ActionOwner](),
@@ -855,7 +855,7 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.OutputArtifacts = expandOutputArtifacts(v)
 	}
 
-	if v, ok := tfMap["owner"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
 		apiObject.ActionTypeId.Owner = types.ActionOwner(v)
 	}
 
@@ -1303,7 +1303,7 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 
 	if apiObject := apiObject.ActionTypeId; apiObject != nil {
 		tfMap["category"] = apiObject.Category
-		tfMap["owner"] = apiObject.Owner
+		tfMap[names.AttrOwner] = apiObject.Owner
 
 		if v := apiObject.Provider; v != nil {
 			actionProvider = aws.ToString(v)

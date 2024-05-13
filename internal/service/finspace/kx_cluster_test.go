@@ -221,7 +221,7 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
-						"size":         "1200",
+						names.AttrSize: "1200",
 						names.AttrType: "CACHE_250",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
@@ -259,7 +259,7 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
-						"size":         "6000",
+						names.AttrSize: "6000",
 						names.AttrType: "CACHE_12",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{

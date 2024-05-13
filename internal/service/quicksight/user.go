@@ -47,7 +47,7 @@ func ResourceUser() *schema.Resource {
 					ForceNew: true,
 				},
 
-				"email": {
+				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
@@ -121,7 +121,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	createOpts := &quicksight.RegisterUserInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Email:        aws.String(d.Get("email").(string)),
+		Email:        aws.String(d.Get(names.AttrEmail).(string)),
 		IdentityType: aws.String(d.Get("identity_type").(string)),
 		Namespace:    aws.String(namespace),
 		UserRole:     aws.String(d.Get("user_role").(string)),
@@ -176,7 +176,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, resp.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("email", resp.User.Email)
+	d.Set(names.AttrEmail, resp.User.Email)
 	d.Set(names.AttrNamespace, namespace)
 	d.Set("user_role", resp.User.Role)
 	d.Set(names.AttrUserName, resp.User.UserName)
@@ -195,7 +195,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	updateOpts := &quicksight.UpdateUserInput{
 		AwsAccountId: aws.String(awsAccountID),
-		Email:        aws.String(d.Get("email").(string)),
+		Email:        aws.String(d.Get(names.AttrEmail).(string)),
 		Namespace:    aws.String(namespace),
 		Role:         aws.String(d.Get("user_role").(string)),
 		UserName:     aws.String(userName),

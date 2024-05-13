@@ -47,7 +47,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
 					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "owner", "ägare"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "ägare"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.disable_template_validation", "true"),

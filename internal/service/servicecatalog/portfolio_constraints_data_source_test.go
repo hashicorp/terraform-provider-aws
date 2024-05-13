@@ -30,7 +30,7 @@ func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *tes
 					resource.TestCheckResourceAttr(dataSourceName, "details.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.constraint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.description", resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.owner", resourceName, "owner"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.owner", resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.portfolio_id", resourceName, "portfolio_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.product_id", resourceName, "product_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.type", resourceName, names.AttrType),

@@ -316,7 +316,7 @@ func resourceEventSourceMapping() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.SourceAccessType](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -1078,7 +1078,7 @@ func expandSourceAccessConfiguration(tfMap map[string]interface{}) *awstypes.Sou
 		apiObject.Type = awstypes.SourceAccessType(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		apiObject.URI = aws.String(v)
 	}
 
@@ -1121,7 +1121,7 @@ func flattenSourceAccessConfiguration(apiObject *awstypes.SourceAccessConfigurat
 	}
 
 	if v := apiObject.URI; v != nil {
-		tfMap["uri"] = aws.ToString(v)
+		tfMap[names.AttrURI] = aws.ToString(v)
 	}
 
 	return tfMap

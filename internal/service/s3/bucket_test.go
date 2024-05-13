@@ -78,7 +78,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
 						"permissions.#": "1",
 						names.AttrType:  "CanonicalUser",
-						"uri":           "",
+						names.AttrURI:   "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),

@@ -99,7 +99,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -216,7 +216,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		input.IpAddressType = aws.String(v.(string))
 	}
 
@@ -319,7 +319,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("dns_options", nil)
 	}
-	d.Set("ip_address_type", vpce.IpAddressType)
+	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
 	d.Set(names.AttrOwnerID, vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
@@ -377,7 +377,7 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	if d.HasChanges("dns_options", "ip_address_type", names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", names.AttrSubnetIDs) {
+	if d.HasChanges("dns_options", names.AttrIPAddressType, names.AttrPolicy, "private_dns_enabled", names.AttrSecurityGroupIDs, "route_table_ids", names.AttrSubnetIDs) {
 		privateDNSEnabled := d.Get("private_dns_enabled").(bool)
 		input := &ec2.ModifyVpcEndpointInput{
 			VpcEndpointId: aws.String(d.Id()),
@@ -396,8 +396,8 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 
-		if d.HasChange("ip_address_type") {
-			input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+		if d.HasChange(names.AttrIPAddressType) {
+			input.IpAddressType = aws.String(d.Get(names.AttrIPAddressType).(string))
 		}
 
 		if d.HasChange("private_dns_enabled") {

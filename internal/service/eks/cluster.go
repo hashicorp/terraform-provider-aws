@@ -156,7 +156,7 @@ func resourceCluster() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -1031,7 +1031,7 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"issuer": aws.ToString(oidc.Issuer),
+		names.AttrIssuer: aws.ToString(oidc.Issuer),
 	}
 
 	return []map[string]interface{}{m}

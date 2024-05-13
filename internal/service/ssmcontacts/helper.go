@@ -13,7 +13,7 @@ import (
 
 func setContactResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.GetContactOutput) error { //nolint:unparam
 	d.Set(names.AttrARN, getContactOutput.ContactArn)
-	d.Set("alias", getContactOutput.Alias)
+	d.Set(names.AttrAlias, getContactOutput.Alias)
 	d.Set(names.AttrType, getContactOutput.Type)
 	d.Set(names.AttrDisplayName, getContactOutput.DisplayName)
 

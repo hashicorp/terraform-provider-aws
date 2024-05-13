@@ -116,7 +116,7 @@ func ResourceKxCluster() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
@@ -291,7 +291,7 @@ func ResourceKxCluster() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(
 								enum.Slice(types.KxSavedownStorageTypeSds01), true),
 						},
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
@@ -325,7 +325,7 @@ func ResourceKxCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -910,7 +910,7 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 		a.Type = types.KxSavedownStorageType(v)
 	}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -942,7 +942,7 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 		a.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		a.IpAddressType = types.IPAddressType(v)
 	}
 
@@ -976,7 +976,7 @@ func expandCacheStorageConfiguration(tfMap map[string]interface{}) *types.KxCach
 		a.Type = &v
 	}
 
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -1269,7 +1269,7 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 	}
 
 	if v := aws.ToInt32(apiObject.Size); v >= 10 && v <= 16000 {
-		m["size"] = v
+		m[names.AttrSize] = v
 	}
 
 	if v := apiObject.VolumeName; v != nil {
@@ -1299,7 +1299,7 @@ func flattenVPCConfiguration(apiObject *types.VpcConfiguration) []interface{} {
 	}
 
 	if v := apiObject.IpAddressType; v != "" {
-		m["ip_address_type"] = string(v)
+		m[names.AttrIPAddressType] = string(v)
 	}
 
 	return []interface{}{m}
@@ -1339,7 +1339,7 @@ func flattenCacheStorageConfiguration(apiObject *types.KxCacheStorageConfigurati
 	}
 
 	if v := apiObject.Size; v != nil {
-		m["size"] = aws.ToInt32(v)
+		m[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	return m

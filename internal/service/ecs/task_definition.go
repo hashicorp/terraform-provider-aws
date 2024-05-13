@@ -319,7 +319,7 @@ func ResourceTaskDefinition() *schema.Resource {
 										ForceNew: true,
 										Optional: true,
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -946,7 +946,7 @@ func expandVolumesDockerVolume(configList []interface{}) *ecs.DockerVolumeConfig
 	config := configList[0].(map[string]interface{})
 	dockerVol := &ecs.DockerVolumeConfiguration{}
 
-	if v, ok := config["scope"].(string); ok && v != "" {
+	if v, ok := config[names.AttrScope].(string); ok && v != "" {
 		dockerVol.Scope = aws.String(v)
 	}
 
@@ -1078,7 +1078,7 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	m := make(map[string]interface{})
 
 	if v := config.Scope; v != nil {
-		m["scope"] = aws.StringValue(v)
+		m[names.AttrScope] = aws.StringValue(v)
 	}
 
 	if v := config.Autoprovision; v != nil {

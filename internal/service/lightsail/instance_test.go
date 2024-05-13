@@ -186,7 +186,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 				Config: testAccInstanceConfig_IPAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 				Config: testAccInstanceConfig_IPAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 				),
 			},
 		},

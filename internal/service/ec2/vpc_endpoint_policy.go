@@ -45,7 +45,7 @@ func ResourceVPCEndpointPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceVPCEndpointPolicyPut(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get("vpc_endpoint_id").(string)
+	endpointID := d.Get(names.AttrVPCEndpointID).(string)
 	req := &ec2.ModifyVpcEndpointInput{
 		VpcEndpointId: aws.String(endpointID),
 	}
@@ -110,7 +110,7 @@ func resourceVPCEndpointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("vpc_endpoint_id", d.Id())
+	d.Set(names.AttrVPCEndpointID, d.Id())
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.StringValue(vpce.PolicyDocument))
 

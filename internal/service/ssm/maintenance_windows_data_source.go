@@ -39,7 +39,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 					},
 				},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -87,7 +87,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", windowIDs)
+	d.Set(names.AttrIDs, windowIDs)
 
 	return diags
 }

@@ -44,7 +44,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrFilter: customFiltersSchema(),
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"size": {
+			names.AttrSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -143,11 +143,11 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrAvailabilityZone, volume.AvailabilityZone)
 	d.Set(names.AttrEncrypted, volume.Encrypted)
-	d.Set("iops", volume.Iops)
+	d.Set(names.AttrIOPS, volume.Iops)
 	d.Set(names.AttrKMSKeyID, volume.KmsKeyId)
 	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 	d.Set("outpost_arn", volume.OutpostArn)
-	d.Set("size", volume.Size)
+	d.Set(names.AttrSize, volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("throughput", volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)

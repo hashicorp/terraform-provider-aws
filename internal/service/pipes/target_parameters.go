@@ -47,7 +47,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"size": {
+										names.AttrSize: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(2, 10000),
@@ -462,7 +462,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 5,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field": {
+										names.AttrField: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
@@ -917,7 +917,7 @@ func expandBatchArrayProperties(tfMap map[string]interface{}) *types.BatchArrayP
 
 	apiObject := &types.BatchArrayProperties{}
 
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		apiObject.Size = aws.Int32(int32(v))
 	}
 
@@ -1617,7 +1617,7 @@ func expandPlacementStrategy(tfMap map[string]interface{}) *types.PlacementStrat
 
 	apiObject := &types.PlacementStrategy{}
 
-	if v, ok := tfMap["field"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 		apiObject.Field = aws.String(v)
 	}
 
@@ -1962,7 +1962,7 @@ func flattenBatchArrayProperties(apiObject *types.BatchArrayProperties) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Size; v != nil {
-		tfMap["size"] = aws.ToInt32(v)
+		tfMap[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -2490,7 +2490,7 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Field; v != nil {
-		tfMap["field"] = aws.ToString(v)
+		tfMap[names.AttrField] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {

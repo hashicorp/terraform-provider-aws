@@ -54,7 +54,7 @@ func resourceWebACL() *schema.Resource {
 				scope := idParts[2]
 				d.SetId(id)
 				d.Set(names.AttrName, name)
-				d.Set("scope", scope)
+				d.Set(names.AttrScope, scope)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -106,7 +106,7 @@ func resourceWebACL() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-				"rule": {
+				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -152,7 +152,7 @@ func resourceWebACL() *schema.Resource {
 						},
 					},
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ForceNew:         true,
@@ -189,8 +189,8 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
 		Name:              aws.String(name),
-		Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
-		Scope:             awstypes.Scope(d.Get("scope").(string)),
+		Rules:             expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Scope:             awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:              getTagsIn(ctx),
 		VisibilityConfig:  expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
@@ -225,7 +225,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findWebACLByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
@@ -259,8 +259,8 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, webACL.Name)
-	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get("rule").(*schema.Set).List()))
-	if err := d.Set("rule", flattenWebACLRules(rules)); err != nil {
+	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List()))
+	if err := d.Set(names.AttrRule, flattenWebACLRules(rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 	d.Set("token_domains", aws.StringSlice(webACL.TokenDomains))
@@ -277,11 +277,11 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		aclID := d.Id()
 		aclName := d.Get(names.AttrName).(string)
-		aclScope := d.Get("scope").(string)
+		aclScope := d.Get(names.AttrScope).(string)
 		aclLockToken := d.Get("lock_token").(string)
 		// Find the AWS managed ShieldMitigationRuleGroup group rule if existent and add it into the set of rules to update
 		// so that the provider will not remove the Shield rule when changes are applied to the WebACL.
-		rules := expandWebACLRules(d.Get("rule").(*schema.Set).List())
+		rules := expandWebACLRules(d.Get(names.AttrRule).(*schema.Set).List())
 		if sr := findShieldRule(rules); len(sr) == 0 {
 			output, err := findWebACLByThreePartKey(ctx, conn, aclID, aclName, aclScope)
 			if err != nil {
@@ -355,7 +355,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	aclId := d.Id()
 	aclName := d.Get(names.AttrName).(string)
-	aclScope := d.Get("scope").(string)
+	aclScope := d.Get(names.AttrScope).(string)
 	aclLockToken := d.Get("lock_token").(string)
 
 	input := &wafv2.DeleteWebACLInput{

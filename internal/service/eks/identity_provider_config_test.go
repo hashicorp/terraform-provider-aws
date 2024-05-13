@@ -113,7 +113,7 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
 				),
 			},
