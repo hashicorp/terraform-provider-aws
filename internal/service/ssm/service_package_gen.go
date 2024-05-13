@@ -45,8 +45,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Parameter",
 		},
 		{
-			Factory:  DataSourceParametersByPath,
+			Factory:  dataSourceParametersByPath,
 			TypeName: "aws_ssm_parameters_by_path",
+			Name:     "Parameters By Path",
 		},
 		{
 			Factory:  DataSourcePatchBaseline,
