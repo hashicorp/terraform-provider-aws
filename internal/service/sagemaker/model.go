@@ -303,14 +303,14 @@ func ResourceModel() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							MaxItems: 16,
@@ -359,7 +359,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createOpts.ExecutionRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		createOpts.VpcConfig = expandVPCConfigRequest(v.([]interface{}))
 	}
 
@@ -393,7 +393,7 @@ func expandVPCConfigRequest(l []interface{}) *sagemaker.VpcConfig {
 
 	return &sagemaker.VpcConfig{
 		SecurityGroupIds: flex.ExpandStringSet(m[names.AttrSecurityGroupIDs].(*schema.Set)),
-		Subnets:          flex.ExpandStringSet(m["subnets"].(*schema.Set)),
+		Subnets:          flex.ExpandStringSet(m[names.AttrSubnets].(*schema.Set)),
 	}
 }
 
@@ -429,7 +429,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting container: %s", err)
 	}
 
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(model.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(model.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -447,7 +447,7 @@ func flattenVPCConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[string]inter
 
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringSet(vpcConfig.SecurityGroupIds),
-		"subnets":                  flex.FlattenStringSet(vpcConfig.Subnets),
+		names.AttrSubnets:          flex.FlattenStringSet(vpcConfig.Subnets),
 	}
 
 	return []map[string]interface{}{m}

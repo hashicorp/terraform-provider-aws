@@ -85,7 +85,7 @@ func resourceScheduledAction() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -130,7 +130,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 			input.EndTime = aws.Time(t)
 		}
 		input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
-		input.Schedule = aws.String(d.Get("schedule").(string))
+		input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		if v, ok := d.GetOk("start_time"); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
 			input.StartTime = aws.Time(t)
@@ -144,8 +144,8 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange("scalable_target_action") {
 			input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
 		}
-		if d.HasChange("schedule") {
-			input.Schedule = aws.String(d.Get("schedule").(string))
+		if d.HasChange(names.AttrSchedule) {
+			input.Schedule = aws.String(d.Get(names.AttrSchedule).(string))
 		}
 		if v, ok := d.GetOk("start_time"); ok {
 			t, _ := time.Parse(time.RFC3339, v.(string))
@@ -197,7 +197,7 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("scalable_target_action", flattenScalableTargetAction(scheduledAction.ScalableTargetAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting scalable_target_action: %s", err)
 	}
-	d.Set("schedule", scheduledAction.Schedule)
+	d.Set(names.AttrSchedule, scheduledAction.Schedule)
 	if scheduledAction.StartTime != nil {
 		d.Set("start_time", scheduledAction.StartTime.Format(time.RFC3339))
 	}

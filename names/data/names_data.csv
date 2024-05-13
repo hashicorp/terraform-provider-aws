@@ -379,8 +379,8 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
 wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
-waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
-waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
+waf,waf,waf,waf,,waf,,,WAF,WAF,,,2,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
+waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,,2,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support
 ,,,,,wavelength,ec2,,Wavelength,,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,,,x,,,,,,Part of EC2
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,,2,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,,,Budgets,DescribeBudgets,"AccountId: aws_sdkv2.String(""012345678901"")",

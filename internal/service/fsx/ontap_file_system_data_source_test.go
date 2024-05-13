@@ -35,7 +35,7 @@ func TestAccFSxONTAPFileSystemDataSource_Id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "daily_automatic_backup_start_time", resourceName, "daily_automatic_backup_start_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "deployment_type", resourceName, "deployment_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "disk_iops_configuration.#", resourceName, "disk_iops_configuration.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDNSName, resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint_ip_address_range", resourceName, "endpoint_ip_address_range"),
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoints.#", resourceName, "endpoints.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ha_pairs", resourceName, "ha_pairs"),

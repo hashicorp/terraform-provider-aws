@@ -207,7 +207,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "group_name", "default"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
@@ -476,7 +476,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 				Config: testAccScheduleConfig_groupName(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttrPair(resourceName, "group_name", "aws_scheduler_schedule_group.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, "aws_scheduler_schedule_group.test", names.AttrName),
 				),
 			},
 			{
@@ -1009,12 +1009,12 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "2",
 						"capacity_provider": "test1",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "0",
 						"capacity_provider": "test2",
-						"weight":            "50",
+						names.AttrWeight:    "50",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
@@ -1026,8 +1026,8 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111111"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
-						names.AttrType: "memberOf",
-						"expression":   "attribute:ecs.os-family in [LINUX]",
+						names.AttrType:       "memberOf",
+						names.AttrExpression: "attribute:ecs.os-family in [LINUX]",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_strategy.*", map[string]string{
 						names.AttrType: "binpack",
@@ -1056,7 +1056,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              "3",
 						"capacity_provider": "test3",
-						"weight":            "100",
+						names.AttrWeight:    "100",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "true"),

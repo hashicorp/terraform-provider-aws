@@ -42,7 +42,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 12 * * ? *)",
+						names.AttrSchedule:  "cron(0 12 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -136,13 +136,13 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule1Name,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 12 * * ? *)",
+						names.AttrSchedule:  "cron(0 12 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule2Name,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 6 * * ? *)",
+						names.AttrSchedule:  "cron(0 6 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -162,19 +162,19 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule1Name,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 6 * * ? *)",
+						names.AttrSchedule:  "cron(0 6 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule2Name,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 12 * * ? *)",
+						names.AttrSchedule:  "cron(0 12 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rule3Name,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 18 * * ? *)",
+						names.AttrSchedule:  "cron(0 18 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -189,7 +189,7 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 12 * * ? *)",
+						names.AttrSchedule:  "cron(0 12 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -308,7 +308,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
-						"schedule":                 "cron(0 12 * * ? *)",
+						names.AttrSchedule:         "cron(0 12 * * ? *)",
 						"lifecycle.#":              "0",
 						"recovery_point_tags.%":    "3",
 						"recovery_point_tags.Name": rName,
@@ -332,7 +332,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
-						"schedule":                 "cron(0 12 * * ? *)",
+						names.AttrSchedule:         "cron(0 12 * * ? *)",
 						"lifecycle.#":              "0",
 						"recovery_point_tags.%":    "3",
 						"recovery_point_tags.Name": rName,
@@ -351,7 +351,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":         rName,
 						"target_vault_name": rName,
-						"schedule":          "cron(0 12 * * ? *)",
+						names.AttrSchedule:  "cron(0 12 * * ? *)",
 						"lifecycle.#":       "0",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -633,7 +633,7 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"rule_name":                rName,
 						"target_vault_name":        rName,
-						"schedule":                 "cron(0 12 * * ? *)",
+						names.AttrSchedule:         "cron(0 12 * * ? *)",
 						"enable_continuous_backup": "true",
 						"lifecycle.#":              "1",
 						"lifecycle.0.delete_after": "35",

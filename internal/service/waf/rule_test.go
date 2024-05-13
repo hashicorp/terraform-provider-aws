@@ -9,21 +9,21 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.Rule
+	var v awstypes.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +38,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`rule/.+`)),
 				),
 			},
@@ -53,7 +53,7 @@ func TestAccWAFRule_basic(t *testing.T) {
 
 func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after waf.Rule
+	var before, after awstypes.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	wafRuleNewName := fmt.Sprintf("wafrulenew%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
@@ -70,7 +70,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleName),
 				),
 			},
 			{
@@ -79,7 +79,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, wafRuleNewName),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", wafRuleNewName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, wafRuleNewName),
 				),
 			},
 		},
@@ -88,7 +88,7 @@ func TestAccWAFRule_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v waf.Rule
+	var v awstypes.Rule
 	wafRuleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 
@@ -112,10 +112,10 @@ func TestAccWAFRule_disappears(t *testing.T) {
 
 func TestAccWAFRule_changePredicates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var ipset waf.IPSet
-	var byteMatchSet waf.ByteMatchSet
+	var ipset awstypes.IPSet
+	var byteMatchSet awstypes.ByteMatchSet
 
-	var before, after waf.Rule
+	var before, after awstypes.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 
@@ -157,9 +157,9 @@ func TestAccWAFRule_changePredicates(t *testing.T) {
 
 func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var geoMatchSet waf.GeoMatchSet
+	var geoMatchSet awstypes.GeoMatchSet
 
-	var v waf.Rule
+	var v awstypes.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 
@@ -190,7 +190,7 @@ func TestAccWAFRule_geoMatchSetPredicate(t *testing.T) {
 // retry behavior when removed from a WebACL
 func TestAccWAFRule_webACL(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.Rule
+	var rule awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_waf_rule.test"
 
@@ -215,7 +215,7 @@ func TestAccWAFRule_webACL(t *testing.T) {
 
 func TestAccWAFRule_noPredicates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.Rule
+	var rule awstypes.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 
@@ -239,7 +239,7 @@ func TestAccWAFRule_noPredicates(t *testing.T) {
 
 func TestAccWAFRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule waf.Rule
+	var rule awstypes.Rule
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_rule.wafrule"
 
@@ -254,7 +254,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -265,7 +265,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -277,7 +277,7 @@ func TestAccWAFRule_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", ruleName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -299,63 +299,52 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetRuleWithContext(ctx, &waf.GetRuleInput{
-				RuleId: aws.String(rs.Primary.ID),
-			})
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			_, err := tfwaf.FindRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading WAF Rule (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if resp != nil && resp.Rule != nil {
-				return fmt.Errorf("WAF Rule (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WAF Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRuleExists(ctx context.Context, n string, v *waf.Rule) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF Rule ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetRuleWithContext(ctx, &waf.GetRuleInput{
-			RuleId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfwaf.FindRuleByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.Rule.RuleId == rs.Primary.ID {
-			*v = *resp.Rule
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WAF Rule (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
 	input := &waf.ListRulesInput{}
 
-	_, err := conn.ListRulesWithContext(ctx, input)
+	_, err := conn.ListRules(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -511,7 +500,7 @@ resource "aws_waf_rule" "wafrule" {
   }
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -540,8 +529,8 @@ resource "aws_waf_rule" "wafrule" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
@@ -585,6 +574,9 @@ resource "aws_waf_web_acl" "test" {
       type = "BLOCK"
     }
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 `, rName)
 }
@@ -597,6 +589,9 @@ resource "aws_waf_web_acl" "test" {
 
   default_action {
     type = "ALLOW"
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 `, rName)

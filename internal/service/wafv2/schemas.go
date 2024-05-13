@@ -503,7 +503,7 @@ func visibilityConfigSchema() *schema.Schema {
 					Type:     schema.TypeBool,
 					Required: true,
 				},
-				"metric_name": {
+				names.AttrMetricName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
@@ -766,7 +766,7 @@ func customResponseBodySchema() *schema.Schema {
 						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
-				"content": {
+				names.AttrContent: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 10240),

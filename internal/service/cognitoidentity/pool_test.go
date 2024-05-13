@@ -270,12 +270,12 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
-						"client_id":               "7lhlkkfbfb4q5kpp90urffao",
+						names.AttrClientID:        "7lhlkkfbfb4q5kpp90urffao",
 						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
-						"client_id":               "7lhlkkfbfb4q5kpp90urffao",
+						names.AttrClientID:        "7lhlkkfbfb4q5kpp90urffao",
 						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Ab129faBb", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),
@@ -294,7 +294,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_identity_providers.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cognito_identity_providers.*", map[string]string{
-						"client_id":               "6lhlkkfbfb4q5kpp90urffae",
+						names.AttrClientID:        "6lhlkkfbfb4q5kpp90urffae",
 						"provider_name":           fmt.Sprintf("cognito-idp.%[1]s.%[2]s/%[1]s_Zr231apJu", acctest.Region(), acctest.PartitionDNSSuffix()),
 						"server_side_token_check": "false",
 					}),

@@ -93,7 +93,7 @@ func testAccServer_basic(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`server/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrCertificate, ""),
-					resource.TestCheckResourceAttr(resourceName, "domain", "S3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "S3"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrEndpoint, "server.transfer", regexache.MustCompile(`s-[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_details.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "PUBLIC"),
@@ -200,7 +200,7 @@ func testAccServer_domain(t *testing.T) {
 				Config: testAccServerConfig_domain(rName, "EFS"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "EFS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "EFS"),
 				),
 			},
 			{

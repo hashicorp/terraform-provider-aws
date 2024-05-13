@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -32,7 +32,7 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_waf_subscribed_rule_group.rulegroup"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.ServiceID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,21 +45,21 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 				Config: testAccSubscribedRuleGroupDataSourceConfig_name(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
-					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMetricName, metricName),
 				),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_metricName(metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
-					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMetricName, metricName),
 				),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_nameAndMetricName(ruleGroupName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, names.AttrName, ruleGroupName),
-					resource.TestCheckResourceAttr(datasourceName, "metric_name", metricName),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrMetricName, metricName),
 				),
 			},
 			{

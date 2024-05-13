@@ -386,7 +386,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -509,9 +509,9 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrConfiguration, crawler.Configuration)
 	d.Set(names.AttrDescription, crawler.Description)
 	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
-	d.Set("schedule", "")
+	d.Set(names.AttrSchedule, "")
 	if crawler.Schedule != nil {
-		d.Set("schedule", crawler.Schedule.ScheduleExpression)
+		d.Set(names.AttrSchedule, crawler.Schedule.ScheduleExpression)
 	}
 	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
@@ -660,7 +660,7 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
@@ -714,7 +714,7 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 		crawlerInput.Description = aws.String(description.(string))
 	}
 
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	} else {
 		crawlerInput.Schedule = aws.String("")

@@ -112,7 +112,7 @@ func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"weight": schema.Float64Attribute{
+									names.AttrWeight: schema.Float64Attribute{
 										Required: true,
 									},
 								},

@@ -76,7 +76,7 @@ func resourcePermission() *schema.Resource {
 				ValidateFunc: validBusName,
 				Default:      DefaultEventBusName,
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validatePermissionPrincipal,
@@ -102,7 +102,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -150,7 +150,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("event_bus_name", eventBusName)
 	switch principal := policyStatement.Principal.(type) {
 	case string:
-		d.Set("principal", principal)
+		d.Set(names.AttrPrincipal, principal)
 	case map[string]interface{}:
 		if v, ok := principal["AWS"].(string); ok {
 			if arn.IsARN(v) {
@@ -159,9 +159,9 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 
-				d.Set("principal", principalARN.AccountID)
+				d.Set(names.AttrPrincipal, principalARN.AccountID)
 			} else {
-				d.Set("principal", v)
+				d.Set(names.AttrPrincipal, v)
 			}
 		}
 	}
@@ -183,7 +183,7 @@ func resourcePermissionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		Condition:    expandCondition(d.Get("condition").([]interface{})),
 		EventBusName: aws.String(eventBusName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 

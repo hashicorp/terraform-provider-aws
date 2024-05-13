@@ -37,7 +37,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "inspector", regexache.MustCompile(`target/.+/template/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, "3600"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "rules_package_arns.#", "data.aws_inspector_rules_packages.available", "arns.#"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

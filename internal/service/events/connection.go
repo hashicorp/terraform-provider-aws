@@ -189,7 +189,7 @@ func resourceConnection() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"client_id": {
+													names.AttrClientID: {
 														Type:     schema.TypeString,
 														Required: true,
 														ValidateFunc: validation.All(
@@ -558,7 +558,7 @@ func expandCreateConnectionOAuthClientRequestParameters(config []interface{}) *t
 	oAuthClientRequestParameters := &types.CreateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["client_id"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
 		if val, ok := param["client_secret"].(string); ok && val != "" {
@@ -740,7 +740,7 @@ func flattenConnectionOAuthClientResponseParameters(oAuthClientRequestParameters
 
 	config := make(map[string]interface{})
 	if oAuthClientRequestParameters.ClientID != nil {
-		config["client_id"] = aws.ToString(oAuthClientRequestParameters.ClientID)
+		config[names.AttrClientID] = aws.ToString(oAuthClientRequestParameters.ClientID)
 	}
 
 	if v, ok := d.GetOk("auth_parameters.0.oauth.0.client_parameters.0.client_secret"); ok {
@@ -889,7 +889,7 @@ func expandUpdateConnectionOAuthClientRequestParameters(config []interface{}) *t
 	oAuthClientRequestParameters := &types.UpdateConnectionOAuthClientRequestParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		if val, ok := param["client_id"].(string); ok && val != "" {
+		if val, ok := param[names.AttrClientID].(string); ok && val != "" {
 			oAuthClientRequestParameters.ClientID = aws.String(val)
 		}
 		if val, ok := param["client_secret"].(string); ok && val != "" {

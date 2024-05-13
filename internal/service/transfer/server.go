@@ -67,7 +67,7 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -335,7 +335,7 @@ func resourceServerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.IdentityProviderDetails.DirectoryId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -490,7 +490,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	} else {
 		d.Set("directory_id", "")
 	}
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrDomain, output.Domain)
 	d.Set(names.AttrEndpoint, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)

@@ -150,7 +150,7 @@ func ResourceImageBuilder() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -227,7 +227,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ImageName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfig = expandImageBuilderVPCConfig(v.([]interface{}))
 	}
 
@@ -288,11 +288,11 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrName, imageBuilder.Name)
 	d.Set(names.AttrState, imageBuilder.State)
 	if imageBuilder.VpcConfig != nil {
-		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
+		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(imageBuilder.VpcConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 		}
 	} else {
-		d.Set("vpc_config", nil)
+		d.Set(names.AttrVPCConfig, nil)
 	}
 
 	return diags

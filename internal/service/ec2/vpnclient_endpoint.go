@@ -158,7 +158,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -343,7 +343,7 @@ func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("connection_log_options", nil)
 	}
 	d.Set(names.AttrDescription, ep.Description)
-	d.Set("dns_name", ep.DnsName)
+	d.Set(names.AttrDNSName, ep.DnsName)
 	d.Set("dns_servers", aws.StringValueSlice(ep.DnsServers))
 	d.Set(names.AttrSecurityGroupIDs, aws.StringValueSlice(ep.SecurityGroupIds))
 	if aws.StringValue(ep.SelfServicePortalUrl) != "" {

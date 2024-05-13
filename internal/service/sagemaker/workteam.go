@@ -60,7 +60,7 @@ func ResourceWorkteam() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -303,7 +303,7 @@ func expandWorkteamCognitoMemberDefinition(l []interface{}) *sagemaker.CognitoMe
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.CognitoMemberDefinition{
-		ClientId:  aws.String(m["client_id"].(string)),
+		ClientId:  aws.String(m[names.AttrClientID].(string)),
 		UserPool:  aws.String(m["user_pool"].(string)),
 		UserGroup: aws.String(m["user_group"].(string)),
 	}
@@ -317,9 +317,9 @@ func flattenWorkteamCognitoMemberDefinition(config *sagemaker.CognitoMemberDefin
 	}
 
 	m := map[string]interface{}{
-		"client_id":  aws.StringValue(config.ClientId),
-		"user_pool":  aws.StringValue(config.UserPool),
-		"user_group": aws.StringValue(config.UserGroup),
+		names.AttrClientID: aws.StringValue(config.ClientId),
+		"user_pool":        aws.StringValue(config.UserPool),
+		"user_group":       aws.StringValue(config.UserGroup),
 	}
 
 	return []map[string]interface{}{m}

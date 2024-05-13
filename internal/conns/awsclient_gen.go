@@ -163,6 +163,8 @@ import (
 	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	waf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/waf"
+	wafregional_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafregional"
 	wafv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
@@ -247,8 +249,6 @@ import (
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
-	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
-	wafregional_sdkv1 "github.com/aws/aws-sdk-go/service/wafregional"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1206,12 +1206,12 @@ func (c *AWSClient) VerifiedPermissionsClient(ctx context.Context) *verifiedperm
 	return errs.Must(client[*verifiedpermissions_sdkv2.Client](ctx, c, names.VerifiedPermissions, make(map[string]any)))
 }
 
-func (c *AWSClient) WAFConn(ctx context.Context) *waf_sdkv1.WAF {
-	return errs.Must(conn[*waf_sdkv1.WAF](ctx, c, names.WAF, make(map[string]any)))
+func (c *AWSClient) WAFClient(ctx context.Context) *waf_sdkv2.Client {
+	return errs.Must(client[*waf_sdkv2.Client](ctx, c, names.WAF, make(map[string]any)))
 }
 
-func (c *AWSClient) WAFRegionalConn(ctx context.Context) *wafregional_sdkv1.WAFRegional {
-	return errs.Must(conn[*wafregional_sdkv1.WAFRegional](ctx, c, names.WAFRegional, make(map[string]any)))
+func (c *AWSClient) WAFRegionalClient(ctx context.Context) *wafregional_sdkv2.Client {
+	return errs.Must(client[*wafregional_sdkv2.Client](ctx, c, names.WAFRegional, make(map[string]any)))
 }
 
 func (c *AWSClient) WAFV2Client(ctx context.Context) *wafv2_sdkv2.Client {

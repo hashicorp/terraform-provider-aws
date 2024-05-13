@@ -58,7 +58,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}
@@ -73,7 +73,7 @@ func TestValidIdentityProvidersClientID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validIdentityProvidersClientID(s, "client_id")
+		_, errors := validIdentityProvidersClientID(s, names.AttrClientID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito Identity Provider Client ID: %v", s, errors)
 		}

@@ -51,7 +51,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 		},
 	})
@@ -112,7 +112,7 @@ func TestAccDataSyncAgent_agentName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 		},
 	})
@@ -142,7 +142,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress},
 			},
 			{
 				Config: testAccAgentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -197,7 +197,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"activation_key", "ip_address", "private_link_ip"},
+				ImportStateVerifyIgnore: []string{"activation_key", names.AttrIPAddress, "private_link_ip"},
 			},
 		},
 	})

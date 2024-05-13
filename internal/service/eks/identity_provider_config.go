@@ -65,7 +65,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"client_id": {
+						names.AttrClientID: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -323,7 +323,7 @@ func expandOIDCIdentityProviderConfigRequest(tfMap map[string]interface{}) (stri
 
 	apiObject := &types.OidcIdentityProviderConfigRequest{}
 
-	if v, ok := tfMap["client_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
 
@@ -368,7 +368,7 @@ func flattenOIDCIdentityProviderConfig(apiObject *types.OidcIdentityProviderConf
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = aws.ToString(v)
+		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 
 	if v := apiObject.GroupsClaim; v != nil {

@@ -79,7 +79,7 @@ func resourceTableExport() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +129,7 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	s3Bucket := d.Get("s3_bucket").(string)
+	s3Bucket := d.Get(names.AttrS3Bucket).(string)
 	tableARN := d.Get("table_arn").(string)
 	input := &dynamodb.ExportTableToPointInTimeInput{
 		S3Bucket: aws.String(s3Bucket),
@@ -204,7 +204,7 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("item_count", desc.ItemCount)
 	d.Set("manifest_files_s3_key", desc.ExportManifest)
-	d.Set("s3_bucket", desc.S3Bucket)
+	d.Set(names.AttrS3Bucket, desc.S3Bucket)
 	d.Set("s3_bucket_owner", desc.S3BucketOwner)
 	d.Set("s3_prefix", desc.S3Prefix)
 	d.Set("s3_sse_algorithm", desc.S3SseAlgorithm)

@@ -111,7 +111,7 @@ func ResourceServiceQuota() *schema.Resource {
 								},
 							},
 						},
-						"metric_name": {
+						names.AttrMetricName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

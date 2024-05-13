@@ -80,7 +80,7 @@ func resourceReplicator() *schema.Resource {
 								},
 							},
 						},
-						"vpc_config": {
+						names.AttrVPCConfig: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -592,7 +592,7 @@ func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map
 	}
 
 	if v := apiObject.VpcConfig; v != nil {
-		tfMap["vpc_config"] = []interface{}{flattenKafkaClusterClientVPCConfig(v)}
+		tfMap[names.AttrVPCConfig] = []interface{}{flattenKafkaClusterClientVPCConfig(v)}
 	}
 
 	return tfMap
@@ -797,7 +797,7 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster { // nosemgr
 func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	apiObject := types.KafkaCluster{}
 
-	if v, ok := tfMap["vpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrVPCConfig].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.VpcConfig = expandKafkaClusterClientVPCConfig(v[0].(map[string]interface{}))
 	}
 

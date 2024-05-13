@@ -48,7 +48,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 					},
 				},
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,7 +125,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 	accelerator := results[0]
 	d.SetId(aws.ToString(accelerator.AcceleratorArn))
 	d.Set(names.AttrARN, accelerator.AcceleratorArn)
-	d.Set("dns_name", accelerator.DnsName)
+	d.Set(names.AttrDNSName, accelerator.DnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
 	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
 	d.Set("ip_address_type", accelerator.IpAddressType)
