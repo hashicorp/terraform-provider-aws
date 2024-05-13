@@ -140,3 +140,27 @@ func statusRouteTableV2(ctx context.Context, conn *ec2.Client, id string) retry.
 		return output, RouteTableStatusReady, nil
 	}
 }
+
+func statusRouteTableAssociationStateV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRouteTableAssociationByIDV2(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.AssociationState == nil {
+			// In ISO partitions AssociationState can be nil.
+			// If the association has been found then we assume it's associated.
+			state := awstypes.RouteTableAssociationStateCodeAssociated
+
+			return &awstypes.RouteTableAssociationState{State: state}, string(state), nil
+		}
+
+		return output.AssociationState, string(output.AssociationState.State), nil
+	}
+}

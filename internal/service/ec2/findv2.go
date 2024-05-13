@@ -668,3 +668,33 @@ func findRouteByPrefixListIDDestinationV2(ctx context.Context, conn *ec2.Client,
 		LastError: fmt.Errorf("Route in Route Table (%s) with Prefix List ID destination (%s) not found", routeTableID, prefixListID),
 	}
 }
+
+// findRouteTableAssociationByIDV2 returns the route table association corresponding to the specified identifier.
+// Returns NotFoundError if no route table association is found.
+func findRouteTableAssociationByIDV2(ctx context.Context, conn *ec2.Client, associationID string) (*awstypes.RouteTableAssociation, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.route-table-association-id": associationID,
+		}),
+	}
+
+	routeTable, err := findRouteTableV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, association := range routeTable.Associations {
+		if aws.ToString(association.RouteTableAssociationId) == associationID {
+			if association.AssociationState != nil {
+				if state := association.AssociationState.State; state == awstypes.RouteTableAssociationStateCodeDisassociated {
+					return nil, &retry.NotFoundError{Message: string(state)}
+				}
+			}
+
+			return &association, nil
+		}
+	}
+
+	return nil, &retry.NotFoundError{}
+}

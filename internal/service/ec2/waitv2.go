@@ -312,3 +312,67 @@ func waitRouteTableDeletedV2(ctx context.Context, conn *ec2.Client, id string, t
 
 	return nil, err
 }
+
+func waitRouteTableAssociationCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTableAssociationState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(types.RouteTableAssociationStateCodeAssociating),
+		Target:         enum.Slice(types.RouteTableAssociationStateCodeAssociated),
+		Refresh:        statusRouteTableAssociationStateV2(ctx, conn, id),
+		Timeout:        timeout,
+		NotFoundChecks: RouteTableAssociationCreatedNotFoundChecks,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RouteTableAssociationState); ok {
+		if output.State == types.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteTableAssociationDeletedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTableAssociationState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RouteTableAssociationStateCodeDisassociating, types.RouteTableAssociationStateCodeAssociated),
+		Target:  []string{},
+		Refresh: statusRouteTableAssociationStateV2(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RouteTableAssociationState); ok {
+		if output.State == types.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRouteTableAssociationUpdatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.RouteTableAssociationState, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.RouteTableAssociationStateCodeAssociating),
+		Target:  enum.Slice(types.RouteTableAssociationStateCodeAssociated),
+		Refresh: statusRouteTableAssociationStateV2(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.RouteTableAssociationState); ok {
+		if output.State == types.RouteTableAssociationStateCodeFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
