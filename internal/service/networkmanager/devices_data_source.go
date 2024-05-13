@@ -26,7 +26,7 @@ func DataSourceDevices() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", deviceIDs)
+	d.Set(names.AttrIDs, deviceIDs)
 
 	return diags
 }
