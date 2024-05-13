@@ -15,12 +15,14 @@ var (
 	ResourceParameter               = resourceParameter
 	ResourcePatchBaseline           = resourcePatchBaseline
 
-	FindActivationByID                    = findActivationByID
-	FindAssociationByID                   = findAssociationByID
-	FindDocumentByName                    = findDocumentByName
-	FindMaintenanceWindowByID             = findMaintenanceWindowByID
-	FindMaintenanceWindowTargetByID       = findMaintenanceWindowTargetByID
-	FindMaintenanceWindowTaskByTwoPartKey = findMaintenanceWindowTaskByTwoPartKey
-	FindParameterByName                   = findParameterByName
-	FindPatchBaselineByID                 = findPatchBaselineByID
+	FindActivationByID                                 = findActivationByID
+	FindAssociationByID                                = findAssociationByID
+	FindDefaultPatchBaselineByOperatingSystem          = findDefaultPatchBaselineByOperatingSystem
+	FindDefaultDefaultPatchBaselineIDByOperatingSystem = findDefaultDefaultPatchBaselineIDByOperatingSystem
+	FindDocumentByName                                 = findDocumentByName
+	FindMaintenanceWindowByID                          = findMaintenanceWindowByID
+	FindMaintenanceWindowTargetByID                    = findMaintenanceWindowTargetByID
+	FindMaintenanceWindowTaskByTwoPartKey              = findMaintenanceWindowTaskByTwoPartKey
+	FindParameterByName                                = findParameterByName
+	FindPatchBaselineByID                              = findPatchBaselineByID
 )
