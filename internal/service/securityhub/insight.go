@@ -114,7 +114,7 @@ func resourceInsight() *schema.Resource {
 						"resource_container_launched_at":                     dateFilterSchema(),
 						"resource_container_name":                            stringFilterSchema(),
 						"resource_details_other":                             mapFilterSchema(),
-						"resource_id":                                        stringFilterSchema(),
+						names.AttrResourceID:                                 stringFilterSchema(),
 						"resource_partition":                                 stringFilterSchema(),
 						"resource_region":                                    stringFilterSchema(),
 						"resource_tags":                                      mapFilterSchema(),
@@ -782,7 +782,7 @@ func expandSecurityFindingFilters(l []interface{}) *types.AwsSecurityFindingFilt
 		filters.ResourceDetailsOther = expandMapFilters(v.List())
 	}
 
-	if v, ok := tfMap["resource_id"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResourceID].(*schema.Set); ok && v.Len() > 0 {
 		filters.ResourceId = expandStringFilters(v.List())
 	}
 
@@ -1207,7 +1207,7 @@ func flattenSecurityFindingFilters(filters *types.AwsSecurityFindingFilters) []i
 		"resource_container_launched_at":                     flattenDateFilters(filters.ResourceContainerLaunchedAt),
 		"resource_container_name":                            flattenStringFilters(filters.ResourceContainerName),
 		"resource_details_other":                             flattenMapFilters(filters.ResourceDetailsOther),
-		"resource_id":                                        flattenStringFilters(filters.ResourceId),
+		names.AttrResourceID:                                 flattenStringFilters(filters.ResourceId),
 		"resource_partition":                                 flattenStringFilters(filters.ResourcePartition),
 		"resource_region":                                    flattenStringFilters(filters.ResourceRegion),
 		"resource_tags":                                      flattenMapFilters(filters.ResourceTags),
