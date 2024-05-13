@@ -611,7 +611,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpoint, acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "pending_confirmation", "true"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "email"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),
@@ -717,7 +717,7 @@ func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if output["Protocol"] == "email" {
+			if output["Protocol"] == names.AttrEmail {
 				continue
 			}
 
