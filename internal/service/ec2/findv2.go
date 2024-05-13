@@ -711,3 +711,22 @@ func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID st
 
 	return findRouteTableV2(ctx, conn, input)
 }
+
+// findVPNGatewayRoutePropagationExistsV2 returns NotFoundError if no route propagation for the specified VPN gateway is found.
+func findVPNGatewayRoutePropagationExistsV2(ctx context.Context, conn *ec2.Client, routeTableID, gatewayID string) error {
+	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+
+	if err != nil {
+		return err
+	}
+
+	for _, v := range routeTable.PropagatingVgws {
+		if aws.ToString(v.GatewayId) == gatewayID {
+			return nil
+		}
+	}
+
+	return &retry.NotFoundError{
+		LastError: fmt.Errorf("Route Table (%s) VPN Gateway (%s) route propagation not found", routeTableID, gatewayID),
+	}
+}
