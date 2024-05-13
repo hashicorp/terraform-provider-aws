@@ -33,7 +33,7 @@ func DataSourceComponents() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
@@ -48,7 +48,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &imagebuilder.ListComponentsInput{}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		input.Owner = aws.String(v.(string))
 	}
 

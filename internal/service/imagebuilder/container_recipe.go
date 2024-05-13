@@ -148,7 +148,7 @@ func ResourceContainerRecipe() *schema.Resource {
 													DiffSuppressFunc: nullable.DiffSuppressNullableBool,
 													ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 												},
-												"iops": {
+												names.AttrIOPS: {
 													Type:         schema.TypeInt,
 													Optional:     true,
 													ForceNew:     true,
@@ -225,7 +225,7 @@ func ResourceContainerRecipe() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -401,7 +401,7 @@ func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrKMSKeyID, containerRecipe.KmsKeyId)
 	d.Set(names.AttrName, containerRecipe.Name)
-	d.Set("owner", containerRecipe.Owner)
+	d.Set(names.AttrOwner, containerRecipe.Owner)
 	d.Set("parent_image", containerRecipe.ParentImage)
 	d.Set("platform", containerRecipe.Platform)
 
