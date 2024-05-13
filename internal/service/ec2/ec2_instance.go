@@ -279,13 +279,13 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -732,12 +732,12 @@ func ResourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -942,7 +942,7 @@ func ResourceInstance() *schema.Resource {
 func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not io1, io2, or gp3 and iops is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + "volume_type"
+	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
 	return (strings.ToLower(v) != ec2.VolumeTypeIo1 && strings.ToLower(v) != ec2.VolumeTypeIo2 && strings.ToLower(v) != ec2.VolumeTypeGp3) && new == "0"
 }
@@ -950,7 +950,7 @@ func iopsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 func throughputDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
 	// Suppress diff if volume_type is not gp3 and throughput is unset or configured as 0
 	i := strings.LastIndexByte(k, '.')
-	vt := k[:i+1] + "volume_type"
+	vt := k[:i+1] + names.AttrVolumeType
 	v := d.Get(vt).(string)
 	return strings.ToLower(v) != ec2.VolumeTypeGp3 && new == "0"
 }
@@ -2333,10 +2333,10 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd[names.AttrDeleteOnTermination] = aws.BoolValue(instanceBd.Ebs.DeleteOnTermination)
 		}
 		if vol.Size != nil {
-			bd["volume_size"] = aws.Int64Value(vol.Size)
+			bd[names.AttrVolumeSize] = aws.Int64Value(vol.Size)
 		}
 		if vol.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(vol.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(vol.VolumeType)
 		}
 		if vol.Iops != nil {
 			bd[names.AttrIOPS] = aws.Int64Value(vol.Iops)
@@ -2567,11 +2567,11 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
@@ -2641,11 +2641,11 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 				ebs.KmsKeyId = aws.String(bd[names.AttrKMSKeyID].(string))
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {

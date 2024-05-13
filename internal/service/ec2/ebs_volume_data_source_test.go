@@ -57,7 +57,7 @@ func TestAccEC2EBSVolumeDataSource_multipleFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSize, resourceName, names.AttrSize),
-					resource.TestCheckResourceAttr(dataSourceName, "volume_type", "gp2"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVolumeType, "gp2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},

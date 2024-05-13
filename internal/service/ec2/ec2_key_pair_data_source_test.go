@@ -81,7 +81,7 @@ func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "fingerprint", resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
-					resource.TestCheckResourceAttrWith(dataSource1Name, "public_key", func(v string) error {
+					resource.TestCheckResourceAttrWith(dataSource1Name, names.AttrPublicKey, func(v string) error {
 						if !tfec2.OpenSSHPublicKeysEqual(v, publicKey) {
 							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
 						}
