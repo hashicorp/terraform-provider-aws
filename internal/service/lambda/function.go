@@ -380,7 +380,7 @@ func resourceFunction() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      3,
@@ -477,7 +477,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Publish:      d.Get("publish").(bool),
 		Role:         aws.String(d.Get("role").(string)),
 		Tags:         getTagsIn(ctx),
-		Timeout:      aws.Int32(int32(d.Get("timeout").(int))),
+		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
 
 	if v, ok := d.GetOk("filename"); ok {
@@ -700,7 +700,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
-	d.Set("timeout", function.Timeout)
+	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode
@@ -887,8 +887,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SnapStart = expandSnapStart(d.Get("snap_start").([]interface{}))
 		}
 
-		if d.HasChange("timeout") {
-			input.Timeout = aws.Int32(int32(d.Get("timeout").(int)))
+		if d.HasChange(names.AttrTimeout) {
+			input.Timeout = aws.Int32(int32(d.Get(names.AttrTimeout).(int)))
 		}
 
 		if d.HasChange("tracing_config") {
@@ -1298,7 +1298,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
-		d.HasChange("timeout") ||
+		d.HasChange(names.AttrTimeout) ||
 		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||
 		d.HasChange("dead_letter_config") ||
