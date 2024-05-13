@@ -29,7 +29,7 @@ func DataSourceSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,7 +61,7 @@ func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.StringValue(resp.SelectionId))
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
 	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
 
 	if resp.BackupSelection.Resources != nil {
