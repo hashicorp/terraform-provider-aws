@@ -25,7 +25,7 @@ func DataSourcePoliciesForTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -59,7 +59,7 @@ func dataSourcePoliciesForTargetRead(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(targetID)
 
-	d.Set("ids", policyIDs)
+	d.Set(names.AttrIDs, policyIDs)
 
 	return diags
 }
