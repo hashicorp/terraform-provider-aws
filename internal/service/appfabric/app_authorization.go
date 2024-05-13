@@ -6,6 +6,7 @@ package appfabric
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,13 +32,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="App Authorization")
+// @Tags(identifierAttribute="arn")
 func newAppAuthorizationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appAuthorizationResource{}
 
@@ -65,23 +67,26 @@ func (r *appAuthorizationResource) Metadata(_ context.Context, request resource.
 func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"app_bundle_identifier": schema.StringAttribute{
-				Required: true,
-			},
-			"app_bundle_arn": framework.ARNAttributeComputedOnly(),
 			"app": schema.StringAttribute{
 				Required: true,
 			},
+			"app_bundle_arn": framework.ARNAttributeComputedOnly(),
+			"app_bundle_identifier": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"auth_type": schema.StringAttribute{
 				Required: true,
 			},
 			"auth_url": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrID:  framework.IDAttribute(),
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			// names.AttrTags:    tftags.TagsAttribute(),
-			// names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -89,12 +94,21 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"persona": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -105,19 +119,17 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 				CustomType: fwtypes.NewListNestedObjectTypeOf[credentialModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
-					// listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"api_key_credential": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[apiKeyCredentialModel](ctx),
-							Validators: []validator.List{
-								// listvalidator.SizeAtMost(1),
-							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"api_key": schema.StringAttribute{
-										Required: true,
+										Required:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -133,7 +145,8 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 										Required: true,
 									},
 									"client_secret": schema.StringAttribute{
-										Required: true,
+										Required:  true,
+										Sensitive: true,
 									},
 								},
 							},
@@ -192,7 +205,7 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	}
 
 	input.Credential = credential
-	// input.Tags = getTagsIn(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAppAuthorization(ctx, input)
 	if err != nil {
@@ -208,7 +221,7 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	data.AppAuthorizationArn = fwflex.StringToFramework(ctx, appAuth.AppAuthorizationArn)
 	data.setID()
 
-	_, err = waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationArn.ValueString(), data.AppBundleIdentifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	aAuth, err := waitAppAuthorizationCreated(ctx, conn, data.AppAuthorizationArn.ValueString(), data.AppBundleIdentifier.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for App Fabric App Authorization (%s) to be created", data.AppAuthorizationArn.ValueString()), err.Error())
 
@@ -216,12 +229,13 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	}
 
 	// Set values for unknowns after creation is complete.
-	data.AppBundleArn = fwflex.StringToFramework(ctx, appAuth.AppBundleArn)
-	data.Status = fwflex.StringValueToFramework(ctx, appAuth.Status)
-	data.Persona = fwflex.StringValueToFramework(ctx, appAuth.Persona)
-	data.AuthUrl = fwflex.StringToFramework(ctx, appAuth.AuthUrl)
-	data.CreatedAt = fwflex.TimeToFramework(ctx, appAuth.CreatedAt)
-	data.UpdatedAt = fwflex.TimeToFramework(ctx, appAuth.UpdatedAt)
+	data.AppBundleArn = fwflex.StringToFramework(ctx, aAuth.AppBundleArn)
+	data.Status = fwflex.StringValueToFramework(ctx, aAuth.Status)
+	data.Persona = fwflex.StringValueToFramework(ctx, aAuth.Persona)
+	data.AuthUrl = fwflex.StringToFramework(ctx, aAuth.AuthUrl)
+	data.parseAuthUrl()
+	data.CreatedAt = fwflex.TimeToFramework(ctx, aAuth.CreatedAt)
+	data.UpdatedAt = fwflex.TimeToFramework(ctx, aAuth.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -251,7 +265,7 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading App Fabric App Authorization ID  (%s)", data.AppAuthorizationArn.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading App Fabric AppAuthorization ID  (%s)", data.AppAuthorizationArn.ValueString()), err.Error())
 
 		return
 	}
@@ -260,6 +274,10 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	//Seting it because of the dynamic nature of Auth Url
+	data.AuthUrl = fwflex.StringToFramework(ctx, output.AuthUrl)
+	data.parseAuthUrl()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -275,54 +293,62 @@ func (r *appAuthorizationResource) Update(ctx context.Context, request resource.
 		return
 	}
 
-	if err := new.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
 	conn := r.Meta().AppFabricClient(ctx)
 
-	if !old.App.Equal(new.App) ||
-		!old.AuthType.Equal(new.AuthType) ||
-		!old.Credential.Equal(new.Credential) ||
-		!old.Tenant.Equal(new.Tenant) ||
-		// !old.Status.Equal(new.Status) ||
+	// Check if updates are necessary based on the changed attributes
+	if !old.Credential.Equal(new.Credential) || !old.Tenant.Equal(new.Tenant) ||
+		!new.Tags.Equal(old.Tags) ||
 		!old.AppBundleIdentifier.Equal(new.AppBundleIdentifier) {
-		// !old.Tags.Equal(new.Tags) {
-
 		var credentialsData []credentialModel
 		response.Diagnostics.Append(new.Credential.ElementsAs(ctx, &credentialsData, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		credential, d := expandCredentialsValue(ctx, credentialsData)
-		response.Diagnostics.Append(d...)
-		if response.Diagnostics.HasError() {
+		credential, diags := expandCredentialsValue(ctx, credentialsData)
+		response.Diagnostics.Append(diags...)
+		if diags.HasError() {
 			return
 		}
 
 		input := &appfabric.UpdateAppAuthorizationInput{
-			AppAuthorizationIdentifier: new.AppAuthorizationArn.ValueStringPointer(),
-			AppBundleIdentifier:        new.AppBundleIdentifier.ValueStringPointer(),
+			AppAuthorizationIdentifier: aws.String(new.AppAuthorizationArn.ValueString()),
+			AppBundleIdentifier:        aws.String(new.AppBundleIdentifier.ValueString()),
 		}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
-		// Additional fields.
+
 		input.Credential = credential
 
 		_, err := conn.UpdateAppAuthorization(ctx, input)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.AppFabric, create.ErrActionUpdating, ResNameAppAuthorization, new.ID.String(), err),
-				err.Error(),
+				"Failed to update App Fabric App Authorization",
+				fmt.Sprintf("Error updating AppAuthorization with ID %s: %s", new.AppAuthorizationArn.String(), err.Error()),
 			)
 			return
 		}
-		_, err = waitAppAuthorizationUpdated(ctx, conn, new.AppAuthorizationArn.ValueString(), new.AppBundleIdentifier.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
+		appAuth, err := waitAppAuthorizationUpdated(ctx, conn, new.AppAuthorizationArn.ValueString(), new.AppBundleIdentifier.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			response.Diagnostics.AddError(
+				"Failed to fetch App Fabric App Authorization after update",
+				fmt.Sprintf("Error reading AppAuthorization with ARN %s post update: %s", new.AppAuthorizationArn.ValueString(), err.Error()),
+			)
+			return
+		}
+
+		// Set values for unknowns after creation is complete.
+		new.Status = fwflex.StringValueToFramework(ctx, appAuth.Status)
+		new.UpdatedAt = fwflex.TimeToFramework(ctx, appAuth.UpdatedAt)
+		new.AppBundleArn = fwflex.StringToFramework(ctx, appAuth.AppBundleArn)
+		new.Persona = fwflex.StringValueToFramework(ctx, appAuth.Persona)
+		new.AuthUrl = fwflex.StringToFramework(ctx, appAuth.AuthUrl)
+		new.parseAuthUrl()
+	} else {
+		new.UpdatedAt = old.UpdatedAt
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -361,6 +387,10 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 
 func (r *appAuthorizationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, resp)
 }
 
 func waitAppAuthorizationCreated(ctx context.Context, conn *appfabric.Client, appAuthorizationArn, appBundleIdentifier string, timeout time.Duration) (*awstypes.AppAuthorization, error) {
@@ -502,108 +532,23 @@ func expandAppAuthorizationOauth2Credential(ctx context.Context, oauth2Credentia
 	}
 }
 
-// func flattenAppAuthorizationCredentialsModel(ctx context.Context, apiObject awstypes.Credential) (types.Object, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	result := types.ObjectUnknown(credentialModelAttrTypes)
-
-// 	obj := map[string]attr.Value{}
-
-// 	switch v := apiObject.(type) {
-// 	case *awstypes.CredentialMemberApiKeyCredential:
-// 		credentials, d := flattenAppAuthorizationCredentialsResourceModel(ctx, &v.Value, nil, "apiKey")
-// 		diags.Append(d...)
-// 		if d.HasError() {
-// 			return result, diags
-// 		}
-// 		obj = map[string]attr.Value{
-// 			"api_key_credential": credentials,
-// 			"oauth2_credential":  types.ListNull(oauth2CredentialModelAttrTypes),
-// 		}
-// 	case *awstypes.CredentialMemberOauth2Credential:
-// 		credentials, d := flattenAppAuthorizationCredentialsResourceModel(ctx, nil, &v.Value, "oath2")
-// 		diags.Append(d...)
-// 		if d.HasError() {
-// 			return result, diags
-// 		}
-// 		obj = map[string]attr.Value{
-// 			"api_key_credential": types.ListNull(apiKeyCredentialModelAttrTypes),
-// 			"oauth2_credential":  credentials,
-// 		}
-// 	}
-
-// 	result, d := types.ObjectValue(credentialModelAttrTypes, obj)
-// 	diags.Append(d...)
-
-// 	return result, diags
-// }
-
-// func flattenAppAuthorizationCredentialsResourceModel(ctx context.Context, apiKeyApiObject *awstypes.ApiKeyCredential, oath2ApiObject *awstypes.Oauth2Credential, credentialType string) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	var elemType types.ObjectType
-// 	var obj map[string]attr.Value
-// 	var objVal basetypes.ObjectValue
-
-// 	if credentialType == "apiKey" {
-// 		var d diag.Diagnostics
-// 		elemType = types.ObjectType{AttrTypes: apiKeyModelAttrTypes}
-// 		obj = map[string]attr.Value{
-// 			"api_key": fwflex.StringToFramework(ctx, apiKeyApiObject.ApiKey),
-// 		}
-// 		objVal, d = types.ObjectValue(apiKeyModelAttrTypes, obj)
-// 		diags.Append(d...)
-// 	} else if credentialType == "oath2" {
-// 		var d diag.Diagnostics
-// 		elemType = types.ObjectType{AttrTypes: oauth2ModelAttrTypes}
-// 		obj = map[string]attr.Value{
-// 			"client_id":     fwflex.StringToFramework(ctx, oath2ApiObject.ClientId),
-// 			"client_secret": fwflex.StringToFramework(ctx, oath2ApiObject.ClientSecret),
-// 		}
-// 		objVal, d = types.ObjectValue(oauth2ModelAttrTypes, obj)
-// 		diags.Append(d...)
-// 	}
-
-// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-// 	diags.Append(d...)
-
-// 	return listVal, diags
-// }
-
-// var (
-// 	apiKeyModelAttrTypes = map[string]attr.Type{
-// 		"api_key": types.StringType,
-// 	}
-
-// 	oauth2ModelAttrTypes = map[string]attr.Type{
-// 		"client_id":     types.StringType,
-// 		"client_secret": types.StringType,
-// 	}
-
-// 	apiKeyCredentialModelAttrTypes = types.ObjectType{AttrTypes: apiKeyModelAttrTypes}
-// 	oauth2CredentialModelAttrTypes = types.ObjectType{AttrTypes: oauth2ModelAttrTypes}
-
-// 	credentialModelAttrTypes = map[string]attr.Type{
-// 		"api_key_credential": types.ListType{ElemType: apiKeyCredentialModelAttrTypes},
-// 		"oauth2_credential":  types.ListType{ElemType: oauth2CredentialModelAttrTypes},
-// 	}
-// )
-
 type appAuthorizationResourceModel struct {
-	AppAuthorizationArn types.String                                     `tfsdk:"arn"`
-	AppBundleIdentifier types.String                                     `tfsdk:"app_bundle_identifier"`
 	App                 types.String                                     `tfsdk:"app"`
-	ID                  types.String                                     `tfsdk:"id"`
+	AppAuthorizationArn types.String                                     `tfsdk:"arn"`
 	AppBundleArn        types.String                                     `tfsdk:"app_bundle_arn"`
+	AppBundleIdentifier types.String                                     `tfsdk:"app_bundle_identifier"`
 	AuthType            types.String                                     `tfsdk:"auth_type"`
 	AuthUrl             types.String                                     `tfsdk:"auth_url"`
 	CreatedAt           timetypes.RFC3339                                `tfsdk:"created_at"`
 	Credential          fwtypes.ListNestedObjectValueOf[credentialModel] `tfsdk:"credential"`
+	ID                  types.String                                     `tfsdk:"id"`
+	Persona             types.String                                     `tfsdk:"persona"`
+	Status              types.String                                     `tfsdk:"status"`
+	Tags                types.Map                                        `tfsdk:"tags"`
+	TagsAll             types.Map                                        `tfsdk:"tags_all"`
 	Tenant              fwtypes.ListNestedObjectValueOf[tenantModel]     `tfsdk:"tenant"`
 	Timeouts            timeouts.Value                                   `tfsdk:"timeouts"`
 	UpdatedAt           timetypes.RFC3339                                `tfsdk:"updated_at"`
-	Persona             types.String                                     `tfsdk:"persona"`
-	Status              types.String                                     `tfsdk:"status"`
-	// Tags                  types.Map                                                `tfsdk:"tags"`
-	// TagsAll               types.Map                                                `tfsdk:"tags_all"`
 }
 
 const (
@@ -643,4 +588,22 @@ type oauth2CredentialModel struct {
 type tenantModel struct {
 	TenantDisplayName types.String `tfsdk:"tenant_display_name"`
 	TenantIdentifier  types.String `tfsdk:"tenant_identifier"`
+}
+
+func (m *appAuthorizationResourceModel) parseAuthUrl() error {
+	if m.AuthUrl.IsNull() {
+		return nil
+	}
+
+	fullURL := m.AuthUrl.ValueString()
+
+	index := strings.Index(fullURL, "oauth2")
+	if index == -1 {
+		return fmt.Errorf("the URL does not contain the 'oauth2' substring")
+	}
+
+	baseURL := fullURL[:index+len("oauth2")]
+	m.AuthUrl = types.StringValue(baseURL)
+
+	return nil
 }

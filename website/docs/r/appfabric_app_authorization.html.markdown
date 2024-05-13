@@ -5,14 +5,7 @@ page_title: "AWS: aws_appfabric_app_authorization"
 description: |-
   Terraform resource for managing an AWS AppFabric App Authorization.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_appfabric_app_authorization
 
 Terraform resource for managing an AWS AppFabric App Authorization.
@@ -23,6 +16,18 @@ Terraform resource for managing an AWS AppFabric App Authorization.
 
 ```terraform
 resource "aws_appfabric_app_authorization" "example" {
+  app_bundle_identifier   = aws_appfabric_app_bundle.arn
+  app             		    = "TERRAFORMCLOUD"
+  auth_type 			        = "apiKey"
+  credential {
+	api_key_credential {
+		api_key = "exampleapikeytoken"
+	}
+  }
+  tenant {
+	tenant_display_name = "example"
+	tenant_identifier   = "example"
+  }
 }
 ```
 
@@ -30,18 +35,41 @@ resource "aws_appfabric_app_authorization" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `app` - (Required) The name of the application for valid values see https://docs.aws.amazon.com/appfabric/latest/api/API_CreateAppAuthorization.html.
+* `app_bundle_identifier` - (Required) The Amazon Resource Name (ARN) or Universal Unique Identifier (UUID) of the app bundle to use for the request.
+* `auth_type` - (Required) The authorization type for the app authorization valid values are oauth2 and apiKey.
+* `credential` - (Required) Contains credentials for the application, such as an API key or OAuth2 client ID and secret.
+Specify credentials that match the authorization type for your request. For example, if the authorization type for your request is OAuth2 (oauth2), then you should provide only the OAuth2 credentials.
+* `tenant` - (Required) Contains information about an application tenant, such as the application display name and identifier.
 
-The following arguments are optional:
+Credential support the following:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `api_key_credential` - (Optional) Contains API key credential information.
+* `oauth2_credential` - (Optional) Contains OAuth2 client credential information.
+
+API Key Credential support the following:
+
+* `api_key` - (Required) Contains API key credential information.
+
+oauth2 Credential support the following:
+
+* `client_id` - (Required) The client ID of the client application.
+* `client_secret` - (Required) The client secret of the client application.
+
+Tenant support the following:
+
+* `tenant_display_name` - (Required) The display name of the tenant.
+* `tenant_identifier` - (Required) The ID of the application tenant.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the App Authorization. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `app_bundle_arn` - The Amazon Resource Name (ARN) of the app bundle for the app authorization.
+* `auth_url` - The application URL for the OAuth flow.
+* `persona` - The user persona of the app authorization.
+
 
 ## Timeouts
 
@@ -50,20 +78,3 @@ This resource exports the following attributes in addition to the arguments abov
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppFabric App Authorization using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_appfabric_app_authorization.example
-  id = "app_authorization-id-12345678"
-}
-```
-
-Using `terraform import`, import AppFabric App Authorization using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_appfabric_app_authorization.example app_authorization-id-12345678
-```

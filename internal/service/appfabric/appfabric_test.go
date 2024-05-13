@@ -14,9 +14,11 @@ func TestAccAppFabric_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AppAuthorization": {
-			"basic":      testAccAppAuthorization_basic,
-			"disappears": testAccAppAuthorization_disappears,
-			// names.AttrTags:     testAccKnowledgeBase_tags,
+			"basic":        testAccAppAuthorization_basic,
+			"disappears":   testAccAppAuthorization_disappears,
+			"apiKeyUpdate": testAccAppAuthorization_apiKeyUpdate,
+			"oath2Update":  testAccAppAuthorization_oath2Update,
+			"tags":         testAccAppAuthorization_tags,
 		},
 	}
 
