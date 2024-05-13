@@ -95,7 +95,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -218,7 +218,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -619,7 +619,7 @@ func expandGraphQLAPIOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnect
 	m := l[0].(map[string]interface{})
 
 	openIDConnectConfig := &appsync.OpenIDConnectConfig{
-		Issuer: aws.String(m["issuer"].(string)),
+		Issuer: aws.String(m[names.AttrIssuer].(string)),
 	}
 
 	if v, ok := m["auth_ttl"].(int); ok && v != 0 {
@@ -760,7 +760,7 @@ func flattenGraphQLAPIOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDCon
 		"auth_ttl":         aws.Int64Value(openIDConnectConfig.AuthTTL),
 		names.AttrClientID: aws.StringValue(openIDConnectConfig.ClientId),
 		"iat_ttl":          aws.Int64Value(openIDConnectConfig.IatTTL),
-		"issuer":           aws.StringValue(openIDConnectConfig.Issuer),
+		names.AttrIssuer:   aws.StringValue(openIDConnectConfig.Issuer),
 	}
 
 	return []interface{}{m}
