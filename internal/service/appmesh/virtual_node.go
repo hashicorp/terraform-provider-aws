@@ -863,7 +863,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"json": {
+																names.AttrJSON: {
 																	Type:     schema.TypeList,
 																	Optional: true,
 																	Elem: &schema.Resource{
