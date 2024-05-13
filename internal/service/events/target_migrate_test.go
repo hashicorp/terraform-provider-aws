@@ -14,9 +14,9 @@ import (
 
 func testResourceTargetStateDataV0() map[string]interface{} {
 	return map[string]interface{}{
-		names.AttrARN: "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
-		"rule":        "testrule",
-		"target_id":   "testtargetid",
+		names.AttrARN:  "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
+		names.AttrRule: "testrule",
+		"target_id":    "testtargetid",
 	}
 }
 
@@ -24,7 +24,7 @@ func testResourceTargetStateDataV0EventBusName() map[string]interface{} {
 	return map[string]interface{}{
 		names.AttrARN:    "arn:aws:test:us-east-1:123456789012:test", //lintignore:AWSAT003,AWSAT005
 		"event_bus_name": "testbus",
-		"rule":           "testrule",
+		names.AttrRule:   "testrule",
 		"target_id":      "testtargetid",
 	}
 }
@@ -34,7 +34,7 @@ func testResourceTargetStateDataV1() map[string]interface{} {
 	return map[string]interface{}{
 		names.AttrARN:    v0[names.AttrARN],
 		"event_bus_name": "default",
-		"rule":           v0["rule"],
+		names.AttrRule:   v0[names.AttrRule],
 		"target_id":      v0["target_id"],
 	}
 }
@@ -44,7 +44,7 @@ func testResourceTargetStateDataV1EventBusName() map[string]interface{} {
 	return map[string]interface{}{
 		names.AttrARN:    v0[names.AttrARN],
 		"event_bus_name": v0["event_bus_name"],
-		"rule":           v0["rule"],
+		names.AttrRule:   v0[names.AttrRule],
 		"target_id":      v0["target_id"],
 	}
 }
