@@ -150,7 +150,7 @@ func resourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -322,7 +322,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.Set(names.AttrName, output.Name)
 	d.Set("operating_system", output.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
@@ -597,7 +597,7 @@ func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if hasObjectContentChanges(d) {
-		return d.SetNewComputed("json")
+		return d.SetNewComputed(names.AttrJSON)
 	}
 
 	return nil
