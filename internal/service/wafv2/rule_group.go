@@ -55,7 +55,7 @@ func resourceRuleGroup() *schema.Resource {
 				scope := idParts[2]
 				d.SetId(id)
 				d.Set(names.AttrName, name)
-				d.Set("scope", scope)
+				d.Set(names.AttrScope, scope)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -104,7 +104,7 @@ func resourceRuleGroup() *schema.Resource {
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
-				"rule": {
+				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					Elem: &schema.Resource{
@@ -139,7 +139,7 @@ func resourceRuleGroup() *schema.Resource {
 						},
 					},
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ForceNew:         true,
@@ -162,8 +162,8 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &wafv2.CreateRuleGroupInput{
 		Capacity:         aws.Int64(int64(d.Get("capacity").(int))),
 		Name:             aws.String(name),
-		Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
-		Scope:            awstypes.Scope(d.Get("scope").(string)),
+		Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
+		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:             getTagsIn(ctx),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
@@ -193,7 +193,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := findRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findRuleGroupByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RuleGroup (%s) not found, removing from state", d.Id())
@@ -215,7 +215,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
-	if err := d.Set("rule", flattenRules(ruleGroup.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenRules(ruleGroup.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(ruleGroup.VisibilityConfig)); err != nil {
@@ -233,8 +233,8 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Id:               aws.String(d.Id()),
 			LockToken:        aws.String(d.Get("lock_token").(string)),
 			Name:             aws.String(d.Get(names.AttrName).(string)),
-			Rules:            expandRules(d.Get("rule").(*schema.Set).List()),
-			Scope:            awstypes.Scope(d.Get("scope").(string)),
+			Rules:            expandRules(d.Get(names.AttrRule).(*schema.Set).List()),
+			Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
 		}
 
@@ -265,7 +265,7 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Scope:     awstypes.Scope(d.Get("scope").(string)),
+		Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RuleGroup: %s", d.Id())

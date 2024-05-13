@@ -44,7 +44,7 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -141,7 +141,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -157,7 +157,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -210,7 +210,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -244,7 +244,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -308,7 +308,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -836,7 +836,7 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -852,7 +852,7 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -884,7 +884,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -900,7 +900,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -932,7 +932,7 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -948,7 +948,7 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "updated-friendly-metric-name"),
@@ -1426,7 +1426,7 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -1533,7 +1533,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1555,7 +1555,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1577,7 +1577,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1621,7 +1621,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1648,7 +1648,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1697,7 +1697,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -1725,7 +1725,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
 						names.AttrKey:         "test_body_1",
@@ -1759,7 +1759,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "custom_response_body.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_response_body.*", map[string]string{
@@ -2490,7 +2490,7 @@ func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-			_, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"])
+			_, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2516,7 +2516,7 @@ func testAccCheckRuleGroupExists(ctx context.Context, n string, v *awstypes.Rule
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"])
+		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 		if err != nil {
 			return err
@@ -2535,7 +2535,7 @@ func testAccRuleGroupImportStateIdFunc(resourceName string) resource.ImportState
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope]), nil
 	}
 }
 
