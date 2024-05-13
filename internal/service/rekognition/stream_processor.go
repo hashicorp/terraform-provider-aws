@@ -646,7 +646,11 @@ type faceSearchModel struct {
 	FaceMatchThreshold types.Number `tfsdk:"face_match_threshold"`
 }
 
-/** AWS SDK doesn't have a settings.connectedhome.labels enum available */
+/*
+- AWS SDK doesn't have a CreateStreamProcessorInput.StreamProcessorSettings.ConnectedHomeSettings.Labels enum available as of 5/13/24
+
+- see docs https://docs.aws.amazon.com/rekognition/latest/APIReference/API_ConnectedHomeSettings.html#API_ConnectedHomeSettings_Contents
+*/
 type labelSettings string
 
 func (labelSettings) Values() []labelSettings {
