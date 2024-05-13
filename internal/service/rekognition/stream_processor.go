@@ -95,7 +95,8 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 		},
 		Blocks: map[string]schema.Block{
 			"data_sharing_preference": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[dataSharingPreferenceModel](ctx),
+				CustomType:  fwtypes.NewObjectTypeOf[dataSharingPreferenceModel](ctx),
+				Description: "Shows whether you are sharing data with Rekognition to improve model performance.",
 				Attributes: map[string]schema.Attribute{
 					"opt_in": schema.BoolAttribute{
 						Description: "Do you want to share data with Rekognition to improve model performance.",
@@ -105,40 +106,47 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"input": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[inputModel](ctx),
+				CustomType:  fwtypes.NewObjectTypeOf[inputModel](ctx),
+				Description: "Information about the source streaming video.",
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
 				Blocks: map[string]schema.Block{
 					"kinesis_video_stream": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
+						CustomType:  fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
+						Description: "Kinesis video stream stream that provides the source streaming video for a Amazon Rekognition Video stream processor.",
 						Attributes: map[string]schema.Attribute{
 							"kinesis_video_stream_arn": schema.StringAttribute{
-								CustomType: fwtypes.ARNType,
-								Required:   true,
+								CustomType:  fwtypes.ARNType,
+								Description: "ARN of the Kinesis video stream stream that streams the source video.",
+								Required:    true,
 							},
 						},
 					},
 				},
 			},
 			"notification_channel": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
+				CustomType:  fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
+				Description: "The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the object detection results and completion status of a video analysis operation.",
 				Attributes: map[string]schema.Attribute{
 					"sns_topic_arn": schema.StringAttribute{
-						CustomType: fwtypes.ARNType,
-						Optional:   true,
+						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
+						CustomType:  fwtypes.ARNType,
+						Optional:    true,
 					},
 				},
 			},
 			"regions_of_interest": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
+				Description: "Specifies locations in the frames where Amazon Rekognition checks for objects or people. You can specify up to 10 regions of interest, and each region has either a polygon or a bounding box.",
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"region": schema.SingleNestedBlock{
 							CustomType: fwtypes.NewObjectTypeOf[regionOfInterestModel](ctx),
 							Blocks: map[string]schema.Block{
 								"bounding_box": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+									CustomType:  fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+									Description: "The box representing a region of interest on screen.",
 									Attributes: map[string]schema.Attribute{
 										"height": schema.NumberAttribute{},
 										"left":   schema.NumberAttribute{},
@@ -147,7 +155,8 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 									},
 								},
 								"polygon": schema.SingleNestedBlock{
-									CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
+									CustomType:  fwtypes.NewObjectTypeOf[polygonModel](ctx),
+									Description: "Specifies a shape made up of up to 10 Point objects to define a region of interest.",
 									Attributes: map[string]schema.Attribute{
 										"x": schema.NumberAttribute{},
 										"y": schema.NumberAttribute{},
@@ -159,53 +168,70 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"output": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[outputModel](ctx),
+				CustomType:  fwtypes.NewObjectTypeOf[outputModel](ctx),
+				Description: "Kinesis data stream stream or Amazon S3 bucket location to which Amazon Rekognition Video puts the analysis results.",
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
 				Blocks: map[string]schema.Block{
 					"kinesis_data_stream": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[kinesisDataStreamModel](ctx),
+						CustomType:  fwtypes.NewObjectTypeOf[kinesisDataStreamModel](ctx),
+						Description: "The Amazon Kinesis Data Streams stream to which the Amazon Rekognition stream processor streams the analysis results.",
 						Attributes: map[string]schema.Attribute{
 							"arn": schema.StringAttribute{
-								CustomType: fwtypes.ARNType,
-								Required:   true,
+								CustomType:  fwtypes.ARNType,
+								Description: "ARN of the output Amazon Kinesis Data Streams stream.",
+								Required:    true,
 							},
 						},
 					},
 					"s3_destination": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[s3DestinationModel](ctx),
+						CustomType:  fwtypes.NewObjectTypeOf[s3DestinationModel](ctx),
+						Description: "The Amazon S3 bucket location to which Amazon Rekognition publishes the detailed inference results of a video analysis operation.",
 						Attributes: map[string]schema.Attribute{
 							names.AttrBucket: schema.StringAttribute{
-								Optional: true,
+								Description: "The name of the Amazon S3 bucket you want to associate with the streaming video project.",
+								Optional:    true,
 							},
 							"key_prefix": schema.StringAttribute{
-								Optional: true,
+								Description: "The prefix value of the location within the bucket that you want the information to be published to.",
+								Optional:    true,
 							},
 						},
 					},
 				},
 			},
 			"settings": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[settingsModel](ctx),
+				CustomType:  fwtypes.NewObjectTypeOf[settingsModel](ctx),
+				Description: "Input parameters used in a streaming video analyzed by a stream processor.",
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
 				Blocks: map[string]schema.Block{
 					"connected_home": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
+						CustomType:  fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
+						Description: "Label detection settings to use on a streaming video.",
 						Attributes: map[string]schema.Attribute{
 							"labels": schema.ListAttribute{
+								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
 								ElementType: types.StringType,
 							},
-							"min_confidence": schema.NumberAttribute{},
+							"min_confidence": schema.NumberAttribute{
+								Description: "The minimum confidence required to label an object in the video.",
+							},
 						},
 					},
 					"face_search": schema.SingleNestedBlock{
-						CustomType: fwtypes.NewObjectTypeOf[faceSearchModel](ctx),
+						CustomType:  fwtypes.NewObjectTypeOf[faceSearchModel](ctx),
+						Description: "Face search settings to use on a streaming video.",
 						Attributes: map[string]schema.Attribute{
-							"collection_id":  schema.StringAttribute{},
-							"min_confidence": schema.NumberAttribute{},
+							"collection_id": schema.StringAttribute{
+								Description: "The ID of a collection that contains faces that you want to search for.",
+							},
+							"face_match_threshold": schema.NumberAttribute{
+								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
+								Validators:  []validator.Number{},
+							},
 						},
 					},
 				},
