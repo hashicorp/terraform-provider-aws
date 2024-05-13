@@ -37,7 +37,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID:VPC_ID", d.Id())
 				}
 				d.SetId(idParts[0])
-				d.Set("vpc", idParts[1])
+				d.Set(names.AttrVPC, idParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -63,7 +63,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
+			names.AttrVPC: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -82,7 +82,7 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 		CreatorRequestId: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Tags:             getTagsIn(ctx),
-		Vpc:              aws.String(d.Get("vpc").(string)),
+		Vpc:              aws.String(d.Get(names.AttrVPC).(string)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
