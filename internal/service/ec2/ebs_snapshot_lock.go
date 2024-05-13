@@ -182,7 +182,7 @@ func resourceEBSSnapshotLockUpdate(ctx context.Context, d *schema.ResourceData, 
 	d.Set("lock_duration_start_time", aws.ToTime(resp.LockDurationStartTime).Format(time.RFC3339))
 	d.Set("lock_state", resp.LockState)
 
-	return diags
+	return append(diags, resourceEBSSnapshotLockRead(ctx, d, meta)...)
 }
 
 func resourceEBSSnapshotLockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
