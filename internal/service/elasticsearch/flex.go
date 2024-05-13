@@ -80,11 +80,11 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
+			if v, ok := m[names.AttrVolumeSize]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
 			var volumeType string
-			if v, ok := m["volume_type"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrVolumeType]; ok && v.(string) != "" {
 				volumeType = v.(string)
 				options.VolumeType = aws.String(volumeType)
 			}
@@ -181,10 +181,10 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 			m["throughput"] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m["volume_size"] = aws.Int64Value(o.VolumeSize)
+			m[names.AttrVolumeSize] = aws.Int64Value(o.VolumeSize)
 		}
 		if o.VolumeType != nil {
-			m["volume_type"] = aws.StringValue(o.VolumeType)
+			m[names.AttrVolumeType] = aws.StringValue(o.VolumeType)
 		}
 	}
 
