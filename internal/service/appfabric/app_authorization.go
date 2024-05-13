@@ -137,7 +137,7 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"client_id": schema.StringAttribute{
+									"client_id": schema.StringAttribute{ // nosemgrep:ci.literal-client_id-string-constant
 										Required: true,
 									},
 									"client_secret": schema.StringAttribute{
