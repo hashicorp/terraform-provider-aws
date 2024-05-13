@@ -385,7 +385,7 @@ func ResourceDataSource() *schema.Resource {
 									},
 								},
 							},
-							"s3": {
+							names.AttrS3: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -1112,7 +1112,7 @@ func expandDataSourceParameters(tfList []interface{}) *quicksight.DataSourcePara
 		}
 	}
 
-	if v := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v != nil {
+	if v := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 && v != nil {
 		m, ok := v[0].(map[string]interface{})
 
 		if ok {
@@ -1444,7 +1444,7 @@ func flattenParameters(parameters *quicksight.DataSourceParameters) []interface{
 
 	if parameters.S3Parameters != nil {
 		params = append(params, map[string]interface{}{
-			"s3": []interface{}{
+			names.AttrS3: []interface{}{
 				map[string]interface{}{
 					"manifest_file_location": []interface{}{
 						map[string]interface{}{
