@@ -122,7 +122,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"credential"},
 			},
 			{
-				Config: testAccAppAuthorizationConfig_updatedApikey(),
+				Config: testAccAppAuthorizationConfig_updatedAPIkey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
@@ -266,7 +266,7 @@ func testAccCheckAppAuthorizationDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["arn"], rs.Primary.Attributes["app_bundle_identifier"])
+			_, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -292,7 +292,7 @@ func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFabricClient(ctx)
 
-		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes["arn"], rs.Primary.Attributes["app_bundle_identifier"])
+		output, err := tfappfabric.FindAppAuthorizationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrARN], rs.Primary.Attributes["app_bundle_identifier"])
 
 		if err != nil {
 			return err
@@ -307,38 +307,40 @@ func testAccCheckAppAuthorizationExists(ctx context.Context, n string, v *types.
 func testAccAppAuthorizationConfig_basic() string {
 	return `
 
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "TERRAFORMCLOUD"
-  auth_type 			  = "apiKey"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "TERRAFORMCLOUD"
+  auth_type             = "apiKey"
   credential {
-	api_key_credential {
-		api_key = "ApiExampleKey"
-	}
+    api_key_credential {
+      api_key = "ApiExampleKey"
+    }
   }
   tenant {
-	tenant_display_name = "test"
-	tenant_identifier   = "test"
+    tenant_display_name = "test"
+    tenant_identifier   = "test"
   }
 }
 `
 }
 
-func testAccAppAuthorizationConfig_updatedApikey() string {
+func testAccAppAuthorizationConfig_updatedAPIkey() string {
 	return `
 
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "TERRAFORMCLOUD"
-  auth_type 			  = "apiKey"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "TERRAFORMCLOUD"
+  auth_type             = "apiKey"
   credential {
-	api_key_credential {
-		api_key = "updatedApiExampleKey"
-	}
+    api_key_credential {
+      api_key = "updatedApiExampleKey"
+    }
   }
   tenant {
-	tenant_display_name = "updated"
-	tenant_identifier   = "test"
+    tenant_display_name = "updated"
+    tenant_identifier   = "test"
   }
 }
 `
@@ -347,18 +349,18 @@ resource "aws_appfabric_app_authorization" "test" {
 func testAccAppAuthorizationConfig_oath2() string {
 	return `
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "DROPBOX"
-  auth_type 			  = "oauth2"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "DROPBOX"
+  auth_type             = "oauth2"
   credential {
-	oauth2_credential {
-		client_id 	  = "ClinentID"
-		client_secret = "SecretforOath2"
-	}
+    oauth2_credential {
+      client_id     = "ClinentID"
+      client_secret = "SecretforOath2"
+    }
   }
   tenant {
-	tenant_display_name = "test"
-	tenant_identifier   = "test"
+    tenant_display_name = "test"
+    tenant_identifier   = "test"
   }
 }
 `
@@ -367,18 +369,18 @@ resource "aws_appfabric_app_authorization" "test" {
 func testAccAppAuthorizationConfig_updatedOath2() string {
 	return `
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "DROPBOX"
-  auth_type 			  = "oauth2"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "DROPBOX"
+  auth_type             = "oauth2"
   credential {
-	oauth2_credential {
-		client_id 	  = "newClinentID"
-		client_secret = "newSecretforOath2"
-	}
+    oauth2_credential {
+      client_id     = "newClinentID"
+      client_secret = "newSecretforOath2"
+    }
   }
   tenant {
-	tenant_display_name = "updated"
-	tenant_identifier   = "test"
+    tenant_display_name = "updated"
+    tenant_identifier   = "test"
   }
 }
 `
@@ -387,18 +389,19 @@ resource "aws_appfabric_app_authorization" "test" {
 func testAccAppAuthorizationConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "TERRAFORMCLOUD"
-  auth_type 			  = "apiKey"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "TERRAFORMCLOUD"
+  auth_type             = "apiKey"
   credential {
-	api_key_credential {
-		api_key = "apiexamplekeytest"
-	}
+    api_key_credential {
+      api_key = "apiexamplekeytest"
+    }
   }
   tenant {
-	tenant_display_name = "test"
-	tenant_identifier   = "test"
+    tenant_display_name = "test"
+    tenant_identifier   = "test"
   }
 
   tags = {
@@ -411,22 +414,23 @@ resource "aws_appfabric_app_authorization" "test" {
 func testAccAppAuthorizationConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		  = "TERRAFORMCLOUD"
-  auth_type 			  = "apiKey"
+  app_bundle_identifier = aws_appfabric_app_bundle.arn
+  app                   = "TERRAFORMCLOUD"
+  auth_type             = "apiKey"
   credential {
-	api_key_credential {
-		api_key = "apiexamplekeytest"
-	}
+    api_key_credential {
+      api_key = "apiexamplekeytest"
+    }
   }
   tenant {
-	tenant_display_name = "test"
-	tenant_identifier   = "test"
+    tenant_display_name = "test"
+    tenant_identifier   = "test"
   }
   tags = {
     %[1]q = %[2]q
-	%[3]q = %[4]q
+    %[3]q = %[4]q
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)

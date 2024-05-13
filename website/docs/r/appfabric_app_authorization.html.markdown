@@ -16,17 +16,18 @@ Terraform resource for managing an AWS AppFabric App Authorization.
 
 ```terraform
 resource "aws_appfabric_app_authorization" "example" {
-  app_bundle_identifier   = aws_appfabric_app_bundle.arn
-  app             		    = "TERRAFORMCLOUD"
-  auth_type 			        = "apiKey"
+  app             		      = "TERRAFORMCLOUD"
+  app_bundle_identifier     = aws_appfabric_app_bundle.arn
+  auth_type 			          = "apiKey"
+  
   credential {
-	api_key_credential {
-		api_key = "exampleapikeytoken"
-	}
+    api_key_credential {
+      api_key = "exampleapikeytoken"
+    }
   }
   tenant {
-	tenant_display_name = "example"
-	tenant_identifier   = "example"
+    tenant_display_name = "example"
+    tenant_identifier   = "example"
   }
 }
 ```
@@ -69,7 +70,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `app_bundle_arn` - The Amazon Resource Name (ARN) of the app bundle for the app authorization.
 * `auth_url` - The application URL for the OAuth flow.
 * `persona` - The user persona of the app authorization.
-
 
 ## Timeouts
 

@@ -56,7 +56,6 @@ const (
 
 type appAuthorizationResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -101,11 +100,8 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -171,7 +167,7 @@ func (r *appAuthorizationResource) Schema(ctx context.Context, req resource.Sche
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -233,7 +229,11 @@ func (r *appAuthorizationResource) Create(ctx context.Context, request resource.
 	data.Status = fwflex.StringValueToFramework(ctx, aAuth.Status)
 	data.Persona = fwflex.StringValueToFramework(ctx, aAuth.Persona)
 	data.AuthUrl = fwflex.StringToFramework(ctx, aAuth.AuthUrl)
-	data.parseAuthUrl()
+	if err := data.parseAuthURL(); err != nil {
+		response.Diagnostics.AddError("parsing Auth URL", err.Error())
+
+		return
+	}
 	data.CreatedAt = fwflex.TimeToFramework(ctx, aAuth.CreatedAt)
 	data.UpdatedAt = fwflex.TimeToFramework(ctx, aAuth.UpdatedAt)
 
@@ -277,7 +277,11 @@ func (r *appAuthorizationResource) Read(ctx context.Context, request resource.Re
 
 	//Seting it because of the dynamic nature of Auth Url
 	data.AuthUrl = fwflex.StringToFramework(ctx, output.AuthUrl)
-	data.parseAuthUrl()
+	if err := data.parseAuthURL(); err != nil {
+		response.Diagnostics.AddError("parsing Auth URL", err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -346,7 +350,11 @@ func (r *appAuthorizationResource) Update(ctx context.Context, request resource.
 		new.AppBundleArn = fwflex.StringToFramework(ctx, appAuth.AppBundleArn)
 		new.Persona = fwflex.StringValueToFramework(ctx, appAuth.Persona)
 		new.AuthUrl = fwflex.StringToFramework(ctx, appAuth.AuthUrl)
-		new.parseAuthUrl()
+		if err := new.parseAuthURL(); err != nil {
+			response.Diagnostics.AddError("parsing Auth URL", err.Error())
+
+			return
+		}
 	} else {
 		new.UpdatedAt = old.UpdatedAt
 	}
@@ -386,7 +394,7 @@ func (r *appAuthorizationResource) Delete(ctx context.Context, request resource.
 }
 
 func (r *appAuthorizationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *appAuthorizationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -493,13 +501,13 @@ func expandCredentialsValue(ctx context.Context, credentialModels []credentialMo
 		if !item.ApiKeyCredential.IsNull() && (len(item.ApiKeyCredential.Elements()) > 0) {
 			var apiKey []apiKeyCredentialModel
 			diags.Append(item.ApiKeyCredential.ElementsAs(ctx, &apiKey, false)...)
-			apiKeycredential := expandAppAuthorizationApiKeyCredential(ctx, apiKey)
+			apiKeycredential := expandAppAuthorizationAPIKeyCredential(ctx, apiKey)
 			credentials = append(credentials, apiKeycredential)
 		}
 		if (!item.Oauth2Credential.IsNull()) && (len(item.Oauth2Credential.Elements()) > 0) {
 			var oath2Credentials []oauth2CredentialModel
 			diags.Append(item.Oauth2Credential.ElementsAs(ctx, &oath2Credentials, false)...)
-			oath2Credential := expandAppAuthorizationOauth2Credential(ctx, oath2Credentials)
+			oath2Credential := expandAppAuthorizationOAuthCredential(ctx, oath2Credentials)
 			credentials = append(credentials, oath2Credential)
 		}
 	}
@@ -507,7 +515,7 @@ func expandCredentialsValue(ctx context.Context, credentialModels []credentialMo
 	return credentials[0], diags
 }
 
-func expandAppAuthorizationApiKeyCredential(ctx context.Context, apiKeyCredential []apiKeyCredentialModel) *awstypes.CredentialMemberApiKeyCredential {
+func expandAppAuthorizationAPIKeyCredential(ctx context.Context, apiKeyCredential []apiKeyCredentialModel) *awstypes.CredentialMemberApiKeyCredential {
 	if len(apiKeyCredential) == 0 {
 		return nil
 	}
@@ -519,7 +527,7 @@ func expandAppAuthorizationApiKeyCredential(ctx context.Context, apiKeyCredentia
 	}
 }
 
-func expandAppAuthorizationOauth2Credential(ctx context.Context, oauth2Credential []oauth2CredentialModel) *awstypes.CredentialMemberOauth2Credential {
+func expandAppAuthorizationOAuthCredential(ctx context.Context, oauth2Credential []oauth2CredentialModel) *awstypes.CredentialMemberOauth2Credential {
 	if len(oauth2Credential) == 0 {
 		return nil
 	}
@@ -590,7 +598,7 @@ type tenantModel struct {
 	TenantIdentifier  types.String `tfsdk:"tenant_identifier"`
 }
 
-func (m *appAuthorizationResourceModel) parseAuthUrl() error {
+func (m *appAuthorizationResourceModel) parseAuthURL() error {
 	if m.AuthUrl.IsNull() {
 		return nil
 	}

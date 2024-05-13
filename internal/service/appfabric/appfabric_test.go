@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFabric_serial(t *testing.T) {
@@ -18,7 +19,7 @@ func TestAccAppFabric_serial(t *testing.T) {
 			"disappears":   testAccAppAuthorization_disappears,
 			"apiKeyUpdate": testAccAppAuthorization_apiKeyUpdate,
 			"oath2Update":  testAccAppAuthorization_oath2Update,
-			"tags":         testAccAppAuthorization_tags,
+			names.AttrTags: testAccAppAuthorization_tags,
 		},
 	}
 
