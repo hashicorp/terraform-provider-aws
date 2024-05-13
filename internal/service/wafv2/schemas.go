@@ -1021,7 +1021,7 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 							},
 							"forwarded_ip": emptySchema(),
 							"http_method":  emptySchema(),
-							"header": {
+							names.AttrHeader: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -1490,7 +1490,7 @@ func managedRuleGroupConfigATPResponseInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"header": {
+				names.AttrHeader: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,

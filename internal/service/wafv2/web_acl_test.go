@@ -1898,7 +1898,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_rateBasedStatement_customKeysBasic(webACLName, "header", "x-forwrded-for"),
+				Config: testAccWebACLConfig_rateBasedStatement_customKeysBasic(webACLName, names.AttrHeader, "x-forwrded-for"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),

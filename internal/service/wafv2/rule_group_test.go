@@ -2184,7 +2184,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, "header", "x-forwrded-for"),
+				Config: testAccRuleGroupConfig_rateBasedStatement_customKeysBasic(ruleGroupName, names.AttrHeader, "x-forwrded-for"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
