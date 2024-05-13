@@ -164,7 +164,7 @@ func ResourceConnector() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 									},
-									"vpc": {
+									names.AttrVPC: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Required: true,
@@ -245,7 +245,7 @@ func ResourceConnector() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cloudwatch_logs": {
+									names.AttrCloudWatchLogs: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -285,7 +285,7 @@ func ResourceConnector() *schema.Resource {
 											},
 										},
 									},
-									"s3": {
+									names.AttrS3: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -775,7 +775,7 @@ func expandApacheCluster(tfMap map[string]interface{}) *kafkaconnect.ApacheKafka
 		apiObject.BootstrapServers = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrVPC].([]interface{}); ok && len(v) > 0 {
 		apiObject.Vpc = expandVPC(v[0].(map[string]interface{}))
 	}
 
@@ -907,7 +907,7 @@ func expandWorkerLogDelivery(tfMap map[string]interface{}) *kafkaconnect.WorkerL
 
 	apiObject := &kafkaconnect.WorkerLogDelivery{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		apiObject.CloudWatchLogs = expandCloudWatchLogsLogDelivery(v[0].(map[string]interface{}))
 	}
 
@@ -915,7 +915,7 @@ func expandWorkerLogDelivery(tfMap map[string]interface{}) *kafkaconnect.WorkerL
 		apiObject.Firehose = expandFirehoseLogDelivery(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		apiObject.S3 = expandS3LogDelivery(v[0].(map[string]interface{}))
 	}
 
@@ -1118,7 +1118,7 @@ func flattenApacheClusterDescription(apiObject *kafkaconnect.ApacheKafkaClusterD
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenVPCDescription(v)}
+		tfMap[names.AttrVPC] = []interface{}{flattenVPCDescription(v)}
 	}
 
 	return tfMap
@@ -1242,7 +1242,7 @@ func flattenWorkerLogDeliveryDescription(apiObject *kafkaconnect.WorkerLogDelive
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
+		tfMap[names.AttrCloudWatchLogs] = []interface{}{flattenCloudWatchLogsLogDeliveryDescription(v)}
 	}
 
 	if v := apiObject.Firehose; v != nil {
@@ -1250,7 +1250,7 @@ func flattenWorkerLogDeliveryDescription(apiObject *kafkaconnect.WorkerLogDelive
 	}
 
 	if v := apiObject.S3; v != nil {
-		tfMap["s3"] = []interface{}{flattenS3LogDeliveryDescription(v)}
+		tfMap[names.AttrS3] = []interface{}{flattenS3LogDeliveryDescription(v)}
 	}
 
 	return tfMap

@@ -64,7 +64,7 @@ func ResourceCustomPlugin() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							ForceNew: true,
@@ -215,7 +215,7 @@ func expandCustomPluginLocation(tfMap map[string]interface{}) *kafkaconnect.Cust
 
 	apiObject := &kafkaconnect.CustomPluginLocation{}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		apiObject.S3Location = expandS3Location(v[0].(map[string]interface{}))
 	}
 
@@ -252,7 +252,7 @@ func flattenCustomPluginLocationDescription(apiObject *kafkaconnect.CustomPlugin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.S3Location; v != nil {
-		tfMap["s3"] = []interface{}{flattenS3LocationDescription(v)}
+		tfMap[names.AttrS3] = []interface{}{flattenS3LocationDescription(v)}
 	}
 
 	return tfMap
