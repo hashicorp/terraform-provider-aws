@@ -56,7 +56,7 @@ func TestAccMetaARNDataSource_s3Bucket(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "partition", "aws"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "resource", "my_corporate_bucket/Development/*"),
-					resource.TestCheckResourceAttr(dataSourceName, "service", "s3"),
+					resource.TestCheckResourceAttr(dataSourceName, "service", names.AttrS3),
 				),
 			},
 		},
