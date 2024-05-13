@@ -39,8 +39,8 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "s3", regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap$`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, names.AttrS3, regexache.MustCompile(`accesspoint\/[a-z][0-9a-z]*[.]mrap$`)),
 					acctest.MatchResourceAttrGlobalHostname(resourceName, names.AttrDomainName, "accesspoint.s3-global", regexache.MustCompile(`^[a-z][0-9a-z]*[.]mrap`)),
 					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", rName),

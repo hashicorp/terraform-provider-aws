@@ -49,7 +49,7 @@ func resourceMultiRegionAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,12 +208,12 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "s3",
+		Service:   names.AttrS3,
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("alias", alias)
+	d.Set(names.AttrAlias, alias)
 	d.Set(names.AttrARN, arn)
 	if err := d.Set("details", []interface{}{flattenMultiRegionAccessPointReport(accessPoint)}); err != nil {
 		return diag.Errorf("setting details: %s", err)

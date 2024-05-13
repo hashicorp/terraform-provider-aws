@@ -45,7 +45,7 @@ func resourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -271,7 +271,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
 		accessPointARN := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
-			Service:   "s3",
+			Service:   names.AttrS3,
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: accountID,
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
@@ -282,7 +282,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("alias", output.Alias)
+	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set(names.AttrEndpoints, output.Endpoints)

@@ -29,7 +29,7 @@ func dataSourceMultiRegionAccessPoint() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -121,12 +121,12 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "s3",
+		Service:   names.AttrS3,
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),
 	}.String()
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("alias", alias)
+	d.Set(names.AttrAlias, alias)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrCreatedAt, aws.ToTime(accessPoint.CreatedAt).Format(time.RFC3339))
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
