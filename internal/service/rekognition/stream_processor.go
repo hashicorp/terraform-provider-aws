@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -181,24 +182,11 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	in := &rekognition.CreateStreamProcessorInput{
-		Name:     aws.String(plan.Name.ValueString()),
-		KmsKeyId: aws.String(plan.KmsKeyId.ValueString()),
-		RoleArn:  aws.String(plan.RoleARN.ValueString()),
-		DataSharingPreference: &awstypes.StreamProcessorDataSharingPreference{
-			OptIn: plan.DataSharingEnabled.ValueBool(),
-		},
-		Input: &awstypes.StreamProcessorInput{
-			KinesisVideoStream: &awstypes.KinesisVideoStream{
-				Arn: aws.String(plan.Input.KinesisVideoStreamArn.ValueString()),
-			},
-		},
-	}
+	in := &rekognition.CreateStreamProcessorInput{}
 
-	if !plan.NotificationChannel.SNSTopicArn.IsNull() {
-		in.NotificationChannel = &awstypes.StreamProcessorNotificationChannel{
-			SNSTopicArn: aws.String(plan.NotificationChannel.SNSTopicArn.ValueString()),
-		}
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	out, err := conn.CreateStreamProcessor(ctx, in)
@@ -217,7 +205,6 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.StreamProcessorArn)
 	plan.ID = plan.ARN
 
 	// TIP: -- 6. Use a waiter to wait for create to complete
@@ -480,23 +467,80 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 }
 
 type resourceStreamProcessorData struct {
-	ARN                 types.String         `tfsdk:"arn"`
-	DataSharingEnabled  types.Bool           `tfsdk:"data_sharing_enabled"`
-	ID                  types.String         `tfsdk:"id"`
-	Input               streamProcessorInput `tfsdk:"input"`
-	KmsKeyId            types.String         `tfsdk:"kms_key_id"`
-	NotificationChannel notificationChannel  `tfsdk:"notification_channel"`
-	Name                types.String         `tfsdk:"name"`
-	RoleARN             fwtypes.ARN          `tfsdk:"role_arn"`
-	Tags                types.Map            `tfsdk:"tags"`
-	TagsAll             types.Map            `tfsdk:"tags_all"`
-	Timeouts            timeouts.Value       `tfsdk:"timeouts"`
+	ARN                   types.String                                      `tfsdk:"arn"`
+	DataSharingPreference fwtypes.ObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
+	ID                    types.String                                      `tfsdk:"id"`
+	Input                 fwtypes.ObjectValueOf[inputModel]                 `tfsdk:"input"`
+	KmsKeyId              types.String                                      `tfsdk:"kms_key_id"`
+	NotificationChannel   fwtypes.ObjectValueOf[notificationChannelModel]   `tfsdk:"notification_channel"`
+	Name                  types.String                                      `tfsdk:"name"`
+	Output                fwtypes.ObjectValueOf[outputModel]                `tfsdk:"output"`
+	RegionsOfInterest     fwtypes.ObjectValueOf[[]regionOfInterestModel]    `tfsdk:"regions_of_interest"`
+	RoleARN               fwtypes.ARN                                       `tfsdk:"role_arn"`
+	Settings              fwtypes.ObjectValueOf[settingsModel]              `tfsdk:"settings"`
+	Tags                  types.Map                                         `tfsdk:"tags"`
+	TagsAll               types.Map                                         `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value                                    `tfsdk:"timeouts"`
 }
 
-type streamProcessorInput struct {
-	KinesisVideoStreamArn fwtypes.ARN `tfsdk:"kinesis_video_stream_arn"`
+type dataSharingPreferenceModel struct {
+	OptIn types.Bool `tfsdk:"opt_in"`
 }
 
-type notificationChannel struct {
+type inputModel struct {
+	KinesisVideoStream fwtypes.ObjectValueOf[kinesisVideoStreamInputModel] `tfsdk:"kinesis_video_stream"`
+}
+
+type kinesisVideoStreamInputModel struct {
+	ARN types.String `tfsdk:"arn"`
+}
+
+type notificationChannelModel struct {
 	SNSTopicArn fwtypes.ARN `tfsdk:"sns_topic_arn"`
+}
+
+type outputModel struct {
+	KinesisDataStream fwtypes.ObjectValueOf[kinesisDataStreamModel] `tfsdk:"kinesis_data_stream"`
+	S3Destination     fwtypes.ObjectValueOf[s3DestinationModel]     `tfsdk:"s3_destination"`
+}
+
+type kinesisDataStreamModel struct {
+	ARN types.String `tfsdk:"arn"`
+}
+
+type s3DestinationModel struct {
+	Bucket    types.String `tfsdk:"bucket"`
+	KeyPrefix types.String `tfsdk:"key_prefix"`
+}
+
+type regionOfInterestModel struct {
+	BoundingBox fwtypes.ObjectValueOf[boundingBoxModel] `tfsdk:"bounding_box"`
+	Polygon     fwtypes.ObjectValueOf[polygonModel]     `tfsdk:"polygon"`
+}
+
+type boundingBoxModel struct {
+	Height types.Number `tfsdk:"height"`
+	Left   types.Number `tfsdk:"left"`
+	Top    types.Number `tfsdk:"top"`
+	Width  types.Number `tfsdk:"width"`
+}
+
+type polygonModel struct {
+	X types.Number `tfsdk:"x"`
+	Y types.Number `tfsdk:"y"`
+}
+
+type settingsModel struct {
+	ConnectedHome fwtypes.ObjectValueOf[connectedHomeModel] `tfsdk:"connected_home"`
+	FaceSearch    fwtypes.ObjectValueOf[faceSearchModel]    `tfsdk:"face_search"`
+}
+
+type connectedHomeModel struct {
+	Labels        types.List   `tfsdk:"labels"`
+	MinConfidence types.Number `tfsdk:"min_confidence"`
+}
+
+type faceSearchModel struct {
+	CollectionId       types.String `tfsdk:"collection_id"`
+	FaceMatchThreshold types.Number `tfsdk:"face_match_threshold"`
 }
