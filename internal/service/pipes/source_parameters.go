@@ -492,7 +492,7 @@ func sourceParametersSchema() *schema.Schema {
 									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
 								),
 							},
-							"vpc": {
+							names.AttrVPC: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 1,
@@ -1122,7 +1122,7 @@ func expandPipeSourceSelfManagedKafkaParameters(tfMap map[string]interface{}) *t
 		apiObject.TopicName = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrVPC].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
 	}
 
@@ -1152,7 +1152,7 @@ func expandUpdatePipeSourceSelfManagedKafkaParameters(tfMap map[string]interface
 		apiObject.ServerRootCaCertificate = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrVPC].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Vpc = expandSelfManagedKafkaAccessConfigurationVPC(v[0].(map[string]interface{}))
 	} else {
 		apiObject.Vpc = &types.SelfManagedKafkaAccessConfigurationVpc{}
@@ -1591,7 +1591,7 @@ func flattenPipeSourceSelfManagedKafkaParameters(apiObject *types.PipeSourceSelf
 	}
 
 	if v := apiObject.Vpc; v != nil {
-		tfMap["vpc"] = []interface{}{flattenSelfManagedKafkaAccessConfigurationVPC(v)}
+		tfMap[names.AttrVPC] = []interface{}{flattenSelfManagedKafkaAccessConfigurationVPC(v)}
 	}
 
 	return tfMap
