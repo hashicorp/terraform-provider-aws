@@ -44,6 +44,7 @@ var (
 	FindRouteByIPv4DestinationV2              = findRouteByIPv4DestinationV2
 	FindRouteByIPv6DestinationV2              = findRouteByIPv6DestinationV2
 	FindRouteByPrefixListIDDestinationV2      = findRouteByPrefixListIDDestinationV2
+	FindRouteTableByIDV2                      = findRouteTableByIDV2
 	FindVolumeAttachmentInstanceByID          = findVolumeAttachmentInstanceByID
 	FindVPCEndpointByIDV2                     = findVPCEndpointByIDV2
 	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses
