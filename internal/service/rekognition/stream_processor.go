@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,27 +90,39 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				CustomType:  fwtypes.ARNType,
 				Required:    true,
 			},
-			"data_sharing_enabled": schema.BoolAttribute{
-				Description: "Do you want to share data with Rekognition to improve model performance.",
-				Optional:    true,
-				Default:     booldefault.StaticBool(false),
-			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"data_sharing_preference": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[dataSharingPreferenceModel](ctx),
+				Attributes: map[string]schema.Attribute{
+					"opt_in": schema.BoolAttribute{
+						Description: "Do you want to share data with Rekognition to improve model performance.",
+						Optional:    true,
+						Default:     booldefault.StaticBool(false),
+					},
+				},
+			},
 			"input": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[inputModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
-				Attributes: map[string]schema.Attribute{
-					"kinesis_video_stream_arn": schema.StringAttribute{
-						CustomType: fwtypes.ARNType,
-						Required:   true,
+				Blocks: map[string]schema.Block{
+					"kinesis_video_stream": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[kinesisVideoStreamInputModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"kinesis_video_stream_arn": schema.StringAttribute{
+								CustomType: fwtypes.ARNType,
+								Required:   true,
+							},
+						},
 					},
 				},
 			},
 			"notification_channel": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
 				Attributes: map[string]schema.Attribute{
 					"sns_topic_arn": schema.StringAttribute{
 						CustomType: fwtypes.ARNType,
@@ -118,65 +130,90 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 					},
 				},
 			},
+			"regions_of_interest": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[regionOfInterestModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					CustomType: fwtypes.NewObjectTypeOf[regionOfInterestModel](ctx),
+					Blocks: map[string]schema.Block{
+						"bounding_box": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[boundingBoxModel](ctx),
+							Attributes: map[string]schema.Attribute{
+								"height": schema.NumberAttribute{},
+								"left":   schema.NumberAttribute{},
+								"top":    schema.NumberAttribute{},
+								"width":  schema.NumberAttribute{},
+							},
+						},
+						"polygon": schema.SingleNestedBlock{
+							CustomType: fwtypes.NewObjectTypeOf[polygonModel](ctx),
+							Attributes: map[string]schema.Attribute{
+								"x": schema.NumberAttribute{},
+								"y": schema.NumberAttribute{},
+							},
+						},
+					},
+				},
+			},
 			"output": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[outputModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
-				Attributes: map[string]schema.Attribute{
-					"kinesis_video_stream_arn": schema.StringAttribute{
-						CustomType: fwtypes.ARNType,
-						Required:   true,
+				Blocks: map[string]schema.Block{
+					"kinesis_data_stream": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[kinesisDataStreamModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"arn": schema.StringAttribute{
+								CustomType: fwtypes.ARNType,
+								Required:   true,
+							},
+						},
 					},
-					"s3_bucket": schema.StringAttribute{
-						Required: true,
+					"s3_destination": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[s3DestinationModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							names.AttrBucket: schema.StringAttribute{
+								Optional: true,
+							},
+							"key_prefix": schema.StringAttribute{
+								Optional: true,
+							},
+						},
 					},
-					"s3_key_prefix": schema.StringAttribute{
-						Required: true,
+				},
+			},
+			"settings": schema.SingleNestedBlock{
+				CustomType: fwtypes.NewObjectTypeOf[settingsModel](ctx),
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
+				Blocks: map[string]schema.Block{
+					"connected_home": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[connectedHomeModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"labels": schema.ListAttribute{
+								ElementType: types.StringType,
+							},
+							"min_confidence": schema.NumberAttribute{},
+						},
+					},
+					"face_search": schema.SingleNestedBlock{
+						CustomType: fwtypes.NewObjectTypeOf[faceSearchModel](ctx),
+						Attributes: map[string]schema.Attribute{
+							"collection_id":  schema.StringAttribute{},
+							"min_confidence": schema.NumberAttribute{},
+						},
 					},
 				},
 			},
 		},
-		// Blocks: map[string]schema.Block{
-		// 	"complex_argument": schema.ListNestedBlock{
-		// 		// TIP: ==== LIST VALIDATORS ====
-		// 		// List and set validators take the place of MaxItems and MinItems in
-		// 		// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-		// 		// make a nested object required. Similar to Plugin-SDK, complex objects
-		// 		// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-		// 		//
-		// 		// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-		// 		// see:
-		// 		// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-		// 		Validators: []validator.List{
-		// 			listvalidator.SizeAtMost(1),
-		// 		},
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"nested_required": schema.StringAttribute{
-		// 					Required: true,
-		// 				},
-		// 				"nested_computed": schema.StringAttribute{
-		// 					Computed: true,
-		// 					PlanModifiers: []planmodifier.String{
-		// 						stringplanmodifier.UseStateForUnknown(),
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	"timeouts": timeouts.Block(ctx, timeouts.Opts{
-		// 		Create: true,
-		// 		Update: true,
-		// 		Delete: true,
-		// 	}),
-		// },
 	}
 }
 
 func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	var plan resourceStreamProcessorData
+	var plan resourceStreamProcessorDataModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -207,7 +244,6 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 
 	plan.ID = plan.ARN
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitStreamProcessorCreated(ctx, conn, plan.Name.ValueString(), createTimeout)
 	if err != nil {
@@ -218,23 +254,21 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	// TIP: -- 2. Fetch the state
-	var state resourceStreamProcessorData
+	var state resourceStreamProcessorDataModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findStreamProcessorByID(ctx, conn, state.Name.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -246,34 +280,27 @@ func (r *resourceStreamProcessor) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	state.Name = flex.StringToFramework(ctx, out.Name)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	// TIP: Setting a complex type.
-	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
-	// resp.Diagnostics.Append(d...)
-	// state.ComplexArgument = complexArgument
-
-	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RekognitionClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
-	var plan, state resourceStreamProcessorData
+	var plan, state resourceStreamProcessorDataModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a modify input structure and check for changes
 	if !plan.Name.Equal(state.Name) {
 
 		in := &rekognition.UpdateStreamProcessorInput{
-			// TIP: Mandatory or fields that will always be present can be set when
-			// you create the Input structure. (Replace these with real fields.)
 			Name: aws.String(plan.Name.ValueString()),
 		}
 
@@ -287,22 +314,8 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 			return
 		}
 
-		// we have to call describe to get the new values
-
-		// if out == nil || out.ResultMetadata == nil {
-		// 	resp.Diagnostics.AddError(
-		// 		create.ProblemStandardMessage(names.Rekognition, create.ErrActionUpdating, ResNameStreamProcessor, plan.Name.String(), nil),
-		// 		errors.New("empty output").Error(),
-		// 	)
-		// 	return
-		// }
-
-		// TIP: Using the output from the update function, re-set any computed attributes
-		// plan.ARN = flex.StringToFramework(ctx, out.Arn)
-		// plan.ID = flex.StringToFramework(ctx, out.StreamProcessor.StreamProcessorId)
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitStreamProcessorUpdated(ctx, conn, plan.Name.ValueString(), updateTimeout)
 	if err != nil {
@@ -313,7 +326,6 @@ func (r *resourceStreamProcessor) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -321,7 +333,7 @@ func (r *resourceStreamProcessor) Delete(ctx context.Context, req resource.Delet
 	conn := r.Meta().RekognitionClient(ctx)
 
 	// TIP: -- 2. Fetch the state
-	var state resourceStreamProcessorData
+	var state resourceStreamProcessorDataModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -466,21 +478,21 @@ func findStreamProcessorByID(ctx context.Context, conn *rekognition.Client, name
 	return out, nil
 }
 
-type resourceStreamProcessorData struct {
-	ARN                   types.String                                      `tfsdk:"arn"`
-	DataSharingPreference fwtypes.ObjectValueOf[dataSharingPreferenceModel] `tfsdk:"data_sharing_preference"`
-	ID                    types.String                                      `tfsdk:"id"`
-	Input                 fwtypes.ObjectValueOf[inputModel]                 `tfsdk:"input"`
-	KmsKeyId              types.String                                      `tfsdk:"kms_key_id"`
-	NotificationChannel   fwtypes.ObjectValueOf[notificationChannelModel]   `tfsdk:"notification_channel"`
-	Name                  types.String                                      `tfsdk:"name"`
-	Output                fwtypes.ObjectValueOf[outputModel]                `tfsdk:"output"`
-	RegionsOfInterest     fwtypes.ObjectValueOf[[]regionOfInterestModel]    `tfsdk:"regions_of_interest"`
-	RoleARN               fwtypes.ARN                                       `tfsdk:"role_arn"`
-	Settings              fwtypes.ObjectValueOf[settingsModel]              `tfsdk:"settings"`
-	Tags                  types.Map                                         `tfsdk:"tags"`
-	TagsAll               types.Map                                         `tfsdk:"tags_all"`
-	Timeouts              timeouts.Value                                    `tfsdk:"timeouts"`
+type resourceStreamProcessorDataModel struct {
+	ARN                   types.String                                           `tfsdk:"arn"`
+	DataSharingPreference fwtypes.ObjectValueOf[dataSharingPreferenceModel]      `tfsdk:"data_sharing_preference"`
+	ID                    types.String                                           `tfsdk:"id"`
+	Input                 fwtypes.ObjectValueOf[inputModel]                      `tfsdk:"input"`
+	KmsKeyId              types.String                                           `tfsdk:"kms_key_id"`
+	NotificationChannel   fwtypes.ObjectValueOf[notificationChannelModel]        `tfsdk:"notification_channel"`
+	Name                  types.String                                           `tfsdk:"name"`
+	Output                fwtypes.ObjectValueOf[outputModel]                     `tfsdk:"output"`
+	RegionsOfInterest     fwtypes.ListNestedObjectValueOf[regionOfInterestModel] `tfsdk:"regions_of_interest"`
+	RoleARN               fwtypes.ARN                                            `tfsdk:"role_arn"`
+	Settings              fwtypes.ObjectValueOf[settingsModel]                   `tfsdk:"settings"`
+	Tags                  types.Map                                              `tfsdk:"tags"`
+	TagsAll               types.Map                                              `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value                                         `tfsdk:"timeouts"`
 }
 
 type dataSharingPreferenceModel struct {
