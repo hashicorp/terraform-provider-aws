@@ -50,7 +50,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return diags
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -92,7 +92,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "Overriding the system-default SSL/TLS certificate to (%s): %s", certificate_identifier, err)
 	}
 
-	return diags
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
