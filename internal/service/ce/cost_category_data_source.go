@@ -44,7 +44,7 @@ func dataSourceCostCategory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"rule": {
+				names.AttrRule: {
 					Type:     schema.TypeSet,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -65,7 +65,7 @@ func dataSourceCostCategory() *schema.Resource {
 									},
 								},
 							},
-							"rule": {
+							names.AttrRule: {
 								Type:     schema.TypeList,
 								Computed: true,
 								Elem:     sdkv2.DataSourceElemFromResourceElem(expressionElem(costCategoryRuleRootElementSchemaLevel)),
@@ -152,7 +152,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set(names.AttrName, costCategory.Name)
-	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
+	if err = d.Set(names.AttrRule, flattenCostCategoryRules(costCategory.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
