@@ -85,12 +85,12 @@ func resourceInstanceGroup() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
@@ -425,10 +425,10 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 			conf := config.(map[string]interface{})
 			ebs := &emr.EbsBlockDeviceConfig{}
 			volumeSpec := &emr.VolumeSpecification{
-				SizeInGB:   aws.Int64(int64(conf["size"].(int))),
+				SizeInGB:   aws.Int64(int64(conf[names.AttrSize].(int))),
 				VolumeType: aws.String(conf[names.AttrType].(string)),
 			}
-			if v, ok := conf["iops"].(int); ok && v != 0 {
+			if v, ok := conf[names.AttrIOPS].(int); ok && v != 0 {
 				volumeSpec.Iops = aws.Int64(int64(v))
 			}
 			if v, ok := conf["volumes_per_instance"].(int); ok && v != 0 {
