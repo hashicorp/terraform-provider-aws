@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Instances",
 		},
 		{
-			Factory:  DataSourceMaintenanceWindows,
+			Factory:  dataSourceMaintenanceWindows,
 			TypeName: "aws_ssm_maintenance_windows",
+			Name:     "Maintenance Windows",
 		},
 		{
 			Factory:  DataSourceParameter,
