@@ -43,7 +43,7 @@ func ResourceDevEnvironment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -84,7 +84,7 @@ func ResourceDevEnvironment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -137,7 +137,7 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 		in.InactivityTimeoutMinutes = int32(v.(int))
 	}
 
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		in.Alias = aws.String(v.(string))
 	}
 
@@ -188,7 +188,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameDevEnvironment, d.Id(), err)
 	}
 
-	d.Set("alias", out.Alias)
+	d.Set(names.AttrAlias, out.Alias)
 	d.Set("project_name", out.ProjectName)
 	d.Set("space_name", out.SpaceName)
 	d.Set(names.AttrInstanceType, out.InstanceType)
@@ -217,8 +217,8 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 		Id: aws.String(d.Id()),
 	}
 
-	if d.HasChanges("alias") {
-		in.Alias = aws.String(d.Get("alias").(string))
+	if d.HasChanges(names.AttrAlias) {
+		in.Alias = aws.String(d.Get(names.AttrAlias).(string))
 		update = true
 	}
 
@@ -412,7 +412,7 @@ func flattenPersistentStorage(apiObject *types.PersistentStorage) []map[string]i
 	}
 
 	tfMap := map[string]interface{}{
-		"size": aws.ToInt32(apiObject.SizeInGiB),
+		names.AttrSize: aws.ToInt32(apiObject.SizeInGiB),
 	}
 
 	return []map[string]interface{}{tfMap}
@@ -491,7 +491,7 @@ func expandIdeConfiguration(tfMap map[string]interface{}) types.IdeConfiguration
 func expandPersistentStorageConfiguration(tfMap map[string]interface{}) *types.PersistentStorageConfiguration {
 	apiObject := &types.PersistentStorageConfiguration{}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
 
