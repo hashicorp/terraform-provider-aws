@@ -54,7 +54,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_virtual_machine_arn", svmResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^fsxn-(nfs|smb)://.+/`)),
 				),
 			},
 			{

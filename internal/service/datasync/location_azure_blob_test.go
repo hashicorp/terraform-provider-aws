@@ -46,7 +46,7 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -156,7 +156,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 		},

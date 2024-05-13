@@ -45,7 +45,7 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "efs_file_system_arn", efsFileSystemResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^efs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^efs://.+/`)),
 				),
 			},
 			{

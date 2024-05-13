@@ -44,7 +44,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_arns.*", subnetResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 				),
 			},
 			{

@@ -55,7 +55,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "simple_user", rName),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
 			{

@@ -47,7 +47,7 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/fsx/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^fsxz://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^fsxz://.+/`)),
 				),
 			},
 			{
