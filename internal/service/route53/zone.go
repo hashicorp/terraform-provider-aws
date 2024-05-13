@@ -66,7 +66,7 @@ func ResourceZone() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"vpc"},
+				ConflictsWith: []string{names.AttrVPC},
 				ValidateFunc:  validation.StringLenBetween(0, 32),
 			},
 			names.AttrForceDestroy: {
@@ -96,7 +96,7 @@ func ResourceZone() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc": {
+			names.AttrVPC: {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				MinItems:      1,
@@ -145,7 +145,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
+	vpcs := expandVPCs(d.Get(names.AttrVPC).(*schema.Set).List(), meta.(*conns.AWSClient).Region)
 
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
@@ -238,7 +238,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	sort.Strings(nameServers)
 	d.Set("name_servers", nameServers)
 
-	if err := d.Set("vpc", flattenVPCs(output.VPCs)); err != nil {
+	if err := d.Set(names.AttrVPC, flattenVPCs(output.VPCs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc: %s", err)
 	}
 
@@ -263,8 +263,8 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("vpc") {
-		o, n := d.GetChange("vpc")
+	if d.HasChange(names.AttrVPC) {
+		o, n := d.GetChange(names.AttrVPC)
 		oldVPCs := o.(*schema.Set)
 		newVPCs := n.(*schema.Set)
 
