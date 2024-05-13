@@ -132,7 +132,7 @@ func resourceCustomActionType() *schema.Resource {
 					},
 				},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -272,7 +272,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("output_artifact_details", nil)
 	}
-	d.Set("owner", actionType.Id.Owner)
+	d.Set(names.AttrOwner, actionType.Id.Owner)
 	d.Set("provider_name", actionType.Id.Provider)
 	if actionType.Settings != nil &&
 		// Service can return empty ({}) Settings.
