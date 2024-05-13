@@ -45,7 +45,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 			},
-			"creation_date": schema.StringAttribute{
+			names.AttrCreationDate: schema.StringAttribute{
 				Computed: true,
 			},
 			"custom_domain": schema.StringAttribute{
@@ -54,7 +54,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 			"deletion_protection": schema.StringAttribute{
 				Computed: true,
 			},
-			"domain": schema.StringAttribute{
+			names.AttrDomain: schema.StringAttribute{
 				Computed: true,
 			},
 			"estimated_number_of_users": schema.Int64Attribute{
@@ -99,7 +99,7 @@ func (d *dataSourceUserPool) Schema(ctx context.Context, req datasource.SchemaRe
 									names.AttrName: schema.StringAttribute{
 										Computed: true,
 									},
-									"priority": schema.Int64Attribute{
+									names.AttrPriority: schema.Int64Attribute{
 										Computed: true,
 									},
 								},
