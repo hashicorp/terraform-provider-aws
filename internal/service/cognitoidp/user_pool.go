@@ -1988,7 +1988,7 @@ func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovi
 			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
-			Name:                   aws.String("email"),
+			Name:                   aws.String(names.AttrEmail),
 			Required:               aws.Bool(false),
 			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
