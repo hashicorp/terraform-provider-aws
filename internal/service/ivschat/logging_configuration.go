@@ -55,7 +55,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cloudwatch_logs": {
+						names.AttrCloudWatchLogs: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -101,7 +101,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 								},
 							},
 						},
-						"s3": {
+						names.AttrS3: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -282,13 +282,13 @@ func flattenDestinationConfiguration(apiObject types.DestinationConfiguration) [
 
 	switch v := apiObject.(type) {
 	case *types.DestinationConfigurationMemberCloudWatchLogs:
-		m["cloudwatch_logs"] = flattenCloudWatchDestinationConfiguration(v.Value)
+		m[names.AttrCloudWatchLogs] = flattenCloudWatchDestinationConfiguration(v.Value)
 
 	case *types.DestinationConfigurationMemberFirehose:
 		m["firehose"] = flattenFirehoseDestinationConfiguration(v.Value)
 
 	case *types.DestinationConfigurationMemberS3:
-		m["s3"] = flattenS3DestinationConfiguration(v.Value)
+		m[names.AttrS3] = flattenS3DestinationConfiguration(v.Value)
 
 	case *types.UnknownUnionMember:
 		log.Println("unknown tag:", v.Tag)
@@ -337,7 +337,7 @@ func expandDestinationConfiguration(vSettings []interface{}) types.DestinationCo
 
 	tfMap := vSettings[0].(map[string]interface{})
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCloudWatchLogs].([]interface{}); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberCloudWatchLogs{
 			Value: *expandCloudWatchLogsDestinationConfiguration(v),
 		}
@@ -345,7 +345,7 @@ func expandDestinationConfiguration(vSettings []interface{}) types.DestinationCo
 		return &types.DestinationConfigurationMemberFirehose{
 			Value: *expandFirehouseDestinationConfiguration(v),
 		}
-	} else if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 {
+	} else if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 {
 		return &types.DestinationConfigurationMemberS3{
 			Value: *expandS3DestinationConfiguration(v),
 		}
