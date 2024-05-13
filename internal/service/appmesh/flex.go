@@ -310,7 +310,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		grpcRoute.RetryPolicy = grpcRetryPolicy
 	}
 
-	if vGrpcTimeout, ok := mGrpcRoute["timeout"].([]interface{}); ok {
+	if vGrpcTimeout, ok := mGrpcRoute[names.AttrTimeout].([]interface{}); ok {
 		grpcRoute.Timeout = expandGRPCTimeout(vGrpcTimeout)
 	}
 
@@ -395,7 +395,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			httpRouteMatch.Scheme = aws.String(vScheme)
 		}
 
-		if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
+		if vHttpRouteHeaders, ok := mHttpRouteMatch[names.AttrHeader].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
 			httpRouteHeaders := []*appmesh.HttpRouteHeader{}
 
 			for _, vHttpRouteHeader := range vHttpRouteHeaders.List() {
@@ -518,7 +518,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		httpRoute.RetryPolicy = httpRetryPolicy
 	}
 
-	if vHttpTimeout, ok := mHttpRoute["timeout"].([]interface{}); ok {
+	if vHttpTimeout, ok := mHttpRoute[names.AttrTimeout].([]interface{}); ok {
 		httpRoute.Timeout = expandHTTPTimeout(vHttpTimeout)
 	}
 
@@ -660,7 +660,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 		tcpRoute.Match = tcpRouteMatch
 	}
 
-	if vTcpTimeout, ok := mTcpRoute["timeout"].([]interface{}); ok {
+	if vTcpTimeout, ok := mTcpRoute[names.AttrTimeout].([]interface{}); ok {
 		tcpRoute.Timeout = expandTCPTimeout(vTcpTimeout)
 	}
 
@@ -869,7 +869,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				listener.PortMapping = portMapping
 			}
 
-			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+			if vTimeout, ok := mListener[names.AttrTimeout].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
 				mTimeout := vTimeout[0].(map[string]interface{})
 
 				listenerTimeout := &appmesh.ListenerTimeout{}
@@ -1391,7 +1391,7 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
 	}
 
-	mGrpcRoute["timeout"] = flattenGRPCTimeout(grpcRoute.Timeout)
+	mGrpcRoute[names.AttrTimeout] = flattenGRPCTimeout(grpcRoute.Timeout)
 
 	return []interface{}{mGrpcRoute}
 }
@@ -1501,7 +1501,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 
 		mHttpRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"header":          vHttpRouteHeaders,
+				names.AttrHeader:  vHttpRouteHeaders,
 				"method":          aws.StringValue(httpRouteMatch.Method),
 				names.AttrPath:    vHttpRoutePath,
 				names.AttrPort:    int(aws.Int64Value(httpRouteMatch.Port)),
@@ -1523,7 +1523,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 	}
 
-	mHttpRoute["timeout"] = flattenHTTPTimeout(httpRoute.Timeout)
+	mHttpRoute[names.AttrTimeout] = flattenHTTPTimeout(httpRoute.Timeout)
 
 	return []interface{}{mHttpRoute}
 }
@@ -1620,7 +1620,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 		}
 	}
 
-	mTcpRoute["timeout"] = flattenTCPTimeout(tcpRoute.Timeout)
+	mTcpRoute[names.AttrTimeout] = flattenTCPTimeout(tcpRoute.Timeout)
 
 	return []interface{}{mTcpRoute}
 }
@@ -1752,7 +1752,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 					"http2": flattenHTTPTimeout(listenerTimeout.Http2),
 					"tcp":   flattenTCPTimeout(listenerTimeout.Tcp),
 				}
-				mListener["timeout"] = []interface{}{mListenerTimeout}
+				mListener[names.AttrTimeout] = []interface{}{mListenerTimeout}
 			}
 
 			if tls := listener.Tls; tls != nil {
