@@ -304,3 +304,14 @@ func stripCR(b []byte) []byte {
 func suppressNormalizeCertRemoval(k, old, new string, d *schema.ResourceData) bool {
 	return normalizeCert(new) == old
 }
+
+func serverCertificateTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListServerCertificateTags(ctx, &iam.ListServerCertificateTagsInput{
+		ServerCertificateName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
+}
