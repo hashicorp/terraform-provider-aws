@@ -78,6 +78,7 @@ type ARNCheckFunc func(any, string, arn.ARN) ([]string, []error)
 // ValidARNCheck validates that a string value matches an ARN format with additional validation on the parsed ARN value
 // It must:
 // * Be parseable as an ARN
+// * Have a non-empty value
 // * Have a valid partition
 // * Have a valid region
 // * Have either an empty or valid account ID
@@ -92,6 +93,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 		}
 
 		if value == "" {
+			errors = append(errors, fmt.Errorf("%s cannot be empty", k))
 			return ws, errors
 		}
 
