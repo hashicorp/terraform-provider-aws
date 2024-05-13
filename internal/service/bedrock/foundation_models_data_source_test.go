@@ -106,7 +106,7 @@ func TestAccBedrockFoundationModelsDataSource_byProvider(t *testing.T) {
 			{
 				Config: testAccFoundationModelsDataSourceConfig_byProvider(provider),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
 					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
