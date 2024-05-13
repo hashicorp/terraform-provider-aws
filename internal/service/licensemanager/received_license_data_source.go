@@ -112,7 +112,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
-			"issuer": {
+			names.AttrIssuer: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
@@ -237,7 +237,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
 	d.Set("entitlements", flattenEntitlements(out.Entitlements))
 	d.Set("home_region", out.HomeRegion)
-	d.Set("issuer", []interface{}{flattenIssuer(out.Issuer)})
+	d.Set(names.AttrIssuer, []interface{}{flattenIssuer(out.Issuer)})
 	d.Set("license_arn", out.LicenseArn)
 	d.Set("license_metadata", flattenMetadatas(out.LicenseMetadata))
 	d.Set("license_name", out.LicenseName)
