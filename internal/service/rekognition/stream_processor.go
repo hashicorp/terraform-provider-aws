@@ -264,7 +264,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 						Attributes: map[string]schema.Attribute{
 							"labels": schema.ListAttribute{
 								Description: "Specifies what you want to detect in the video, such as people, packages, or pets.",
-								ElementType: types.StringType, //TODO: THIS SHOULD BE A CUSTOM ENUM TYPE "PERSON", "PET", "PACKAGE", and "ALL".
+								ElementType: fwtypes.StringEnumType[labelSettings](),
 								Required:    true,
 							},
 							"min_confidence": schema.Int64Attribute{
@@ -644,4 +644,16 @@ type connectedHomeModel struct {
 type faceSearchModel struct {
 	CollectionId       types.String `tfsdk:"collection_id"`
 	FaceMatchThreshold types.Number `tfsdk:"face_match_threshold"`
+}
+
+/** AWS SDK doesn't have a settings.connectedhome.labels enum available */
+type labelSettings string
+
+func (labelSettings) Values() []labelSettings {
+	return []labelSettings{
+		"PERSON",
+		"PET",
+		"PACKAGE",
+		"ALL",
+	}
 }
