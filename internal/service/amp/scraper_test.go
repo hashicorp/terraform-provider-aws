@@ -41,7 +41,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 				Config: testAccScraperConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckNoResourceAttr(resourceName, "alias"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
@@ -162,7 +162,7 @@ func TestAccAMPScraper_alias(t *testing.T) {
 				Config: testAccScraperConfig_alias(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
 				),
 			},
 			{
