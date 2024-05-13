@@ -262,7 +262,7 @@ func layoutSchema() *schema.Schema {
 											MaxItems: 28,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"content": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BodySectionContent.html
+													names.AttrContent: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BodySectionContent.html
 														Type:     schema.TypeList,
 														Required: true,
 														MinItems: 1,
@@ -508,7 +508,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 									},
 								},
 							},
-							"expression": stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
 						},
 					},
 				},
@@ -1193,7 +1193,7 @@ func expandSheetElementRenderingRule(tfMap map[string]interface{}) *quicksight.S
 
 	layout := &quicksight.SheetElementRenderingRule{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		layout.Expression = aws.String(v)
 	}
 	if v, ok := tfMap["configuration_overrides"].([]interface{}); ok && len(v) > 0 {
@@ -1360,7 +1360,7 @@ func expandBodySectionConfiguration(tfMap map[string]interface{}) *quicksight.Bo
 	if v, ok := tfMap["section_id"].(string); ok && v != "" {
 		config.SectionId = aws.String(v)
 	}
-	if v, ok := tfMap["content"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrContent].([]interface{}); ok && len(v) > 0 {
 		config.Content = expandBodySectionContent(v)
 	}
 	if v, ok := tfMap["page_break_configuration"].([]interface{}); ok && len(v) > 0 {
@@ -1646,7 +1646,7 @@ func expandSheetTextBox(tfMap map[string]interface{}) *quicksight.SheetTextBox {
 	if v, ok := tfMap["sheet_text_box_id"].(string); ok && v != "" {
 		box.SheetTextBoxId = aws.String(v)
 	}
-	if v, ok := tfMap["content"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrContent].(string); ok && v != "" {
 		box.Content = aws.String(v)
 	}
 
@@ -2046,7 +2046,7 @@ func flattenSheetElementRenderingRule(apiObject []*quicksight.SheetElementRender
 			tfMap["configuration_overrides"] = flattenSheetElementConfigurationOverrides(config.ConfigurationOverrides)
 		}
 		if config.Expression != nil {
-			tfMap["expression"] = aws.StringValue(config.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(config.Expression)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -2147,8 +2147,8 @@ func flattenBodySectionConfiguration(apiObject []*quicksight.BodySectionConfigur
 		}
 
 		tfMap := map[string]interface{}{
-			"content":    flattenBodySectionContent(config.Content),
-			"section_id": aws.StringValue(config.SectionId),
+			names.AttrContent: flattenBodySectionContent(config.Content),
+			"section_id":      aws.StringValue(config.SectionId),
 		}
 		if config.PageBreakConfiguration != nil {
 			tfMap["page_break_configuration"] = flattenSectionPageBreakConfiguration(config.PageBreakConfiguration)

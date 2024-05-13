@@ -126,7 +126,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 												Required:     true,
 												ValidateFunc: validation.StringLenBetween(1, 255),
 											},
-											"weight": {
+											names.AttrWeight: {
 												Type:         schema.TypeInt,
 												Required:     true,
 												ValidateFunc: validation.IntBetween(0, 100),
@@ -420,7 +420,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),
@@ -677,7 +677,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 														Required:     true,
 														ValidateFunc: validation.StringLenBetween(1, 255),
 													},
-													"weight": {
+													names.AttrWeight: {
 														Type:         schema.TypeInt,
 														Required:     true,
 														ValidateFunc: validation.IntBetween(0, 100),

@@ -139,7 +139,7 @@ func ResourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -235,7 +235,7 @@ func ResourceListener() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
@@ -251,7 +251,7 @@ func ResourceListener() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"duration": {
+												names.AttrDuration: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 604800),
@@ -798,7 +798,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 	config := &awstypes.AuthenticateOidcActionConfig{
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
-		ClientId:                         aws.String(tfMap["client_id"].(string)),
+		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
 		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
 		Issuer:                           aws.String(tfMap["issuer"].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
@@ -930,7 +930,7 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes
 
 		group := awstypes.TargetGroupTuple{
 			TargetGroupArn: aws.String(tfMap[names.AttrARN].(string)),
-			Weight:         aws.Int32(int32(tfMap["weight"].(int))),
+			Weight:         aws.Int32(int32(tfMap[names.AttrWeight].(int))),
 		}
 
 		groups = append(groups, group)
@@ -951,7 +951,7 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 
 	// The Plugin SDK stores a `nil` returned by the API as a `0` in the state. This is a invalid value.
 	var duration *int32
-	if v := tfMap["duration"].(int); v > 0 {
+	if v := tfMap[names.AttrDuration].(int); v > 0 {
 		duration = aws.Int32(int32(v))
 	}
 
@@ -1079,7 +1079,7 @@ func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcAction
 	m := map[string]interface{}{
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
-		"client_id":                           aws.ToString(config.ClientId),
+		names.AttrClientID:                    aws.ToString(config.ClientId),
 		"client_secret":                       clientSecret,
 		"issuer":                              aws.ToString(config.Issuer),
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
@@ -1148,8 +1148,8 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGr
 
 	for _, group := range groups {
 		m := map[string]interface{}{
-			names.AttrARN: aws.ToString(group.TargetGroupArn),
-			"weight":      aws.ToInt32(group.Weight),
+			names.AttrARN:    aws.ToString(group.TargetGroupArn),
+			names.AttrWeight: aws.ToInt32(group.Weight),
 		}
 
 		vGroups = append(vGroups, m)
@@ -1164,8 +1164,8 @@ func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *aws
 	}
 
 	m := map[string]interface{}{
-		names.AttrEnabled: aws.ToBool(config.Enabled),
-		"duration":        aws.ToInt32(config.DurationSeconds),
+		names.AttrEnabled:  aws.ToBool(config.Enabled),
+		names.AttrDuration: aws.ToInt32(config.DurationSeconds),
 	}
 
 	return []interface{}{m}

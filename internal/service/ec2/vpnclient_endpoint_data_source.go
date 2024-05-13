@@ -128,7 +128,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -245,7 +245,7 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		d.Set("connection_log_options", nil)
 	}
 	d.Set(names.AttrDescription, ep.Description)
-	d.Set("dns_name", ep.DnsName)
+	d.Set(names.AttrDNSName, ep.DnsName)
 	d.Set("dns_servers", aws.StringSlice(ep.DnsServers))
 	d.Set(names.AttrSecurityGroupIDs, aws.StringSlice(ep.SecurityGroupIds))
 	if aws.ToString(ep.SelfServicePortalUrl) != "" {

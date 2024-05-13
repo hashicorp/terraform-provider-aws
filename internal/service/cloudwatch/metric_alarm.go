@@ -125,7 +125,7 @@ func resourceMetricAlarm() *schema.Resource {
 					),
 				},
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"metric_query"},
@@ -134,7 +134,7 @@ func resourceMetricAlarm() *schema.Resource {
 			"metric_query": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"metric_name"},
+				ConflictsWith: []string{names.AttrMetricName},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrAccountID: {
@@ -142,7 +142,7 @@ func resourceMetricAlarm() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-						"expression": {
+						names.AttrExpression: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -163,7 +163,7 @@ func resourceMetricAlarm() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -291,7 +291,7 @@ func resourceMetricAlarm() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-				_, metricNameOk := diff.GetOk("metric_name")
+				_, metricNameOk := diff.GetOk(names.AttrMetricName)
 				_, statisticOk := diff.GetOk("statistic")
 				_, extendedStatisticOk := diff.GetOk("extended_statistic")
 
@@ -302,7 +302,7 @@ func resourceMetricAlarm() *schema.Resource {
 				if v := diff.Get("metric_query"); v != nil {
 					for _, v := range v.(*schema.Set).List() {
 						tfMap := v.(map[string]interface{})
-						if v, ok := tfMap["expression"]; ok && v.(string) != "" {
+						if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
 							if v := tfMap["metric"]; v != nil {
 								if len(v.([]interface{})) > 0 {
 									return errors.New("No metric_query may have both `expression` and a `metric` specified")
@@ -393,7 +393,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("evaluation_periods", alarm.EvaluationPeriods)
 	d.Set("extended_statistic", alarm.ExtendedStatistic)
 	d.Set("insufficient_data_actions", alarm.InsufficientDataActions)
-	d.Set("metric_name", alarm.MetricName)
+	d.Set(names.AttrMetricName, alarm.MetricName)
 	if len(alarm.Metrics) > 0 {
 		if err := d.Set("metric_query", flattenMetricAlarmMetrics(alarm.Metrics)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metric_query: %s", err)
@@ -512,7 +512,7 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.InsufficientDataActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("metric_name"); ok {
+	if v, ok := d.GetOk(names.AttrMetricName); ok {
 		apiObject.MetricName = aws.String(v.(string))
 	}
 
@@ -568,11 +568,11 @@ func flattenMetricAlarmMetrics(apiObjects []types.MetricDataQuery) []interface{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			names.AttrAccountID: aws.ToString(apiObject.AccountId),
-			"expression":        aws.ToString(apiObject.Expression),
-			names.AttrID:        aws.ToString(apiObject.Id),
-			"label":             aws.ToString(apiObject.Label),
-			"return_data":       aws.ToBool(apiObject.ReturnData),
+			names.AttrAccountID:  aws.ToString(apiObject.AccountId),
+			names.AttrExpression: aws.ToString(apiObject.Expression),
+			names.AttrID:         aws.ToString(apiObject.Id),
+			"label":              aws.ToString(apiObject.Label),
+			"return_data":        aws.ToBool(apiObject.ReturnData),
 		}
 
 		if v := apiObject.MetricStat; v != nil {
@@ -602,7 +602,7 @@ func flattenMetricAlarmMetricsMetricStat(apiObject *types.MetricStat) map[string
 
 	if v := apiObject.Metric; v != nil {
 		tfMap["dimensions"] = flattenMetricAlarmDimensions(v.Dimensions)
-		tfMap["metric_name"] = aws.ToString(v.MetricName)
+		tfMap[names.AttrMetricName] = aws.ToString(v.MetricName)
 		tfMap[names.AttrNamespace] = aws.ToString(v.Namespace)
 	}
 
@@ -631,7 +631,7 @@ func expandMetricAlarmMetrics(tfList []interface{}) []types.MetricDataQuery {
 			apiObject.AccountId = aws.String(v.(string))
 		}
 
-		if v, ok := tfMap["expression"]; ok && v.(string) != "" {
+		if v, ok := tfMap[names.AttrExpression]; ok && v.(string) != "" {
 			apiObject.Expression = aws.String(v.(string))
 		}
 
@@ -668,7 +668,7 @@ func expandMetricAlarmMetricsMetric(tfMap map[string]interface{}) *types.MetricS
 
 	apiObject := &types.MetricStat{
 		Metric: &types.Metric{
-			MetricName: aws.String(tfMap["metric_name"].(string)),
+			MetricName: aws.String(tfMap[names.AttrMetricName].(string)),
 		},
 		Stat: aws.String(tfMap["stat"].(string)),
 	}

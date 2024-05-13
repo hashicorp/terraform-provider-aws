@@ -81,7 +81,7 @@ func ResourceVerifiedAccessTrustProvider() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IsURLWithHTTPS,
 						},
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
@@ -302,7 +302,7 @@ func flattenOIDCOptions(apiObject *types.OidcOptions, clientSecret string) []int
 		tfMap["authorization_endpoint"] = aws.ToString(v)
 	}
 	if v := apiObject.ClientId; v != nil {
-		tfMap["client_id"] = aws.ToString(v)
+		tfMap[names.AttrClientID] = aws.ToString(v)
 	}
 	if v := apiObject.Issuer; v != nil {
 		tfMap["issuer"] = aws.ToString(v)
@@ -344,7 +344,7 @@ func expandCreateVerifiedAccessTrustProviderOIDCOptions(tfMap map[string]interfa
 	if v, ok := tfMap["authorization_endpoint"].(string); ok && v != "" {
 		apiObject.AuthorizationEndpoint = aws.String(v)
 	}
-	if v, ok := tfMap["client_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrClientID].(string); ok && v != "" {
 		apiObject.ClientId = aws.String(v)
 	}
 	if v, ok := tfMap["client_secret"].(string); ok && v != "" {

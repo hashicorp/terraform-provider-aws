@@ -98,7 +98,7 @@ func ResourceHealthCheck() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.IsIPAddress,
@@ -206,7 +206,7 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.Inverted = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		healthCheckConfig.IPAddress = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk(names.AttrPort); ok {
@@ -325,7 +325,7 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("fqdn", healthCheckConfig.FullyQualifiedDomainName)
 	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
 	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
-	d.Set("ip_address", healthCheckConfig.IPAddress)
+	d.Set(names.AttrIPAddress, healthCheckConfig.IPAddress)
 	d.Set("measure_latency", healthCheckConfig.MeasureLatency)
 	d.Set(names.AttrPort, healthCheckConfig.Port)
 	d.Set("regions", aws.StringValueSlice(healthCheckConfig.Regions))
@@ -388,8 +388,8 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.Inverted = aws.Bool(d.Get("invert_healthcheck").(bool))
 		}
 
-		if d.HasChange("ip_address") {
-			input.IPAddress = aws.String(d.Get("ip_address").(string))
+		if d.HasChange(names.AttrIPAddress) {
+			input.IPAddress = aws.String(d.Get(names.AttrIPAddress).(string))
 		}
 
 		if d.HasChange(names.AttrPort) {

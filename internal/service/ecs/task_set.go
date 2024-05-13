@@ -62,7 +62,7 @@ func ResourceTaskSet() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
@@ -148,7 +148,7 @@ func ResourceTaskSet() *schema.Resource {
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							MaxItems: 16,
 							Required: true,

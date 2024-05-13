@@ -52,9 +52,9 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
+				ConflictsWith: []string{"private_link_endpoint", names.AttrIPAddress},
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -102,7 +102,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
 	activationKey := d.Get("activation_key").(string)
-	agentIpAddress := d.Get("ip_address").(string)
+	agentIpAddress := d.Get(names.AttrIPAddress).(string)
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {

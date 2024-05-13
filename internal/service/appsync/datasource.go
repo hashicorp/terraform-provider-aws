@@ -246,7 +246,7 @@ func ResourceDataSource() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"schema": {
+									names.AttrSchema: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -886,7 +886,7 @@ func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegio
 		result.DbClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := configured["schema"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrSchema]; ok && v.(string) != "" {
 		result.Schema = aws.String(v.(string))
 	}
 
@@ -917,7 +917,7 @@ func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[s
 	}
 
 	if config.Schema != nil {
-		result["schema"] = aws.StringValue(config.Schema)
+		result[names.AttrSchema] = aws.StringValue(config.Schema)
 	}
 
 	return []map[string]interface{}{result}

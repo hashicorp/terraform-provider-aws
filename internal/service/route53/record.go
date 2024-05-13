@@ -307,7 +307,7 @@ func ResourceRecord() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -490,7 +490,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if record.Weight != nil {
 		v := []map[string]interface{}{{
-			"weight": aws.Int64Value((record.Weight)),
+			names.AttrWeight: aws.Int64Value((record.Weight)),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting weighted_routing_policy: %s", err)
@@ -617,7 +617,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if o, ok := v.([]interface{}); ok {
 			if len(o) == 1 {
 				if v, ok := o[0].(map[string]interface{}); ok {
-					oldRec.Weight = aws.Int64(int64(v["weight"].(int)))
+					oldRec.Weight = aws.Int64(int64(v[names.AttrWeight].(int)))
 				}
 			}
 		}
@@ -968,7 +968,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		records := v.([]interface{})
 		weight := records[0].(map[string]interface{})
 
-		rec.Weight = aws.Int64(int64(weight["weight"].(int)))
+		rec.Weight = aws.Int64(int64(weight[names.AttrWeight].(int)))
 	}
 
 	return rec

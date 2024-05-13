@@ -19,7 +19,7 @@ func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStra
 		if val, ok := cp["base"]; ok {
 			ps.Base = aws.Int64(int64(val.(int)))
 		}
-		if val, ok := cp["weight"]; ok {
+		if val, ok := cp[names.AttrWeight]; ok {
 			ps.Weight = aws.Int64(int64(val.(int)))
 		}
 		if val, ok := cp["capacity_provider"]; ok {
@@ -40,7 +40,7 @@ func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []
 		s := make(map[string]interface{})
 		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
 		if cp.Weight != nil {
-			s["weight"] = aws.Int64Value(cp.Weight)
+			s[names.AttrWeight] = aws.Int64Value(cp.Weight)
 		}
 		if cp.Base != nil {
 			s["base"] = aws.Int64Value(cp.Base)

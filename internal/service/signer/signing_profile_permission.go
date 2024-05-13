@@ -49,7 +49,7 @@ func ResourceSigningProfilePermission() *schema.Resource {
 					"signer:SignPayload",
 				}, false),
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -110,7 +110,7 @@ func resourceSigningProfilePermissionCreate(ctx context.Context, d *schema.Resou
 	statementID := create.Name(d.Get("statement_id").(string), d.Get("statement_id_prefix").(string))
 	input := &signer.AddProfilePermissionInput{
 		Action:      aws.String(d.Get(names.AttrAction).(string)),
-		Principal:   aws.String(d.Get("principal").(string)),
+		Principal:   aws.String(d.Get(names.AttrPrincipal).(string)),
 		ProfileName: aws.String(profileName),
 		RevisionId:  aws.String(revisionID),
 		StatementId: aws.String(statementID),
@@ -170,7 +170,7 @@ func resourceSigningProfilePermissionRead(ctx context.Context, d *schema.Resourc
 	}
 
 	d.Set(names.AttrAction, permission.Action)
-	d.Set("principal", permission.Principal)
+	d.Set(names.AttrPrincipal, permission.Principal)
 	d.Set("profile_version", permission.ProfileVersion)
 	d.Set("statement_id", permission.StatementId)
 	d.Set("statement_id_prefix", create.NamePrefixFromName(aws.ToString(permission.StatementId)))

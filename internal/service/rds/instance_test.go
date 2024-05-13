@@ -3793,7 +3793,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &vBefore),
 					testAccCheckInstanceDomainAttributes(domain1, &vBefore),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -3802,7 +3802,7 @@ func TestAccRDSInstance_MSSQL_domain(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &vAfter),
 					testAccCheckInstanceDomainAttributes(domain2, &vAfter),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},
@@ -3834,7 +3834,7 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &vRestoredInstance),
 					testAccCheckInstanceExists(ctx, originResourceName, &v),
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
-					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomain),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
 				),
 			},

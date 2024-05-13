@@ -86,7 +86,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "export_only.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_only.0", "database"),
+					resource.TestCheckResourceAttr(resourceName, "export_only.0", names.AttrDatabase),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", s3Prefix),
 				),
 			},

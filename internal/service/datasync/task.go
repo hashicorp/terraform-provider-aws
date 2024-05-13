@@ -198,7 +198,7 @@ func resourceTask() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -337,7 +337,7 @@ func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TaskReportConfig = expandTaskReportConfig(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
@@ -385,7 +385,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
-	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenTaskSchedule(output.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
@@ -425,8 +425,8 @@ func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.Options = expandOptions(d.Get("options").([]interface{}))
 		}
 
-		if d.HasChanges("schedule") {
-			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
+		if d.HasChanges(names.AttrSchedule) {
+			input.Schedule = expandTaskSchedule(d.Get(names.AttrSchedule).([]interface{}))
 		}
 
 		if d.HasChanges("task_report_config") {

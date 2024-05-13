@@ -191,7 +191,7 @@ func resourceRepositoryAssociation() *schema.Resource {
 								},
 							},
 						},
-						"s3_bucket": {
+						names.AttrS3Bucket: {
 							Type:     schema.TypeList,
 							ForceNew: true,
 							Optional: true,
@@ -555,7 +555,7 @@ func expandRepository(repository []interface{}) *types.Repository {
 	if v, ok := tfMap["github_enterprise_server"]; ok {
 		result.GitHubEnterpriseServer = expandThirdPartySourceRepository(v.([]interface{}))
 	}
-	if v, ok := tfMap["s3_bucket"]; ok {
+	if v, ok := tfMap[names.AttrS3Bucket]; ok {
 		result.S3Bucket = expandS3Repository(v.([]interface{}))
 	}
 

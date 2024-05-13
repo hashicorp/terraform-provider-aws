@@ -62,7 +62,7 @@ func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -129,7 +129,7 @@ func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.R
 		User:              aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -172,7 +172,7 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrARN, output.LocationArn)
 	d.Set(names.AttrCreationTime, output.CreationTime.Format(time.RFC3339))
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrDomain, output.Domain)
 	d.Set("fsx_filesystem_arn", d.Get("fsx_filesystem_arn"))
 	d.Set("security_group_arns", output.SecurityGroupArns)
 	d.Set("subdirectory", subdirectory)

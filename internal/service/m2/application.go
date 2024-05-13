@@ -114,12 +114,12 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"content": schema.StringAttribute{
+						names.AttrContent: schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 65000),
 								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("content"),
+									path.MatchRelative().AtParent().AtName(names.AttrContent),
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},

@@ -158,7 +158,7 @@ func ResourceKxCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"s3_bucket": {
+						names.AttrS3Bucket: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(3, 255),
@@ -189,7 +189,7 @@ func ResourceKxCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -486,7 +486,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.AutoScalingConfiguration = expandAutoScalingConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Databases = expandDatabases(v.([]interface{}))
 	}
 
@@ -580,7 +580,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
-	if err := d.Set("database", flattenDatabases(out.Databases)); err != nil {
+	if err := d.Set(names.AttrDatabase, flattenDatabases(out.Databases)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
@@ -629,8 +629,8 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		ClusterName:   aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && d.HasChanges("database") {
-		DatabaseConfigIn.Databases = expandDatabases(d.Get("database").([]interface{}))
+	if v, ok := d.GetOk(names.AttrDatabase); ok && len(v.([]interface{})) > 0 && d.HasChanges(names.AttrDatabase) {
+		DatabaseConfigIn.Databases = expandDatabases(d.Get(names.AttrDatabase).([]interface{}))
 		updateDb = true
 	}
 
@@ -1114,7 +1114,7 @@ func expandCode(tfList []interface{}) *types.CodeConfiguration {
 
 	a := &types.CodeConfiguration{}
 
-	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
 		a.S3Bucket = aws.String(v)
 	}
 
@@ -1313,7 +1313,7 @@ func flattenCode(apiObject *types.CodeConfiguration) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.S3Bucket; v != nil {
-		m["s3_bucket"] = aws.ToString(v)
+		m[names.AttrS3Bucket] = aws.ToString(v)
 	}
 
 	if v := apiObject.S3Key; v != nil {

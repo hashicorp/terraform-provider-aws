@@ -24,7 +24,7 @@ func dataSourceNamedQuery() *schema.Resource {
 		ReadWithoutTimeout: dataSourceNamedQueryRead,
 
 		Schema: map[string]*schema.Schema{
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -77,7 +77,7 @@ func dataSourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(query.NamedQueryId))
-	d.Set("database", query.Database)
+	d.Set(names.AttrDatabase, query.Database)
 	d.Set(names.AttrDescription, query.Description)
 	d.Set(names.AttrName, query.Name)
 	d.Set("querystring", query.QueryString)
