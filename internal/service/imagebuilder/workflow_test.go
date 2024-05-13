@@ -43,7 +43,7 @@ func TestAccImageBuilderWorkflow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, imagebuilder.WorkflowTypeTest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
@@ -224,14 +224,14 @@ func TestAccImageBuilderWorkflow_uri(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "data"),
-					resource.TestCheckResourceAttrSet(resourceName, "uri"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURI),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"uri"},
+				ImportStateVerifyIgnore: []string{names.AttrURI},
 			},
 		},
 	})

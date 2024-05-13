@@ -237,7 +237,7 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "stop_action.*", map[string]string{
-						"scope": "RuleSet",
+						names.AttrScope: "RuleSet",
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "stop_action.*.topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),

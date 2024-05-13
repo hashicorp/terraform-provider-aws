@@ -46,7 +46,7 @@ func TestAccDataSyncLocationS3_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "s3_storage_class"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{
@@ -82,7 +82,7 @@ func TestAccDataSyncLocationS3_storageClass(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "s3_config.0.bucket_access_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/test/"),
 					resource.TestCheckResourceAttr(resourceName, "s3_storage_class", "STANDARD_IA"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^s3://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^s3://.+/`)),
 				),
 			},
 			{

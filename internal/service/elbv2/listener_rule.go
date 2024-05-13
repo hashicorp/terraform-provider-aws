@@ -260,7 +260,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -317,7 +317,7 @@ func ResourceListenerRule() *schema.Resource {
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -327,7 +327,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",

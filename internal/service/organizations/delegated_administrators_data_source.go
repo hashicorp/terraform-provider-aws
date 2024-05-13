@@ -35,7 +35,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -105,7 +105,7 @@ func flattenDelegatedAdministrators(apiObjects []*organizations.DelegatedAdminis
 		tfList = append(tfList, map[string]interface{}{
 			names.AttrARN:             aws.StringValue(apiObject.Arn),
 			"delegation_enabled_date": aws.TimeValue(apiObject.DelegationEnabledDate).Format(time.RFC3339),
-			"email":                   aws.StringValue(apiObject.Email),
+			names.AttrEmail:           aws.StringValue(apiObject.Email),
 			names.AttrID:              aws.StringValue(apiObject.Id),
 			"joined_method":           aws.StringValue(apiObject.JoinedMethod),
 			"joined_timestamp":        aws.TimeValue(apiObject.JoinedTimestamp).Format(time.RFC3339),

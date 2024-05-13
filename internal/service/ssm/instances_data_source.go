@@ -41,7 +41,7 @@ func dataSourceInstances() *schema.Resource {
 					},
 				},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", tfslices.ApplyToAll(output, func(v awstypes.InstanceInformation) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.InstanceInformation) string {
 		return aws.ToString(v.InstanceId)
 	}))
 

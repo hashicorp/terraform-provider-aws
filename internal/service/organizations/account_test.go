@@ -58,7 +58,7 @@ func testAccAccount_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
@@ -97,7 +97,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "email", email),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEmail, email),
 					resource.TestCheckResourceAttr(resourceName, "govcloud_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "joined_timestamp"),

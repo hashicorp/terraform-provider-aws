@@ -239,7 +239,7 @@ func DataSourceDataSet() *schema.Resource {
 func logicalTableMapDataSourceSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

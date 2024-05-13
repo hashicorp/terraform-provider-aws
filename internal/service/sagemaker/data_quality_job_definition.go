@@ -177,7 +177,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 														},
 													},
 												},
-												"json": {
+												names.AttrJSON: {
 													Type:     schema.TypeList,
 													MaxItems: 1,
 													Optional: true,
@@ -740,7 +740,7 @@ func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) [
 	}
 
 	if config.Json != nil {
-		m["json"] = flattenMonitoringJSONDatasetFormat(config.Json)
+		m[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(config.Json)
 	}
 
 	return []map[string]interface{}{m}
@@ -1119,7 +1119,7 @@ func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.Monitori
 		c.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
-	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		c.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 

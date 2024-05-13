@@ -9,22 +9,21 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFWebACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -58,7 +57,7 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 
 func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName1 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	rName2 := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
@@ -104,7 +103,7 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 
 func TestAccWAFWebACL_defaultAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -141,7 +140,7 @@ func TestAccWAFWebACL_defaultAction(t *testing.T) {
 
 func TestAccWAFWebACL_rules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -187,7 +186,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 
 func TestAccWAFWebACL_logging(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -240,7 +239,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 
 func TestAccWAFWebACL_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -264,7 +263,7 @@ func TestAccWAFWebACL_disappears(t *testing.T) {
 
 func TestAccWAFWebACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webACL waf.WebACL
+	var webACL awstypes.WebACL
 	rName := fmt.Sprintf("wafacl%s", sdkacctest.RandString(5))
 	resourceName := "aws_waf_web_acl.test"
 
@@ -330,54 +329,43 @@ func testAccCheckWebACLDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-			resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
-				WebACLId: aws.String(rs.Primary.ID),
-			})
+			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+			_, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error reading WAF Web ACL (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if resp != nil && resp.WebACL != nil {
-				return fmt.Errorf("WAF Web ACL (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("WAF Web ACL %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckWebACLExists(ctx context.Context, n string, v *waf.WebACL) resource.TestCheckFunc {
+func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WebACL ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn(ctx)
-		resp, err := conn.GetWebACLWithContext(ctx, &waf.GetWebACLInput{
-			WebACLId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfwaf.FindWebACLByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if *resp.WebACL.WebACLId == rs.Primary.ID {
-			*v = *resp.WebACL
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("WebACL (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -445,6 +433,9 @@ resource "aws_waf_web_acl" "test" {
       type = "BLOCK"
     }
   }
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 `, rName)
 }
@@ -472,6 +463,9 @@ resource "aws_waf_web_acl" "test" {
     override_action {
       type = "NONE"
     }
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 `, rName)
@@ -529,6 +523,9 @@ resource "aws_waf_web_acl" "test" {
     override_action {
       type = "NONE"
     }
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 `, rName)
@@ -674,7 +671,7 @@ resource "aws_waf_web_acl" "test" {
   }
 
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
 `, rName, tag1Key, tag1Value)
@@ -691,8 +688,8 @@ resource "aws_waf_web_acl" "test" {
   }
 
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)

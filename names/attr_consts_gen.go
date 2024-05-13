@@ -15,6 +15,7 @@ const (
 	AttrAccountID                  = "account_id"
 	AttrAction                     = "action"
 	AttrAddress                    = "address"
+	AttrAlias                      = "alias"
 	AttrApplyImmediately           = "apply_immediately"
 	AttrAutoMinorVersionUpgrade    = "auto_minor_version_upgrade"
 	AttrAvailabilityZone           = "availability_zone"
@@ -46,6 +47,7 @@ const (
 	AttrDomain                     = "domain"
 	AttrDomainName                 = "domain_name"
 	AttrDuration                   = "duration"
+	AttrEmail                      = "email"
 	AttrEnabled                    = "enabled"
 	AttrEncrypted                  = "encrypted"
 	AttrEncryptionConfiguration    = "encryption_configuration"
@@ -55,6 +57,7 @@ const (
 	AttrEngineVersion              = "engine_version"
 	AttrExecutionRoleARN           = "execution_role_arn"
 	AttrExpression                 = "expression"
+	AttrField                      = "field"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
 	AttrForceDestroy               = "force_destroy"
@@ -62,10 +65,15 @@ const (
 	AttrGroupName                  = "group_name"
 	AttrHostedZoneID               = "hosted_zone_id"
 	AttrID                         = "id"
+	AttrIDs                        = "ids"
+	AttrIOPS                       = "iops"
 	AttrIPAddress                  = "ip_address"
+	AttrIPAddressType              = "ip_address_type"
 	AttrIdentifier                 = "identifier"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
+	AttrIssuer                     = "issuer"
+	AttrJSON                       = "json"
 	AttrKMSKeyARN                  = "kms_key_arn"
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
@@ -81,6 +89,7 @@ const (
 	AttrNamespace                  = "namespace"
 	AttrNetworkConfiguration       = "network_configuration"
 	AttrNetworkInterfaceID         = "network_interface_id"
+	AttrOwner                      = "owner"
 	AttrOwnerID                    = "owner_id"
 	AttrParameter                  = "parameter"
 	AttrParameters                 = "parameters"
@@ -101,18 +110,21 @@ const (
 	AttrResourceARN                = "resource_arn"
 	AttrResourceType               = "resource_type"
 	AttrRoleARN                    = "role_arn"
+	AttrRule                       = "rule"
 	AttrS3Bucket                   = "s3_bucket"
 	AttrS3BucketName               = "s3_bucket_name"
 	AttrSNSTopicARN                = "sns_topic_arn"
 	AttrSchedule                   = "schedule"
 	AttrScheduleExpression         = "schedule_expression"
 	AttrSchema                     = "schema"
+	AttrScope                      = "scope"
 	AttrSecretKey                  = "secret_key"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
 	AttrServiceName                = "service_name"
 	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
+	AttrSize                       = "size"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
 	AttrSource                     = "source"
@@ -129,11 +141,13 @@ const (
 	AttrTransitGatewayAttachmentID = "transit_gateway_attachment_id"
 	AttrTransitGatewayID           = "transit_gateway_id"
 	AttrType                       = "type"
+	AttrURI                        = "uri"
 	AttrURL                        = "url"
 	AttrUnit                       = "unit"
 	AttrUserName                   = "user_name"
 	AttrUsername                   = "username"
 	AttrVPCConfig                  = "vpc_config"
+	AttrVPCEndpointID              = "vpc_endpoint_id"
 	AttrVPCID                      = "vpc_id"
 	AttrVPCSecurityGroupIDs        = "vpc_security_group_ids"
 	AttrValue                      = "value"
@@ -153,6 +167,7 @@ func ConstOrQuote(constant string) string {
 		"account_id":                    "AttrAccountID",
 		"action":                        "AttrAction",
 		"address":                       "AttrAddress",
+		"alias":                         "AttrAlias",
 		"apply_immediately":             "AttrApplyImmediately",
 		"auto_minor_version_upgrade":    "AttrAutoMinorVersionUpgrade",
 		"availability_zone":             "AttrAvailabilityZone",
@@ -184,6 +199,7 @@ func ConstOrQuote(constant string) string {
 		"domain":                        "AttrDomain",
 		"domain_name":                   "AttrDomainName",
 		"duration":                      "AttrDuration",
+		"email":                         "AttrEmail",
 		"enabled":                       "AttrEnabled",
 		"encrypted":                     "AttrEncrypted",
 		"encryption_configuration":      "AttrEncryptionConfiguration",
@@ -193,6 +209,7 @@ func ConstOrQuote(constant string) string {
 		"engine_version":                "AttrEngineVersion",
 		"execution_role_arn":            "AttrExecutionRoleARN",
 		"expression":                    "AttrExpression",
+		"field":                         "AttrField",
 		"file_system_id":                "AttrFileSystemID",
 		"filter":                        "AttrFilter",
 		"force_destroy":                 "AttrForceDestroy",
@@ -200,10 +217,15 @@ func ConstOrQuote(constant string) string {
 		"group_name":                    "AttrGroupName",
 		"hosted_zone_id":                "AttrHostedZoneID",
 		"id":                            "AttrID",
+		"ids":                           "AttrIDs",
+		"iops":                          "AttrIOPS",
 		"ip_address":                    "AttrIPAddress",
+		"ip_address_type":               "AttrIPAddressType",
 		"identifier":                    "AttrIdentifier",
 		"instance_id":                   "AttrInstanceID",
 		"instance_type":                 "AttrInstanceType",
+		"issuer":                        "AttrIssuer",
+		"json":                          "AttrJSON",
 		"kms_key_arn":                   "AttrKMSKeyARN",
 		"kms_key_id":                    "AttrKMSKeyID",
 		"key":                           "AttrKey",
@@ -219,6 +241,7 @@ func ConstOrQuote(constant string) string {
 		"namespace":                     "AttrNamespace",
 		"network_configuration":         "AttrNetworkConfiguration",
 		"network_interface_id":          "AttrNetworkInterfaceID",
+		"owner":                         "AttrOwner",
 		"owner_id":                      "AttrOwnerID",
 		"parameter":                     "AttrParameter",
 		"parameters":                    "AttrParameters",
@@ -239,18 +262,21 @@ func ConstOrQuote(constant string) string {
 		"resource_arn":                  "AttrResourceARN",
 		"resource_type":                 "AttrResourceType",
 		"role_arn":                      "AttrRoleARN",
+		"rule":                          "AttrRule",
 		"s3_bucket":                     "AttrS3Bucket",
 		"s3_bucket_name":                "AttrS3BucketName",
 		"sns_topic_arn":                 "AttrSNSTopicARN",
 		"schedule":                      "AttrSchedule",
 		"schedule_expression":           "AttrScheduleExpression",
 		"schema":                        "AttrSchema",
+		"scope":                         "AttrScope",
 		"secret_key":                    "AttrSecretKey",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
 		"service_name":                  "AttrServiceName",
 		"session":                       "AttrSession",
 		"shared_config_files":           "AttrSharedConfigFiles",
+		"size":                          "AttrSize",
 		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
 		"skip_requesting_account_id":    "AttrSkipRequestingAccountID",
 		"source":                        "AttrSource",
@@ -267,11 +293,13 @@ func ConstOrQuote(constant string) string {
 		"transit_gateway_attachment_id": "AttrTransitGatewayAttachmentID",
 		"transit_gateway_id":            "AttrTransitGatewayID",
 		"type":                          "AttrType",
+		"uri":                           "AttrURI",
 		"url":                           "AttrURL",
 		"unit":                          "AttrUnit",
 		"user_name":                     "AttrUserName",
 		"username":                      "AttrUsername",
 		"vpc_config":                    "AttrVPCConfig",
+		"vpc_endpoint_id":               "AttrVPCEndpointID",
 		"vpc_id":                        "AttrVPCID",
 		"vpc_security_group_ids":        "AttrVPCSecurityGroupIDs",
 		"value":                         "AttrValue",

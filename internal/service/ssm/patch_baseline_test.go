@@ -40,7 +40,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccPatchBaselineConfig_basic(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -53,13 +53,13 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
-					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatchesEnableNonSecurity", "false"),
-					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "1"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.0"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Name", resourceName, names.AttrName),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Description", resourceName, names.AttrDescription),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "OperatingSystem", resourceName, "operating_system"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", "1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Name", resourceName, names.AttrName),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Description", resourceName, names.AttrDescription),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "OperatingSystem", resourceName, "operating_system"),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				Config: testAccPatchBaselineConfig_basicUpdated(name),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrJSON)),
 					},
 				},
 				Check: resource.ComposeTestCheckFunc(
@@ -84,9 +84,9 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", string(awstypes.PatchComplianceLevelHigh)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems - August 2017"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.1"),
-					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[1]", resourceName, "approved_patches.0"),
-					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "2"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.1"),
+					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[1]", resourceName, "approved_patches.0"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", "2"),
 					func(*terraform.State) error {
 						if aws.ToString(before.BaselineId) != aws.ToString(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")

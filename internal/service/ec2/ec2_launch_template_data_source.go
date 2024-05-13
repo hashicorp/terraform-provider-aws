@@ -57,7 +57,7 @@ func DataSourceLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},

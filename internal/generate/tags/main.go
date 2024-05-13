@@ -298,13 +298,6 @@ func main() {
 
 	tagPackage := awsPkg
 
-	if tagPackage == "wafregional" {
-		tagPackage = "waf"
-		if *sdkVersion == sdkV1 {
-			awsPkg = ""
-		}
-	}
-
 	var cleanRetryErrorCodes []string
 	for _, c := range strings.Split(*retryTagsErrorCodes, ",") {
 		if strings.HasPrefix(c, fmt.Sprintf("%s.", servicePackage)) || strings.HasPrefix(c, "types.") {

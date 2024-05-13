@@ -2,13 +2,8 @@
 # SPDX-License-Identifier: MPL-2.0
 
 {{ define "tags" }}
-{{ if eq . "tags0" -}}
-{{- else if eq . "tags" }}
-  tags = var.tags
-{{- else if eq . "tagsNull" }}
-  tags = {
-    (var.tagKey1) = null
-  }
+{{ if eq . "tags" }}
+  tags = var.resource_tags
 {{- else if eq . "tagsComputed1"}}
   tags = {
     (var.unknownTagKey) = null_resource.test.id
@@ -44,26 +39,24 @@ resource "null_resource" "test" {}
 {{ end -}}
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
-{{ if eq .Tags "tags0" -}}
-{{ else if eq .Tags "tags" }}
-variable "tags" {
+
+{{ if eq .Tags "tags" -}}
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
-  nullable = false
+  nullable = true
 }
-{{ else if eq .Tags "tagsNull" }}
-variable "tagKey1" {
-  type     = string
-  nullable = false
-}
-{{ else if eq .Tags "tagsComputed1" }}
+{{- else if eq .Tags "tagsComputed1" -}}
 variable "unknownTagKey" {
   type     = string
   nullable = false
 }
-{{ else if eq .Tags "tagsComputed2" }}
+{{- else if eq .Tags "tagsComputed2" -}}
 variable "unknownTagKey" {
   type     = string
   nullable = false
@@ -79,7 +72,7 @@ variable "knownTagValue" {
   nullable = false
 }
 {{- end }}
-{{ if .WithDefaultTags -}}
+{{ if .WithDefaultTags }}
 variable "provider_tags" {
   type     = map(string)
   nullable = false

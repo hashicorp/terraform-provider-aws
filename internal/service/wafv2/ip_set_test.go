@@ -39,7 +39,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -54,7 +54,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
 				),
@@ -112,7 +112,7 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv6)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "1234:5678:9abc:6811:0000:0000:0000:0000/64"),
@@ -149,7 +149,7 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
 				),
@@ -184,7 +184,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
 				),
@@ -196,7 +196,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetNewName),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
 				),
@@ -297,7 +297,7 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
-					resource.TestCheckResourceAttr(resourceName, "scope", string(awstypes.ScopeRegional)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "50"),
 				),
@@ -321,7 +321,7 @@ func testAccCheckIPSetDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-			_, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"])
+			_, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -351,7 +351,7 @@ func testAccCheckIPSetExists(ctx context.Context, n string, v *awstypes.IPSet) r
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
-		output, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"])
+		output, err := tfwafv2.FindIPSetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
 
 		if err != nil {
 			return err
@@ -502,6 +502,6 @@ func testAccIPSetImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes["scope"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope]), nil
 	}
 }

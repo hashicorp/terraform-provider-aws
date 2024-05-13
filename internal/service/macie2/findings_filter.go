@@ -51,7 +51,7 @@ func ResourceFindingsFilter() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
+									names.AttrField: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -297,7 +297,7 @@ func expandFindingCriteriaFilter(findingCriterias []interface{}) (*macie2.Findin
 
 	for _, criterion := range inputFindingCriteria {
 		crit := criterion.(map[string]interface{})
-		field := crit["field"].(string)
+		field := crit[names.AttrField].(string)
 		conditional := macie2.CriterionAdditionalProperties{}
 
 		if v, ok := crit["eq"].(*schema.Set); ok && v.Len() != 0 {
@@ -367,7 +367,7 @@ func flattenFindingCriteriaFindingsFilter(findingCriteria *macie2.FindingCriteri
 
 	for field, conditions := range findingCriteria.Criterion {
 		criterion := map[string]interface{}{
-			"field": field,
+			names.AttrField: field,
 		}
 		if len(conditions.Eq) != 0 {
 			criterion["eq"] = aws.StringValueSlice(conditions.Eq)

@@ -27,7 +27,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -61,7 +61,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchServerlessClient(ctx)
 
-	id := d.Get("vpc_endpoint_id").(string)
+	id := d.Get(names.AttrVPCEndpointID).(string)
 	vpcEndpoint, err := findVPCEndpointByID(ctx, conn, id)
 
 	if err != nil {

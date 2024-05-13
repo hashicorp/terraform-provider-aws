@@ -38,7 +38,7 @@ func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner", resourceName, "owner"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwner, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parent_image", resourceName, "parent_image"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform", resourceName, "platform"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),

@@ -173,7 +173,7 @@ func resourceObjectCopy() *schema.Resource {
 				ConflictsWith: []string{"acl"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -200,7 +200,7 @@ func resourceObjectCopy() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.Type](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -689,7 +689,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 
 	apiObject := &types.Grantee{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		apiObject.EmailAddress = aws.String(v)
 	}
 
@@ -701,7 +701,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 		apiObject.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		apiObject.URI = aws.String(v)
 	}
 
@@ -789,7 +789,7 @@ func grantHash(v interface{}) int {
 	if v, ok := m[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if v, ok := m["uri"]; ok {
+	if v, ok := m[names.AttrURI]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if p, ok := m["permissions"]; ok {

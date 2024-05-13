@@ -151,7 +151,7 @@ func defaultPatchBaselineRestoreOSDefault(ctx context.Context, conn *ssm.Client,
 	_, err = conn.RegisterDefaultPatchBaseline(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system (%s) to (%s): %s", os, baselineID, err)
+		return sdkdiag.AppendErrorf(diags, "restoring SSM Default Patch Baseline for operating system (%s) to (%s): %s", os, aws.ToString(baselineID), err)
 	}
 
 	return diags

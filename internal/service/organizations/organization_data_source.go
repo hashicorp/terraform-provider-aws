@@ -32,7 +32,7 @@ func DataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -96,7 +96,7 @@ func DataSourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

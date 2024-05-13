@@ -319,7 +319,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -404,7 +404,7 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -651,7 +651,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -692,7 +692,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 {
+			if v, ok := bd[names.AttrIOPS].(int); ok && v > 0 {
 				ebs.Iops = aws.Int64(int64(v))
 			}
 
@@ -997,7 +997,7 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
-			bd["iops"] = aws.Int64Value(bdm.Ebs.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
 		}
 		if aws.StringValue(bdm.DeviceName) == "ROOT_DEVICE" {
 			blockDevices["root"] = bd

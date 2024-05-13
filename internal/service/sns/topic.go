@@ -160,7 +160,7 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{names.AttrName},
 		},
-		"owner": {
+		names.AttrOwner: {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -228,7 +228,7 @@ var (
 		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                    topicAttributeNameOwner,
+		names.AttrOwner:                            topicAttributeNameOwner,
 		names.AttrPolicy:                           topicAttributeNamePolicy,
 		"signature_version":                        topicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,

@@ -351,7 +351,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
@@ -786,7 +786,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("iops"); ok {
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -998,7 +998,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("iops"); ok {
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -1218,7 +1218,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("iops"); ok {
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
 			modifyDbInstanceInput.Iops = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
 		}
@@ -1458,7 +1458,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("iops"); ok {
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -1642,7 +1642,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOk("iops"); ok {
+		if v, ok := d.GetOk(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -1873,7 +1873,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrIdentifier, v.DBInstanceIdentifier)
 	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(v.DBInstanceIdentifier)))
 	d.Set("instance_class", v.DBInstanceClass)
-	d.Set("iops", v.Iops)
+	d.Set(names.AttrIOPS, v.Iops)
 	d.Set(names.AttrKMSKeyID, v.KmsKeyId)
 	if v.LatestRestorableTime != nil {
 		d.Set("latest_restorable_time", aws.TimeValue(v.LatestRestorableTime).Format(time.RFC3339))
@@ -2190,13 +2190,13 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.ResourceData) bool {
 	needsModify := false
 
-	if d.HasChanges("allocated_storage", "iops") {
+	if d.HasChanges("allocated_storage", names.AttrIOPS) {
 		needsModify = true
 		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
 
 		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
-		if d.HasChange("iops") || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
-			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		if d.HasChange(names.AttrIOPS) || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
 
@@ -2395,7 +2395,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.StorageThroughput = aws.Int32(int32(d.Get("storage_throughput").(int)))
 
 		if input.Iops == nil {
-			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 
 		if input.AllocatedStorage == nil {
@@ -2408,7 +2408,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		input.StorageType = aws.String(d.Get("storage_type").(string))
 
 		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
-			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
 

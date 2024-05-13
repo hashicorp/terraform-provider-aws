@@ -105,7 +105,7 @@ func dataSourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +123,7 @@ func dataSourcePatchBaseline() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -169,7 +169,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	filters := []awstypes.PatchOrchestratorFilter{
 		{
 			Key:    aws.String("OWNER"),
-			Values: []string{d.Get("owner").(string)},
+			Values: []string{d.Get(names.AttrOwner).(string)},
 		},
 	}
 
@@ -242,7 +242,7 @@ Baselines:
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.Set(names.AttrName, baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
 	d.Set("rejected_patches", output.RejectedPatches)

@@ -67,7 +67,7 @@ func ResourceCatalogTable() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -456,7 +456,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
-	d.Set("owner", table.Owner)
+	d.Set(names.AttrOwner, table.Owner)
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
@@ -609,7 +609,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 		tableInput.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		tableInput.Owner = aws.String(v.(string))
 	}
 

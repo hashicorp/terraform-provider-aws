@@ -293,7 +293,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_endpoint_id", vpceResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrVPCEndpointID, vpceResourceName, names.AttrID),
 				),
 			},
 			{

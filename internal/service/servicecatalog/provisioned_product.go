@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
-// @Testing(tagsTest=config-only, existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/servicecatalog;servicecatalog.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
 func ResourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,

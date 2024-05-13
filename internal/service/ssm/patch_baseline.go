@@ -149,7 +149,7 @@ func resourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -220,7 +220,8 @@ func resourcePatchBaseline() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if d.HasChanges(names.AttrDescription,
+				if d.HasChanges(
+					names.AttrDescription,
 					"global_filter",
 					"approval_rule",
 					"approved_patches",
@@ -231,7 +232,7 @@ func resourcePatchBaseline() *schema.Resource {
 					"approved_patches_enable_non_security",
 					names.AttrSource,
 				) {
-					return d.SetNewComputed("json")
+					return d.SetNewComputed(names.AttrJSON)
 				}
 
 				return nil
@@ -336,7 +337,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
 	}
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.Set(names.AttrName, output.Name)
 	d.Set("operating_system", output.OperatingSystem)
 	d.Set("rejected_patches", output.RejectedPatches)

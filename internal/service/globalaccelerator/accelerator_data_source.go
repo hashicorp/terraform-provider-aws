@@ -69,7 +69,7 @@ func (d *acceleratorDataSource) Schema(ctx context.Context, request datasource.S
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": schema.StringAttribute{
+			names.AttrIPAddressType: schema.StringAttribute{
 				Computed: true,
 			},
 			"ip_sets": schema.ListAttribute{

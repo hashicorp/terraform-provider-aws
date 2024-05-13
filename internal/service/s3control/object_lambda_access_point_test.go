@@ -39,7 +39,7 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),

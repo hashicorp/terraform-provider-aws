@@ -44,7 +44,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				MinItems: 1,
@@ -146,7 +146,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(bucket),
 		LifecycleConfiguration: &types.LifecycleConfiguration{
-			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 
@@ -188,7 +188,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrBucket, d.Id())
 
-	if err := d.Set("rule", flattenLifecycleRules(ctx, output.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenLifecycleRules(ctx, output.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -212,7 +212,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 		LifecycleConfiguration: &types.LifecycleConfiguration{
-			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get(names.AttrRule).(*schema.Set).List()),
 		},
 	}
 

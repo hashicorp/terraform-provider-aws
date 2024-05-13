@@ -41,7 +41,7 @@ func dataSourceMaintenanceWindows() *schema.Resource {
 					},
 				},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +73,7 @@ func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", tfslices.ApplyToAll(output, func(v awstypes.MaintenanceWindowIdentity) string {
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.MaintenanceWindowIdentity) string {
 		return aws.ToString(v.WindowId)
 	}))
 

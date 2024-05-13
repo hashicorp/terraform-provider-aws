@@ -360,7 +360,7 @@ func sweepTargets(region string) error {
 							d.SetId(targetCreateResourceID(eventBusName, ruleName, targetID))
 							d.Set("event_bus_name", eventBusName)
 							d.Set(names.AttrForceDestroy, true)
-							d.Set("rule", ruleName)
+							d.Set(names.AttrRule, ruleName)
 							d.Set("target_id", targetID)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))

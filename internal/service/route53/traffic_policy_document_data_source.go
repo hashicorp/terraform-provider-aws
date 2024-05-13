@@ -46,7 +46,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 					},
 				},
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -273,7 +273,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("record_type"); ok {
 		trafficDoc.RecordType = v.(string)
 	}
-	if v, ok := d.GetOk("rule"); ok {
+	if v, ok := d.GetOk(names.AttrRule); ok {
 		trafficDoc.Rules = expandDataTrafficPolicyRulesDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("start_endpoint"); ok {
@@ -292,7 +292,7 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 
 	d.SetId(strconv.Itoa(schema.HashString(jsonString)))
 

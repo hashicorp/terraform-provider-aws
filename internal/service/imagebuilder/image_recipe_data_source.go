@@ -50,7 +50,7 @@ func DataSourceImageRecipe() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"iops": {
+									names.AttrIOPS: {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
@@ -128,7 +128,7 @@ func DataSourceImageRecipe() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -187,7 +187,7 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("date_created", imageRecipe.DateCreated)
 	d.Set(names.AttrDescription, imageRecipe.Description)
 	d.Set(names.AttrName, imageRecipe.Name)
-	d.Set("owner", imageRecipe.Owner)
+	d.Set(names.AttrOwner, imageRecipe.Owner)
 	d.Set("parent_image", imageRecipe.ParentImage)
 	d.Set("platform", imageRecipe.Platform)
 	d.Set(names.AttrTags, KeyValueTags(ctx, imageRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())

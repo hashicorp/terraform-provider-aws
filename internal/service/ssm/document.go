@@ -140,7 +140,7 @@ func resourceDocument() *schema.Resource {
 					validation.StringLenBetween(3, 128),
 				),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -349,7 +349,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("hash_type", doc.HashType)
 	d.Set("latest_version", doc.LatestVersion)
 	d.Set(names.AttrName, doc.Name)
-	d.Set("owner", doc.Owner)
+	d.Set(names.AttrOwner, doc.Owner)
 	if err := d.Set(names.AttrParameter, flattenDocumentParameters(doc.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}

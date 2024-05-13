@@ -52,7 +52,7 @@ func ResourceAccount() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"email": {
+			names.AttrEmail: {
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Required: true,
@@ -127,7 +127,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	s, err := createAccount(ctx, conn,
 		d.Get(names.AttrName).(string),
-		d.Get("email").(string),
+		d.Get(names.AttrEmail).(string),
 		iamUserAccessToBilling,
 		roleName,
 		getTagsIn(ctx),
@@ -194,7 +194,7 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrARN, account.Arn)
-	d.Set("email", account.Email)
+	d.Set(names.AttrEmail, account.Email)
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, account.Name)

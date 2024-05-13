@@ -40,7 +40,7 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 			"cache_behavior":          testAccDistribution_cacheBehavior,
 			"cache_behavior_settings": testAccDistribution_cacheBehaviorSettings,
 			"default_cache_behavior":  testAccDistribution_defaultCacheBehavior,
-			"ip_address_type":         testAccDistribution_ipAddressType,
+			names.AttrIPAddressType:   testAccDistribution_ipAddressType,
 			names.AttrTags:            testAccDistribution_tags,
 		},
 	}
@@ -92,7 +92,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.behavior", "cache"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "dualstack"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.region_name"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
@@ -286,7 +286,7 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeIpv4)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", string(types.IpAddressTypeIpv4)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeIpv4)),
 				),
 			},
 			{
@@ -298,7 +298,7 @@ func testAccDistribution_ipAddressType(t *testing.T) {
 				Config: testAccDistributionConfig_ipAddressType(rName, bucketName, string(types.IpAddressTypeDualstack)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ip_address_type", string(types.IpAddressTypeDualstack)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, string(types.IpAddressTypeDualstack)),
 				),
 			},
 		},

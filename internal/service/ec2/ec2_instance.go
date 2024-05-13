@@ -247,7 +247,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -708,7 +708,7 @@ func ResourceInstance() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:             schema.TypeInt,
 							Optional:         true,
 							Computed:         true,
@@ -2339,7 +2339,7 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["volume_type"] = aws.StringValue(vol.VolumeType)
 		}
 		if vol.Iops != nil {
-			bd["iops"] = aws.Int64Value(vol.Iops)
+			bd[names.AttrIOPS] = aws.Int64Value(vol.Iops)
 		}
 		if vol.Encrypted != nil {
 			bd[names.AttrEncrypted] = aws.BoolValue(vol.Encrypted)
@@ -2573,7 +2573,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
@@ -2647,7 +2647,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 
 			if v, ok := bd["volume_type"].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
-				if iops, ok := bd["iops"].(int); ok && iops > 0 {
+				if iops, ok := bd[names.AttrIOPS].(int); ok && iops > 0 {
 					if ec2.VolumeTypeIo1 == strings.ToLower(v) || ec2.VolumeTypeIo2 == strings.ToLower(v) || ec2.VolumeTypeGp3 == strings.ToLower(v) {
 						// Only set the iops attribute if the volume type is io1, io2, or gp3. Setting otherwise
 						// can trigger a refresh/plan loop based on the computed value that is given

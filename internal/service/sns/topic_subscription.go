@@ -209,7 +209,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		waitForConfirmation = false
 	}
 
-	if strings.Contains(protocol, "email") {
+	if strings.Contains(protocol, names.AttrEmail) {
 		waitForConfirmation = false
 	}
 

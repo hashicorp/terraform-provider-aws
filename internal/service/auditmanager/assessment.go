@@ -117,7 +117,7 @@ func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequ
 					},
 				},
 			},
-			"scope": schema.ListNestedBlock{
+			names.AttrScope: schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),

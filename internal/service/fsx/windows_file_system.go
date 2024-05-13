@@ -146,7 +146,7 @@ func resourceWindowsFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -765,7 +765,7 @@ func expandWindowsDiskIopsConfiguration(l []interface{}) *fsx.DiskIopsConfigurat
 	data := l[0].(map[string]interface{})
 	req := &fsx.DiskIopsConfiguration{}
 
-	if v, ok := data["iops"].(int); ok {
+	if v, ok := data[names.AttrIOPS].(int); ok {
 		req.Iops = aws.Int64(int64(v))
 	}
 
@@ -784,7 +784,7 @@ func flattenWindowsDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interf
 	m := map[string]interface{}{}
 
 	if rs.Iops != nil {
-		m["iops"] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
 	}
 	if rs.Mode != nil {
 		m[names.AttrMode] = aws.StringValue(rs.Mode)

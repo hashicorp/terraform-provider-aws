@@ -85,7 +85,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[types.CountryCode](),
 							},
-							"email": {
+							names.AttrEmail: {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Computed:     true,
@@ -651,7 +651,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	tfMap["country_code"] = apiObject.CountryCode
 
 	if v := apiObject.Email; v != nil {
-		tfMap["email"] = aws.ToString(v)
+		tfMap[names.AttrEmail] = aws.ToString(v)
 	}
 
 	if v := apiObject.ExtraParams; v != nil {
@@ -730,7 +730,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.CountryCode = types.CountryCode(v)
 	}
 
-	if v, ok := tfMap["email"].(string); ok {
+	if v, ok := tfMap[names.AttrEmail].(string); ok {
 		apiObject.Email = aws.String(v)
 	}
 

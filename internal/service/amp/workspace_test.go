@@ -38,7 +38,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
@@ -172,7 +172,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					testAccCheckWorkspaceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName2),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					testAccCheckWorkspaceRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v4),
 					testAccCheckWorkspaceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 		},

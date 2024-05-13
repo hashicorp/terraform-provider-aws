@@ -45,7 +45,7 @@ func resourceAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -282,7 +282,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrAccountID, accountID)
-	d.Set("alias", output.Alias)
+	d.Set(names.AttrAlias, output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
 	d.Set(names.AttrDomainName, meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set(names.AttrEndpoints, output.Endpoints)
