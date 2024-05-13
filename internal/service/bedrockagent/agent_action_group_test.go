@@ -120,6 +120,47 @@ func TestAccBedrockAgentAgentActionGroup_update(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgentActionGroup_functionSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v awstypes.AgentActionGroup
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentActionGroupConfig_functionSchema(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.name", "sayHello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.description", "Says Hello"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.map_block_key", names.AttrMessage),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.type", "string"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.description", "The Hello message"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.0.required", "true"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.map_block_key", "unused"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.type", "integer"),
+					resource.TestCheckResourceAttr(resourceName, "function_schema.0.functions.0.parameters.1.required", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
 func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -168,7 +209,7 @@ func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *awstyp
 
 func testAccAgentActionGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_action_group" "test" {
   action_group_name          = %[1]q
@@ -188,7 +229,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 
 func testAccAgentActionGroupConfig_s3APISchema(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lambda(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -219,7 +260,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_lamba(rName string) string {
+func testAccAgentActionGroupConfig_lambda(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
@@ -250,4 +291,38 @@ resource "aws_lambda_function" "test_lambda" {
   runtime = "python3.9"
 }
 `, rName)
+}
+
+func testAccAgentActionGroupConfig_functionSchema(rName string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentActionGroupConfig_lambda(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_action_group" "test" {
+  action_group_name          = %[1]q
+  agent_id                   = aws_bedrockagent_agent.test.agent_id
+  agent_version              = "DRAFT"
+  description                = "Basic Agent Action"
+  skip_resource_in_use_check = true
+  action_group_executor {
+    lambda = aws_lambda_function.test_lambda.arn
+  }
+  function_schema {
+    functions {
+      name        = "sayHello"
+      description = "Says Hello"
+      parameters {
+        map_block_key = "message"
+        type          = "string"
+        description   = "The Hello message"
+        required      = true
+      }
+      parameters {
+        map_block_key = "unused"
+        type          = "integer"
+        required      = false
+      }
+    }
+  }
+}
+`, rName))
 }

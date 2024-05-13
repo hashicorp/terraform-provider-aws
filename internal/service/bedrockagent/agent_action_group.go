@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -150,6 +151,63 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					},
 				},
 			},
+			"function_schema": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[functionSchemaModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"functions": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[functionModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrName: schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+										},
+									},
+									names.AttrDescription: schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 1200),
+										},
+									},
+								},
+								Blocks: map[string]schema.Block{
+									names.AttrParameters: schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[parameterDetailModel](ctx),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"map_block_key": schema.StringAttribute{
+													Required: true,
+													Validators: []validator.String{
+														stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+													},
+												},
+												names.AttrType: schema.StringAttribute{
+													Required:   true,
+													CustomType: fwtypes.StringEnumType[awstypes.Type](),
+												},
+												names.AttrDescription: schema.StringAttribute{
+													Optional: true,
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 500),
+													},
+												},
+												"required": schema.BoolAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -188,6 +246,21 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		}
 
 		input.ApiSchema = expandAPISchema(ctx, apiSchemaData)
+	}
+
+	if !data.FunctionSchema.IsNull() {
+		functionSchemaData, diags := data.FunctionSchema.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		functionSchema, diags := expandFunctionSchema(ctx, functionSchemaData)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.FunctionSchema = functionSchema
 	}
 
 	output, err := conn.CreateAgentActionGroup(ctx, input)
@@ -245,6 +318,13 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 	data.ActionGroupExecutor = flattenActionGroupExecutor(ctx, output.ActionGroupExecutor)
 	data.APISchema = flattenAPISchema(ctx, output.ApiSchema)
 
+	functionSchema, diags := flattenFunctionSchema(ctx, output.FunctionSchema)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	data.FunctionSchema = functionSchema
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -266,6 +346,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 		!new.ActionGroupState.Equal(old.ActionGroupState) ||
 		!new.APISchema.Equal(old.APISchema) ||
 		!new.Description.Equal(old.Description) ||
+		!new.FunctionSchema.Equal(old.FunctionSchema) ||
 		!new.ParentActionGroupSignature.Equal(old.ParentActionGroupSignature) {
 		input := &bedrockagent.UpdateAgentActionGroupInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
@@ -292,6 +373,21 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 			}
 
 			input.ApiSchema = expandAPISchema(ctx, apiSchemaData)
+		}
+
+		if !new.FunctionSchema.IsNull() {
+			functionSchemaData, diags := new.FunctionSchema.ToPtr(ctx)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			functionSchema, diags := expandFunctionSchema(ctx, functionSchemaData)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+			input.FunctionSchema = functionSchema
 		}
 
 		_, err := conn.UpdateAgentActionGroup(ctx, input)
@@ -378,6 +474,7 @@ type agentActionGroupResourceModel struct {
 	AgentVersion               types.String                                              `tfsdk:"agent_version"`
 	APISchema                  fwtypes.ListNestedObjectValueOf[apiSchemaModel]           `tfsdk:"api_schema"`
 	Description                types.String                                              `tfsdk:"description"`
+	FunctionSchema             fwtypes.ListNestedObjectValueOf[functionSchemaModel]      `tfsdk:"function_schema"`
 	ID                         types.String                                              `tfsdk:"id"`
 	ParentActionGroupSignature fwtypes.StringEnum[awstypes.ActionGroupSignature]         `tfsdk:"parent_action_group_signature"`
 	SkipResourceInUseCheck     types.Bool                                                `tfsdk:"skip_resource_in_use_check"`
@@ -418,6 +515,22 @@ type apiSchemaModel struct {
 type s3IdentifierModel struct {
 	S3BucketName types.String `tfsdk:"s3_bucket_name"`
 	S3ObjectKey  types.String `tfsdk:"s3_object_key"`
+}
+
+type functionSchemaModel struct {
+	Functions fwtypes.ListNestedObjectValueOf[functionModel] `tfsdk:"functions"`
+}
+
+type functionModel struct {
+	Name        types.String                                         `tfsdk:"name"`
+	Description types.String                                         `tfsdk:"description"`
+	Parameters  fwtypes.SetNestedObjectValueOf[parameterDetailModel] `tfsdk:"parameters"`
+}
+type parameterDetailModel struct {
+	MapBlockKey types.String                      `tfsdk:"map_block_key"`
+	Type        fwtypes.StringEnum[awstypes.Type] `tfsdk:"type"`
+	Description types.String                      `tfsdk:"description"`
+	Required    types.Bool                        `tfsdk:"required"`
 }
 
 func expandActionGroupExecutor(_ context.Context, actionGroupExecutorData *actionGroupExecutorModel) awstypes.ActionGroupExecutor {
@@ -487,4 +600,46 @@ func flattenAPISchema(ctx context.Context, apiObject awstypes.APISchema) fwtypes
 	}
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &apiSchemaData)
+}
+
+func expandFunctionSchema(ctx context.Context, functionSchemaData *functionSchemaModel) (awstypes.FunctionSchema, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if !functionSchemaData.Functions.IsNull() {
+		functions := functionSchemaData.Functions
+		memberFunctions := make([]awstypes.Function, len(functions.Elements()))
+		diags.Append(fwflex.Expand(ctx, functions, &memberFunctions)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.FunctionSchemaMemberFunctions{
+			Value: memberFunctions,
+		}, diags
+	}
+
+	return nil, diags
+}
+
+func flattenFunctionSchema(ctx context.Context, apiObject awstypes.FunctionSchema) (fwtypes.ListNestedObjectValueOf[functionSchemaModel], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if apiObject == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[functionSchemaModel](ctx), diags
+	}
+
+	var functionSchemaData functionSchemaModel
+
+	switch v := apiObject.(type) {
+	case *awstypes.FunctionSchemaMemberFunctions:
+		memberFunctions := fwtypes.NewListNestedObjectValueOfSliceMust[functionModel](ctx, []*functionModel{})
+		diags.Append(fwflex.Flatten(ctx, v.Value, &memberFunctions)...)
+		if diags.HasError() {
+			return fwtypes.NewListNestedObjectValueOfNull[functionSchemaModel](ctx), diags
+		}
+
+		functionSchemaData.Functions = memberFunctions
+	}
+
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &functionSchemaData), diags
 }
