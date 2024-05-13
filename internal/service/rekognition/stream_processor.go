@@ -230,7 +230,6 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 							},
 							"face_match_threshold": schema.NumberAttribute{
 								Description: "Minimum face match confidence score that must be met to return a result for a recognized face.",
-								Validators:  []validator.Number{},
 							},
 						},
 					},
