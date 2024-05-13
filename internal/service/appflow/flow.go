@@ -325,7 +325,7 @@ func resourceFlow() *schema.Resource {
 											},
 										},
 									},
-									"s3": {
+									names.AttrS3: {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
@@ -863,7 +863,7 @@ func resourceFlow() *schema.Resource {
 											},
 										},
 									},
-									"s3": {
+									names.AttrS3: {
 										Type:     schema.TypeList,
 										Optional: true,
 										Computed: true,
@@ -1089,7 +1089,7 @@ func resourceFlow() *schema.Resource {
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.MarketoConnectorOperator](),
 									},
-									"s3": {
+									names.AttrS3: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ValidateDiagFunc: enum.Validate[types.S3ConnectorOperator](),
@@ -1647,7 +1647,7 @@ func expandDestinationConnectorProperties(tfMap map[string]interface{}) *types.D
 		a.Redshift = expandRedshiftDestinationProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3DestinationProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2099,7 +2099,7 @@ func expandSourceConnectorProperties(tfMap map[string]interface{}) *types.Source
 		a.Marketo = expandMarketoSourceProperties(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["s3"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrS3].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		a.S3 = expandS3SourceProperties(v[0].(map[string]interface{}))
 	}
 
@@ -2508,7 +2508,7 @@ func expandConnectorOperator(tfMap map[string]interface{}) *types.ConnectorOpera
 		a.Marketo = types.MarketoConnectorOperator(v)
 	}
 
-	if v, ok := tfMap["s3"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3].(string); ok && v != "" {
 		a.S3 = types.S3ConnectorOperator(v)
 	}
 
@@ -2743,7 +2743,7 @@ func flattenDestinationConnectorProperties(destinationConnectorProperties *types
 	}
 
 	if v := destinationConnectorProperties.S3; v != nil {
-		m["s3"] = []interface{}{flattenS3DestinationProperties(v)}
+		m[names.AttrS3] = []interface{}{flattenS3DestinationProperties(v)}
 	}
 
 	if v := destinationConnectorProperties.Salesforce; v != nil {
@@ -3179,7 +3179,7 @@ func flattenSourceConnectorProperties(sourceConnectorProperties *types.SourceCon
 	}
 
 	if v := sourceConnectorProperties.S3; v != nil {
-		m["s3"] = []interface{}{flattenS3SourceProperties(v)}
+		m[names.AttrS3] = []interface{}{flattenS3SourceProperties(v)}
 	}
 
 	if v := sourceConnectorProperties.Salesforce; v != nil {
@@ -3541,7 +3541,7 @@ func flattenConnectorOperator(connectorOperator *types.ConnectorOperator) map[st
 	m["google_analytics"] = connectorOperator.GoogleAnalytics
 	m["infor_nexus"] = connectorOperator.InforNexus
 	m["marketo"] = connectorOperator.Marketo
-	m["s3"] = connectorOperator.S3
+	m[names.AttrS3] = connectorOperator.S3
 	m["salesforce"] = connectorOperator.Salesforce
 	m["sapo_data"] = connectorOperator.SAPOData
 	m["service_now"] = connectorOperator.ServiceNow
