@@ -53,7 +53,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.metric_stream_to_firehose", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttr(resourceName, "statistics_configuration.#", "0"),
@@ -164,7 +164,7 @@ func TestAccCloudWatchMetricStream_includeFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "0"),
 				),
@@ -194,7 +194,7 @@ func TestAccCloudWatchMetricStream_includeFiltersWithMetricNames(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.0", "CPUUtilization"),
@@ -226,7 +226,7 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "0")),
 			},
@@ -255,7 +255,7 @@ func TestAccCloudWatchMetricStream_excludeFiltersWithMetricNames(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "output_format", "json"),
+					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.0", "CPUUtilization"),
