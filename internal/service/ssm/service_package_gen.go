@@ -81,7 +81,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMaintenanceWindow,
+			Factory:  resourceMaintenanceWindow,
 			TypeName: "aws_ssm_maintenance_window",
 			Name:     "Maintenance Window",
 			Tags: &types.ServicePackageResourceTags{
