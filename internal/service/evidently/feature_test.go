@@ -42,7 +42,7 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/feature/%s", rName, rName2)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", "Variation1"),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_rules.#", "0"),

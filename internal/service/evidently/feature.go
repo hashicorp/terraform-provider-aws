@@ -54,7 +54,7 @@ func ResourceFeature() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -280,7 +280,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrARN, feature.Arn)
-	d.Set("created_time", aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(feature.CreatedTime).Format(time.RFC3339))
 	d.Set("default_variation", feature.DefaultVariation)
 	d.Set(names.AttrDescription, feature.Description)
 	d.Set("entity_overrides", feature.EntityOverrides)
