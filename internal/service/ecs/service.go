@@ -265,7 +265,7 @@ func ResourceService() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeString,
 							Optional: true,
 							StateFunc: func(v interface{}) string {
@@ -1348,7 +1348,7 @@ func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) 
 			return nil, fmt.Errorf("missing type attribute in placement strategy configuration block")
 		}
 
-		f, ok := p["field"].(string)
+		f, ok := p[names.AttrField].(string)
 
 		if !ok {
 			return nil, fmt.Errorf("missing field attribute in placement strategy configuration block")
@@ -1379,11 +1379,11 @@ func flattenPlacementStrategy(pss []*ecs.PlacementStrategy) []interface{} {
 		c[names.AttrType] = aws.StringValue(ps.Type)
 
 		if ps.Field != nil {
-			c["field"] = aws.StringValue(ps.Field)
+			c[names.AttrField] = aws.StringValue(ps.Field)
 
 			// for some fields the API requires lowercase for creation but will return uppercase on query
 			if aws.StringValue(ps.Field) == "MEMORY" || aws.StringValue(ps.Field) == "CPU" {
-				c["field"] = strings.ToLower(aws.StringValue(ps.Field))
+				c[names.AttrField] = strings.ToLower(aws.StringValue(ps.Field))
 			}
 		}
 
