@@ -28,15 +28,12 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
-<<<<<<< HEAD
 	ApplicationAutoscalingEndpointID     = "application-autoscaling"
-=======
 	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"
 	APIGatewayID                         = "apigateway"
 	APIGatewayV2EndpointID               = "apigateway"
->>>>>>> main
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"

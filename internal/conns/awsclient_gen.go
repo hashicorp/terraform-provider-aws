@@ -15,11 +15,8 @@ import (
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
-<<<<<<< HEAD
-	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
-=======
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
->>>>>>> main
+	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -173,16 +170,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-<<<<<<< HEAD
-	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
-	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
-	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
-=======
-	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
->>>>>>> main
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
