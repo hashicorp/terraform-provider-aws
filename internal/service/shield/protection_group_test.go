@@ -224,7 +224,7 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternByResourceType)),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", string(awstypes.ProtectedResourceTypeElasticIpAllocation)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, string(awstypes.ProtectedResourceTypeElasticIpAllocation)),
 				),
 			},
 			{
@@ -237,7 +237,7 @@ func TestAccShieldProtectionGroup_resourceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternByResourceType)),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", string(awstypes.ProtectedResourceTypeApplicationLoadBalancer)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, string(awstypes.ProtectedResourceTypeApplicationLoadBalancer)),
 				),
 			},
 			{

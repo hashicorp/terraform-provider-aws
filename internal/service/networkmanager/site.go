@@ -86,7 +86,7 @@ func ResourceSite() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
@@ -401,7 +401,7 @@ func expandLocation(tfMap map[string]interface{}) *networkmanager.Location {
 
 	apiObject := &networkmanager.Location{}
 
-	if v, ok := tfMap["address"].(string); ok {
+	if v, ok := tfMap[names.AttrAddress].(string); ok {
 		apiObject.Address = aws.String(v)
 	}
 
@@ -424,7 +424,7 @@ func flattenLocation(apiObject *networkmanager.Location) map[string]interface{} 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Address; v != nil {
-		tfMap["address"] = aws.StringValue(v)
+		tfMap[names.AttrAddress] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Latitude; v != nil {

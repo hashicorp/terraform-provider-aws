@@ -24,7 +24,7 @@ func DataSourceCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +92,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.StringValue(out.CertificateIdentifier))
 	arn := aws.StringValue(out.CertificateArn)
-	d.Set("certificate_arn", arn)
+	d.Set(names.AttrCertificateARN, arn)
 	d.Set("certificate_id", out.CertificateIdentifier)
 	d.Set("certificate_pem", out.CertificatePem)
 	if len(out.CertificateWallet) != 0 {

@@ -75,7 +75,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -205,7 +205,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 256),
@@ -261,7 +261,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 								},
 							},
 						},
-						"resource_type": {
+						names.AttrResourceType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 64),
@@ -460,7 +460,7 @@ func expandExperimentTemplateActions(l *schema.Set) map[string]types.CreateExper
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -499,7 +499,7 @@ func expandExperimentTemplateActionsForUpdate(l *schema.Set) map[string]types.Up
 			config.Description = aws.String(v)
 		}
 
-		if v, ok := raw["parameter"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := raw[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 			config.Parameters = expandExperimentTemplateActionParameteres(v)
 		}
 
@@ -652,7 +652,7 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -702,7 +702,7 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
 		}
 
-		if v, ok := raw["resource_type"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
 			config.ResourceType = aws.String(v)
 		}
 
@@ -787,7 +787,7 @@ func expandExperimentTemplateTargetFilters(l []interface{}) []types.ExperimentTe
 		raw := m.(map[string]interface{})
 		config := types.ExperimentTemplateTargetInputFilter{}
 
-		if v, ok := raw["path"].(string); ok && v != "" {
+		if v, ok := raw[names.AttrPath].(string); ok && v != "" {
 			config.Path = aws.String(v)
 		}
 
@@ -825,7 +825,7 @@ func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemp
 		item := make(map[string]interface{})
 		item["action_id"] = aws.ToString(v.ActionId)
 		item[names.AttrDescription] = aws.ToString(v.Description)
-		item["parameter"] = flattenExperimentTemplateActionParameters(v.Parameters)
+		item[names.AttrParameter] = flattenExperimentTemplateActionParameters(v.Parameters)
 		item["start_after"] = v.StartAfter
 		item[names.AttrTarget] = flattenExperimentTemplateActionTargets(v.Targets)
 
@@ -862,7 +862,7 @@ func flattenExperimentTemplateTargets(configured map[string]types.ExperimentTemp
 		item[names.AttrFilter] = flattenExperimentTemplateTargetFilters(v.Filters)
 		item["resource_arns"] = v.ResourceArns
 		item["resource_tag"] = flattenExperimentTemplateTargetResourceTags(v.ResourceTags)
-		item["resource_type"] = aws.ToString(v.ResourceType)
+		item[names.AttrResourceType] = aws.ToString(v.ResourceType)
 		item["selection_mode"] = aws.ToString(v.SelectionMode)
 		item[names.AttrParameters] = v.Parameters
 
@@ -947,7 +947,7 @@ func flattenExperimentTemplateTargetFilters(configured []types.ExperimentTemplat
 
 	for _, v := range configured {
 		item := make(map[string]interface{})
-		item["path"] = aws.ToString(v.Path)
+		item[names.AttrPath] = aws.ToString(v.Path)
 		item[names.AttrValues] = v.Values
 
 		dataResources = append(dataResources, item)

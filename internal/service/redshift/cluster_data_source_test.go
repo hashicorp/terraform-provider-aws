@@ -51,7 +51,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "manual_snapshot_retention_period"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_track_name"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(dataSourceName, "publicly_accessible"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),

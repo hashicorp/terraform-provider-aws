@@ -44,7 +44,7 @@ func resourceBucketInventory() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -102,7 +102,7 @@ func resourceBucketInventory() *schema.Resource {
 											},
 										},
 									},
-									"format": {
+									names.AttrFormat: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.InventoryFormat](),
@@ -154,7 +154,7 @@ func resourceBucketInventory() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.InventoryOptionalField](),
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -183,7 +183,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		IsEnabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
-	if v, ok := d.GetOk("destination"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrDestination); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})[names.AttrBucket].([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Destination = &types.InventoryDestination{
 			S3BucketDestination: expandInventoryBucketDestination(tfMap),
@@ -202,7 +202,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		inventoryConfiguration.OptionalFields = flex.ExpandStringyValueSet[types.InventoryOptionalField](v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSchedule); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		inventoryConfiguration.Schedule = &types.InventorySchedule{
 			Frequency: types.InventoryFrequency(tfMap["frequency"].(string)),
@@ -269,7 +269,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 		tfMap := map[string]interface{}{
 			names.AttrBucket: flattenInventoryBucketDestination(v.S3BucketDestination),
 		}
-		if err := d.Set("destination", []map[string]interface{}{tfMap}); err != nil {
+		if err := d.Set(names.AttrDestination, []map[string]interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 		}
 	}
@@ -280,7 +280,7 @@ func resourceBucketInventoryRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("included_object_versions", ic.IncludedObjectVersions)
 	d.Set(names.AttrName, name)
 	d.Set("optional_fields", ic.OptionalFields)
-	if err := d.Set("schedule", flattenInventorySchedule(ic.Schedule)); err != nil {
+	if err := d.Set(names.AttrSchedule, flattenInventorySchedule(ic.Schedule)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
 	}
 
@@ -362,7 +362,7 @@ func flattenInventorySchedule(schedule *types.InventorySchedule) []map[string]in
 
 func expandInventoryBucketDestination(m map[string]interface{}) *types.InventoryS3BucketDestination {
 	destination := &types.InventoryS3BucketDestination{
-		Format: types.InventoryFormat(m["format"].(string)),
+		Format: types.InventoryFormat(m[names.AttrFormat].(string)),
 		Bucket: aws.String(m["bucket_arn"].(string)),
 	}
 
@@ -407,8 +407,8 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 	result := make([]map[string]interface{}, 0, 1)
 
 	m := map[string]interface{}{
-		"format":     destination.Format,
-		"bucket_arn": aws.ToString(destination.Bucket),
+		names.AttrFormat: destination.Format,
+		"bucket_arn":     aws.ToString(destination.Bucket),
 	}
 
 	if destination.AccountId != nil {

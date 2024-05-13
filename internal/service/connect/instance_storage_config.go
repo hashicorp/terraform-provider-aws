@@ -42,7 +42,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -184,7 +184,7 @@ func resourceInstanceStorageConfigCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get(names.AttrInstanceID).(string)
-	resourceType := d.Get("resource_type").(string)
+	resourceType := d.Get(names.AttrResourceType).(string)
 
 	input := &connect.AssociateInstanceStorageConfigInput{
 		InstanceId:    aws.String(instanceId),
@@ -243,7 +243,7 @@ func resourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set("association_id", storageConfig.AssociationId)
 	d.Set(names.AttrInstanceID, instanceId)
-	d.Set("resource_type", resourceType)
+	d.Set(names.AttrResourceType, resourceType)
 
 	if err := d.Set("storage_config", flattenStorageConfig(storageConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)

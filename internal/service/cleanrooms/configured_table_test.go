@@ -46,7 +46,7 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
 						names.AttrDatabaseName: rName,
-						"table_name":           rName,
+						names.AttrTableName:    rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.Project", TEST_TAG),
 				),
@@ -173,7 +173,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference(t *testing.T) {
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
 						names.AttrDatabaseName: secondDatabaseName,
-						"table_name":           TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrTableName:    TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -208,7 +208,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyDatabase(t *testi
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
 						names.AttrDatabaseName: secondDatabaseName,
-						"table_name":           TEST_FIRST_ADDITIONAL_TABLE_NAME,
+						names.AttrTableName:    TEST_FIRST_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -243,7 +243,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
 						names.AttrDatabaseName: firstDatabaseName,
-						"table_name":           TEST_SECOND_ADDITIONAL_TABLE_NAME,
+						names.AttrTableName:    TEST_SECOND_ADDITIONAL_TABLE_NAME,
 					}),
 				),
 			},
@@ -349,7 +349,7 @@ func checkConfiguredTableIsTheSame(name string, configuredTable *cleanrooms.GetC
 
 const TEST_ALLOWED_COLUMNS = "[\"my_column_1\",\"my_column_2\"]"
 const TEST_ANALYSIS_METHOD = "DIRECT_QUERY"
-const TEST_DATABASE_NAME = "database"
+const TEST_DATABASE_NAME = names.AttrDatabase
 const TEST_TABLE_NAME = "table"
 
 func testAccConfiguredTableConfig_basic(name string, description string, tagValue string, rName string) string {

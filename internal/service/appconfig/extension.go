@@ -88,7 +88,7 @@ func ResourceExtension() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -140,7 +140,7 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrParameter); ok && v.(*schema.Set).Len() > 0 {
 		in.Parameters = expandExtensionParameters(v.(*schema.Set).List())
 	}
 
@@ -179,7 +179,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("action_point", flattenExtensionActionPoints(out.Actions))
 	d.Set(names.AttrDescription, out.Description)
-	d.Set("parameter", flattenExtensionParameters(out.Parameters))
+	d.Set(names.AttrParameter, flattenExtensionParameters(out.Parameters))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrVersion, out.VersionNumber)
 
@@ -206,8 +206,8 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		requestUpdate = true
 	}
 
-	if d.HasChange("parameter") {
-		in.Parameters = expandExtensionParameters(d.Get("parameter").(*schema.Set).List())
+	if d.HasChange(names.AttrParameter) {
+		in.Parameters = expandExtensionParameters(d.Get(names.AttrParameter).(*schema.Set).List())
 		requestUpdate = true
 	}
 

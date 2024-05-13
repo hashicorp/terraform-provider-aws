@@ -55,7 +55,7 @@ func ResourceImage() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
@@ -84,7 +84,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -126,7 +126,7 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("image_name", image.ImageName)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrRoleARN, image.RoleArn)
-	d.Set("display_name", image.DisplayName)
+	d.Set(names.AttrDisplayName, image.DisplayName)
 	d.Set(names.AttrDescription, image.Description)
 
 	return diags
@@ -153,8 +153,8 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		needsUpdate = true
 	}
 
-	if d.HasChange("display_name") {
-		if v, ok := d.GetOk("display_name"); ok {
+	if d.HasChange(names.AttrDisplayName) {
+		if v, ok := d.GetOk(names.AttrDisplayName); ok {
 			input.DisplayName = aws.String(v.(string))
 		} else {
 			deleteProperties = append(deleteProperties, aws.String("DisplayName"))

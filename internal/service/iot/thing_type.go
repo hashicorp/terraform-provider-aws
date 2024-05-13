@@ -54,7 +54,7 @@ func ResourceThingType() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validThingTypeName,
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
@@ -99,7 +99,7 @@ func resourceThingTypeCreate(ctx context.Context, d *schema.ResourceData, meta i
 		ThingTypeName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("properties"); ok {
+	if v, ok := d.GetOk(names.AttrProperties); ok {
 		configs := v.([]interface{})
 		if config, ok := configs[0].(map[string]interface{}); ok && config != nil {
 			input.ThingTypeProperties = expandThingTypeProperties(config)
@@ -150,7 +150,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	if output.ThingTypeMetadata != nil {
 		d.Set("deprecated", output.ThingTypeMetadata.Deprecated)
 	}
-	if err := d.Set("properties", flattenThingTypeProperties(output.ThingTypeProperties)); err != nil {
+	if err := d.Set(names.AttrProperties, flattenThingTypeProperties(output.ThingTypeProperties)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 	}
 

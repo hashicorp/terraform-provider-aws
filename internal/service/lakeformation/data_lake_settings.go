@@ -88,7 +88,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -113,7 +113,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -311,7 +311,7 @@ func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{})
 	apiObject := awstypes.PrincipalPermissions{
 		Permissions: flex.ExpandStringyValueList[awstypes.Permission](tfMap["permissions"].(*schema.Set).List()),
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
+			DataLakePrincipalIdentifier: aws.String(tfMap[names.AttrPrincipal].(string)),
 		},
 	}
 
@@ -344,7 +344,7 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.Principal
 	}
 
 	if v := aws.ToString(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
-		tfMap["principal"] = v
+		tfMap[names.AttrPrincipal] = v
 	}
 
 	return tfMap

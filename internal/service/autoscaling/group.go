@@ -866,7 +866,7 @@ func resourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
@@ -3393,7 +3393,7 @@ func expandVPCZoneIdentifiers(tfList []interface{}) *string {
 func expandTrafficSourceIdentifier(tfMap map[string]interface{}) awstypes.TrafficSourceIdentifier {
 	apiObject := awstypes.TrafficSourceIdentifier{}
 
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		apiObject.Identifier = aws.String(v)
 	}
 
@@ -3861,7 +3861,7 @@ func flattenTrafficSourceIdentifier(apiObject awstypes.TrafficSourceIdentifier) 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.ToString(v)
+		tfMap[names.AttrIdentifier] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {

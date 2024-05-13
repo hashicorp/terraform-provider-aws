@@ -27,7 +27,7 @@ func TestAccRoute53ResolverRuleGroupAssociationDataSource_basic(t *testing.T) {
 				Config: testAccRuleGroupAssociationDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(dataSourceName, "creation_time"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(dataSourceName, "creator_request_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_id", resourceName, "firewall_rule_group_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "firewall_rule_group_association_id", resourceName, names.AttrID),

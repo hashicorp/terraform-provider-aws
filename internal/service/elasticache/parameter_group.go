@@ -64,7 +64,7 @@ func resourceParameterGroup() *schema.Resource {
 					return strings.ToLower(val.(string))
 				},
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -153,7 +153,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
-	d.Set("parameter", flattenParameters(output.Parameters))
+	d.Set(names.AttrParameter, flattenParameters(output.Parameters))
 
 	return diags
 }
@@ -162,8 +162,8 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChange("parameter") {
-		o, n := d.GetChange("parameter")
+	if d.HasChange(names.AttrParameter) {
+		o, n := d.GetChange(names.AttrParameter)
 		toRemove, toAdd := parameterChanges(o, n)
 
 		// We can only modify 20 parameters at a time, so walk them until

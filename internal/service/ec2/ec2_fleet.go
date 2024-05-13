@@ -1183,7 +1183,7 @@ func expandPlacement(tfMap map[string]interface{}) *ec2.Placement {
 		apiObject.GroupId = aws.String(v)
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -1513,7 +1513,7 @@ func flattenPlacement(apiObject *ec2.PlacementResponse) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	return tfMap

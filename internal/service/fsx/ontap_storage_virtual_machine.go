@@ -106,7 +106,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
-									"username": {
+									names.AttrUsername: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
@@ -131,7 +131,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -148,7 +148,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -165,7 +165,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -182,7 +182,7 @@ func resourceONTAPStorageVirtualMachine() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"dns_name": {
+									names.AttrDNSName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -417,7 +417,7 @@ func expandSelfManagedActiveDirectoryConfiguration(cfg []interface{}) *fsx.SelfM
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf["username"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -473,7 +473,7 @@ func expandSelfManagedActiveDirectoryConfigurationUpdates(cfg []interface{}) *fs
 		out.Password = aws.String(v)
 	}
 
-	if v, ok := conf["username"].(string); ok && len(v) > 0 {
+	if v, ok := conf[names.AttrUsername].(string); ok && len(v) > 0 {
 		out.UserName = aws.String(v)
 	}
 
@@ -518,7 +518,7 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	}
 
 	if rs.UserName != nil {
-		m["username"] = aws.StringValue(rs.UserName)
+		m[names.AttrUsername] = aws.StringValue(rs.UserName)
 	}
 
 	// Since we are in a configuration block and the FSx API does not return
@@ -564,7 +564,7 @@ func flattenSvmEndpoint(rs *fsx.SvmEndpoint) []interface{} {
 
 	m := make(map[string]interface{})
 	if rs.DNSName != nil {
-		m["dns_name"] = aws.StringValue(rs.DNSName)
+		m[names.AttrDNSName] = aws.StringValue(rs.DNSName)
 	}
 	if rs.IpAddresses != nil {
 		m["ip_addresses"] = flex.FlattenStringSet(rs.IpAddresses)

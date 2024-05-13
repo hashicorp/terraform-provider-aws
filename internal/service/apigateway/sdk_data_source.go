@@ -27,7 +27,7 @@ func dataSourceSDK() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -85,7 +85,7 @@ func dataSourceSDKRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(id)
 	d.Set("body", string(sdk.Body))
 	d.Set("content_disposition", sdk.ContentDisposition)
-	d.Set("content_type", sdk.ContentType)
+	d.Set(names.AttrContentType, sdk.ContentType)
 
 	return diags
 }

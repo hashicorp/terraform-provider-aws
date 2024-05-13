@@ -40,7 +40,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 1000),
@@ -78,7 +78,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ecs.LaunchType_Values(), false),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -90,7 +90,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -176,7 +176,7 @@ func DataSourceTaskExecution() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -213,7 +213,7 @@ func DataSourceTaskExecution() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -317,7 +317,7 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("launch_type"); ok {
 		input.LaunchType = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("network_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("overrides"); ok {
@@ -381,7 +381,7 @@ func expandTaskOverride(tfList []interface{}) *ecs.TaskOverride {
 	if v, ok := tfMap["memory"]; ok {
 		apiObject.Memory = aws.String(v.(string))
 	}
-	if v, ok := tfMap["execution_role_arn"]; ok {
+	if v, ok := tfMap[names.AttrExecutionRoleARN]; ok {
 		apiObject.ExecutionRoleArn = aws.String(v.(string))
 	}
 	if v, ok := tfMap["task_role_arn"]; ok {

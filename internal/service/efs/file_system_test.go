@@ -37,7 +37,7 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),

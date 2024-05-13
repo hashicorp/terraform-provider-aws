@@ -165,7 +165,7 @@ func ResourceSMBFileShare() *schema.Resource {
 					validation.StringLenBetween(2, 100),
 				),
 			},
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -346,7 +346,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("notification_policy", fileshare.NotificationPolicy)
 	d.Set("object_acl", fileshare.ObjectACL)
 	d.Set("oplocks_enabled", fileshare.OplocksEnabled)
-	d.Set("path", fileshare.Path)
+	d.Set(names.AttrPath, fileshare.Path)
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set(names.AttrRoleARN, fileshare.Role)

@@ -32,9 +32,9 @@ func TestAccSiteVPNCustomerGatewayDataSource_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeviceName, dataSourceName, names.AttrDeviceName),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIPAddress, dataSourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
@@ -62,9 +62,9 @@ func TestAccSiteVPNCustomerGatewayDataSource_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "bgp_asn", dataSourceName, "bgp_asn"),
-					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", dataSourceName, "certificate_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, dataSourceName, names.AttrCertificateARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDeviceName, dataSourceName, names.AttrDeviceName),
-					resource.TestCheckResourceAttrPair(resourceName, "ip_address", dataSourceName, "ip_address"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIPAddress, dataSourceName, names.AttrIPAddress),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),

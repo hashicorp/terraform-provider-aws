@@ -36,7 +36,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/json"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/json"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "a test schema"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, modelName),
 				),
@@ -46,7 +46,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccModelImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"schema"},
+				ImportStateVerifyIgnore: []string{names.AttrSchema},
 			},
 		},
 	})

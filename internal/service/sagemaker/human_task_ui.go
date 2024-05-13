@@ -46,7 +46,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"content": {
+						names.AttrContent: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -56,7 +56,7 @@ func ResourceHumanTaskUI() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"url": {
+						names.AttrURL: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -165,7 +165,7 @@ func expandHumanTaskUiUiTemplate(l []interface{}) *sagemaker.UiTemplate {
 	m := l[0].(map[string]interface{})
 
 	config := &sagemaker.UiTemplate{
-		Content: aws.String(m["content"].(string)),
+		Content: aws.String(m[names.AttrContent].(string)),
 	}
 
 	return config
@@ -177,9 +177,9 @@ func flattenHumanTaskUiUiTemplate(config *sagemaker.UiTemplateInfo, content stri
 	}
 
 	m := map[string]interface{}{
-		"content_sha256": aws.StringValue(config.ContentSha256),
-		"url":            aws.StringValue(config.Url),
-		"content":        content,
+		"content_sha256":  aws.StringValue(config.ContentSha256),
+		names.AttrURL:     aws.StringValue(config.Url),
+		names.AttrContent: content,
 	}
 
 	return []map[string]interface{}{m}

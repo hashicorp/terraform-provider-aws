@@ -76,7 +76,7 @@ func resourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -206,7 +206,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrARN, d.Id())
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set("certificate_authority_arn", d.Get("certificate_authority_arn").(string))
 	d.Set("certificate_chain", output.CertificateChain)
 
@@ -217,7 +217,7 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
+	block, _ := pem.Decode([]byte(d.Get(names.AttrCertificate).(string)))
 	if block == nil {
 		log.Printf("[WARN] Failed to parse ACM PCA Certificate (%s)", d.Id())
 		return diags

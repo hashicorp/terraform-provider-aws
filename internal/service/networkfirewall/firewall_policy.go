@@ -48,7 +48,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"encryption_configuration": encryptionConfigurationSchema(),
+			names.AttrEncryptionConfiguration: encryptionConfigurationSchema(),
 			"firewall_policy": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -227,7 +227,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("encryption_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrEncryptionConfiguration); ok {
 		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
@@ -262,7 +262,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	response := output.FirewallPolicyResponse
 	d.Set(names.AttrARN, response.FirewallPolicyArn)
 	d.Set(names.AttrDescription, response.Description)
-	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
+	d.Set(names.AttrEncryptionConfiguration, flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
@@ -279,9 +279,9 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
-	if d.HasChanges(names.AttrDescription, "encryption_configuration", "firewall_policy") {
+	if d.HasChanges(names.AttrDescription, names.AttrEncryptionConfiguration, "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
-			EncryptionConfiguration: expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
+			EncryptionConfiguration: expandEncryptionConfiguration(d.Get(names.AttrEncryptionConfiguration).([]interface{})),
 			FirewallPolicy:          expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn:       aws.String(d.Id()),
 			UpdateToken:             aws.String(d.Get("update_token").(string)),

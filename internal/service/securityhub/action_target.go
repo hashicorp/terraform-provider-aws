@@ -44,7 +44,7 @@ func resourceActionTarget() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"identifier": {
+			names.AttrIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -68,7 +68,7 @@ func resourceActionTargetCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	id := d.Get("identifier").(string)
+	id := d.Get(names.AttrIdentifier).(string)
 	input := &securityhub.CreateActionTargetInput{
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Id:          aws.String(id),
@@ -109,7 +109,7 @@ func resourceActionTargetRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, output.ActionTargetArn)
 	d.Set(names.AttrDescription, output.Description)
-	d.Set("identifier", actionTargetIdentifier)
+	d.Set(names.AttrIdentifier, actionTargetIdentifier)
 	d.Set(names.AttrName, output.Name)
 
 	return diags

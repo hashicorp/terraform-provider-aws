@@ -56,7 +56,7 @@ func resourceWebACL() *schema.Resource {
 					},
 				},
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -96,7 +96,7 @@ func resourceWebACL() *schema.Resource {
 					},
 				},
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -174,7 +174,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &wafregional.CreateWebACLInput{
 			ChangeToken:   token,
 			DefaultAction: expandAction(d.Get("default_action").([]interface{})),
-			MetricName:    aws.String(d.Get("metric_name").(string)),
+			MetricName:    aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:          aws.String(name),
 			Tags:          getTagsIn(ctx),
 		}
@@ -188,7 +188,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(aws.ToString(output.(*wafregional.CreateWebACLOutput).WebACL.WebACLId))
 
-	if loggingConfiguration := d.Get("logging_configuration").([]interface{}); len(loggingConfiguration) == 1 {
+	if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{}); len(loggingConfiguration) == 1 {
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   "waf-regional",
@@ -255,7 +255,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("default_action", flattenAction(webACL.DefaultAction)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
-	d.Set("metric_name", webACL.MetricName)
+	d.Set(names.AttrMetricName, webACL.MetricName)
 	d.Set(names.AttrName, webACL.Name)
 	if err := d.Set("rule", flattenWebACLRules(webACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
@@ -276,7 +276,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading WAF Regional Web ACL (%s) logging configuration: %s", d.Id(), err)
 	}
 
-	if err := d.Set("logging_configuration", loggingConfiguration); err != nil {
+	if err := d.Set(names.AttrLoggingConfiguration, loggingConfiguration); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 
@@ -308,8 +308,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("logging_configuration") {
-		if loggingConfiguration := d.Get("logging_configuration").([]interface{}); len(loggingConfiguration) == 1 {
+	if d.HasChange(names.AttrLoggingConfiguration) {
+		if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{}); len(loggingConfiguration) == 1 {
 			input := &wafregional.PutLoggingConfigurationInput{
 				LoggingConfiguration: expandLoggingConfiguration(loggingConfiguration, d.Get(names.AttrARN).(string)),
 			}

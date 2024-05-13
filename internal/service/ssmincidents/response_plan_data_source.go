@@ -46,7 +46,7 @@ func DataSourceResponsePlan() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{
@@ -84,7 +84,7 @@ func DataSourceResponsePlan() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func DataSourceResponsePlan() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"sns_topic_arn": {
+									names.AttrSNSTopicARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

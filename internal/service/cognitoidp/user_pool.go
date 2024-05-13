@@ -132,7 +132,7 @@ func resourceUserPool() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
 				},
 			},
-			"creation_date": {
+			names.AttrCreationDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -163,7 +163,7 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -408,7 +408,7 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MinItems: 1,
@@ -715,7 +715,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		input.Schema = expandUserPoolSchema(v.(*schema.Set).List())
 	}
 
@@ -846,13 +846,13 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set(names.AttrARN, userPool.Arn)
 	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
-	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
+	d.Set(names.AttrCreationDate, userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
 	d.Set("deletion_protection", userPool.DeletionProtection)
 	if err := d.Set("device_configuration", flattenUserPoolDeviceConfiguration(userPool.DeviceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting device_configuration: %s", err)
 	}
-	d.Set("domain", userPool.Domain)
+	d.Set(names.AttrDomain, userPool.Domain)
 	if err := d.Set("email_configuration", flattenUserPoolEmailConfiguration(userPool.EmailConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting email_configuration: %s", err)
 	}
@@ -869,10 +869,10 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting password_policy: %s", err)
 	}
 	var configuredSchema []interface{}
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		configuredSchema = v.(*schema.Set).List()
 	}
-	if err := d.Set("schema", flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), userPool.SchemaAttributes)); err != nil {
+	if err := d.Set(names.AttrSchema, flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), userPool.SchemaAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 	d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
@@ -1143,8 +1143,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("schema") {
-		o, n := d.GetChange("schema")
+	if d.HasChange(names.AttrSchema) {
+		o, n := d.GetChange(names.AttrSchema)
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if os.Difference(ns).Len() == 0 {
@@ -1966,7 +1966,7 @@ func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovi
 			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
-			Name:                   aws.String("address"),
+			Name:                   aws.String(names.AttrAddress),
 			Required:               aws.Bool(false),
 			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),

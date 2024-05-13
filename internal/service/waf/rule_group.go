@@ -76,7 +76,7 @@ func resourceRuleGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -103,7 +103,7 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:        aws.String(name),
 			Tags:        getTagsIn(ctx),
 		}
@@ -172,7 +172,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Resource:  "rulegroup/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("metric_name", ruleGroup.MetricName)
+	d.Set(names.AttrMetricName, ruleGroup.MetricName)
 	d.Set(names.AttrName, ruleGroup.Name)
 
 	return diags

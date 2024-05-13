@@ -81,7 +81,7 @@ func ResourceDataSource() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -246,7 +246,7 @@ func ResourceDataSource() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"schema": {
+									names.AttrSchema: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -521,7 +521,7 @@ func expandDynamoDBDataSourceConfig(l []interface{}, currentRegion string) *apps
 
 	result := &appsync.DynamodbDataSourceConfig{
 		AwsRegion: aws.String(currentRegion),
-		TableName: aws.String(configured["table_name"].(string)),
+		TableName: aws.String(configured[names.AttrTableName].(string)),
 	}
 
 	if v, ok := configured[names.AttrRegion]; ok && v.(string) != "" {
@@ -573,8 +573,8 @@ func flattenDynamoDBDataSourceConfig(config *appsync.DynamodbDataSourceConfig) [
 	}
 
 	result := map[string]interface{}{
-		names.AttrRegion: aws.StringValue(config.AwsRegion),
-		"table_name":     aws.StringValue(config.TableName),
+		names.AttrRegion:    aws.StringValue(config.AwsRegion),
+		names.AttrTableName: aws.StringValue(config.TableName),
 	}
 
 	if config.UseCallerCredentials != nil {
@@ -886,7 +886,7 @@ func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegio
 		result.DbClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := configured["schema"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrSchema]; ok && v.(string) != "" {
 		result.Schema = aws.String(v.(string))
 	}
 
@@ -917,7 +917,7 @@ func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[s
 	}
 
 	if config.Schema != nil {
-		result["schema"] = aws.StringValue(config.Schema)
+		result[names.AttrSchema] = aws.StringValue(config.Schema)
 	}
 
 	return []map[string]interface{}{result}

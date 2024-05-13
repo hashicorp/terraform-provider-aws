@@ -46,7 +46,7 @@ func dataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,7 +83,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("authorization_token", authorizationToken)
 	d.Set("proxy_endpoint", proxyEndpoint)
 	d.Set("expires_at", expiresAt)
-	d.Set("user_name", userName)
+	d.Set(names.AttrUserName, userName)
 	d.Set(names.AttrPassword, password)
 
 	return diags

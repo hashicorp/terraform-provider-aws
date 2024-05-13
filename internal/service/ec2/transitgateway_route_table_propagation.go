@@ -37,7 +37,7 @@ func ResourceTransitGatewayRouteTablePropagation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +107,7 @@ func resourceTransitGatewayRouteTablePropagationRead(ctx context.Context, d *sch
 	}
 
 	d.Set("resource_id", transitGatewayPropagation.ResourceId)
-	d.Set("resource_type", transitGatewayPropagation.ResourceType)
+	d.Set(names.AttrResourceType, transitGatewayPropagation.ResourceType)
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPropagation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 

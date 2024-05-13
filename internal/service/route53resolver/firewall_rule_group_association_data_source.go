@@ -23,7 +23,7 @@ func DataSourceFirewallRuleGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -87,7 +87,7 @@ func dataSourceRuleGroupAssociationRead(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.StringValue(ruleGroupAssociation.Id))
 	d.Set(names.AttrARN, ruleGroupAssociation.Arn)
-	d.Set("creation_time", ruleGroupAssociation.CreationTime)
+	d.Set(names.AttrCreationTime, ruleGroupAssociation.CreationTime)
 	d.Set("creator_request_id", ruleGroupAssociation.CreatorRequestId)
 	d.Set("firewall_rule_group_id", ruleGroupAssociation.FirewallRuleGroupId)
 	d.Set("firewall_rule_group_association_id", ruleGroupAssociation.Id)

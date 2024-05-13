@@ -150,7 +150,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -357,7 +357,7 @@ func resourceBucket() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.IntAtLeast(1),
 												},
-												"mode": {
+												names.AttrMode: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.ObjectLockRetentionMode](),
@@ -422,7 +422,7 @@ func resourceBucket() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringInSlice(enum.Slice(types.DeleteMarkerReplicationStatusEnabled), false),
 									},
-									"destination": {
+									names.AttrDestination: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										MinItems: 1,
@@ -1556,7 +1556,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeBucketNotEmpty) {
-		if d.Get("force_destroy").(bool) {
+		if d.Get(names.AttrForceDestroy).(bool) {
 			// Delete everything including locked objects.
 			// Don't ignore any object errors or we could recurse infinitely.
 			var objectLockEnabled bool
@@ -2455,7 +2455,7 @@ func expandBucketReplicationRules(ctx context.Context, l []interface{}) []types.
 			continue
 		}
 
-		if v, ok := tfRuleMap["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfRuleMap[names.AttrDestination].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Destination = expandBucketDestination(v)
 		} else {
 			rule.Destination = &types.Destination{}
@@ -2638,7 +2638,7 @@ func flattenBucketReplicationRules(ctx context.Context, rules []types.Replicatio
 		}
 
 		if rule.Destination != nil {
-			m["destination"] = flattenBucketDestination(rule.Destination)
+			m[names.AttrDestination] = flattenBucketDestination(rule.Destination)
 		}
 
 		if rule.Filter != nil {
@@ -2905,7 +2905,7 @@ func expandBucketObjectLockConfiguration(l []interface{}) *types.ObjectLockConfi
 			if v, ok := tfMap["days"].(int); ok && v > 0 {
 				apiObject.Rule.DefaultRetention.Days = aws.Int32(int32(v))
 			}
-			if v, ok := tfMap["mode"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
 				apiObject.Rule.DefaultRetention.Mode = types.ObjectLockRetentionMode(v)
 			}
 			if v, ok := tfMap["years"].(int); ok && v > 0 {
@@ -2931,9 +2931,9 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 		tfMap := map[string]interface{}{
 			"default_retention": []interface{}{
 				map[string]interface{}{
-					"days":  aws.ToInt32(apiObject.Days),
-					"mode":  apiObject.Mode,
-					"years": aws.ToInt32(apiObject.Years),
+					"days":         aws.ToInt32(apiObject.Days),
+					names.AttrMode: apiObject.Mode,
+					"years":        aws.ToInt32(apiObject.Years),
 				},
 			},
 		}

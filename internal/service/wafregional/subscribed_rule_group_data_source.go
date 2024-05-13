@@ -24,15 +24,15 @@ func dataSourceSubscribedRuleGroup() *schema.Resource {
 		ReadWithoutTimeout: dataSourceSubscribedRuleGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				AtLeastOneOf: []string{names.AttrName, "metric_name"},
+				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
 			},
 			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				AtLeastOneOf: []string{names.AttrName, "metric_name"},
+				AtLeastOneOf: []string{names.AttrName, names.AttrMetricName},
 			},
 		},
 	}
@@ -44,7 +44,7 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 
 	var filter tfslices.Predicate[*awstypes.SubscribedRuleGroupSummary]
 
-	if v, ok := d.GetOk("metric_name"); ok {
+	if v, ok := d.GetOk(names.AttrMetricName); ok {
 		name := v.(string)
 		filter = func(v *awstypes.SubscribedRuleGroupSummary) bool {
 			return aws.ToString(v.MetricName) == name
@@ -72,7 +72,7 @@ func dataSourceSubscribedRuleGroupRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.SetId(aws.ToString(output.RuleGroupId))
-	d.Set("metric_name", output.MetricName)
+	d.Set(names.AttrMetricName, output.MetricName)
 	d.Set(names.AttrName, output.Name)
 
 	return nil

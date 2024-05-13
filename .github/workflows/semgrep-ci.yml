@@ -28,10 +28,12 @@ jobs:
       - run: |
           semgrep --validate \
             --config .ci/.semgrep.yml \
+            --config .ci/.semgrep-constants.yml \
             --config .ci/semgrep/
       - run: |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
+            --config .ci/.semgrep-constants.yml \
             --config .ci/semgrep/ \
             --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \

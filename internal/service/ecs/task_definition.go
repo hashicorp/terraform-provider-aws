@@ -119,7 +119,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -184,7 +184,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"expression": {
+						names.AttrExpression: {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
@@ -210,7 +210,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"properties": {
+						names.AttrProperties: {
 							Type:     schema.TypeMap,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Optional: true,
@@ -404,7 +404,7 @@ func ResourceTaskDefinition() *schema.Resource {
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"domain": {
+												names.AttrDomain: {
 													Type:     schema.TypeString,
 													ForceNew: true,
 													Required: true,
@@ -476,7 +476,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.EphemeralStorage = expandTaskDefinitionEphemeralStorage(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("execution_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
 		input.ExecutionRoleArn = aws.String(v.(string))
 	}
 
@@ -628,7 +628,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
-	d.Set("execution_role_arn", taskDefinition.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, taskDefinition.ExecutionRoleArn)
 	d.Set("cpu", taskDefinition.Cpu)
 	d.Set("memory", taskDefinition.Memory)
 	d.Set("network_mode", taskDefinition.NetworkMode)
@@ -745,7 +745,7 @@ func resourceTaskDefinitionVolumeHash(v interface{}) int {
 			if v, ok := m["credentials_parameter"]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
-			if v, ok := m["domain"]; ok && v.(string) != "" {
+			if v, ok := m[names.AttrDomain]; ok && v.(string) != "" {
 				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 			}
 		}
@@ -762,7 +762,7 @@ func flattenPlacementConstraints(pcs []*ecs.TaskDefinitionPlacementConstraint) [
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
 		c[names.AttrType] = aws.StringValue(pc.Type)
-		c["expression"] = aws.StringValue(pc.Expression)
+		c[names.AttrExpression] = aws.StringValue(pc.Expression)
 		results = append(results, c)
 	}
 	return results
@@ -809,7 +809,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 	config := make(map[string]interface{})
 	config["container_name"] = aws.StringValue(pc.ContainerName)
 	config[names.AttrType] = aws.StringValue(pc.Type)
-	config["properties"] = meshProperties
+	config[names.AttrProperties] = meshProperties
 
 	return []map[string]interface{}{
 		config,
@@ -848,7 +848,7 @@ func expandTaskDefinitionPlacementConstraints(constraints []interface{}) ([]*ecs
 	for _, raw := range constraints {
 		p := raw.(map[string]interface{})
 		t := p[names.AttrType].(string)
-		e := p["expression"].(string)
+		e := p[names.AttrExpression].(string)
 		if err := validPlacementConstraint(t, e); err != nil {
 			return nil, err
 		}
@@ -884,7 +884,7 @@ func expandTaskDefinitionProxyConfiguration(proxyConfigs []interface{}) *ecs.Pro
 	proxyConfig := proxyConfigs[0]
 	configMap := proxyConfig.(map[string]interface{})
 
-	rawProperties := configMap["properties"].(map[string]interface{})
+	rawProperties := configMap[names.AttrProperties].(map[string]interface{})
 
 	properties := make([]*ecs.KeyValuePair, len(rawProperties))
 	i := 0
@@ -1038,7 +1038,7 @@ func expandVolumesFSxWinVolumeAuthorizationConfig(config []interface{}) *ecs.FSx
 		auth.CredentialsParameter = aws.String(v)
 	}
 
-	if v, ok := authconfig["domain"].(string); ok && v != "" {
+	if v, ok := authconfig[names.AttrDomain].(string); ok && v != "" {
 		auth.Domain = aws.String(v)
 	}
 
@@ -1174,7 +1174,7 @@ func flattenFSxWinVolumeAuthorizationConfig(config *ecs.FSxWindowsFileServerAuth
 			m["credentials_parameter"] = aws.StringValue(v)
 		}
 		if v := config.Domain; v != nil {
-			m["domain"] = aws.StringValue(v)
+			m[names.AttrDomain] = aws.StringValue(v)
 		}
 	}
 

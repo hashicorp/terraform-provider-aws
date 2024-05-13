@@ -31,10 +31,10 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "email", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(dataSourceName, "namespace", tfquicksight.DefaultUserNamespace),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrNamespace, tfquicksight.DefaultUserNamespace),
 					resource.TestCheckResourceAttr(dataSourceName, "identity_type", quicksight.IdentityTypeQuicksight),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "user_role", quicksight.UserRoleReader),

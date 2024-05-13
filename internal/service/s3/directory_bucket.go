@@ -79,7 +79,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"force_destroy": schema.BoolAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),

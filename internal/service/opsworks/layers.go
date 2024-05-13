@@ -153,7 +153,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      opsworks.CloudWatchLogsInitialPositionStartOfFile,
 									ValidateFunc: validation.StringInSlice(opsworks.CloudWatchLogsInitialPosition_Values(), false),
 								},
-								"log_group_name": {
+								names.AttrLogGroupName: {
 									Type:     schema.TypeString,
 									Required: true,
 								},
@@ -1079,7 +1079,7 @@ func expandCloudWatchLogsLogStream(tfMap map[string]interface{}) *opsworks.Cloud
 		apiObject.InitialPosition = aws.String(v)
 	}
 
-	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrLogGroupName].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
 
@@ -1178,7 +1178,7 @@ func flattenCloudWatchLogsLogStream(apiObject *opsworks.CloudWatchLogsLogStream)
 	}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.MultiLineStartPattern; v != nil {

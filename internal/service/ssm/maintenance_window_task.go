@@ -146,7 +146,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 									},
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -265,7 +265,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 										Optional: true,
 									},
 
-									"parameter": {
+									names.AttrParameter: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -400,7 +400,7 @@ func expandTaskInvocationAutomationParameters(config []interface{}) *ssm.Mainten
 	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
 		params.DocumentVersion = aws.String(attr.(string))
 	}
-	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
+	if attr, ok := configParam[names.AttrParameter]; ok && len(attr.(*schema.Set).List()) > 0 {
 		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 
@@ -414,7 +414,7 @@ func flattenTaskInvocationAutomationParameters(parameters *ssm.MaintenanceWindow
 		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.Parameters != nil {
-		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
+		result[names.AttrParameter] = flattenTaskInvocationCommonParameters(parameters.Parameters)
 	}
 
 	return []interface{}{result}
@@ -482,7 +482,7 @@ func expandTaskInvocationRunCommandParameters(config []interface{}) *ssm.Mainten
 	if attr, ok := configParam["output_s3_key_prefix"]; ok && len(attr.(string)) != 0 {
 		params.OutputS3KeyPrefix = aws.String(attr.(string))
 	}
-	if attr, ok := configParam["parameter"]; ok && len(attr.(*schema.Set).List()) > 0 {
+	if attr, ok := configParam[names.AttrParameter]; ok && len(attr.(*schema.Set).List()) > 0 {
 		params.Parameters = expandTaskInvocationCommonParameters(attr.(*schema.Set).List())
 	}
 	if attr, ok := configParam["service_role_arn"]; ok && len(attr.(string)) != 0 {
@@ -523,7 +523,7 @@ func flattenTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindow
 		result["output_s3_key_prefix"] = aws.StringValue(parameters.OutputS3KeyPrefix)
 	}
 	if parameters.Parameters != nil {
-		result["parameter"] = flattenTaskInvocationCommonParameters(parameters.Parameters)
+		result[names.AttrParameter] = flattenTaskInvocationCommonParameters(parameters.Parameters)
 	}
 	if parameters.ServiceRoleArn != nil {
 		result["service_role_arn"] = aws.StringValue(parameters.ServiceRoleArn)

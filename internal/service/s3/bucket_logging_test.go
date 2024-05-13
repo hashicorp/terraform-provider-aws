@@ -135,7 +135,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"permission":     string(types.BucketLogsPermissionFullControl),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.id", "data.aws_canonical_user_id.current", names.AttrID),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", "display_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
 				),
 			},
 			{
@@ -153,7 +153,7 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionRead),
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", "display_name"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "target_grant.*.grantee.0.display_name", "data.aws_canonical_user_id.current", names.AttrDisplayName),
 				),
 			},
 			{

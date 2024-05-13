@@ -27,11 +27,11 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination": {
+			names.AttrDestination: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"destination_arn": {
+			names.AttrDestinationARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -100,8 +100,8 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 	networkInsightsPathID := aws.StringValue(nip.NetworkInsightsPathId)
 	d.SetId(networkInsightsPathID)
 	d.Set(names.AttrARN, nip.NetworkInsightsPathArn)
-	d.Set("destination", nip.Destination)
-	d.Set("destination_arn", nip.DestinationArn)
+	d.Set(names.AttrDestination, nip.Destination)
+	d.Set(names.AttrDestinationARN, nip.DestinationArn)
 	d.Set("destination_ip", nip.DestinationIp)
 	d.Set("destination_port", nip.DestinationPort)
 	d.Set("network_insights_path_id", networkInsightsPathID)

@@ -83,7 +83,7 @@ func ResourceWorkflow() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"path": {
+															names.AttrPath: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -210,7 +210,7 @@ func ResourceWorkflow() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"path": {
+															names.AttrPath: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -396,7 +396,7 @@ func ResourceWorkflow() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"path": {
+															names.AttrPath: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -523,7 +523,7 @@ func ResourceWorkflow() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"path": {
+															names.AttrPath: {
 																Type:         schema.TypeString,
 																Optional:     true,
 																ForceNew:     true,
@@ -1158,7 +1158,7 @@ func expandEFSFileLocation(tfMap []interface{}) *transfer.EfsFileLocation {
 		apiObject.FileSystemId = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw["path"].(string); ok && v != "" {
+	if v, ok := tfMapRaw[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
@@ -1177,7 +1177,7 @@ func flattenEFSFileLocation(apiObject *transfer.EfsFileLocation) []interface{} {
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.StringValue(v)
+		tfMap[names.AttrPath] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

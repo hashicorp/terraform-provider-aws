@@ -44,7 +44,7 @@ func resourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -93,7 +93,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateRuleInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:        aws.String(name),
 			Tags:        getTagsIn(ctx),
 		}
@@ -141,7 +141,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Resource:  "rule/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("metric_name", rule.MetricName)
+	d.Set(names.AttrMetricName, rule.MetricName)
 	d.Set(names.AttrName, rule.Name)
 	if err := d.Set("predicate", flattenPredicates(rule.Predicates)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predicate: %s", err)

@@ -40,7 +40,7 @@ func ResourceDatabase() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
@@ -151,7 +151,7 @@ func ResourceDatabase() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -220,7 +220,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("publicly_accessible"); ok {
+	if v, ok := d.GetOk(names.AttrPubliclyAccessible); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
 
@@ -310,7 +310,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("master_username", rd.MasterUsername)
 	d.Set("preferred_backup_window", rd.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, rd.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", rd.PubliclyAccessible)
+	d.Set(names.AttrPubliclyAccessible, rd.PubliclyAccessible)
 	d.Set("ram_size", rd.Hardware.RamSizeInGb)
 	d.Set("relational_database_name", rd.Name)
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
@@ -326,9 +326,9 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	if d.HasChangesExcept("apply_immediately", "final_snapshot_name", "skip_final_snapshot", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrApplyImmediately, "final_snapshot_name", "skip_final_snapshot", names.AttrTags, names.AttrTagsAll) {
 		input := &lightsail.UpdateRelationalDatabaseInput{
-			ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
+			ApplyImmediately:       aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			RelationalDatabaseName: aws.String(d.Id()),
 		}
 
@@ -356,8 +356,8 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
 		}
 
-		if d.HasChange("publicly_accessible") {
-			input.PubliclyAccessible = aws.Bool(d.Get("publicly_accessible").(bool))
+		if d.HasChange(names.AttrPubliclyAccessible) {
+			input.PubliclyAccessible = aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool))
 		}
 
 		output, err := conn.UpdateRelationalDatabase(ctx, input)
@@ -378,8 +378,8 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChange("publicly_accessible") {
-			if err := waitDatabasePubliclyAccessibleModified(ctx, conn, aws.String(d.Id()), d.Get("publicly_accessible").(bool)); err != nil {
+		if d.HasChange(names.AttrPubliclyAccessible) {
+			if err := waitDatabasePubliclyAccessibleModified(ctx, conn, aws.String(d.Id()), d.Get(names.AttrPubliclyAccessible).(bool)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Lightsail Relational Database (%s) publicly accessible update: %s", d.Id(), err)
 			}
 		}

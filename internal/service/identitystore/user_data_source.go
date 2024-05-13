@@ -113,7 +113,7 @@ func DataSourceUser() *schema.Resource {
 				},
 				ConflictsWith: []string{names.AttrFilter, "user_id"},
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -268,7 +268,7 @@ func DataSourceUser() *schema.Resource {
 				AtLeastOneOf:  []string{"alternate_identifier", names.AttrFilter, "user_id"},
 				ConflictsWith: []string{"alternate_identifier"},
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -327,7 +327,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		user := results[0]
 
 		d.SetId(aws.ToString(user.UserId))
-		d.Set("display_name", user.DisplayName)
+		d.Set(names.AttrDisplayName, user.DisplayName)
 		d.Set("identity_store_id", user.IdentityStoreId)
 		d.Set("locale", user.Locale)
 		d.Set("nickname", user.NickName)
@@ -336,7 +336,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("timezone", user.Timezone)
 		d.Set("title", user.Title)
 		d.Set("user_id", user.UserId)
-		d.Set("user_name", user.UserName)
+		d.Set(names.AttrUserName, user.UserName)
 		d.Set("user_type", user.UserType)
 
 		if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {
@@ -405,7 +405,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(user.UserId))
 
-	d.Set("display_name", user.DisplayName)
+	d.Set(names.AttrDisplayName, user.DisplayName)
 	d.Set("identity_store_id", user.IdentityStoreId)
 	d.Set("locale", user.Locale)
 	d.Set("nickname", user.NickName)
@@ -414,7 +414,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("timezone", user.Timezone)
 	d.Set("title", user.Title)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 	d.Set("user_type", user.UserType)
 
 	if err := d.Set("addresses", flattenAddresses(user.Addresses)); err != nil {

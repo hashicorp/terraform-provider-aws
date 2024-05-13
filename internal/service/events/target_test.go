@@ -232,14 +232,14 @@ func TestAccEventsTarget_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetNoBusNameImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config:   testAccTargetConfig_defaultBusName(rName),
@@ -299,7 +299,7 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -335,7 +335,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -369,7 +369,7 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -408,7 +408,7 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -445,7 +445,7 @@ func TestAccEventsTarget_full(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -478,7 +478,7 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -514,7 +514,7 @@ func TestAccEventsTarget_http(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -552,7 +552,7 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_httpParameterUpdated(rName),
@@ -606,7 +606,7 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -639,7 +639,7 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -680,7 +680,7 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecs(rName),
@@ -694,7 +694,7 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecsNoLaunchType(rName),
@@ -743,7 +743,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecs(rName),
@@ -757,7 +757,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccTargetConfig_ecsBlankLaunchType(rName),
@@ -795,7 +795,7 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -834,7 +834,7 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -869,7 +869,7 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -905,7 +905,7 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -938,7 +938,7 @@ func TestAccEventsTarget_batch(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -969,7 +969,7 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1000,7 +1000,7 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1036,7 +1036,7 @@ func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1095,7 +1095,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1161,7 +1161,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -1194,7 +1194,7 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTargetImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})

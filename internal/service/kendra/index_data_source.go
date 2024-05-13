@@ -67,7 +67,7 @@ func DataSourceIndex() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -264,7 +264,7 @@ func DataSourceIndex() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

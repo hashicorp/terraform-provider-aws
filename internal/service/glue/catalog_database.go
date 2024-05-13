@@ -73,7 +73,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(glue.Permission_Values(), false),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -105,7 +105,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -354,7 +354,7 @@ func expandDatabaseFederatedDatabase(tfMap map[string]interface{}) *glue.Federat
 		apiObject.ConnectionName = aws.String(v)
 	}
 
-	if v, ok := tfMap["identifier"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIdentifier].(string); ok && v != "" {
 		apiObject.Identifier = aws.String(v)
 	}
 
@@ -395,7 +395,7 @@ func flattenDatabaseFederatedDatabase(apiObject *glue.FederatedDatabase) map[str
 	}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.StringValue(v)
+		tfMap[names.AttrIdentifier] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -460,7 +460,7 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.Princ
 		apiObject.Permissions = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["principal"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 
@@ -511,7 +511,7 @@ func flattenDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) ma
 	}
 
 	if v := apiObject.Principal; v != nil {
-		tfMap["principal"] = []interface{}{flattenDatabasePrincipal(v)}
+		tfMap[names.AttrPrincipal] = []interface{}{flattenDatabasePrincipal(v)}
 	}
 
 	return tfMap

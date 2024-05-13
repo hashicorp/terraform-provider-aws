@@ -112,7 +112,7 @@ func ResourceIndex() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
@@ -351,7 +351,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -771,7 +771,7 @@ func expandRelevance(relevance []interface{}, documentAttributeValueType string)
 
 	result := &types.Relevance{}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		result.Duration = aws.String(v)
 	}
 
@@ -935,7 +935,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.SecretManagerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		result.URL = aws.String(v)
 	}
 
@@ -986,7 +986,7 @@ func flattenRelevance(relevance *types.Relevance, documentAttributeValueType str
 	}
 
 	if v := relevance.Duration; v != nil {
-		values["duration"] = aws.ToString(v)
+		values[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := relevance.Freshness; v != nil && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
@@ -1142,7 +1142,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.URL; v != nil {
-		values["url"] = aws.ToString(v)
+		values[names.AttrURL] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.UserNameAttributeField; v != nil {

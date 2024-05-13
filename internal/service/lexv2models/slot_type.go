@@ -145,7 +145,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 										CustomType: fwtypes.NewListNestedObjectTypeOf[Source](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"s3_bucket_name": schema.StringAttribute{
+												names.AttrS3BucketName: schema.StringAttribute{
 													Required: true,
 												},
 												"s3_object_key": schema.StringAttribute{

@@ -86,7 +86,7 @@ func ResourceJobTemplate() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"properties": {
+															names.AttrProperties: {
 																Type:     schema.TypeMap,
 																Optional: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func ResourceJobTemplate() *schema.Resource {
 														},
 													},
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -116,7 +116,7 @@ func ResourceJobTemplate() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"log_group_name": {
+															names.AttrLogGroupName: {
 																Type:     schema.TypeString,
 																Required: true,
 																ForceNew: true,
@@ -156,7 +156,7 @@ func ResourceJobTemplate() *schema.Resource {
 								},
 							},
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -362,7 +362,7 @@ func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTempl
 		apiObject.ConfigurationOverrides = expandConfigurationOverrides(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -439,7 +439,7 @@ func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configurat
 		apiObject.Configurations = expandConfigurations(v)
 	}
 
-	if v, ok := tfMap["properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Properties = flex.ExpandStringMap(v)
 	}
 
@@ -570,7 +570,7 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.JobDriver; v != nil {
@@ -636,7 +636,7 @@ func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]int
 	}
 
 	if v := apiObject.Properties; v != nil {
-		tfMap["properties"] = aws.StringValueMap(v)
+		tfMap[names.AttrProperties] = aws.StringValueMap(v)
 	}
 
 	return tfMap
@@ -672,7 +672,7 @@ func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.Parametri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {

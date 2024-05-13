@@ -24,6 +24,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"basic":          testAccDataCellsFilter_basic,
 			"columnWildcard": testAccDataCellsFilter_columnWildcard,
 			"disappears":     testAccDataCellsFilter_disappears,
+			"rowFilter":      testAccDataCellsFilter_rowFilter,
 		},
 		"DataLakeSettingsDataSource": {
 			"basic":          testAccDataLakeSettingsDataSource_basic,
@@ -31,7 +32,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"PermissionsBasic": {
 			"basic":               testAccPermissions_basic,
-			"database":            testAccPermissions_database,
+			names.AttrDatabase:    testAccPermissions_database,
 			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
 			"databaseMultiple":    testAccPermissions_databaseMultiple,
 			"dataCellsFilter":     testAccPermissions_dataCellsFilter,
@@ -44,7 +45,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
 			"dataCellsFilter":  testAccPermissionsDataSource_dataCellsFilter,
-			"database":         testAccPermissionsDataSource_database,
+			names.AttrDatabase: testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
 			"lfTag":            testAccPermissionsDataSource_lfTag,
 			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
@@ -84,7 +85,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"ResourceLFTags": {
 			"basic":                testAccResourceLFTags_basic,
-			"database":             testAccResourceLFTags_database,
+			names.AttrDatabase:     testAccResourceLFTags_database,
 			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
 			"disappears":           testAccResourceLFTags_disappears,
 			"hierarchy":            testAccResourceLFTags_hierarchy,

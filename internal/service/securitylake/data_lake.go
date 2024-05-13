@@ -78,7 +78,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"configuration": schema.ListNestedBlock{
+			names.AttrConfiguration: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
@@ -87,7 +87,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"encryption_configuration": schema.ListAttribute{
+						names.AttrEncryptionConfiguration: schema.ListAttribute{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeEncryptionConfigurationModel](ctx),
 							Optional:   true,
 							Computed:   true,

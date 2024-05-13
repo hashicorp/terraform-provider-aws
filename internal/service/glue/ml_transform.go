@@ -51,7 +51,7 @@ func ResourceMLTransform() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"table_name": {
+						names.AttrTableName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -164,7 +164,7 @@ func ResourceMLTransform() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -287,7 +287,7 @@ func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
-	if err := d.Set("schema", flattenMLTransformSchemaColumns(output.Schema)); err != nil {
+	if err := d.Set(names.AttrSchema, flattenMLTransformSchemaColumns(output.Schema)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 
@@ -380,7 +380,7 @@ func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {
 
 		table := &glue.Table{}
 
-		if v, ok := m["table_name"].(string); ok {
+		if v, ok := m[names.AttrTableName].(string); ok {
 			table.TableName = aws.String(v)
 		}
 
@@ -407,7 +407,7 @@ func flattenMLTransformInputRecordTables(tables []*glue.Table) []interface{} {
 
 	for _, table := range tables {
 		m := map[string]interface{}{
-			"table_name":           aws.StringValue(table.TableName),
+			names.AttrTableName:    aws.StringValue(table.TableName),
 			names.AttrDatabaseName: aws.StringValue(table.DatabaseName),
 		}
 

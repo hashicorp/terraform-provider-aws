@@ -229,7 +229,7 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -258,7 +258,7 @@ func endpointSchema() *schema.Schema {
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"address": {
+				names.AttrAddress: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -339,7 +339,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.SnapshotWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("sns_topic_arn"); ok {
+	if v, ok := d.GetOk(names.AttrSNSTopicARN); ok {
 		input.SnsTopicArn = aws.String(v.(string))
 	}
 
@@ -436,8 +436,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SnapshotWindow = aws.String(d.Get("snapshot_window").(string))
 		}
 
-		if d.HasChange("sns_topic_arn") {
-			v := d.Get("sns_topic_arn").(string)
+		if d.HasChange(names.AttrSNSTopicARN) {
+			v := d.Get(names.AttrSNSTopicARN).(string)
 
 			input.SnsTopicArn = aws.String(v)
 
@@ -542,9 +542,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
 	if aws.StringValue(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
-		d.Set("sns_topic_arn", cluster.SnsTopicArn)
+		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
-		d.Set("sns_topic_arn", "")
+		d.Set(names.AttrSNSTopicARN, "")
 	}
 
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
@@ -600,7 +600,7 @@ func flattenEndpoint(endpoint *memorydb.Endpoint) []interface{} {
 	m := map[string]interface{}{}
 
 	if v := aws.StringValue(endpoint.Address); v != "" {
-		m["address"] = v
+		m[names.AttrAddress] = v
 	}
 
 	if v := aws.Int64Value(endpoint.Port); v != 0 {

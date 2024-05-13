@@ -44,7 +44,7 @@ func TestAccWAFRuleGroup_basic(t *testing.T) {
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 					computeActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
@@ -84,7 +84,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", groupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccWAFRuleGroup_changeNameForceNew(t *testing.T) {
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newGroupName),
 					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "metric_name", newGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, newGroupName),
 				),
 			},
 			{

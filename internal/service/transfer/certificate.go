@@ -44,7 +44,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate": {
+			names.AttrCertificate: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -71,7 +71,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -98,7 +98,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	input := &transfer.ImportCertificateInput{
-		Certificate: aws.String(d.Get("certificate").(string)),
+		Certificate: aws.String(d.Get(names.AttrCertificate).(string)),
 		Tags:        getTagsIn(ctx),
 		Usage:       aws.String(d.Get("usage").(string)),
 	}
@@ -111,7 +111,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("private_key"); ok {
+	if v, ok := d.GetOk(names.AttrPrivateKey); ok {
 		input.PrivateKey = aws.String(v.(string))
 	}
 
@@ -144,7 +144,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("active_date", aws.ToTime(output.ActiveDate).Format(time.RFC3339))
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("certificate", output.Certificate)
+	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set("certificate_chain", output.CertificateChain)
 	d.Set("certificate_id", output.CertificateId)
 	d.Set(names.AttrDescription, output.Description)

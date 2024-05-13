@@ -44,7 +44,7 @@ func resourceRateBasedRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -103,7 +103,7 @@ func resourceRateBasedRuleCreate(ctx context.Context, d *schema.ResourceData, me
 	outputRaw, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		input := &wafregional.CreateRateBasedRuleInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
 			Name:        aws.String(name),
 			RateKey:     awstypes.RateKey(d.Get("rate_key").(string)),
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
@@ -164,7 +164,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		Resource:  "ratebasedrule/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("metric_name", rule.MetricName)
+	d.Set(names.AttrMetricName, rule.MetricName)
 	d.Set(names.AttrName, rule.Name)
 	if err := d.Set("predicate", predicates); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predicate: %s", err)

@@ -63,7 +63,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 					"cloudwatch_config": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
-							"log_group_name": schema.StringAttribute{
+							names.AttrLogGroupName: schema.StringAttribute{
 								// Required: true,
 								Optional: true,
 							},

@@ -288,7 +288,7 @@ func ResourceJobDefinition() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"path": {
+															names.AttrPath: {
 																Type:     schema.TypeString,
 																Required: true,
 															},

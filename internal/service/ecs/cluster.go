@@ -45,7 +45,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -79,7 +79,7 @@ func ResourceCluster() *schema.Resource {
 													Type:     schema.TypeBool,
 													Optional: true,
 												},
-												"s3_bucket_name": {
+												names.AttrS3BucketName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -114,7 +114,7 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"namespace": {
+						names.AttrNamespace: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -168,7 +168,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
 		input.Configuration = expandClusterConfiguration(v.([]interface{}))
 	}
 
@@ -239,7 +239,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	cluster := outputRaw.(*ecs.Cluster)
 	d.Set(names.AttrARN, cluster.ClusterArn)
 	if cluster.Configuration != nil {
-		if err := d.Set("configuration", flattenClusterConfiguration(cluster.Configuration)); err != nil {
+		if err := d.Set(names.AttrConfiguration, flattenClusterConfiguration(cluster.Configuration)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 		}
 	}
@@ -265,12 +265,12 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	if d.HasChanges("configuration", "service_connect_defaults", "setting") {
+	if d.HasChanges(names.AttrConfiguration, "service_connect_defaults", "setting") {
 		input := &ecs.UpdateClusterInput{
 			Cluster: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+		if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 {
 			input.Configuration = expandClusterConfiguration(v.([]interface{}))
 		}
 
@@ -478,7 +478,7 @@ func expandClusterServiceConnectDefaultsRequest(tfMap map[string]interface{}) *e
 
 	apiObject := &ecs.ClusterServiceConnectDefaultsRequest{}
 
-	if v, ok := tfMap["namespace"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
 
@@ -493,7 +493,7 @@ func flattenClusterServiceConnectDefaults(apiObject *ecs.ClusterServiceConnectDe
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Namespace; v != nil {
-		tfMap["namespace"] = aws.StringValue(v)
+		tfMap[names.AttrNamespace] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -566,7 +566,7 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 	}
 
 	if apiObject.S3BucketName != nil {
-		tfMap["s3_bucket_name"] = aws.StringValue(apiObject.S3BucketName)
+		tfMap[names.AttrS3BucketName] = aws.StringValue(apiObject.S3BucketName)
 	}
 
 	if apiObject.S3KeyPrefix != nil {
@@ -624,7 +624,7 @@ func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) 
 		config.CloudWatchLogGroupName = aws.String(v)
 	}
 
-	if v, ok := raw["s3_bucket_name"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrS3BucketName].(string); ok && v != "" {
 		config.S3BucketName = aws.String(v)
 	}
 

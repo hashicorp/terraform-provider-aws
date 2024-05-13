@@ -101,7 +101,7 @@ func ResourceTargetGroup() *schema.Resource {
 										},
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "/",
@@ -481,7 +481,7 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.ToString(v)
+		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -568,7 +568,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 		apiObject.Matcher = expandMatcherMemberHTTPCode(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 

@@ -142,7 +142,7 @@ func ResourceImageRecipe() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"parameter": {
+						names.AttrParameter: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -393,7 +393,7 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *imagebuilder.Co
 		apiObject.ComponentArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrParameter].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandComponentParameters(v.List())
 	}
 
@@ -592,7 +592,7 @@ func flattenComponentConfiguration(apiObject *imagebuilder.ComponentConfiguratio
 	}
 
 	if v := apiObject.Parameters; v != nil {
-		tfMap["parameter"] = flattenComponentParameters(v)
+		tfMap[names.AttrParameter] = flattenComponentParameters(v)
 	}
 
 	return tfMap

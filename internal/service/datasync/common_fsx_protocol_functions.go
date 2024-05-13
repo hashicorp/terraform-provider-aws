@@ -68,7 +68,7 @@ func expandSMB(l []interface{}) *awstypes.FsxProtocolSmb {
 	protocol := &awstypes.FsxProtocolSmb{
 		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
 	}
-	if v, ok := m["domain"].(string); ok && v != "" {
+	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
 		protocol.Domain = aws.String(v)
 	}
 	if v, ok := m[names.AttrPassword].(string); ok && v != "" {
@@ -103,7 +103,7 @@ func flattenSMB(smb *awstypes.FsxProtocolSmb) []interface{} {
 		"mount_options": flattenSMBMountOptions(smb.MountOptions),
 	}
 	if v := smb.Domain; v != nil {
-		m["domain"] = aws.ToString(v)
+		m[names.AttrDomain] = aws.ToString(v)
 	}
 	if v := smb.Password; v != nil {
 		m[names.AttrPassword] = aws.ToString(v)

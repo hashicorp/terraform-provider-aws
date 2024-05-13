@@ -40,7 +40,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(displayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "display_name", displayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, displayName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),

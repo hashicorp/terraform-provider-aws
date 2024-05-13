@@ -29,7 +29,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 		ImportStateVerify: true,
 		ImportStateVerifyIgnore: []string{
 			"allow_major_version_upgrade",
-			"apply_immediately",
+			names.AttrApplyImmediately,
 			"final_snapshot_identifier",
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
@@ -55,7 +55,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),

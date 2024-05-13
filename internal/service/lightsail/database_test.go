@@ -67,7 +67,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -129,7 +129,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -188,7 +188,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -259,7 +259,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -362,7 +362,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -421,7 +421,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -457,7 +457,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "true"),
 				),
 			},
 			{
@@ -465,7 +465,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -475,7 +475,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 				),
 			},
 		},
@@ -509,7 +509,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -573,7 +573,7 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -611,7 +611,7 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -667,7 +667,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",

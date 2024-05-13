@@ -45,7 +45,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"dns_name": {
+						names.AttrDNSName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -117,7 +117,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"service_name": {
+			names.AttrServiceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -156,7 +156,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 			map[string]string{
 				"vpc-endpoint-state": d.Get(names.AttrState).(string),
 				"vpc-id":             d.Get(names.AttrVPCID).(string),
-				"service-name":       d.Get("service_name").(string),
+				"service-name":       d.Get(names.AttrServiceName).(string),
 			},
 		),
 	}
@@ -211,7 +211,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("requester_managed", vpce.RequesterManaged)
 	d.Set("route_table_ids", aws.StringValueSlice(vpce.RouteTableIds))
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
-	d.Set("service_name", serviceName)
+	d.Set(names.AttrServiceName, serviceName)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(vpce.SubnetIds))
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty

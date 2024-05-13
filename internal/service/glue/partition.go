@@ -44,7 +44,7 @@ func ResourcePartition() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"table_name": {
+			names.AttrTableName: {
 				Type:         schema.TypeString,
 				ForceNew:     true,
 				Required:     true,
@@ -189,7 +189,7 @@ func ResourcePartition() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"creation_time": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -210,7 +210,7 @@ func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get(names.AttrDatabaseName).(string)
-	tableName := d.Get("table_name").(string)
+	tableName := d.Get(names.AttrTableName).(string)
 	values := d.Get("partition_values").([]interface{})
 
 	input := &glue.CreatePartitionInput{
@@ -246,7 +246,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Glue Partition: %s", err)
 	}
 
-	d.Set("table_name", partition.TableName)
+	d.Set(names.AttrTableName, partition.TableName)
 	d.Set(names.AttrCatalogID, partition.CatalogId)
 	d.Set(names.AttrDatabaseName, partition.DatabaseName)
 	d.Set("partition_values", flex.FlattenStringList(partition.Values))
@@ -260,7 +260,7 @@ func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if partition.CreationTime != nil {
-		d.Set("creation_time", partition.CreationTime.Format(time.RFC3339))
+		d.Set(names.AttrCreationTime, partition.CreationTime.Format(time.RFC3339))
 	}
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(partition.StorageDescriptor)); err != nil {

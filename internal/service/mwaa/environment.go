@@ -92,7 +92,7 @@ func ResourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"execution_role_arn": {
+			names.AttrExecutionRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -135,7 +135,7 @@ func ResourceEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"logging_configuration": {
+			names.AttrLoggingConfiguration: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -197,7 +197,7 @@ func ResourceEnvironment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -317,9 +317,9 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	name := d.Get(names.AttrName).(string)
 	input := &mwaa.CreateEnvironmentInput{
 		DagS3Path:            aws.String(d.Get("dag_s3_path").(string)),
-		ExecutionRoleArn:     aws.String(d.Get("execution_role_arn").(string)),
+		ExecutionRoleArn:     aws.String(d.Get(names.AttrExecutionRoleARN).(string)),
 		Name:                 aws.String(name),
-		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get("network_configuration").([]interface{})),
+		NetworkConfiguration: expandEnvironmentNetworkConfigurationCreate(d.Get(names.AttrNetworkConfiguration).([]interface{})),
 		SourceBucketArn:      aws.String(d.Get("source_bucket_arn").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -344,7 +344,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.KmsKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("logging_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok {
 		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
 	}
 
@@ -441,18 +441,18 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
 	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
-	d.Set("execution_role_arn", environment.ExecutionRoleArn)
+	d.Set(names.AttrExecutionRoleARN, environment.ExecutionRoleArn)
 	d.Set("kms_key", environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
-	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
+	if err := d.Set(names.AttrLoggingConfiguration, flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
 	d.Set(names.AttrName, environment.Name)
-	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
@@ -506,12 +506,12 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.EnvironmentClass = aws.String(d.Get("environment_class").(string))
 		}
 
-		if d.HasChange("execution_role_arn") {
-			input.ExecutionRoleArn = aws.String(d.Get("execution_role_arn").(string))
+		if d.HasChange(names.AttrExecutionRoleARN) {
+			input.ExecutionRoleArn = aws.String(d.Get(names.AttrExecutionRoleARN).(string))
 		}
 
-		if d.HasChange("logging_configuration") {
-			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get("logging_configuration").([]interface{}))
+		if d.HasChange(names.AttrLoggingConfiguration) {
+			input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(d.Get(names.AttrLoggingConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("max_workers") {
@@ -522,8 +522,8 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.MinWorkers = aws.Int32(int32(d.Get("min_workers").(int)))
 		}
 
-		if d.HasChange("network_configuration") {
-			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get("network_configuration").([]interface{}))
+		if d.HasChange(names.AttrNetworkConfiguration) {
+			input.NetworkConfiguration = expandEnvironmentNetworkConfigurationUpdate(d.Get(names.AttrNetworkConfiguration).([]interface{}))
 		}
 
 		if d.HasChange("plugins_s3_object_version") {

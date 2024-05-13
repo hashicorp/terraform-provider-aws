@@ -22,7 +22,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContainerRecipesRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -78,16 +78,16 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipes: %s", err)
 	}
 
-	var arns, names []string
+	var arns, nms []string
 
 	for _, r := range results {
 		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+		nms = append(nms, aws.StringValue(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
+	d.Set(names.AttrARNs, arns)
+	d.Set("names", nms)
 
 	return diags
 }

@@ -48,7 +48,7 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -127,7 +127,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	waitForConfigurationAttached := false
-	if groupCfg, set := d.GetOk("configuration"); set {
+	if groupCfg, set := d.GetOk(names.AttrConfiguration); set {
 		// Only expand and add configuration if its set
 		input.Configuration = expandGroupConfigurationItems(groupCfg.(*schema.Set).List())
 		waitForConfigurationAttached = true
@@ -210,7 +210,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 	if hasConfiguration {
-		if err := d.Set("configuration", flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
+		if err := d.Set(names.AttrConfiguration, flattenGroupConfigurationItems(groupCfg.Configuration)); err != nil {
 			return diag.Errorf("setting configuration: %s", err)
 		}
 	}
@@ -222,7 +222,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	// Conversion between a resource-query and configuration group is not possible and vice-versa
-	if d.HasChange("configuration") && d.HasChange("resource_query") {
+	if d.HasChange(names.AttrConfiguration) && d.HasChange("resource_query") {
 		return diag.Errorf("conversion between resource-query and configuration group types is not possible")
 	}
 
@@ -252,9 +252,9 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("configuration") {
+	if d.HasChange(names.AttrConfiguration) {
 		input := &resourcegroups.PutGroupConfigurationInput{
-			Configuration: expandGroupConfigurationItems(d.Get("configuration").(*schema.Set).List()),
+			Configuration: expandGroupConfigurationItems(d.Get(names.AttrConfiguration).(*schema.Set).List()),
 			Group:         aws.String(d.Id()),
 		}
 

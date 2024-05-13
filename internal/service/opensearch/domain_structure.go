@@ -103,7 +103,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservi
 		startAt, _ := time.Parse(time.RFC3339, tfMap["start_at"].(string))
 		autoTuneMaintenanceSchedule.StartAt = aws.Time(startAt)
 
-		if v, ok := tfMap["duration"].([]interface{}); ok {
+		if v, ok := tfMap[names.AttrDuration].([]interface{}); ok {
 			autoTuneMaintenanceSchedule.Duration = expandAutoTuneMaintenanceScheduleDuration(v[0].(map[string]interface{}))
 		}
 
@@ -118,7 +118,7 @@ func expandAutoTuneMaintenanceSchedules(tfList []interface{}) []*opensearchservi
 func expandAutoTuneMaintenanceScheduleDuration(tfMap map[string]interface{}) *opensearchservice.Duration {
 	autoTuneMaintenanceScheduleDuration := &opensearchservice.Duration{
 		Value: aws.Int64(int64(tfMap[names.AttrValue].(int))),
-		Unit:  aws.String(tfMap["unit"].(string)),
+		Unit:  aws.String(tfMap[names.AttrUnit].(string)),
 	}
 
 	return autoTuneMaintenanceScheduleDuration
@@ -280,7 +280,7 @@ func flattenAutoTuneMaintenanceSchedules(autoTuneMaintenanceSchedules []*opensea
 
 		m["start_at"] = aws.TimeValue(autoTuneMaintenanceSchedule.StartAt).Format(time.RFC3339)
 
-		m["duration"] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
+		m[names.AttrDuration] = []interface{}{flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceSchedule.Duration)}
 
 		m["cron_expression_for_recurrence"] = aws.StringValue(autoTuneMaintenanceSchedule.CronExpressionForRecurrence)
 
@@ -294,7 +294,7 @@ func flattenAutoTuneMaintenanceScheduleDuration(autoTuneMaintenanceScheduleDurat
 	m := map[string]interface{}{}
 
 	m[names.AttrValue] = aws.Int64Value(autoTuneMaintenanceScheduleDuration.Value)
-	m["unit"] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
+	m[names.AttrUnit] = aws.StringValue(autoTuneMaintenanceScheduleDuration.Unit)
 
 	return m
 }

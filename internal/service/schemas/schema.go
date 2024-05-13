@@ -42,7 +42,7 @@ func ResourceSchema() *schema.Resource {
 				Computed: true,
 			},
 
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
@@ -105,7 +105,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	name := d.Get(names.AttrName).(string)
 	registryName := d.Get("registry_name").(string)
 	input := &schemas.CreateSchemaInput{
-		Content:      aws.String(d.Get("content").(string)),
+		Content:      aws.String(d.Get(names.AttrContent).(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -153,7 +153,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrARN, output.SchemaArn)
-	d.Set("content", output.Content)
+	d.Set(names.AttrContent, output.Content)
 	d.Set(names.AttrDescription, output.Description)
 	if output.LastModified != nil {
 		d.Set("last_modified", aws.TimeValue(output.LastModified).Format(time.RFC3339))
@@ -177,7 +177,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	if d.HasChanges("content", names.AttrDescription, names.AttrType) {
+	if d.HasChanges(names.AttrContent, names.AttrDescription, names.AttrType) {
 		name, registryName, err := SchemaParseResourceID(d.Id())
 
 		if err != nil {
@@ -189,8 +189,8 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			SchemaName:   aws.String(name),
 		}
 
-		if d.HasChanges("content", names.AttrType) {
-			input.Content = aws.String(d.Get("content").(string))
+		if d.HasChanges(names.AttrContent, names.AttrType) {
+			input.Content = aws.String(d.Get(names.AttrContent).(string))
 			input.Type = aws.String(d.Get(names.AttrType).(string))
 		}
 

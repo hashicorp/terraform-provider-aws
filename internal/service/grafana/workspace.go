@@ -64,7 +64,7 @@ func ResourceWorkspace() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(managedgrafana.AuthenticationProviderTypes_Values(), false),
 				},
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:                  schema.TypeString,
 				Optional:              true,
 				Computed:              true,
@@ -200,7 +200,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		Tags:                    getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok {
 		input.Configuration = aws.String(v.(string))
 	}
 
@@ -321,7 +321,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s) configuration: %s", d.Id(), err)
 	}
 
-	d.Set("configuration", output.Configuration)
+	d.Set(names.AttrConfiguration, output.Configuration)
 
 	return diags
 }
@@ -330,7 +330,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	if d.HasChangesExcept("configuration", "grafana_version", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrConfiguration, "grafana_version", names.AttrTags, names.AttrTagsAll) {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -406,9 +406,9 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("configuration", "grafana_version") {
+	if d.HasChanges(names.AttrConfiguration, "grafana_version") {
 		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
-			Configuration: aws.String(d.Get("configuration").(string)),
+			Configuration: aws.String(d.Get(names.AttrConfiguration).(string)),
 			WorkspaceId:   aws.String(d.Id()),
 		}
 

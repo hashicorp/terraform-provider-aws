@@ -95,7 +95,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 									"provider_name": schema.StringAttribute{
 										Required: true,
 									},
-									"service_name": schema.StringAttribute{
+									names.AttrServiceName: schema.StringAttribute{
 										Required: true,
 									},
 								},
@@ -495,8 +495,8 @@ var (
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
-		"provider_name": types.StringType,
-		"service_name":  types.StringType,
+		"provider_name":       types.StringType,
+		names.AttrServiceName: types.StringType,
 	}
 
 	multiplexProgramSettingsAttrs = map[string]attr.Type{
@@ -534,7 +534,7 @@ func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramS
 
 	attrs := map[string]attr.Value{}
 	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
-	attrs["service_name"] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
+	attrs[names.AttrServiceName] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
 
