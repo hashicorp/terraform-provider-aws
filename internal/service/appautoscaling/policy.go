@@ -327,7 +327,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (interface{}, error) {
-		return findScalingPolicyByFourPartKey(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
+		return findScalingPolicyByFourPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
 	})
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
