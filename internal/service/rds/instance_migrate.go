@@ -347,7 +347,7 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 			},
 
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -791,7 +791,7 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -932,7 +932,7 @@ func InstanceStateUpgradeV1(_ context.Context, rawState map[string]interface{}, 
 		return nil, nil
 	}
 
-	rawState[names.AttrID] = rawState["resource_id"]
+	rawState[names.AttrID] = rawState[names.AttrResourceID]
 
 	return rawState, nil
 }
