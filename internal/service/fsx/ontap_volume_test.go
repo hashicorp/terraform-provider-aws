@@ -54,7 +54,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tiering_policy.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
-					resource.TestCheckResourceAttr(resourceName, "volume_type", "ONTAP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeType, "ONTAP"),
 				),
 			},
 			{

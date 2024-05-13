@@ -330,7 +330,7 @@ func resourceONTAPVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -403,7 +403,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:               aws.String(name),
 		OntapConfiguration: ontapConfig,
 		Tags:               getTagsIn(ctx),
-		VolumeType:         aws.String(d.Get("volume_type").(string)),
+		VolumeType:         aws.String(d.Get(names.AttrVolumeType).(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -474,7 +474,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("uuid", ontapConfig.UUID)
 	d.Set("volume_style", ontapConfig.VolumeStyle)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	// Volume tags aren't set in the Describe response.
 	// setTagsOut(ctx, volume.Tags)
