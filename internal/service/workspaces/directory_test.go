@@ -49,7 +49,7 @@ func testAccDirectory_basic(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, directoryResourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "directory_type", string(types.WorkspaceDirectoryTypeSimpleAd)),
