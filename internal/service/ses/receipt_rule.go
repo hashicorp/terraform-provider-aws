@@ -224,7 +224,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope": {
+						names.AttrScope: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ses.StopScope_Values(), false),
@@ -407,8 +407,8 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.StopAction != nil {
 			stopAction := map[string]interface{}{
-				"scope":    aws.StringValue(element.StopAction.Scope),
-				"position": i + 1,
+				names.AttrScope: aws.StringValue(element.StopAction.Scope),
+				"position":      i + 1,
 			}
 
 			if element.StopAction.TopicArn != nil {
@@ -698,7 +698,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			stopAction := &ses.StopAction{
-				Scope: aws.String(elem["scope"].(string)),
+				Scope: aws.String(elem[names.AttrScope].(string)),
 			}
 
 			if elem["topic_arn"] != "" {
