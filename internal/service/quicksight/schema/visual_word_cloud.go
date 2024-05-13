@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func wordCloudVisualSchema() *schema.Schema {
@@ -43,8 +44,8 @@ func wordCloudVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"group_by": dimensionFieldSchema(dimensionsFieldMaxItems10), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"size":     measureFieldSchema(1),                           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
+													"group_by":     dimensionFieldSchema(dimensionsFieldMaxItems10), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
+													names.AttrSize: measureFieldSchema(1),                           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
 										},
@@ -187,7 +188,7 @@ func expandWordCloudAggregatedFieldWells(tfList []interface{}) *quicksight.WordC
 	if v, ok := tfMap["group_by"].([]interface{}); ok && len(v) > 0 {
 		config.GroupBy = expandDimensionFields(v)
 	}
-	if v, ok := tfMap["size"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrSize].([]interface{}); ok && len(v) > 0 {
 		config.Size = expandMeasureFields(v)
 	}
 
@@ -322,7 +323,7 @@ func flattenWordCloudAggregatedFieldWells(apiObject *quicksight.WordCloudAggrega
 		tfMap["group_by"] = flattenDimensionFields(apiObject.GroupBy)
 	}
 	if apiObject.Size != nil {
-		tfMap["size"] = flattenMeasureFields(apiObject.Size)
+		tfMap[names.AttrSize] = flattenMeasureFields(apiObject.Size)
 	}
 
 	return []interface{}{tfMap}

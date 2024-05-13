@@ -332,7 +332,7 @@ func ResourceDataSet() *schema.Resource {
 																	Type:     schema.TypeString,
 																	Required: true,
 																},
-																"size": {
+																names.AttrSize: {
 																	Type:     schema.TypeInt,
 																	Required: true,
 																},
@@ -374,7 +374,7 @@ func ResourceDataSet() *schema.Resource {
 func logicalTableMapSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
@@ -1291,7 +1291,7 @@ func expandDataSetLogicalTableMap(tfSet *schema.Set) map[string]*quicksight.Logi
 		logicalTable := &quicksight.LogicalTable{}
 		logicalTableMapID := vMap["logical_table_map_id"].(string)
 
-		if v, ok := vMap["alias"].(string); ok {
+		if v, ok := vMap[names.AttrAlias].(string); ok {
 			logicalTable.Alias = aws.String(v)
 		}
 		if v, ok := vMap[names.AttrSource].([]interface{}); ok {
@@ -1921,7 +1921,7 @@ func expandLookbackWindow(tfList []interface{}) *quicksight.LookbackWindow {
 	if v, ok := tfMap["column_name"].(string); ok {
 		window.ColumnName = aws.String(v)
 	}
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		window.Size = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["size_unit"].(string); ok {
@@ -2142,7 +2142,7 @@ func flattenLogicalTableMap(apiObject map[string]*quicksight.LogicalTable, resou
 			"logical_table_map_id": key,
 		}
 		if table.Alias != nil {
-			tfMap["alias"] = aws.StringValue(table.Alias)
+			tfMap[names.AttrAlias] = aws.StringValue(table.Alias)
 		}
 		if table.DataTransforms != nil {
 			tfMap["data_transforms"] = flattenDataTransforms(table.DataTransforms)
@@ -2658,7 +2658,7 @@ func flattenLookbackWindow(apiObject *quicksight.LookbackWindow) interface{} {
 		tfMap["column_name"] = aws.StringValue(apiObject.ColumnName)
 	}
 	if apiObject.Size != nil {
-		tfMap["size"] = aws.Int64Value(apiObject.Size)
+		tfMap[names.AttrSize] = aws.Int64Value(apiObject.Size)
 	}
 	if apiObject.SizeUnit != nil {
 		tfMap["size_unit"] = aws.StringValue(apiObject.SizeUnit)
