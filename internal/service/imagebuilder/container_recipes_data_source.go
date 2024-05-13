@@ -33,7 +33,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
@@ -48,7 +48,7 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		input.Owner = aws.String(v.(string))
 	}
 
