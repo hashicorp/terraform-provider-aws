@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -167,6 +168,71 @@ func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id st
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointAcceptedV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(vpcEndpointStatePendingAcceptance),
+		Target:     enum.Slice(vpcEndpointStateAvailable),
+		Timeout:    timeout,
+		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcEndpoint); ok {
+		if state, lastError := output.State, output.LastError; state == types.StateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointAvailableV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(vpcEndpointStatePending),
+		Target:     enum.Slice(vpcEndpointStateAvailable, vpcEndpointStatePendingAcceptance),
+		Timeout:    timeout,
+		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcEndpoint); ok {
+		if state, lastError := output.State, output.LastError; state == types.StateFailed && lastError != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(lastError.Code), aws.ToString(lastError.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCEndpointDeletedV2(ctx context.Context, conn *ec2.Client, vpcEndpointID string, timeout time.Duration) (*types.VpcEndpoint, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(vpcEndpointStateDeleting, vpcEndpointStateDeleted),
+		Target:     []string{},
+		Refresh:    statusVPCEndpointStateV2(ctx, conn, vpcEndpointID),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.VpcEndpoint); ok {
 		return output, err
 	}
 

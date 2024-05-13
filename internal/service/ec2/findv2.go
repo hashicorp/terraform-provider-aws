@@ -480,3 +480,117 @@ func findPrefixListsV2(ctx context.Context, conn *ec2.Client, input *ec2.Describ
 
 	return output, nil
 }
+
+func findVPCEndpointByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcEndpoint, error) {
+	input := &ec2.DescribeVpcEndpointsInput{
+		VpcEndpointIds: []string{id},
+	}
+
+	output, err := findVPCEndpointV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.State == awstypes.StateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(output.State),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.VpcEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findVPCEndpointV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) (*awstypes.VpcEndpoint, error) {
+	output, err := findVPCEndpointsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointsInput) ([]awstypes.VpcEndpoint, error) {
+	var output []awstypes.VpcEndpoint
+
+	paginator := ec2.NewDescribeVpcEndpointsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.VpcEndpoints...)
+	}
+
+	return output, nil
+}
+
+func findPrefixListByNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.PrefixList, error) {
+	input := &ec2.DescribePrefixListsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"prefix-list-name": name,
+		}),
+	}
+
+	return findPrefixListV2(ctx, conn, input)
+}
+
+func findVPCEndpointServiceConfigurationByServiceNameV2(ctx context.Context, conn *ec2.Client, name string) (*awstypes.ServiceConfiguration, error) {
+	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"service-name": name,
+		}),
+	}
+
+	return findVPCEndpointServiceConfigurationV2(ctx, conn, input)
+}
+
+func findVPCEndpointServiceConfigurationV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) (*awstypes.ServiceConfiguration, error) {
+	output, err := findVPCEndpointServiceConfigurationsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCEndpointServiceConfigurationsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcEndpointServiceConfigurationsInput) ([]awstypes.ServiceConfiguration, error) {
+	var output []awstypes.ServiceConfiguration
+
+	paginator := ec2.NewDescribeVpcEndpointServiceConfigurationsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+			return nil, err
+		}
+
+		output = append(output, page.ServiceConfigurations...)
+	}
+
+	return output, nil
+}
