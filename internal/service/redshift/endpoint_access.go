@@ -96,7 +96,7 @@ func resourceEndpointAccess() *schema.Resource {
 								},
 							},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -259,7 +259,7 @@ func flattenVPCEndpoint(apiObject *redshift.VpcEndpoint) []interface{} {
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {
