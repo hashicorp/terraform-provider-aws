@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -217,14 +218,22 @@ func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.
 			return nil, err
 		}
 
-		for _, target := range page.ScalableTargets {
-			if aws.ToString(target.ResourceId) != resourceID || string(target.ScalableDimension) != dimension || string(target.ServiceNamespace) != namespace {
-				output = append(output, target)
-			}
+		output = append(output, page.ScalableTargets...)
+	}
+
+	target, err := tfresource.AssertSingleValueResult(output)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.ToString(target.ResourceId) != resourceID || string(target.ScalableDimension) != dimension || string(target.ServiceNamespace) != namespace {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
 		}
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return target, nil
 }
 
 func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
