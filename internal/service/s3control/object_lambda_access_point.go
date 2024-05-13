@@ -45,7 +45,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -202,7 +202,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alias", outputAlias.Value)
+	d.Set(names.AttrAlias, outputAlias.Value)
 
 	return nil
 }

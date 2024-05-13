@@ -40,7 +40,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					// https://docs.aws.amazon.com/AmazonS3/latest/userguide/access-points-alias.html:
-					resource.TestMatchResourceAttr(resourceName, "alias", regexache.MustCompile(`^.*-s3alias$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile(`^.*-s3alias$`)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s", accessPointName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, bucketName),
 					acctest.CheckResourceAttrAccountID(resourceName, "bucket_account_id"),
