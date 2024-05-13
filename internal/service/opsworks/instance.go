@@ -333,14 +333,14 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -411,14 +411,14 @@ func ResourceInstance() *schema.Resource {
 							ForceNew: true,
 						},
 
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
 
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -643,11 +643,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				ebs.SnapshotId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
@@ -684,11 +684,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				DeleteOnTermination: aws.Bool(bd[names.AttrDeleteOnTermination].(bool)),
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
@@ -991,10 +991,10 @@ func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
 			bd[names.AttrDeleteOnTermination] = aws.BoolValue(bdm.Ebs.DeleteOnTermination)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeSize != nil {
-			bd["volume_size"] = aws.Int64Value(bdm.Ebs.VolumeSize)
+			bd[names.AttrVolumeSize] = aws.Int64Value(bdm.Ebs.VolumeSize)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.VolumeType != nil {
-			bd["volume_type"] = aws.StringValue(bdm.Ebs.VolumeType)
+			bd[names.AttrVolumeType] = aws.StringValue(bdm.Ebs.VolumeType)
 		}
 		if bdm.Ebs != nil && bdm.Ebs.Iops != nil {
 			bd[names.AttrIOPS] = aws.Int64Value(bdm.Ebs.Iops)
