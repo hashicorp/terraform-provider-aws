@@ -698,3 +698,16 @@ func findRouteTableAssociationByIDV2(ctx context.Context, conn *ec2.Client, asso
 
 	return nil, &retry.NotFoundError{}
 }
+
+// findMainRouteTableByVPCIDV2 returns the main route table for the specified VPC.
+// Returns NotFoundError if no route table is found.
+func findMainRouteTableByVPCIDV2(ctx context.Context, conn *ec2.Client, vpcID string) (*awstypes.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"association.main": "true",
+			"vpc-id":           vpcID,
+		}),
+	}
+
+	return findRouteTableV2(ctx, conn, input)
+}
