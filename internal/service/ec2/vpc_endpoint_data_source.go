@@ -78,7 +78,7 @@ func DataSourceVPCEndpoint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -204,7 +204,7 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	} else {
 		d.Set("dns_options", nil)
 	}
-	d.Set("ip_address_type", vpce.IpAddressType)
+	d.Set(names.AttrIPAddressType, vpce.IpAddressType)
 	d.Set("network_interface_ids", aws.StringValueSlice(vpce.NetworkInterfaceIds))
 	d.Set(names.AttrOwnerID, vpce.OwnerId)
 	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
