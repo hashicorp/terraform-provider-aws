@@ -242,7 +242,8 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(output.AssociationDescription.AssociationId))
 
 	if v, ok := d.GetOk("wait_for_success_timeout_seconds"); ok {
-		if _, err := waitAssociationCreated(ctx, conn, d.Id(), time.Duration(v.(int))*time.Second); err != nil {
+		timeout := time.Duration(v.(int)) * time.Second //nolint:durationcheck // should really be d.Timeout(schema.TimeoutCreate)
+		if _, err := waitAssociationCreated(ctx, conn, d.Id(), timeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SSM Association (%s) create: %s", d.Id(), err)
 		}
 	}
