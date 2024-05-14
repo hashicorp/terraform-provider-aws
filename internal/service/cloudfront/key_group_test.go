@@ -136,7 +136,7 @@ func TestAccCloudFrontKeyGroup_items(t *testing.T) {
 				Config: testAccKeyGroupConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", "2"),
+					resource.TestCheckResourceAttr("aws_cloudfront_key_group.test", "items.#", acctest.CtTwo),
 				),
 			},
 		},

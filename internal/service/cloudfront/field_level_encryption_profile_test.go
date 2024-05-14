@@ -64,7 +64,7 @@ func TestAccCloudFrontFieldLevelEncryptionProfile_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encryption_entities.0.items.*", map[string]string{
 						"provider_id":              rName,
 						"field_patterns.#":         acctest.CtOne,
-						"field_patterns.0.items.#": "2",
+						"field_patterns.0.items.#": acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "DateOfBirth"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "encryption_entities.0.items.*.field_patterns.0.items.*", "FirstName"),

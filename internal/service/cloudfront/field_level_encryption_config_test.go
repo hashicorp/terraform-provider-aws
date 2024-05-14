@@ -46,7 +46,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_type_profile_config.0.forward_when_content_type_is_unknown", "true"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", "true"),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.forward_when_query_arg_profile_is_unknown", "false"),
 					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "query_arg_profile_config.0.query_arg_profiles.0.items.*", map[string]string{
 						"query_arg": "Arg1",
 					}),
