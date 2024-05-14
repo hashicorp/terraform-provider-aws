@@ -59,7 +59,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
