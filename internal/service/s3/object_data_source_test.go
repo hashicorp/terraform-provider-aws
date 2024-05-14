@@ -93,7 +93,7 @@ func TestAccS3ObjectDataSource_readableBody(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_readableBody(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -297,19 +297,19 @@ func TestAccS3ObjectDataSource_leadingSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -343,11 +343,11 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
@@ -399,13 +399,13 @@ func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -438,19 +438,19 @@ func TestAccS3ObjectDataSource_leadingMultipleSlashes(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
