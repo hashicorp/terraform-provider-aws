@@ -394,7 +394,7 @@ func TestAccAppAutoScalingScheduledAction_spotFleet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, fmt.Sprintf("at(%s)", ts)),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.min_capacity", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_target_action.0.max_capacity", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "timezone", "UTC"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf("scheduledAction:.+:scheduledActionName/%s$", rName))),
 				),
