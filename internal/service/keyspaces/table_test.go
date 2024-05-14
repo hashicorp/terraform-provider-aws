@@ -227,7 +227,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 						names.AttrType: "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
-						names.AttrName: "role",
+						names.AttrName: names.AttrRole,
 						names.AttrType: "text",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
@@ -256,7 +256,7 @@ func TestAccKeyspacesTable_multipleColumns(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.static_column.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
-						names.AttrName: "role",
+						names.AttrName: names.AttrRole,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.static_column.*", map[string]string{
 						names.AttrName: "pay_scale0",
