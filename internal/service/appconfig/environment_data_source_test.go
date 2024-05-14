@@ -42,7 +42,7 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "monitor.*.alarm_role_arn", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
 				),
 			},

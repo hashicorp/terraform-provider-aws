@@ -86,7 +86,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parameters2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter1", pValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.parameter2", pValue2),
 				),
@@ -103,7 +103,7 @@ func TestAccAppConfigExtensionAssociation_Parameters(t *testing.T) {
 				Config: testAccExtensionAssociationConfig_parametersNotRequired(rName, pName2, pDescription2, pRequiredFalse, pValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtZero),
 				),
 			},
 		},
