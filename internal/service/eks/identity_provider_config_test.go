@@ -49,10 +49,10 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.identity_provider_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.issuer_url", "https://example.com"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", names.AttrEmail),
@@ -142,7 +142,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -155,7 +155,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -164,7 +164,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

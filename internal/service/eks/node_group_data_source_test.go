@@ -48,7 +48,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceResourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceResourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "taint.#", dataSourceResourceName, "taints.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceResourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVersion, dataSourceResourceName, names.AttrVersion),
 				),
 			},

@@ -45,7 +45,7 @@ func TestAccEKSAddon_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(addonResourceName, names.AttrClusterName, clusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
-					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(addonResourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -368,7 +368,7 @@ func TestAccEKSAddon_tags(t *testing.T) {
 				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -381,7 +381,7 @@ func TestAccEKSAddon_tags(t *testing.T) {
 				Config: testAccAddonConfig_tags2(rName, addonName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -390,7 +390,7 @@ func TestAccEKSAddon_tags(t *testing.T) {
 				Config: testAccAddonConfig_tags1(rName, addonName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
