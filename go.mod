@@ -179,7 +179,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.18.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.25.5
 	github.com/aws/smithy-go v1.20.2
-	github.com/beevik/etree v1.3.0
+	github.com/beevik/etree v1.4.0
 	github.com/cedar-policy/cedar-go v0.0.0-20240318205125-470d1fe984bb
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
