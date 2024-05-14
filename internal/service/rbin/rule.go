@@ -87,7 +87,7 @@ func ResourceRule() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ResourceType](),
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -163,7 +163,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	in := &rbin.CreateRuleInput{
 		ResourceType:    types.ResourceType(d.Get(names.AttrResourceType).(string)),
-		RetentionPeriod: expandRetentionPeriod(d.Get("retention_period").([]interface{})),
+		RetentionPeriod: expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
@@ -225,7 +225,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
-	if err := d.Set("retention_period", flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
+	if err := d.Set(names.AttrRetentionPeriod, flattenRetentionPeriod(out.RetentionPeriod)); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
@@ -251,8 +251,8 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		update = true
 	}
 
-	if d.HasChanges("retention_period") {
-		in.RetentionPeriod = expandRetentionPeriod(d.Get("retention_period").([]interface{}))
+	if d.HasChanges(names.AttrRetentionPeriod) {
+		in.RetentionPeriod = expandRetentionPeriod(d.Get(names.AttrRetentionPeriod).([]interface{}))
 		update = true
 	}
 
