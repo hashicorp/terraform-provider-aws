@@ -940,7 +940,6 @@ func FindVPCsV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcsIn
 		}
 
 		output = append(output, page.Vpcs...)
-
 	}
 
 	return output, nil
