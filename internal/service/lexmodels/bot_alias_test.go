@@ -54,7 +54,7 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bot_name", testBotAliasID),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, testBotAliasID),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.#", acctest.CtZero),
 				),
 			},
 			{
@@ -252,7 +252,7 @@ func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.CtTwo),
 
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						names.AttrDestination: "CLOUDWATCH_LOGS",
