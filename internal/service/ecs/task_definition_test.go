@@ -160,10 +160,10 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 						"docker_volume_configuration.0.driver":             "local",
 						"docker_volume_configuration.0.scope":              "shared",
 						"docker_volume_configuration.0.autoprovision":      "true",
-						"docker_volume_configuration.0.driver_opts.%":      "2",
+						"docker_volume_configuration.0.driver_opts.%":      acctest.CtTwo,
 						"docker_volume_configuration.0.driver_opts.device": "tmpfs",
 						"docker_volume_configuration.0.driver_opts.uid":    "1000",
-						"docker_volume_configuration.0.labels.%":           "2",
+						"docker_volume_configuration.0.labels.%":           acctest.CtTwo,
 						"docker_volume_configuration.0.labels.environment": "test",
 						"docker_volume_configuration.0.labels.stack":       "april",
 					}),
@@ -991,7 +991,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 			},
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check:  resource.TestCheckResourceAttr(resourceName, "revision", "2"), // should get re-created
+				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.CtTwo), // should get re-created
 			},
 		},
 	})
@@ -1013,7 +1013,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1028,7 +1028,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1037,7 +1037,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
