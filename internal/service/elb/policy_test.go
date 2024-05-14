@@ -133,7 +133,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.1",
 						names.AttrValue: "true",
@@ -150,7 +150,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  "Protocol-TLSv1.2",
 						names.AttrValue: "true",
