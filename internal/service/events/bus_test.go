@@ -87,11 +87,11 @@ func TestAccEventsBus_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig_tags1(busName, "key1", "value1"),
+				Config: testAccBusConfig_tags1(busName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -100,22 +100,22 @@ func TestAccEventsBus_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_tags2(busName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBusConfig_tags2(busName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBusConfig_tags1(busName, "key2", "value2"),
+				Config: testAccBusConfig_tags1(busName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
