@@ -54,7 +54,7 @@ func TestAccRoute53ResolverRulesDataSource_resolverEndpointID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(ds1ResourceName, "resolver_rule_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(ds2ResourceName, "resolver_rule_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(ds3ResourceName, "resolver_rule_ids.#", "0"),
+					resource.TestCheckResourceAttr(ds3ResourceName, "resolver_rule_ids.#", acctest.CtZero),
 				),
 			},
 		},
@@ -94,7 +94,7 @@ func TestAccRoute53ResolverRulesDataSource_nonExistentNameRegex(t *testing.T) {
 			{
 				Config: testAccRulesDataSourceConfig_nonExistentNameRegex,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", "0"),
+					resource.TestCheckResourceAttr(dsResourceName, "resolver_rule_ids.#", acctest.CtZero),
 				),
 			},
 		},

@@ -40,7 +40,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutation_protection", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "101"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
 				Config: testAccFirewallRuleGroupAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -211,7 +211,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
 				Config: testAccFirewallRuleGroupAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -220,7 +220,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_tags(t *testing.T) {
 				Config: testAccFirewallRuleGroupAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
