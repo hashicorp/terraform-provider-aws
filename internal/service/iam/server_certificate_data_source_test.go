@@ -64,7 +64,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrName),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", names.AttrPath),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
-					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "certificate_chain", ""),
+					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", names.AttrCertificateChain, ""),
 					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},

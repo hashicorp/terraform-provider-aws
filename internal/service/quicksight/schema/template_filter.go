@@ -479,8 +479,8 @@ func filterScopeConfigurationSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"scope":    stringSchema(true, validation.StringInSlice(quicksight.FilterVisualScope_Values(), false)),
-										"sheet_id": idSchema(),
+										names.AttrScope: stringSchema(true, validation.StringInSlice(quicksight.FilterVisualScope_Values(), false)),
+										"sheet_id":      idSchema(),
 										"visual_ids": {
 											Type:     schema.TypeSet,
 											Optional: true,
@@ -796,7 +796,7 @@ func expandSheetVisualScopingConfiguration(tfMap map[string]interface{}) *quicks
 
 	config := &quicksight.SheetVisualScopingConfiguration{}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 	if v, ok := tfMap["sheet_id"].(string); ok && v != "" {
@@ -1742,7 +1742,7 @@ func flattenSheetVisualScopingConfigurations(apiObject []*quicksight.SheetVisual
 
 		tfMap := map[string]interface{}{}
 		if config.Scope != nil {
-			tfMap["scope"] = aws.StringValue(config.Scope)
+			tfMap[names.AttrScope] = aws.StringValue(config.Scope)
 		}
 		if config.SheetId != nil {
 			tfMap["sheet_id"] = aws.StringValue(config.SheetId)

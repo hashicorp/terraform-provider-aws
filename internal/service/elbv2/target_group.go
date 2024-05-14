@@ -75,7 +75,7 @@ func ResourceTargetGroup() *schema.Resource {
 				Default:      300,
 				ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 3600),
 			},
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -93,7 +93,7 @@ func ResourceTargetGroup() *schema.Resource {
 							Default:      3,
 							ValidateFunc: validation.IntBetween(2, 10),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      30,
@@ -130,7 +130,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc:     validation.StringInSlice(healthCheckProtocolEnumValues(), true),
 							DiffSuppressFunc: suppressIfTargetType(elbv2.TargetTypeEnumLambda),
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
@@ -145,7 +145,7 @@ func ResourceTargetGroup() *schema.Resource {
 					},
 				},
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -392,21 +392,21 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.VpcId = aws.String(d.Get(names.AttrVPCID).(string))
 
 		if targetType == elbv2.TargetTypeEnumIp {
-			if v, ok := d.GetOk("ip_address_type"); ok {
+			if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 				input.IpAddressType = aws.String(v.(string))
 			}
 		}
 	}
 
-	if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 
 		input.HealthCheckEnabled = aws.Bool(tfMap[names.AttrEnabled].(bool))
-		input.HealthCheckIntervalSeconds = aws.Int64(int64(tfMap["interval"].(int)))
+		input.HealthCheckIntervalSeconds = aws.Int64(int64(tfMap[names.AttrInterval].(int)))
 		input.HealthyThresholdCount = aws.Int64(int64(tfMap["healthy_threshold"].(int)))
 		input.UnhealthyThresholdCount = aws.Int64(int64(tfMap["unhealthy_threshold"].(int)))
 
-		if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+		if v, ok := tfMap[names.AttrTimeout].(int); ok && v != 0 {
 			input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 		}
 
@@ -537,10 +537,10 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set(names.AttrARN, targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
-	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set(names.AttrIPAddressType, targetGroup.IpAddressType)
 	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
@@ -592,19 +592,19 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	protocol := d.Get(names.AttrProtocol).(string)
 	targetType := d.Get("target_type").(string)
 
-	if d.HasChange("health_check") {
-		if v, ok := d.GetOk("health_check"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if d.HasChange(names.AttrHealthCheck) {
+		if v, ok := d.GetOk(names.AttrHealthCheck); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
 			input := &elbv2.ModifyTargetGroupInput{
 				HealthCheckEnabled:         aws.Bool(tfMap[names.AttrEnabled].(bool)),
-				HealthCheckIntervalSeconds: aws.Int64(int64(tfMap["interval"].(int))),
+				HealthCheckIntervalSeconds: aws.Int64(int64(tfMap[names.AttrInterval].(int))),
 				HealthyThresholdCount:      aws.Int64(int64(tfMap["healthy_threshold"].(int))),
 				TargetGroupArn:             aws.String(d.Id()),
 				UnhealthyThresholdCount:    aws.Int64(int64(tfMap["unhealthy_threshold"].(int))),
 			}
 
-			if v, ok := tfMap["timeout"].(int); ok && v != 0 {
+			if v, ok := tfMap[names.AttrTimeout].(int); ok && v != 0 {
 				input.HealthCheckTimeoutSeconds = aws.Int64(int64(v))
 			}
 
@@ -988,11 +988,11 @@ func TargetGroupSuffixFromARN(arn *string) string {
 
 func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta any) error {
 	healthCheck := make(map[string]any)
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 		healthCheck = healthChecks[0].(map[string]interface{})
 	}
 
-	healtCheckPath := cty.GetAttrPath("health_check").IndexInt(0)
+	healtCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 
 	if p, ok := healthCheck[names.AttrProtocol].(string); ok && strings.ToUpper(p) == elbv2.ProtocolEnumTcp {
 		if m := healthCheck["matcher"].(string); m != "" {
@@ -1038,9 +1038,9 @@ func customizeDiffTargetGroupTargetTypeLambda(_ context.Context, diff *schema.Re
 		return nil
 	}
 
-	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+	if healthChecks := diff.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
-		healtCheckPath := cty.GetAttrPath("health_check").IndexInt(0)
+		healtCheckPath := cty.GetAttrPath(names.AttrHealthCheck).IndexInt(0)
 		healthCheckProtocol := healthCheck[names.AttrProtocol].(string)
 
 		if healthCheckProtocol == elbv2.ProtocolEnumTcp {
@@ -1099,10 +1099,10 @@ func flattenTargetGroupHealthCheck(apiObject *elbv2.TargetGroup) []interface{} {
 	tfMap := map[string]interface{}{
 		names.AttrEnabled:     aws.BoolValue(apiObject.HealthCheckEnabled),
 		"healthy_threshold":   int(aws.Int64Value(apiObject.HealthyThresholdCount)),
-		"interval":            int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
+		names.AttrInterval:    int(aws.Int64Value(apiObject.HealthCheckIntervalSeconds)),
 		names.AttrPort:        aws.StringValue(apiObject.HealthCheckPort),
 		names.AttrProtocol:    aws.StringValue(apiObject.HealthCheckProtocol),
-		"timeout":             int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
+		names.AttrTimeout:     int(aws.Int64Value(apiObject.HealthCheckTimeoutSeconds)),
 		"unhealthy_threshold": int(aws.Int64Value(apiObject.UnhealthyThresholdCount)),
 	}
 
@@ -1318,9 +1318,9 @@ func targetGroupRuntimeValidation(d *schema.ResourceData, diags *diag.Diagnostic
 			))
 		}
 
-		if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
+		if healthChecks := d.Get(names.AttrHealthCheck).([]interface{}); len(healthChecks) == 1 {
 			healthCheck := healthChecks[0].(map[string]interface{})
-			path := cty.GetAttrPath("health_check")
+			path := cty.GetAttrPath(names.AttrHealthCheck)
 
 			if healthCheckProtocol := healthCheck[names.AttrProtocol].(string); healthCheckProtocol != "" {
 				*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(

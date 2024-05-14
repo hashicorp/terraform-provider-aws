@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -38,10 +38,10 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 
@@ -50,8 +50,8 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "8"),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -90,7 +90,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -101,11 +101,11 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTargetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -115,20 +115,20 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTargetConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTargetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccTargetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
@@ -168,7 +168,7 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -198,8 +198,8 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var writeTarget applicationautoscaling.ScalableTarget
-	var readTarget applicationautoscaling.ScalableTarget
+	var writeTarget awstypes.ScalableTarget
+	var readTarget awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	readResourceName := "aws_appautoscaling_target.read"
 	writeResourceName := "aws_appautoscaling_target.write"
@@ -215,16 +215,16 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, writeResourceName, &writeTarget),
 					resource.TestCheckResourceAttr(writeResourceName, "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr(writeResourceName, "resource_id", "table/"+rName),
+					resource.TestCheckResourceAttr(writeResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(writeResourceName, "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
-					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", "1"),
+					resource.TestCheckResourceAttr(writeResourceName, "min_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(writeResourceName, "max_capacity", "10"),
 
 					testAccCheckTargetExists(ctx, readResourceName, &readTarget),
 					resource.TestCheckResourceAttr(readResourceName, "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr(readResourceName, "resource_id", "table/"+rName),
+					resource.TestCheckResourceAttr(readResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(readResourceName, "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
-					resource.TestCheckResourceAttr(readResourceName, "min_capacity", "2"),
+					resource.TestCheckResourceAttr(readResourceName, "min_capacity", acctest.CtTwo),
 					resource.TestCheckResourceAttr(readResourceName, "max_capacity", "15"),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var readTarget applicationautoscaling.ScalableTarget
+	var readTarget awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -257,7 +257,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appautoscaling_target" {
@@ -281,7 +281,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(ctx context.Context, n string, v *awstypes.ScalableTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -292,7 +292,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautos
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		output, err := tfappautoscaling.FindTargetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
@@ -808,7 +808,7 @@ func testAccTargetImportStateIdFunc(resourceName string) resource.ImportStateIdF
 
 		id := fmt.Sprintf("%s/%s/%s",
 			rs.Primary.Attributes["service_namespace"],
-			rs.Primary.Attributes["resource_id"],
+			rs.Primary.Attributes[names.AttrResourceID],
 			rs.Primary.Attributes["scalable_dimension"])
 		return id, nil
 	}

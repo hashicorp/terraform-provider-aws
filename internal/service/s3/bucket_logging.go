@@ -80,7 +80,7 @@ func resourceBucketLogging() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -379,7 +379,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 		grantee.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		grantee.URI = aws.String(v)
 	}
 
@@ -426,7 +426,7 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.URI != nil {
-		m["uri"] = aws.ToString(g.URI)
+		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
 	return []interface{}{m}

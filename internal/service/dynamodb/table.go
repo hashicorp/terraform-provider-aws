@@ -91,7 +91,7 @@ func resourceTable() *schema.Resource {
 			},
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() != "" && diff.HasChange("stream_enabled") {
-					if err := diff.SetNewComputed("stream_arn"); err != nil {
+					if err := diff.SetNewComputed(names.AttrStreamARN); err != nil {
 						return fmt.Errorf("setting stream_arn to computed: %s", err)
 					}
 				}
@@ -292,7 +292,7 @@ func resourceTable() *schema.Resource {
 							Required: true,
 							// update is equivalent of force a new *replica*, not table
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -408,7 +408,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -813,7 +813,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("stream_view_type", d.Get("stream_view_type").(string))
 	}
 
-	d.Set("stream_arn", table.LatestStreamArn)
+	d.Set(names.AttrStreamARN, table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
 	sse := flattenTableServerSideEncryption(table.SSEDescription)
@@ -1818,7 +1818,7 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.Client, arn, tableName s
 			continue
 		}
 
-		tfMap["stream_arn"] = aws.ToString(table.LatestStreamArn)
+		tfMap[names.AttrStreamARN] = aws.ToString(table.LatestStreamArn)
 		tfMap["stream_label"] = aws.ToString(table.LatestStreamLabel)
 
 		if table.SSEDescription != nil {

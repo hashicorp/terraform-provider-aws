@@ -47,7 +47,7 @@ func DataSourceSecurityProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -121,7 +121,7 @@ func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if permissions != nil {
-		d.Set("permissions", flex.FlattenStringSet(permissions))
+		d.Set(names.AttrPermissions, flex.FlattenStringSet(permissions))
 	}
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, securityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

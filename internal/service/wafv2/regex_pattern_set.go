@@ -50,7 +50,7 @@ func resourceRegexPatternSet() *schema.Resource {
 				scope := idParts[2]
 				d.SetId(id)
 				d.Set(names.AttrName, name)
-				d.Set("scope", scope)
+				d.Set(names.AttrScope, scope)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -93,7 +93,7 @@ func resourceRegexPatternSet() *schema.Resource {
 						},
 					},
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ForceNew:         true,
@@ -115,7 +115,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 	input := &wafv2.CreateRegexPatternSetInput{
 		Name:                  aws.String(name),
 		RegularExpressionList: []awstypes.Regex{},
-		Scope:                 awstypes.Scope(d.Get("scope").(string)),
+		Scope:                 awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:                  getTagsIn(ctx),
 	}
 
@@ -141,7 +141,7 @@ func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := findRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
@@ -175,7 +175,7 @@ func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, 
 			LockToken:             aws.String(d.Get("lock_token").(string)),
 			Name:                  aws.String(d.Get(names.AttrName).(string)),
 			RegularExpressionList: []awstypes.Regex{},
-			Scope:                 awstypes.Scope(d.Get("scope").(string)),
+			Scope:                 awstypes.Scope(d.Get(names.AttrScope).(string)),
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -204,7 +204,7 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Scope:     awstypes.Scope(d.Get("scope").(string)),
+		Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet: %s", d.Id())

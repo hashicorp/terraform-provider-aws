@@ -66,7 +66,7 @@ func dataSourceFunctionURL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -122,7 +122,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 		d.Set("cors", nil)
 	}
 	d.Set(names.AttrCreationTime, output.CreationTime)
-	d.Set("function_arn", output.FunctionArn)
+	d.Set(names.AttrFunctionARN, output.FunctionArn)
 	d.Set("function_name", name)
 	d.Set("function_url", functionURL)
 	d.Set("invoke_mode", output.InvokeMode)

@@ -85,7 +85,7 @@ func ResourceFlowLog() *schema.Resource {
 				ForceNew:     true,
 				ExactlyOneOf: []string{"eni_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -225,7 +225,7 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DeliverCrossAccountRole = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.DeliverLogsPermissionArn = aws.String(v.(string))
 	}
 
@@ -294,7 +294,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("destination_options", nil)
 	}
-	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
+	d.Set(names.AttrIAMRoleARN, fl.DeliverLogsPermissionArn)
 	d.Set("log_destination", fl.LogDestination)
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_format", fl.LogFormat)

@@ -45,7 +45,7 @@ func ResourceProfile() *schema.Resource {
 				Optional: true,
 			},
 			names.AttrAddress: customerProfileAddressSchema(),
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -191,7 +191,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Address = expandAddress(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("attributes"); ok {
+	if v, ok := d.GetOk(names.AttrAttributes); ok {
 		input.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -303,7 +303,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("additional_information", output.AdditionalInformation)
 	d.Set(names.AttrAddress, flattenAddress(output.Address))
 	d.Set("account_number", output.AccountNumber)
-	d.Set("attributes", output.Attributes)
+	d.Set(names.AttrAttributes, output.Attributes)
 	d.Set("billing_address", flattenAddress(output.BillingAddress))
 	d.Set("birth_date", output.BirthDate)
 	d.Set("business_email_address", output.BusinessEmailAddress)
@@ -346,8 +346,8 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Address = expandUpdateAddress(d.Get(names.AttrAddress).([]interface{}))
 	}
 
-	if d.HasChange("attributes") {
-		input.Attributes = flex.ExpandStringValueMap(d.Get("attributes").(map[string]interface{}))
+	if d.HasChange(names.AttrAttributes) {
+		input.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]interface{}))
 	}
 
 	if d.HasChange("billing_address") {

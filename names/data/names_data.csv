@@ -20,7 +20,7 @@ appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,,2,,aw
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,AppConfigData,,,
 appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,,2,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,Appflow,ListFlows,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,,2,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,AppIntegrations,ListApplications,,
-application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,1,,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,Application Auto Scaling,DescribeScalableTargets,,
+application-autoscaling,applicationautoscaling,applicationautoscaling,applicationautoscaling,appautoscaling,applicationautoscaling,,applicationautoscaling,AppAutoScaling,ApplicationAutoScaling,,,2,aws_appautoscaling_,aws_applicationautoscaling_,,appautoscaling_,Application Auto Scaling,,,,,,,,Application Auto Scaling,DescribeScalableTargets,ServiceNamespace: awstypes.ServiceNamespaceEcs,
 applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,applicationcostprofiler,,applicationcostprofiler,,,ApplicationCostProfiler,ApplicationCostProfiler,,1,,,aws_applicationcostprofiler_,,applicationcostprofiler_,Application Cost Profiler,AWS,,x,,,,,ApplicationCostProfiler,,,
 discovery,discovery,applicationdiscoveryservice,applicationdiscoveryservice,,discovery,,applicationdiscovery;applicationdiscoveryservice,Discovery,ApplicationDiscoveryService,,1,,,aws_discovery_,,discovery_,Application Discovery,AWS,,x,,,,,Application Discovery Service,,,
 mgn,mgn,mgn,mgn,,mgn,,,Mgn,Mgn,,1,,,aws_mgn_,,mgn_,Application Migration (Mgn),AWS,,x,,,,,mgn,,,
@@ -293,7 +293,7 @@ qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,,2,,aw
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,,,QLDB,ListLedgers,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,x,,,,,QLDB Session,,,
 quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,QuickSight,ListDashboards,"AwsAccountId: aws_sdkv1.String(""123456789012"")",
-ram,ram,ram,ram,,ram,,,RAM,RAM,,1,,,aws_ram_,,ram_,RAM (Resource Access Manager),AWS,,,,,,,RAM,ListPermissions,,
+ram,ram,ram,ram,,ram,,,RAM,RAM,,,2,,aws_ram_,,ram_,RAM (Resource Access Manager),AWS,,,,,,,RAM,ListPermissions,,
 rds,rds,rds,rds,,rds,,,RDS,RDS,,1,2,aws_(db_|rds_),aws_rds_,,rds_;db_,RDS (Relational Database),Amazon,,,,,,,RDS,DescribeDBInstances,,
 rds-data,rdsdata,rdsdataservice,rdsdata,,rdsdata,,rdsdataservice,RDSData,RDSDataService,,1,,,aws_rdsdata_,,rdsdata_,RDS Data,Amazon,,x,,,,,RDS Data,,,
 pi,pi,pi,pi,,pi,,,PI,PI,,1,,,aws_pi_,,pi_,RDS Performance Insights (PI),Amazon,,x,,,,,PI,,,
@@ -347,7 +347,7 @@ snow-device-management,snowdevicemanagement,snowdevicemanagement,snowdevicemanag
 snowball,snowball,snowball,snowball,,snowball,,,Snowball,Snowball,,1,,,aws_snowball_,,snowball_,Snow Family,AWS,,x,,,,,Snowball,,,
 sns,sns,sns,sns,,sns,,,SNS,SNS,,,2,,aws_sns_,,sns_,SNS (Simple Notification),Amazon,,,,,,,SNS,ListSubscriptions,,
 sqs,sqs,sqs,sqs,,sqs,,,SQS,SQS,,,2,,aws_sqs_,,sqs_,SQS (Simple Queue),Amazon,,,,,,,SQS,ListQueues,,
-ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,1,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,,,SSM,ListDocuments,,
+ssm,ssm,ssm,ssm,,ssm,,,SSM,SSM,,,2,,aws_ssm_,,ssm_,SSM (Systems Manager),AWS,,,,,,,SSM,ListDocuments,,
 ssm-contacts,ssmcontacts,ssmcontacts,ssmcontacts,,ssmcontacts,,,SSMContacts,SSMContacts,,,2,,aws_ssmcontacts_,,ssmcontacts_,SSM Contacts,AWS,,,,,,,SSM Contacts,ListContacts,,
 ssm-incidents,ssmincidents,ssmincidents,ssmincidents,,ssmincidents,,,SSMIncidents,SSMIncidents,,,2,,aws_ssmincidents_,,ssmincidents_,SSM Incident Manager Incidents,AWS,,,,,,,SSM Incidents,ListResponsePlans,,
 ssm-sap,ssmsap,ssmsap,ssmsap,,ssmsap,,,SSMSAP,SsmSap,,,2,,aws_ssmsap_,,ssmsap_,Systems Manager for SAP,AWS,,,,,,,Ssm Sap,ListApplications,,
@@ -379,8 +379,8 @@ vpc-lattice,vpclattice,vpclattice,vpclattice,,vpclattice,,,VPCLattice,VPCLattice
 ,,,,,vpnclient,ec2,,ClientVPN,,,,,aws_ec2_client_vpn,aws_vpnclient_,vpnclient_,ec2_client_vpn_,VPN (Client),AWS,x,,,x,,,,,,Part of EC2
 ,,,,,vpnsite,ec2,,SiteVPN,,,,,aws_(customer_gateway|vpn_),aws_vpnsite_,vpnsite_,customer_gateway;vpn_,VPN (Site-to-Site),AWS,x,,,x,,,,,,Part of EC2
 wafv2,wafv2,wafv2,wafv2,,wafv2,,,WAFV2,WAFV2,,,2,,aws_wafv2_,,wafv2_,WAF,AWS,,,,,,,WAFV2,ListRuleGroups,Scope: awstypes.ScopeRegional,
-waf,waf,waf,waf,,waf,,,WAF,WAF,,1,,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
-waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,1,,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
+waf,waf,waf,waf,,waf,,,WAF,WAF,,,2,,aws_waf_,,waf_,WAF Classic,AWS,,,,,,,WAF,ListRules,,
+waf-regional,wafregional,wafregional,wafregional,,wafregional,,,WAFRegional,WAFRegional,,,2,,aws_wafregional_,,wafregional_,WAF Classic Regional,AWS,,,,,,,WAF Regional,ListRules,,
 ,,,,,,,,,,,,,,,,,WAM (WorkSpaces Application Manager),Amazon,x,,,,,,,,,No SDK support
 ,,,,,wavelength,ec2,,Wavelength,,,,,aws_ec2_carrier_gateway,aws_wavelength_,wavelength_,ec2_carrier_,Wavelength,AWS,x,,,x,,,,,,Part of EC2
 budgets,budgets,budgets,budgets,,budgets,,,Budgets,Budgets,,,2,,aws_budgets_,,budgets_,Web Services Budgets,Amazon,,,,,,,Budgets,DescribeBudgets,"AccountId: aws_sdkv2.String(""012345678901"")",

@@ -26,7 +26,7 @@ func TestAccVPCNetworkInterfacesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -46,7 +46,7 @@ func TestAccVPCNetworkInterfacesDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", acctest.CtOne),
 				),
 			},
 		},
@@ -66,7 +66,7 @@ func TestAccVPCNetworkInterfacesDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", acctest.CtZero),
 				),
 			},
 		},

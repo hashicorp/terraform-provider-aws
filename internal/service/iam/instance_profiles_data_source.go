@@ -30,7 +30,7 @@ func dataSourceInstanceProfiles() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -71,7 +71,7 @@ func dataSourceInstanceProfilesRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(roleName)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", nms)
+	d.Set(names.AttrNames, nms)
 	d.Set("paths", paths)
 
 	return diags

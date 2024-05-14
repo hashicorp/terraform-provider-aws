@@ -32,8 +32,8 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "accounts.#", 0),
-					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", "0"),
-					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", acctest.CtZero),
 				),
 			},
 		},

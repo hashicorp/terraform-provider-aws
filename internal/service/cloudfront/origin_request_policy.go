@@ -34,7 +34,7 @@ func resourceOriginRequestPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -143,7 +143,7 @@ func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -191,7 +191,7 @@ func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
 		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
@@ -231,7 +231,7 @@ func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		Name: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 

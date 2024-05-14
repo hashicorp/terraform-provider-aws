@@ -28,7 +28,7 @@ func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +73,7 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", routeTablePropagationIDs)
+	d.Set(names.AttrIDs, routeTablePropagationIDs)
 
 	return diags
 }

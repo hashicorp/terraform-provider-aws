@@ -41,7 +41,7 @@ func ResourceConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -56,7 +56,7 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	output, err := conn.UpdateResolverConfigWithContext(ctx, input)
@@ -97,7 +97,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("autodefined_reverse_flag", autodefinedReverseFlag)
 	d.Set(names.AttrOwnerID, resolverConfig.OwnerId)
-	d.Set("resource_id", resolverConfig.ResourceId)
+	d.Set(names.AttrResourceID, resolverConfig.ResourceId)
 
 	return nil
 }
@@ -108,7 +108,7 @@ func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
 		AutodefinedReverseFlag: aws.String(autodefinedReverseFlag),
-		ResourceId:             aws.String(d.Get("resource_id").(string)),
+		ResourceId:             aws.String(d.Get(names.AttrResourceID).(string)),
 	}
 
 	_, err := conn.UpdateResolverConfigWithContext(ctx, input)

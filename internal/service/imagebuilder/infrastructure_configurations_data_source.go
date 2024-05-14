@@ -27,7 +27,7 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrFilter: namevaluesfilters.Schema(),
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -77,7 +77,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", nms)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

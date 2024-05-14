@@ -819,7 +819,7 @@ func expandLabelMatchStatement(l []interface{}) *awstypes.LabelMatchStatement {
 
 	statement := &awstypes.LabelMatchStatement{
 		Key:   aws.String(m[names.AttrKey].(string)),
-		Scope: awstypes.LabelMatchScope(m["scope"].(string)),
+		Scope: awstypes.LabelMatchScope(m[names.AttrScope].(string)),
 	}
 
 	return statement
@@ -894,7 +894,7 @@ func expandSizeConstraintStatement(l []interface{}) *awstypes.SizeConstraintStat
 	return &awstypes.SizeConstraintStatement{
 		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
-		Size:                int64(m["size"].(int)),
+		Size:                int64(m[names.AttrSize].(int)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -1372,10 +1372,10 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m["body_contains"].([]interface{}); ok && len(v) > 0 {
 		out.BodyContains = expandBodyContains(v)
 	}
-	if v, ok := m["header"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
 		out.Header = expandHeader(v)
 	}
-	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		out.Json = expandResponseInspectionJSON(v)
 	}
 	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
@@ -1527,7 +1527,7 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []awstypes.RateBasedSta
 		if v, ok := m["http_method"]; ok && len(v.([]interface{})) > 0 {
 			r.HTTPMethod = &awstypes.RateLimitHTTPMethod{}
 		}
-		if v, ok := m["header"]; ok {
+		if v, ok := m[names.AttrHeader]; ok {
 			r.Header = expandRateLimitHeader(v.([]interface{}))
 		}
 		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
@@ -2241,8 +2241,8 @@ func flattenLabelMatchStatement(l *awstypes.LabelMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrKey: aws.ToString(l.Key),
-		"scope":       string(l.Scope),
+		names.AttrKey:   aws.ToString(l.Key),
+		names.AttrScope: string(l.Scope),
 	}
 
 	return []interface{}{m}
@@ -2308,7 +2308,7 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) interfa
 	m := map[string]interface{}{
 		"comparison_operator": string(s.ComparisonOperator),
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"size":                s.Size,
+		names.AttrSize:        s.Size,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2768,10 +2768,10 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m["body_contains"] = flattenBodyContains(apiObject.BodyContains)
 	}
 	if apiObject.Header != nil {
-		m["header"] = flattenHeader(apiObject.Header)
+		m[names.AttrHeader] = flattenHeader(apiObject.Header)
 	}
 	if apiObject.Json != nil {
-		m["json"] = flattenResponseInspectionJSON(apiObject.Json)
+		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
 		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
@@ -2925,7 +2925,7 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			}
 		}
 		if o.Header != nil {
-			tfMap["header"] = flattenRateLimitHeader(o.Header)
+			tfMap[names.AttrHeader] = flattenRateLimitHeader(o.Header)
 		}
 		if o.IP != nil {
 			tfMap["ip"] = []interface{}{

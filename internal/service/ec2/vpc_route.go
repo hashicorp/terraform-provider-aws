@@ -43,7 +43,7 @@ var routeValidTargets = []string{
 	"nat_gateway_id",
 	names.AttrNetworkInterfaceID,
 	names.AttrTransitGatewayID,
-	"vpc_endpoint_id",
+	names.AttrVPCEndpointID,
 	"vpc_peering_connection_id",
 }
 
@@ -143,7 +143,7 @@ func resourceRoute() *schema.Resource {
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ExactlyOneOf: routeValidTargets,
@@ -324,10 +324,10 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// VPC Endpoint ID is returned in Gateway ID field
 	if strings.HasPrefix(aws.StringValue(route.GatewayId), "vpce-") {
 		d.Set("gateway_id", "")
-		d.Set("vpc_endpoint_id", route.GatewayId)
+		d.Set(names.AttrVPCEndpointID, route.GatewayId)
 	} else {
 		d.Set("gateway_id", route.GatewayId)
-		d.Set("vpc_endpoint_id", "")
+		d.Set(names.AttrVPCEndpointID, "")
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)

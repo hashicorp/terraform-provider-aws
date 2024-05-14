@@ -447,7 +447,7 @@ func expandPlacementStrategy(tfMap map[string]interface{}) types.PlacementStrate
 
 	a := types.PlacementStrategy{}
 
-	if v, ok := tfMap["field"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 		a.Field = aws.String(v)
 	}
 
@@ -462,7 +462,7 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	m := map[string]interface{}{}
 
 	if v := apiObject.Field; v != nil {
-		m["field"] = aws.ToString(v)
+		m[names.AttrField] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {

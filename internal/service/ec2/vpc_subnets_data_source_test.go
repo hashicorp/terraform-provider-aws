@@ -29,9 +29,9 @@ func TestAccVPCSubnetsDataSource_basic(t *testing.T) {
 				Config: testAccVPCSubnetsDataSourceConfig_dataSource(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_subnets.selected", "ids.#", "4"),
-					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_subnets.private", "ids.#", acctest.CtTwo),
 					acctest.CheckResourceAttrGreaterThanValue("data.aws_subnets.all", "ids.#", 0),
-					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_subnets.none", "ids.#", acctest.CtZero),
 				),
 			},
 		},
@@ -50,7 +50,7 @@ func TestAccVPCSubnetsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCSubnetsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_subnets.test", "ids.#", acctest.CtTwo),
 				),
 			},
 		},

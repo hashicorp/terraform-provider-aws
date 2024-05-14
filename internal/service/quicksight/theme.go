@@ -283,7 +283,7 @@ func ResourceTheme() *schema.Resource {
 						},
 					},
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -301,7 +301,7 @@ func ResourceTheme() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validation.StringLenBetween(1, 2048),
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
@@ -376,7 +376,7 @@ func resourceThemeCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.Configuration = expandThemeConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Permissions = expandResourcePermissions(v.([]interface{}))
 	}
 
@@ -415,7 +415,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
@@ -436,7 +436,7 @@ func resourceThemeRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diag.Errorf("describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -451,7 +451,7 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		in := &quicksight.UpdateThemeInput{
 			AwsAccountId: aws.String(awsAccountId),
 			ThemeId:      aws.String(themeId),
@@ -474,8 +474,8 @@ func resourceThemeUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("permissions") {
-		oraw, nraw := d.GetChange("permissions")
+	if d.HasChange(names.AttrPermissions) {
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.([]interface{})
 		n := nraw.([]interface{})
 

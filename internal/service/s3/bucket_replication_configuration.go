@@ -43,12 +43,12 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 63),
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1000,
@@ -80,7 +80,7 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"owner": {
+												names.AttrOwner: {
 													Type:             schema.TypeString,
 													Required:         true,
 													ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
@@ -320,8 +320,8 @@ func resourceBucketReplicationConfigurationCreate(ctx context.Context, d *schema
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(bucket),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
-			Rules: expandReplicationRules(ctx, d.Get("rule").([]interface{})),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 
@@ -385,8 +385,8 @@ func resourceBucketReplicationConfigurationRead(ctx context.Context, d *schema.R
 	}
 
 	d.Set(names.AttrBucket, d.Id())
-	d.Set("role", rc.Role)
-	if err := d.Set("rule", flattenReplicationRules(ctx, rc.Rules)); err != nil {
+	d.Set(names.AttrRole, rc.Role)
+	if err := d.Set(names.AttrRule, flattenReplicationRules(ctx, rc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -400,8 +400,8 @@ func resourceBucketReplicationConfigurationUpdate(ctx context.Context, d *schema
 	input := &s3.PutBucketReplicationInput{
 		Bucket: aws.String(d.Id()),
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role:  aws.String(d.Get("role").(string)),
-			Rules: expandReplicationRules(ctx, d.Get("rule").([]interface{})),
+			Role:  aws.String(d.Get(names.AttrRole).(string)),
+			Rules: expandReplicationRules(ctx, d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 
@@ -601,7 +601,7 @@ func expandAccessControlTranslation(l []interface{}) *types.AccessControlTransla
 
 	result := &types.AccessControlTranslation{}
 
-	if v, ok := tfMap["owner"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrOwner].(string); ok && v != "" {
 		result.Owner = types.OwnerOverride(v)
 	}
 
@@ -968,7 +968,7 @@ func flattenAccessControlTranslation(act *types.AccessControlTranslation) []inte
 	}
 
 	m := map[string]interface{}{
-		"owner": act.Owner,
+		names.AttrOwner: act.Owner,
 	}
 
 	return []interface{}{m}

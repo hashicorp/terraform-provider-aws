@@ -19,7 +19,7 @@ resource "aws_iam_policy" "test" {
 }
 EOF
 
-  tags = var.tags
+  tags = var.resource_tags
 }
 
 data "aws_partition" "current" {}
@@ -27,13 +27,15 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
-variable "tags" {
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
   type     = map(string)
-  nullable = false
+  nullable = true
 }
-
 

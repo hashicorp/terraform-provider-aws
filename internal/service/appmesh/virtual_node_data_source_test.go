@@ -41,7 +41,7 @@ func testAccVirtualNodeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.#", dataSourceName, "spec.0.listener.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.logging.#", dataSourceName, "spec.0.logging.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.service_discovery.#", dataSourceName, "spec.0.service_discovery.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

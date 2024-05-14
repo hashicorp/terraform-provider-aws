@@ -29,7 +29,7 @@ func DataSourceSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,7 +37,7 @@ func DataSourceSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -61,11 +61,11 @@ func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.SetId(aws.StringValue(resp.SelectionId))
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
 	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
 
 	if resp.BackupSelection.Resources != nil {
-		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
+		if err := d.Set(names.AttrResources, aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 		}
 	}

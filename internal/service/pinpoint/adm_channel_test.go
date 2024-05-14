@@ -72,7 +72,7 @@ func TestAccPinpointADMChannel_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrClientID, "client_secret"},
+				ImportStateVerifyIgnore: []string{names.AttrClientID, names.AttrClientSecret},
 			},
 			{
 				Config: testAccADMChannelConfig_basic(config),

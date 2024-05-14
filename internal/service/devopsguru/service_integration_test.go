@@ -39,9 +39,9 @@ func testAccServiceIntegration_basic(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ops_center.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.0.opt_in_status", string(types.OptInStatusEnabled)),
 				),
 			},
@@ -54,9 +54,9 @@ func testAccServiceIntegration_basic(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_basic(string(types.OptInStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logs_anomaly_detection.0.opt_in_status", string(types.OptInStatusDisabled)),
-					resource.TestCheckResourceAttr(resourceName, "ops_center.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ops_center.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ops_center.0.opt_in_status", string(types.OptInStatusDisabled)),
 				),
 			},
@@ -83,7 +83,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_kmsCustomerManaged(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_server_side_encryption.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeCustomerManagedKey)),
@@ -98,7 +98,7 @@ func testAccServiceIntegration_kms(t *testing.T) {
 				Config: testAccServiceIntegrationConfig_kmsAWSOwned(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceIntegrationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.opt_in_status", string(types.OptInStatusEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "kms_server_side_encryption.0.type", string(types.ServerSideEncryptionTypeAwsOwnedKmsKey)),
 				),

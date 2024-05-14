@@ -41,7 +41,7 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, TEST_NAME),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, TEST_DESCRIPTION),
 					resource.TestCheckResourceAttr(resourceName, "analysis_method", TEST_ANALYSIS_METHOD),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "table_reference.*", map[string]string{
@@ -129,7 +129,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Config: testAccConfiguredTableConfig_allowedColumns(TEST_ALLOWED_COLUMNS, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableExists(ctx, resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.1", "my_column_2"),
 				),
@@ -138,7 +138,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Config: testAccConfiguredTableConfig_allowedColumns("[\"my_column_1\"]", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 				),
 			},

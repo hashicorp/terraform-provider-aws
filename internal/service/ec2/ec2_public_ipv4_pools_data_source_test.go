@@ -45,7 +45,7 @@ func TestAccEC2PublicIPv4PoolsDataSource_tags(t *testing.T) {
 			{
 				Config: testPublicIPv4PoolsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "pool_ids.#", acctest.CtZero),
 				),
 			},
 		},

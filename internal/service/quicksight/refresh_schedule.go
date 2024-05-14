@@ -112,7 +112,7 @@ func (r *resourceRefreshSchedule) Schema(ctx context.Context, req resource.Schem
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"interval": schema.StringAttribute{
+									names.AttrInterval: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.OneOf(quicksight.RefreshInterval_Values()...),
@@ -201,7 +201,7 @@ var (
 		"day_of_week":  types.StringType,
 	}
 	refreshFrequencyAttrTypes = map[string]attr.Type{
-		"interval": types.StringType,
+		names.AttrInterval: types.StringType,
 		"refresh_on_day": types.ListType{
 			ElemType: types.ObjectType{
 				AttrTypes: refreshOnDayAttrTypes,
@@ -623,10 +623,10 @@ func flattenRefreshFrequency(ctx context.Context, apiObject *quicksight.RefreshF
 	diags.Append(d...)
 
 	refreshFrequencyAttrs := map[string]attr.Value{
-		"interval":        flex.StringToFramework(ctx, apiObject.Interval),
-		"time_of_the_day": flex.StringToFramework(ctx, apiObject.TimeOfTheDay),
-		"timezone":        flex.StringToFramework(ctx, apiObject.Timezone),
-		"refresh_on_day":  refreshOnDay,
+		names.AttrInterval: flex.StringToFramework(ctx, apiObject.Interval),
+		"time_of_the_day":  flex.StringToFramework(ctx, apiObject.TimeOfTheDay),
+		"timezone":         flex.StringToFramework(ctx, apiObject.Timezone),
+		"refresh_on_day":   refreshOnDay,
 	}
 
 	objVal, d := types.ObjectValue(refreshFrequencyAttrTypes, refreshFrequencyAttrs)

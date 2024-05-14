@@ -42,7 +42,7 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"stream_arn": {
+			names.AttrStreamARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -61,7 +61,7 @@ func resourceKinesisStreamingDestinationCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	streamARN := d.Get("stream_arn").(string)
+	streamARN := d.Get(names.AttrStreamARN).(string)
 	tableName := d.Get(names.AttrTableName).(string)
 	id := errs.Must(flex.FlattenResourceId([]string{tableName, streamARN}, kinesisStreamingDestinationResourceIDPartCount, false))
 	input := &dynamodb.EnableKinesisStreamingDestinationInput{
@@ -106,7 +106,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
 	}
 
-	d.Set("stream_arn", output.StreamArn)
+	d.Set(names.AttrStreamARN, output.StreamArn)
 	d.Set(names.AttrTableName, tableName)
 
 	return diags

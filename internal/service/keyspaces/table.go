@@ -113,7 +113,7 @@ func resourceTable() *schema.Resource {
 					},
 				},
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -121,7 +121,7 @@ func resourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -325,7 +325,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ClientSideTimestamps = expandClientSideTimestamps(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("comment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrComment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Comment = expandComment(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -403,11 +403,11 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("client_side_timestamps", nil)
 	}
 	if table.Comment != nil {
-		if err := d.Set("comment", []interface{}{flattenComment(table.Comment)}); err != nil {
+		if err := d.Set(names.AttrComment, []interface{}{flattenComment(table.Comment)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting comment: %s", err)
 		}
 	} else {
-		d.Set("comment", nil)
+		d.Set(names.AttrComment, nil)
 	}
 	d.Set("default_time_to_live", table.DefaultTimeToLive)
 	if table.EncryptionSpecification != nil {
@@ -811,7 +811,7 @@ func expandComment(tfMap map[string]interface{}) *types.Comment {
 
 	apiObject := &types.Comment{}
 
-	if v, ok := tfMap["message"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
 		apiObject.Message = aws.String(v)
 	}
 
@@ -1098,7 +1098,7 @@ func flattenComment(apiObject *types.Comment) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Message; v != nil {
-		tfMap["message"] = aws.ToString(v)
+		tfMap[names.AttrMessage] = aws.ToString(v)
 	}
 
 	return tfMap

@@ -93,7 +93,7 @@ func resourceKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -252,7 +252,7 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set("enable_key_rotation", key.rotation)
 	d.Set("is_enabled", key.metadata.Enabled)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 	d.Set("rotation_period_in_days", key.rotationPeriodInDays)

@@ -32,7 +32,7 @@ func TestAccAppConfigConfigurationProfilesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccConfigurationProfilesDataSourceConfig_basic(appName, rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "configuration_profile_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "configuration_profile_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "configuration_profile_ids.*", "aws_appconfig_configuration_profile.test_1", "configuration_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "configuration_profile_ids.*", "aws_appconfig_configuration_profile.test_2", "configuration_profile_id"),
 				),

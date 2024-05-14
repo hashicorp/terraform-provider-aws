@@ -37,7 +37,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "license_model", licenseModel),
-					resource.TestCheckResourceAttr(dataSourceName, "storage_type", storageType),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrStorageType, storageType),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.default", names.AttrVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, "instance_class", "data.aws_rds_orderable_db_instance.dynamic", "instance_class"),
 				),

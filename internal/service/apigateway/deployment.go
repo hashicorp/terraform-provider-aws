@@ -69,7 +69,7 @@ func resourceDeployment() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,

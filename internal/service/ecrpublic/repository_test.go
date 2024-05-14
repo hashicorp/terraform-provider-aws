@@ -37,7 +37,7 @@ func TestAccECRPublicRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
@@ -64,11 +64,11 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
+				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -77,20 +77,20 @@ func TestAccECRPublicRepository_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRepositoryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRepositoryConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
+				Config: testAccRepositoryConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -113,7 +113,7 @@ func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataAboutText(rName, "about_text_1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_1"),
 				),
 			},
@@ -126,7 +126,7 @@ func TestAccECRPublicRepository_CatalogData_aboutText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataAboutText(rName, "about_text_2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.about_text", "about_text_2"),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccECRPublicRepository_CatalogData_architectures(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataArchitectures(rName, "Linux"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.0", "Linux"),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccECRPublicRepository_CatalogData_architectures(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataArchitectures(rName, "Windows"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.architectures.0", "Windows"),
 				),
 			},
@@ -187,7 +187,7 @@ func TestAccECRPublicRepository_CatalogData_description(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataDescription(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 1"),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccECRPublicRepository_CatalogData_description(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataDescription(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.description", "description 2"),
 				),
 			},
@@ -224,7 +224,7 @@ func TestAccECRPublicRepository_CatalogData_operatingSystems(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataOperatingSystems(rName, "ARM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.0", "ARM"),
 				),
 			},
@@ -237,7 +237,7 @@ func TestAccECRPublicRepository_CatalogData_operatingSystems(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataOperatingSystems(rName, "x86"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.operating_systems.0", "x86"),
 				),
 			},
@@ -261,7 +261,7 @@ func TestAccECRPublicRepository_CatalogData_usageText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataUsageText(rName, "usage text 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 1"),
 				),
 			},
@@ -274,7 +274,7 @@ func TestAccECRPublicRepository_CatalogData_usageText(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataUsageText(rName, "usage text 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "catalog_data.0.usage_text", "usage text 2"),
 				),
 			},
@@ -298,7 +298,7 @@ func TestAccECRPublicRepository_CatalogData_logoImageBlob(t *testing.T) {
 				Config: testAccRepositoryConfig_catalogDataLogoImageBlob(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "catalog_data.0.logo_image_blob"),
 				),
 			},
@@ -328,7 +328,7 @@ func TestAccECRPublicRepository_Basic_forceDestroy(t *testing.T) {
 				Config: testAccRepositoryConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ecr-public", "repository/"+rName),
 				),
@@ -405,7 +405,7 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			repositoryName := rs.Primary.Attributes["repository_name"]
+			repositoryName := rs.Primary.Attributes[names.AttrRepositoryName]
 			input := ecrpublic.DescribeRepositoriesInput{
 
 				RepositoryNames: []string{repositoryName},
@@ -422,8 +422,8 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			for _, repository := range out.Repositories {
-				if aws.ToString(repository.RepositoryName) == rs.Primary.Attributes["repository_name"] {
-					return fmt.Errorf("ECR Public repository still exists: %s", rs.Primary.Attributes["repository_name"])
+				if aws.ToString(repository.RepositoryName) == rs.Primary.Attributes[names.AttrRepositoryName] {
+					return fmt.Errorf("ECR Public repository still exists: %s", rs.Primary.Attributes[names.AttrRepositoryName])
 				}
 			}
 		}

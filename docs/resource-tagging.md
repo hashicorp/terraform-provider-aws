@@ -578,7 +578,7 @@ Verify all acceptance testing passes for the resource (e.g., `make testacc TESTS
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the arguments reference:
 
 ```markdown
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 ```
 
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the attribute reference:

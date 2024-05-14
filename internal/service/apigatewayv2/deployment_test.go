@@ -122,7 +122,7 @@ func TestAccAPIGatewayV2Deployment_triggers(t *testing.T) {
 				ImportStateIdFunc:       testAccDeploymentImportStateIdFunc(resourceName),
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"triggers"},
+				ImportStateVerifyIgnore: []string{names.AttrTriggers},
 			},
 			{
 				Config: testAccDeploymentConfig_triggers(rName, true),

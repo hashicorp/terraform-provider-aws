@@ -24,8 +24,8 @@ func TestAccEFSAccessPointsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAccessPointsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
 				),
 			},
 		},
@@ -45,8 +45,8 @@ func TestAccEFSAccessPointsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccAccessPointsDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtZero),
 				),
 			},
 		},

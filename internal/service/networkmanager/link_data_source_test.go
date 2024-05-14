@@ -34,7 +34,7 @@ func TestAccNetworkManagerLinkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "link_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provider_name", resourceName, "provider_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "site_id", resourceName, "site_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 				),
 			},
