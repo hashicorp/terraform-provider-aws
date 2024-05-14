@@ -176,7 +176,7 @@ func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaph
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVerifiedAccessGroup(), resourceName),
@@ -204,11 +204,11 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 		CheckDestroy:             testAccCheckVerifiedAccessGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -218,20 +218,20 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVerifiedAccessGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVerifiedAccessGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

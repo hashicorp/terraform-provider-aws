@@ -89,11 +89,11 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkInsightsAnalysisDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -103,20 +103,20 @@ func TestAccVPCNetworkInsightsAnalysis_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_completion"},
 			},
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCNetworkInsightsAnalysisConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
