@@ -8,9 +8,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -85,7 +86,7 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 
 func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	ipamID := d.Get("ipam_id").(string)
 	ipamResourceDiscoveryID := d.Get("ipam_resource_discovery_id").(string)
@@ -93,16 +94,16 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 		ClientToken:             aws.String(id.UniqueId()),
 		IpamId:                  aws.String(ipamID),
 		IpamResourceDiscoveryId: aws.String(ipamResourceDiscoveryID),
-		TagSpecifications:       getTagSpecificationsIn(ctx, ec2.ResourceTypeIpamResourceDiscoveryAssociation),
+		TagSpecifications:       getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamResourceDiscoveryAssociation),
 	}
 
-	output, err := conn.AssociateIpamResourceDiscoveryWithContext(ctx, input)
+	output, err := conn.AssociateIpamResourceDiscovery(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IPAM (%s) Resource Discovery (%s) Association: %s", ipamID, ipamResourceDiscoveryID, err)
 	}
 
-	d.SetId(aws.StringValue(output.IpamResourceDiscoveryAssociation.IpamResourceDiscoveryAssociationId))
+	d.SetId(aws.ToString(output.IpamResourceDiscoveryAssociation.IpamResourceDiscoveryAssociationId))
 
 	if _, err := WaitIPAMResourceDiscoveryAssociationAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery Association (%s) create: %s", d.Id(), err)
@@ -113,7 +114,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 
 func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	rda, err := FindIPAMResourceDiscoveryAssociationByID(ctx, conn, d.Id())
 
@@ -136,7 +137,7 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 	d.Set(names.AttrOwnerID, rda.OwnerId)
 	d.Set(names.AttrState, rda.State)
 
-	setTagsOut(ctx, rda.Tags)
+	setTagsOutV2(ctx, rda.Tags)
 
 	return diags
 }
@@ -151,10 +152,10 @@ func resourceIPAMResourceDiscoveryAssociationUpdate(ctx context.Context, d *sche
 
 func resourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting IPAM Resource Discovery Association: %s", d.Id())
-	_, err := conn.DisassociateIpamResourceDiscoveryWithContext(ctx, &ec2.DisassociateIpamResourceDiscoveryInput{
+	_, err := conn.DisassociateIpamResourceDiscovery(ctx, &ec2.DisassociateIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryAssociationId: aws.String(d.Id()),
 	})
 
