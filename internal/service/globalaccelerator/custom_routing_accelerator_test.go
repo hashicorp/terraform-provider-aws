@@ -44,9 +44,9 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, "Z2BJ6XQ5FK7U4H"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "IPV4"),
-					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_addresses.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_addresses.#", acctest.CtTwo),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.0", ipRegex),
 					resource.TestMatchResourceAttr(resourceName, "ip_sets.0.ip_addresses.1", ipRegex),
 					resource.TestCheckResourceAttr(resourceName, "ip_sets.0.ip_family", "IPv4"),
@@ -101,7 +101,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -123,7 +123,7 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_tags(t *testing.T) {
 				Config: testAccCustomRoutingAcceleratorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomRoutingAcceleratorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
