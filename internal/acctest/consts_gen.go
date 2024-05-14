@@ -9,9 +9,15 @@ import (
 )
 
 const (
+	CtFalseCaps   = "FALSE"
+	CtKey1        = "key1"
+	CtKey2        = "key2"
 	CtOne         = "1"
 	CtTagsPercent = "tags.%"
+	CtTrueCaps    = "TRUE"
 	CtTwo         = "2"
+	CtValue1      = "value1"
+	CtValue2      = "value2"
 	CtZero        = "0"
 )
 
@@ -20,9 +26,15 @@ const (
 // generated code and templates.
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
+		"FALSE":  "CtFalseCaps",
+		"key1":   "CtKey1",
+		"key2":   "CtKey2",
 		"1":      "CtOne",
 		"tags.%": "CtTagsPercent",
+		"TRUE":   "CtTrueCaps",
 		"2":      "CtTwo",
+		"value1": "CtValue1",
+		"value2": "CtValue2",
 		"0":      "CtZero",
 	}
 
