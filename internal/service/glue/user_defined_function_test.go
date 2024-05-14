@@ -89,7 +89,7 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_resourceURI2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtTwo),
 				),
 			},
 			{

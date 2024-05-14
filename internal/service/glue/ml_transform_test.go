@@ -43,7 +43,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "input_record_tables.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.database_name", tableResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "input_record_tables.0.table_name", tableResourceName, names.AttrName),
@@ -51,16 +51,16 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.data_type", "int"),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.name", "my_column_1"),
 					resource.TestCheckResourceAttr(resourceName, "schema.1.data_type", "string"),
 					resource.TestCheckResourceAttr(resourceName, "schema.1.name", "my_column_2"),
-					resource.TestCheckResourceAttr(resourceName, "label_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "label_count", acctest.CtZero),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func TestAccGlueMlTransform_maxRetries(t *testing.T) {
 				Config: testAccMLTransformConfig_maxRetries(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "max_retries", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_retries", acctest.CtZero),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				Config: testAccMLTransformConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -275,7 +275,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				Config: testAccMLTransformConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -284,7 +284,7 @@ func TestAccGlueMlTransform_tags(t *testing.T) {
 				Config: testAccMLTransformConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -316,7 +316,7 @@ func TestAccGlueMlTransform_timeout(t *testing.T) {
 				Config: testAccMLTransformConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, acctest.CtTwo),
 				),
 			},
 			{
@@ -354,7 +354,7 @@ func TestAccGlueMlTransform_workerType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
 					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.1X"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", acctest.CtTwo),
 				),
 			},
 			{
