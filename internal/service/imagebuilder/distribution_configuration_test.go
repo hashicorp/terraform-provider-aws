@@ -50,7 +50,7 @@ func TestAccImageBuilderDistributionConfiguration_basic(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, "date_updated", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -166,10 +166,10 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 				Config: testAccDistributionConfigurationConfig_amiTags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":               "1",
-						"ami_distribution_configuration.0.ami_tags.%":    "1",
+						"ami_distribution_configuration.#":               acctest.CtOne,
+						"ami_distribution_configuration.0.ami_tags.%":    acctest.CtOne,
 						"ami_distribution_configuration.0.ami_tags.key1": "value1",
 					}),
 				),
@@ -184,10 +184,10 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_am
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":               "1",
-						"ami_distribution_configuration.0.ami_tags.%":    "1",
+						"ami_distribution_configuration.#":               acctest.CtOne,
+						"ami_distribution_configuration.0.ami_tags.%":    acctest.CtOne,
 						"ami_distribution_configuration.0.ami_tags.key2": "value2",
 					}),
 				),
@@ -211,9 +211,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_de
 				Config: testAccDistributionConfigurationConfig_amiDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":             "1",
+						"ami_distribution_configuration.#":             acctest.CtOne,
 						"ami_distribution_configuration.0.description": "description1",
 					}),
 				),
@@ -228,9 +228,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_de
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":             "1",
+						"ami_distribution_configuration.#":             acctest.CtOne,
 						"ami_distribution_configuration.0.description": "description2",
 					}),
 				),
@@ -256,7 +256,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_km
 				Config: testAccDistributionConfigurationConfig_amiKMSKeyID1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.kms_key_id", kmsKeyResourceName, names.AttrARN),
 				),
 			},
@@ -270,7 +270,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_km
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.kms_key_id", kmsKeyResourceName2, names.AttrARN),
 				),
 			},
@@ -293,7 +293,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 				Config: testAccDistributionConfigurationConfig_amiLaunchPermissionUserGroups(rName, "all"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.user_groups.*", "all"),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 				Config: testAccDistributionConfigurationConfig_amiLaunchPermissionUserIDs(rName, "111111111111"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.user_ids.*", "111111111111"),
 				),
 			},
@@ -335,7 +335,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.user_ids.*", "222222222222"),
 				),
 			},
@@ -362,7 +362,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 				Config: testAccDistributionConfigurationConfig_amiLaunchPermissionOrganizationARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organization_arns.*", organizationResourceName, names.AttrARN),
 				),
 			},
@@ -395,7 +395,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistributionLau
 				Config: testAccDistributionConfigurationConfig_amiLaunchPermissionOrganizationalUnitARNs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.ami_distribution_configuration.0.launch_permission.0.organizational_unit_arns.*", organizationalUnitResourceName, names.AttrARN),
 				),
 			},
@@ -423,9 +423,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_na
 				Config: testAccDistributionConfigurationConfig_amiName(rName, "name1-{{ imagebuilder:buildDate }}"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":      "1",
+						"ami_distribution_configuration.#":      acctest.CtOne,
 						"ami_distribution_configuration.0.name": "name1-{{ imagebuilder:buildDate }}",
 					}),
 				),
@@ -440,9 +440,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_na
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":      "1",
+						"ami_distribution_configuration.#":      acctest.CtOne,
 						"ami_distribution_configuration.0.name": "name2-{{ imagebuilder:buildDate }}",
 					}),
 				),
@@ -452,9 +452,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_na
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
-						"ami_distribution_configuration.#":      "1",
+						"ami_distribution_configuration.#":      acctest.CtOne,
 						"ami_distribution_configuration.0.name": "AmazonLinux2-EKS-1.27-{{ imagebuilder:buildDate }}",
 					}),
 				),
@@ -478,7 +478,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_ta
 				Config: testAccDistributionConfigurationConfig_amiTargetAccountIDs(rName, "111111111111"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.target_account_ids.*", "111111111111"),
 				),
 			},
@@ -492,7 +492,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_ta
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.*.ami_distribution_configuration.0.target_account_ids.*", "222222222222"),
 				),
 			},
@@ -515,8 +515,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Config: testAccDistributionConfigurationConfig_containerTags(rName, "tag1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.0.container_distribution_configuration.0.container_tags.*", "tag1"),
 				),
 			},
@@ -530,8 +530,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "distribution.0.container_distribution_configuration.0.container_tags.*", "tag2"),
 				),
 			},
@@ -554,8 +554,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Config: testAccDistributionConfigurationConfig_containerDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.description", "description1"),
 				),
 			},
@@ -569,8 +569,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.description", "description2"),
 				),
 			},
@@ -593,9 +593,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Config: testAccDistributionConfigurationConfig_containerTargetRepository(rName, "repository1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.repository_name", "repository1"),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.service", "ECR"),
 				),
@@ -610,9 +610,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionContainerDistribut
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.repository_name", "repository2"),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.container_distribution_configuration.0.target_repository.0.service", "ECR"),
 				),
@@ -636,8 +636,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", "true"),
 				),
 			},
@@ -650,8 +650,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchEnabled(rName, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.enabled", "false"),
 				),
 			},
@@ -676,12 +676,12 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchLaunchTemplate1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_id", launchTemplateResourceName1, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", acctest.CtOne),
 				),
 			},
 			{
@@ -693,9 +693,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchLaunchTemplate2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_name", launchTemplateResourceName2, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", "2"),
@@ -720,8 +720,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchMaxParallelLaunches(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", "7"),
 				),
 			},
@@ -734,8 +734,8 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchMaxParallelLaunches(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", "10"),
 				),
 			},
@@ -758,9 +758,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchSnapshotConfiguration(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count", "5"),
 				),
 			},
@@ -773,9 +773,9 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 				Config: testAccDistributionConfigurationConfig_fastLaunchSnapshotConfiguration(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count", "10"),
 				),
 			},
@@ -799,8 +799,8 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 				Config: testAccDistributionConfigurationConfig_launchTemplateIDDefault(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 				),
@@ -815,8 +815,8 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 				),
@@ -826,8 +826,8 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_launchTemplateCon
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.default", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.launch_template_configuration.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.launch_template_configuration.0.account_id", "111111111111"),
@@ -857,7 +857,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *te
 				Config: testAccDistributionConfigurationConfig_licenseARNs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.license_configuration_arns.*", licenseConfigurationResourceName, names.AttrID),
 				),
 			},
@@ -871,7 +871,7 @@ func TestAccImageBuilderDistributionConfiguration_Distribution_licenseARNs(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "distribution.*.license_configuration_arns.*", licenseConfigurationResourceName2, names.AttrID),
 				),
 			},
@@ -894,7 +894,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -916,7 +916,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
