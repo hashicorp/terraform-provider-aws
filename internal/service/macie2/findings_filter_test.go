@@ -335,7 +335,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "position", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
 						"eq.#":          acctest.CtOne,
@@ -383,7 +383,7 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "position", acctest.CtOne),
