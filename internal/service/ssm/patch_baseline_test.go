@@ -111,11 +111,11 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineConfig_tags1(name, "key1", "value1"),
+				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -124,20 +124,20 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPatchBaselineConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPatchBaselineConfig_tags2(name, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPatchBaselineConfig_tags1(name, "key2", "value2"),
+				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
