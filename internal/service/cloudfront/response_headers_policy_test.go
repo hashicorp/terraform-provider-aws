@@ -121,12 +121,12 @@ func TestAccCloudFrontResponseHeadersPolicy_customHeaders(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
 						names.AttrHeader: "X-Header1",
 						"override":       "true",
-						names.AttrValue:  "value1",
+						names.AttrValue:  acctest.CtValue1,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
 						names.AttrHeader: "X-Header2",
 						"override":       "false",
-						names.AttrValue:  "value2",
+						names.AttrValue:  acctest.CtValue2,
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -167,7 +167,7 @@ func TestAccCloudFrontResponseHeadersPolicy_RemoveHeadersConfig(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
 						names.AttrHeader: "X-Header1",
 						"override":       "true",
-						names.AttrValue:  "value1",
+						names.AttrValue:  acctest.CtValue1,
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -215,7 +215,7 @@ func TestAccCloudFrontResponseHeadersPolicy_securityHeaders(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "custom_headers_config.0.items.*", map[string]string{
 						names.AttrHeader: "X-Header1",
 						"override":       "true",
-						names.AttrValue:  "value1",
+						names.AttrValue:  acctest.CtValue1,
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
