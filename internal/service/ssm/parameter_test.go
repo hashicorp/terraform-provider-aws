@@ -42,7 +42,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
@@ -79,7 +79,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
 					resource.TestCheckNoResourceAttr(resourceName, "overwrite"),
@@ -443,7 +443,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				},
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", "true"),
 				),
 			},
@@ -517,7 +517,7 @@ func TestAccSSMParameter_Overwrite_tags(t *testing.T) {
 				Config: testAccParameterConfig_overwriteTags1(rName, true, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -548,7 +548,7 @@ func TestAccSSMParameter_Overwrite_noOverwriteTags(t *testing.T) {
 				Config: testAccParameterConfig_overwriteTags1(rName, false, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -579,7 +579,7 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 				Config: testAccParameterConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -592,7 +592,7 @@ func TestAccSSMParameter_Overwrite_updateToTags(t *testing.T) {
 				Config: testAccParameterConfig_overwriteTags1(rName, true, "key1", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value2"),
 				),
 			},
@@ -651,7 +651,7 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				Config: testAccParameterConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -665,7 +665,7 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				Config: testAccParameterConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -674,7 +674,7 @@ func TestAccSSMParameter_tags(t *testing.T) {
 				Config: testAccParameterConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
