@@ -46,6 +46,7 @@ const (
 	AttrDNSName                    = "dns_name"
 	AttrDatabase                   = "database"
 	AttrDatabaseName               = "database_name"
+	AttrDefaultAction              = "default_action"
 	AttrDefaultValue               = "default_value"
 	AttrDeleteOnTermination        = "delete_on_termination"
 	AttrDescription                = "description"
@@ -67,10 +68,12 @@ const (
 	AttrEnvironment                = "environment"
 	AttrExecutionRoleARN           = "execution_role_arn"
 	AttrExpression                 = "expression"
+	AttrExternalID                 = "external_id"
 	AttrFamily                     = "family"
 	AttrField                      = "field"
 	AttrFileSystemID               = "file_system_id"
 	AttrFilter                     = "filter"
+	AttrForceDelete                = "force_delete"
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
 	AttrFunctionARN                = "function_arn"
@@ -96,11 +99,13 @@ const (
 	AttrKMSKeyID                   = "kms_key_id"
 	AttrKey                        = "key"
 	AttrKeyID                      = "key_id"
+	AttrLanguageCode               = "language_code"
 	AttrLastUpdatedDate            = "last_updated_date"
 	AttrLaunchTemplate             = "launch_template"
 	AttrLogGroupName               = "log_group_name"
 	AttrLoggingConfiguration       = "logging_configuration"
 	AttrMax                        = "max"
+	AttrMaxCapacity                = "max_capacity"
 	AttrMessage                    = "message"
 	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
@@ -127,8 +132,10 @@ const (
 	AttrPriority                   = "priority"
 	AttrPrivateKey                 = "private_key"
 	AttrProfile                    = "profile"
+	AttrPropagateTags              = "propagate_tags"
 	AttrProperties                 = "properties"
 	AttrProtocol                   = "protocol"
+	AttrProviderName               = "provider_name"
 	AttrPublicKey                  = "public_key"
 	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
@@ -154,6 +161,7 @@ const (
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
 	AttrServiceName                = "service_name"
+	AttrServiceRole                = "service_role"
 	AttrServiceRoleARN             = "service_role_arn"
 	AttrSession                    = "session"
 	AttrSharedConfigFiles          = "shared_config_files"
@@ -161,13 +169,16 @@ const (
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
 	AttrSkipDestroy                = "skip_destroy"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
+	AttrSnapshotID                 = "snapshot_id"
 	AttrSource                     = "source"
 	AttrSourceType                 = "source_type"
 	AttrStage                      = "stage"
 	AttrStartTime                  = "start_time"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
+	AttrStatusCode                 = "status_code"
 	AttrStatusMessage              = "status_message"
+	AttrStatusReason               = "status_reason"
 	AttrStorageType                = "storage_type"
 	AttrStreamARN                  = "stream_arn"
 	AttrSubnetID                   = "subnet_id"
@@ -245,6 +256,7 @@ func ConstOrQuote(constant string) string {
 		"dns_name":                      "AttrDNSName",
 		"database":                      "AttrDatabase",
 		"database_name":                 "AttrDatabaseName",
+		"default_action":                "AttrDefaultAction",
 		"default_value":                 "AttrDefaultValue",
 		"delete_on_termination":         "AttrDeleteOnTermination",
 		"description":                   "AttrDescription",
@@ -266,10 +278,12 @@ func ConstOrQuote(constant string) string {
 		"environment":                   "AttrEnvironment",
 		"execution_role_arn":            "AttrExecutionRoleARN",
 		"expression":                    "AttrExpression",
+		"external_id":                   "AttrExternalID",
 		"family":                        "AttrFamily",
 		"field":                         "AttrField",
 		"file_system_id":                "AttrFileSystemID",
 		"filter":                        "AttrFilter",
+		"force_delete":                  "AttrForceDelete",
 		"force_destroy":                 "AttrForceDestroy",
 		"format":                        "AttrFormat",
 		"function_arn":                  "AttrFunctionARN",
@@ -295,11 +309,13 @@ func ConstOrQuote(constant string) string {
 		"kms_key_id":                    "AttrKMSKeyID",
 		"key":                           "AttrKey",
 		"key_id":                        "AttrKeyID",
+		"language_code":                 "AttrLanguageCode",
 		"last_updated_date":             "AttrLastUpdatedDate",
 		"launch_template":               "AttrLaunchTemplate",
 		"log_group_name":                "AttrLogGroupName",
 		"logging_configuration":         "AttrLoggingConfiguration",
 		"max":                           "AttrMax",
+		"max_capacity":                  "AttrMaxCapacity",
 		"message":                       "AttrMessage",
 		"metric_name":                   "AttrMetricName",
 		"min":                           "AttrMin",
@@ -326,8 +342,10 @@ func ConstOrQuote(constant string) string {
 		"priority":                      "AttrPriority",
 		"private_key":                   "AttrPrivateKey",
 		"profile":                       "AttrProfile",
+		"propagate_tags":                "AttrPropagateTags",
 		"properties":                    "AttrProperties",
 		"protocol":                      "AttrProtocol",
+		"provider_name":                 "AttrProviderName",
 		"public_key":                    "AttrPublicKey",
 		"publicly_accessible":           "AttrPubliclyAccessible",
 		"region":                        "AttrRegion",
@@ -353,6 +371,7 @@ func ConstOrQuote(constant string) string {
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
 		"service_name":                  "AttrServiceName",
+		"service_role":                  "AttrServiceRole",
 		"service_role_arn":              "AttrServiceRoleARN",
 		"session":                       "AttrSession",
 		"shared_config_files":           "AttrSharedConfigFiles",
@@ -360,13 +379,16 @@ func ConstOrQuote(constant string) string {
 		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
 		"skip_destroy":                  "AttrSkipDestroy",
 		"skip_requesting_account_id":    "AttrSkipRequestingAccountID",
+		"snapshot_id":                   "AttrSnapshotID",
 		"source":                        "AttrSource",
 		"source_type":                   "AttrSourceType",
 		"stage":                         "AttrStage",
 		"start_time":                    "AttrStartTime",
 		"state":                         "AttrState",
 		"status":                        "AttrStatus",
+		"status_code":                   "AttrStatusCode",
 		"status_message":                "AttrStatusMessage",
+		"status_reason":                 "AttrStatusReason",
 		"storage_type":                  "AttrStorageType",
 		"stream_arn":                    "AttrStreamARN",
 		"subnet_id":                     "AttrSubnetID",
