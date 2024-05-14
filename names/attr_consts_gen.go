@@ -27,11 +27,14 @@ const (
 	AttrCertificate                = "certificate"
 	AttrCertificateARN             = "certificate_arn"
 	AttrClientID                   = "client_id"
+	AttrClientSecret               = "client_secret"
 	AttrClusterIdentifier          = "cluster_identifier"
+	AttrClusterName                = "cluster_name"
 	AttrComment                    = "comment"
 	AttrConfiguration              = "configuration"
 	AttrContent                    = "content"
 	AttrContentType                = "content_type"
+	AttrCreateTime                 = "create_time"
 	AttrCreatedAt                  = "created_at"
 	AttrCreatedDate                = "created_date"
 	AttrCreatedTime                = "created_time"
@@ -40,6 +43,7 @@ const (
 	AttrDNSName                    = "dns_name"
 	AttrDatabase                   = "database"
 	AttrDatabaseName               = "database_name"
+	AttrDefaultValue               = "default_value"
 	AttrDeleteOnTermination        = "delete_on_termination"
 	AttrDescription                = "description"
 	AttrDestination                = "destination"
@@ -57,6 +61,7 @@ const (
 	AttrEndpointType               = "endpoint_type"
 	AttrEndpoints                  = "endpoints"
 	AttrEngineVersion              = "engine_version"
+	AttrEnvironment                = "environment"
 	AttrExecutionRoleARN           = "execution_role_arn"
 	AttrExpression                 = "expression"
 	AttrField                      = "field"
@@ -64,8 +69,10 @@ const (
 	AttrFilter                     = "filter"
 	AttrForceDestroy               = "force_destroy"
 	AttrFormat                     = "format"
+	AttrFunctionARN                = "function_arn"
 	AttrGroupName                  = "group_name"
 	AttrHeader                     = "header"
+	AttrHealthCheck                = "health_check"
 	AttrHostedZoneID               = "hosted_zone_id"
 	AttrIAMRoleARN                 = "iam_role_arn"
 	AttrID                         = "id"
@@ -74,6 +81,7 @@ const (
 	AttrIPAddress                  = "ip_address"
 	AttrIPAddressType              = "ip_address_type"
 	AttrIdentifier                 = "identifier"
+	AttrInstanceCount              = "instance_count"
 	AttrInstanceID                 = "instance_id"
 	AttrInstanceType               = "instance_type"
 	AttrIssuer                     = "issuer"
@@ -91,6 +99,7 @@ const (
 	AttrMetricName                 = "metric_name"
 	AttrMin                        = "min"
 	AttrMode                       = "mode"
+	AttrMostRecent                 = "most_recent"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
 	AttrNamespace                  = "namespace"
@@ -116,13 +125,16 @@ const (
 	AttrPublicKey                  = "public_key"
 	AttrPubliclyAccessible         = "publicly_accessible"
 	AttrRegion                     = "region"
+	AttrRepositoryName             = "repository_name"
 	AttrResourceARN                = "resource_arn"
 	AttrResourceID                 = "resource_id"
 	AttrResourceType               = "resource_type"
+	AttrRetentionPeriod            = "retention_period"
 	AttrRoleARN                    = "role_arn"
 	AttrRule                       = "rule"
 	AttrS3Bucket                   = "s3_bucket"
 	AttrS3BucketName               = "s3_bucket_name"
+	AttrS3KeyPrefix                = "s3_key_prefix"
 	AttrSNSTopicARN                = "sns_topic_arn"
 	AttrSchedule                   = "schedule"
 	AttrScheduleExpression         = "schedule_expression"
@@ -136,11 +148,15 @@ const (
 	AttrSharedConfigFiles          = "shared_config_files"
 	AttrSize                       = "size"
 	AttrSkipCredentialsValidation  = "skip_credentials_validation"
+	AttrSkipDestroy                = "skip_destroy"
 	AttrSkipRequestingAccountID    = "skip_requesting_account_id"
 	AttrSource                     = "source"
+	AttrSourceType                 = "source_type"
 	AttrStartTime                  = "start_time"
 	AttrState                      = "state"
 	AttrStatus                     = "status"
+	AttrStatusMessage              = "status_message"
+	AttrStorageType                = "storage_type"
 	AttrSubnetID                   = "subnet_id"
 	AttrSubnetIDs                  = "subnet_ids"
 	AttrSubnets                    = "subnets"
@@ -193,11 +209,14 @@ func ConstOrQuote(constant string) string {
 		"certificate":                   "AttrCertificate",
 		"certificate_arn":               "AttrCertificateARN",
 		"client_id":                     "AttrClientID",
+		"client_secret":                 "AttrClientSecret",
 		"cluster_identifier":            "AttrClusterIdentifier",
+		"cluster_name":                  "AttrClusterName",
 		"comment":                       "AttrComment",
 		"configuration":                 "AttrConfiguration",
 		"content":                       "AttrContent",
 		"content_type":                  "AttrContentType",
+		"create_time":                   "AttrCreateTime",
 		"created_at":                    "AttrCreatedAt",
 		"created_date":                  "AttrCreatedDate",
 		"created_time":                  "AttrCreatedTime",
@@ -206,6 +225,7 @@ func ConstOrQuote(constant string) string {
 		"dns_name":                      "AttrDNSName",
 		"database":                      "AttrDatabase",
 		"database_name":                 "AttrDatabaseName",
+		"default_value":                 "AttrDefaultValue",
 		"delete_on_termination":         "AttrDeleteOnTermination",
 		"description":                   "AttrDescription",
 		"destination":                   "AttrDestination",
@@ -223,6 +243,7 @@ func ConstOrQuote(constant string) string {
 		"endpoint_type":                 "AttrEndpointType",
 		"endpoints":                     "AttrEndpoints",
 		"engine_version":                "AttrEngineVersion",
+		"environment":                   "AttrEnvironment",
 		"execution_role_arn":            "AttrExecutionRoleARN",
 		"expression":                    "AttrExpression",
 		"field":                         "AttrField",
@@ -230,8 +251,10 @@ func ConstOrQuote(constant string) string {
 		"filter":                        "AttrFilter",
 		"force_destroy":                 "AttrForceDestroy",
 		"format":                        "AttrFormat",
+		"function_arn":                  "AttrFunctionARN",
 		"group_name":                    "AttrGroupName",
 		"header":                        "AttrHeader",
+		"health_check":                  "AttrHealthCheck",
 		"hosted_zone_id":                "AttrHostedZoneID",
 		"iam_role_arn":                  "AttrIAMRoleARN",
 		"id":                            "AttrID",
@@ -240,6 +263,7 @@ func ConstOrQuote(constant string) string {
 		"ip_address":                    "AttrIPAddress",
 		"ip_address_type":               "AttrIPAddressType",
 		"identifier":                    "AttrIdentifier",
+		"instance_count":                "AttrInstanceCount",
 		"instance_id":                   "AttrInstanceID",
 		"instance_type":                 "AttrInstanceType",
 		"issuer":                        "AttrIssuer",
@@ -257,6 +281,7 @@ func ConstOrQuote(constant string) string {
 		"metric_name":                   "AttrMetricName",
 		"min":                           "AttrMin",
 		"mode":                          "AttrMode",
+		"most_recent":                   "AttrMostRecent",
 		"name":                          "AttrName",
 		"name_prefix":                   "AttrNamePrefix",
 		"namespace":                     "AttrNamespace",
@@ -282,13 +307,16 @@ func ConstOrQuote(constant string) string {
 		"public_key":                    "AttrPublicKey",
 		"publicly_accessible":           "AttrPubliclyAccessible",
 		"region":                        "AttrRegion",
+		"repository_name":               "AttrRepositoryName",
 		"resource_arn":                  "AttrResourceARN",
 		"resource_id":                   "AttrResourceID",
 		"resource_type":                 "AttrResourceType",
+		"retention_period":              "AttrRetentionPeriod",
 		"role_arn":                      "AttrRoleARN",
 		"rule":                          "AttrRule",
 		"s3_bucket":                     "AttrS3Bucket",
 		"s3_bucket_name":                "AttrS3BucketName",
+		"s3_key_prefix":                 "AttrS3KeyPrefix",
 		"sns_topic_arn":                 "AttrSNSTopicARN",
 		"schedule":                      "AttrSchedule",
 		"schedule_expression":           "AttrScheduleExpression",
@@ -302,11 +330,15 @@ func ConstOrQuote(constant string) string {
 		"shared_config_files":           "AttrSharedConfigFiles",
 		"size":                          "AttrSize",
 		"skip_credentials_validation":   "AttrSkipCredentialsValidation",
+		"skip_destroy":                  "AttrSkipDestroy",
 		"skip_requesting_account_id":    "AttrSkipRequestingAccountID",
 		"source":                        "AttrSource",
+		"source_type":                   "AttrSourceType",
 		"start_time":                    "AttrStartTime",
 		"state":                         "AttrState",
 		"status":                        "AttrStatus",
+		"status_message":                "AttrStatusMessage",
+		"storage_type":                  "AttrStorageType",
 		"subnet_id":                     "AttrSubnetID",
 		"subnet_ids":                    "AttrSubnetIDs",
 		"subnets":                       "AttrSubnets",
