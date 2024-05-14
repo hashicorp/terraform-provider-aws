@@ -91,8 +91,8 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 				Config: testAccResourceServerConfig_scopeUpdate(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtOne),
 				),
 			},
 			{
