@@ -130,7 +130,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dns_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.type", "HTTP"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.failure_threshold", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "health_check_config.0.resource_path", "/updated-path"),
 					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
@@ -252,7 +252,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -262,12 +262,12 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccServiceConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccServiceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -275,7 +275,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
