@@ -75,11 +75,11 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_tags1("key1", "value1"),
+				Config: testAccHealthCheckConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -88,20 +88,20 @@ func TestAccRoute53HealthCheck_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHealthCheckConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccHealthCheckConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccHealthCheckConfig_tags1("key2", "value2"),
+				Config: testAccHealthCheckConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
