@@ -103,7 +103,7 @@ filter {
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
 					resource.TestCheckResourceAttr(resourceName, "filter.1.criteria", "isPublic"),
