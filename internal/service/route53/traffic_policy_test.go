@@ -80,7 +80,6 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	comment := names.AttrComment
 	commentUpdated := `comment updated`
 
 	resource.ParallelTest(t, resource.TestCase{
