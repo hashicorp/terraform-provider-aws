@@ -132,7 +132,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					acctest.MatchResourceAttrRegionalARN(resourceName, "elements.1.kinesis_data_stream_sink_configuration.0.insights_target", "kinesis", regexache.MustCompile(fmt.Sprintf(`stream/%s`, streamName1))),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.0.type", "IssueDetection"),
 					resource.TestCheckResourceAttrSet(resourceName, "real_time_alert_configuration.0.rules.0.issue_detection_configuration.0.%"),
 					resource.TestCheckResourceAttr(resourceName, "real_time_alert_configuration.0.rules.1.type", "KeywordMatch"),
@@ -222,7 +222,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -231,13 +231,13 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMediaInsightsPipelineConfigurationConfig_tags2(rName, roleName, streamName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccMediaInsightsPipelineConfigurationConfig_tags2(rName, roleName, streamName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 					testAccCheckMediaInsightsPipelineConfigurationExists(ctx, resourceName, &mipc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
