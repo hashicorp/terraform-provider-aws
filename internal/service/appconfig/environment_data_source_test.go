@@ -43,7 +43,7 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},
