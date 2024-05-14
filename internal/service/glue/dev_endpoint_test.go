@@ -324,14 +324,14 @@ func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey1),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey2),
 				),
 			},
 			{

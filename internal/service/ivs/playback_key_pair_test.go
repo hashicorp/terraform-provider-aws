@@ -60,7 +60,7 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -138,7 +138,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 			{
 				Config: testAccPlaybackKeyPairConfig_tags2(rName, publicKeyPEM, "key1", "value1updated", "key2", "value2"),

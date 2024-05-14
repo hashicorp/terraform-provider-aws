@@ -107,7 +107,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -141,7 +141,7 @@ func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		input.SourceVolumeARN = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -194,7 +194,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("volume_arn", arn)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
-	d.Set("kms_key", volume.KMSKey)
+	d.Set(names.AttrKMSKey, volume.KMSKey)
 	if volume.KMSKey != nil {
 		d.Set("kms_encrypted", true)
 	} else {

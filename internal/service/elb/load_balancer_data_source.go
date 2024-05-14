@@ -111,7 +111,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

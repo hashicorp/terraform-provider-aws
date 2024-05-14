@@ -65,7 +65,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"kms_key": {
+			names.AttrKMSKey: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -115,7 +115,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -144,7 +144,7 @@ func resourceStorediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData
 		input.SnapshotId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKey); ok {
 		input.KMSKey = aws.String(v.(string))
 	}
 
@@ -202,12 +202,12 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("disk_id", volume.VolumeDiskId)
 	d.Set("snapshot_id", volume.SourceSnapshotId)
 	d.Set("volume_id", volume.VolumeId)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 	d.Set("volume_size_in_bytes", volume.VolumeSizeInBytes)
 	d.Set("volume_status", volume.VolumeStatus)
 	d.Set("volume_attachment_status", volume.VolumeAttachmentStatus)
 	d.Set("preserve_existing_data", volume.PreservedExistingData)
-	d.Set("kms_key", volume.KMSKey)
+	d.Set(names.AttrKMSKey, volume.KMSKey)
 	d.Set("kms_encrypted", volume.KMSKey != nil)
 
 	attr := volume.VolumeiSCSIAttributes

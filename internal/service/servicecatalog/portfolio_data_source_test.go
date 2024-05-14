@@ -28,7 +28,7 @@ func TestAccServiceCatalogPortfolioDataSource_basic(t *testing.T) {
 				Config: testAccPortfolioDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "provider_name", dataSourceName, "provider_name"),

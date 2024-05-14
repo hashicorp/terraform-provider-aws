@@ -178,13 +178,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -302,13 +302,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_size": {
+									names.AttrVolumeSize: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										Computed: true,
 										ForceNew: true,
 									},
-									"volume_type": {
+									names.AttrVolumeType: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
@@ -1356,11 +1356,11 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
@@ -1409,11 +1409,11 @@ func readSpotFleetBlockDeviceMappingsFromConfig(ctx context.Context, d map[strin
 				ebs.KmsKeyId = aws.String(v)
 			}
 
-			if v, ok := bd["volume_size"].(int); ok && v != 0 {
+			if v, ok := bd[names.AttrVolumeSize].(int); ok && v != 0 {
 				ebs.VolumeSize = aws.Int64(int64(v))
 			}
 
-			if v, ok := bd["volume_type"].(string); ok && v != "" {
+			if v, ok := bd[names.AttrVolumeType].(string); ok && v != "" {
 				ebs.VolumeType = aws.String(v)
 			}
 
@@ -1992,11 +1992,11 @@ func ebsBlockDevicesToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 			}
 
 			if ebs.VolumeSize != nil {
-				m["volume_size"] = aws.Int64Value(ebs.VolumeSize)
+				m[names.AttrVolumeSize] = aws.Int64Value(ebs.VolumeSize)
 			}
 
 			if ebs.VolumeType != nil {
-				m["volume_type"] = aws.StringValue(ebs.VolumeType)
+				m[names.AttrVolumeType] = aws.StringValue(ebs.VolumeType)
 			}
 
 			if ebs.Iops != nil {
@@ -2053,11 +2053,11 @@ func rootBlockDeviceToSet(bdm []*ec2.BlockDeviceMapping, rootDevName *string) *s
 				}
 
 				if val.Ebs.VolumeSize != nil {
-					m["volume_size"] = aws.Int64Value(val.Ebs.VolumeSize)
+					m[names.AttrVolumeSize] = aws.Int64Value(val.Ebs.VolumeSize)
 				}
 
 				if val.Ebs.VolumeType != nil {
-					m["volume_type"] = aws.StringValue(val.Ebs.VolumeType)
+					m[names.AttrVolumeType] = aws.StringValue(val.Ebs.VolumeType)
 				}
 
 				if val.Ebs.Iops != nil {

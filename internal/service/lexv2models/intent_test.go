@@ -701,7 +701,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		WantErr  bool
 	}{
 		{
-			TestName: "message",
+			TestName: names.AttrMessage,
 			TFFull:   &messageTF,
 			TFEmpty:  &tflexv2models.Message{},
 			AWSFull:  &messageAWS,

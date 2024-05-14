@@ -81,7 +81,7 @@ func resourceBucketInventory() *schema.Resource {
 													ConflictsWith: []string{"destination.0.bucket.0.encryption.0.sse_s3"},
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"key_id": {
+															names.AttrKeyID: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -390,7 +390,7 @@ func expandInventoryBucketDestination(m map[string]interface{}) *types.Inventory
 			case "sse_kms":
 				m := data[0].(map[string]interface{})
 				encryption.SSEKMS = &types.SSEKMS{
-					KeyId: aws.String(m["key_id"].(string)),
+					KeyId: aws.String(m[names.AttrKeyID].(string)),
 				}
 			case "sse_s3":
 				encryption.SSES3 = &types.SSES3{}
@@ -425,7 +425,7 @@ func flattenInventoryBucketDestination(destination *types.InventoryS3BucketDesti
 		} else if destination.Encryption.SSEKMS != nil {
 			encryption["sse_kms"] = []map[string]interface{}{
 				{
-					"key_id": aws.ToString(destination.Encryption.SSEKMS.KeyId),
+					names.AttrKeyID: aws.ToString(destination.Encryption.SSEKMS.KeyId),
 				},
 			}
 		}

@@ -169,7 +169,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"header": {
+															names.AttrHeader: {
 																Type:     schema.TypeBool,
 																Optional: true,
 																ForceNew: true,
@@ -754,7 +754,7 @@ func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFor
 	m := map[string]interface{}{}
 
 	if config.Header != nil {
-		m["header"] = aws.BoolValue(config.Header)
+		m[names.AttrHeader] = aws.BoolValue(config.Header)
 	}
 
 	return []map[string]interface{}{m}
@@ -1157,7 +1157,7 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.Monit
 	}
 
 	m := configured[0].(map[string]interface{})
-	if v, ok := m["header"]; ok {
+	if v, ok := m[names.AttrHeader]; ok {
 		c.Header = aws.Bool(v.(bool))
 	}
 

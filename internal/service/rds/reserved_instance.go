@@ -111,7 +111,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -189,7 +189,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedDBInstanceId)
-	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
 	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 

@@ -181,7 +181,7 @@ func resourceObjectCopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -738,7 +738,7 @@ func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 			continue
 		}
 
-		for _, perm := range tfMap["permissions"].(*schema.Set).List() {
+		for _, perm := range tfMap[names.AttrPermissions].(*schema.Set).List() {
 			if v := expandObjectCopyGrant(tfMap); v != "" {
 				switch types.Permission(perm.(string)) {
 				case types.PermissionFullControl:
@@ -792,7 +792,7 @@ func grantHash(v interface{}) int {
 	if v, ok := m[names.AttrURI]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if p, ok := m["permissions"]; ok {
+	if p, ok := m[names.AttrPermissions]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
 	}
 	return create.StringHashcode(buf.String())

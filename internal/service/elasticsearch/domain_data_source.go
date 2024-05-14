@@ -226,11 +226,11 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

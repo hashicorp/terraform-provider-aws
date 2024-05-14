@@ -46,7 +46,7 @@ func TestAccGlueJob_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
 				),
 			},
 			{
@@ -108,7 +108,7 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "0"),
 				),
 			},
 			{
@@ -530,14 +530,14 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
 			},
 			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{
@@ -565,14 +565,14 @@ func TestAccGlueJob_timeout(t *testing.T) {
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "1"),
 				),
 			},
 			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{

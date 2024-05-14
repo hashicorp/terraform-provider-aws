@@ -138,7 +138,7 @@ func ResourceSelection() *schema.Resource {
 					},
 				},
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -194,7 +194,7 @@ func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	selection := &backup.Selection{
 		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
-		IamRoleArn:    aws.String(d.Get("iam_role_arn").(string)),
+		IamRoleArn:    aws.String(d.Get(names.AttrIAMRoleARN).(string)),
 		ListOfTags:    expandConditionTags(d.Get("selection_tag").(*schema.Set).List()),
 		NotResources:  flex.ExpandStringSet(d.Get("not_resources").(*schema.Set)),
 		Resources:     flex.ExpandStringSet(d.Get("resources").(*schema.Set)),
@@ -303,7 +303,7 @@ func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("plan_id", resp.BackupPlanId)
 	d.Set(names.AttrName, resp.BackupSelection.SelectionName)
-	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, resp.BackupSelection.IamRoleArn)
 
 	if conditions := resp.BackupSelection.Conditions; conditions != nil {
 		if err := d.Set("condition", flattenConditions(conditions)); err != nil {

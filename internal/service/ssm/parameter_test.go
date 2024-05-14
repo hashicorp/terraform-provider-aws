@@ -830,7 +830,7 @@ func TestAccSSMParameter_Secure_basic(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
-					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
+					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/aws/ssm"), // Default SSM key id
 				),
 			},
 			{
@@ -1038,7 +1038,7 @@ func TestAccSSMParameter_Secure_key(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
-					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/"+randString),
 				),
 			},
 			{
@@ -1070,7 +1070,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
-					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/aws/ssm"), // Default SSM key id
+					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/aws/ssm"), // Default SSM key id
 				),
 			},
 			{
@@ -1085,7 +1085,7 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "secret"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
-					resource.TestCheckResourceAttr(resourceName, "key_id", "alias/"+randString),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/"+randString),
 				),
 			},
 		},

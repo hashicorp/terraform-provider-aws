@@ -57,7 +57,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_description", resourceName, "product_description"),
 					resource.TestCheckResourceAttrSet(resourceName, "recurring_charges"),
 					resource.TestCheckResourceAttr(resourceName, "reservation_id", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 					resource.TestCheckResourceAttrSet(resourceName, "usage_price"),
 				),

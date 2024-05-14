@@ -70,7 +70,7 @@ func ResourceMember() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"message": {
+			names.AttrMessage: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -111,7 +111,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.DisableEmailNotification = aws.Bool(v)
 	}
 
-	if v, ok := d.GetOk("message"); ok {
+	if v, ok := d.GetOk(names.AttrMessage); ok {
 		input.Message = aws.String(v.(string))
 	}
 

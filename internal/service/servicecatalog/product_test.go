@@ -42,7 +42,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 					testAccCheckProductExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "beskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "distributor", "distributör"),
 					resource.TestCheckResourceAttr(resourceName, "has_default_path", "false"),

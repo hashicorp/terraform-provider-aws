@@ -88,7 +88,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(tagResourceName, names.AttrResourceID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),
@@ -160,7 +160,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(tagResourceName, names.AttrResourceID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),

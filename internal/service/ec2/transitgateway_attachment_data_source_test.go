@@ -33,7 +33,7 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T, semaphore tf
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_filter(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
@@ -68,7 +68,7 @@ func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T, semaphore tfsync
 				Config: testAccTransitGatewayAttachmentDataSourceConfig_id(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, dataSourceName, names.AttrResourceID),
 					acctest.CheckResourceAttrAccountID(dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),

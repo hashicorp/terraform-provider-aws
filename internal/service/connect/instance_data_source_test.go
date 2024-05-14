@@ -27,7 +27,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_management_type", dataSourceName, "identity_management_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_alias", dataSourceName, "instance_alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "inbound_calls_enabled", dataSourceName, "inbound_calls_enabled"),
@@ -45,7 +45,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 				Config: testAccInstanceDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedTime, dataSourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrPair(resourceName, "identity_management_type", dataSourceName, "identity_management_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_alias", dataSourceName, "instance_alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "inbound_calls_enabled", dataSourceName, "inbound_calls_enabled"),

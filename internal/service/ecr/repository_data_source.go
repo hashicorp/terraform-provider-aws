@@ -38,7 +38,7 @@ func dataSourceRepository() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

@@ -536,7 +536,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -1921,7 +1921,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", aws.StringValueSlice(v.ReadReplicaDBInstanceIdentifiers))
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
-	d.Set("resource_id", v.DbiResourceId)
+	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set("storage_encrypted", v.StorageEncrypted)
 	d.Set("storage_throughput", v.StorageThroughput)
@@ -2092,7 +2092,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			// id changes here
 			d.SetId(aws.StringValue(target.DbiResourceId))
-			d.Set("resource_id", target.DbiResourceId)
+			d.Set(names.AttrResourceID, target.DbiResourceId)
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Deleting Blue/Green Deployment source", d.Get(names.AttrIdentifier).(string))
 

@@ -78,7 +78,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -151,7 +151,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("throughput", volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -101,7 +101,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -178,7 +178,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrState, snapshot.State)
 	d.Set("storage_tier", snapshot.StorageTier)
 	d.Set("volume_id", snapshot.VolumeId)
-	d.Set("volume_size", snapshot.VolumeSize)
+	d.Set(names.AttrVolumeSize, snapshot.VolumeSize)
 
 	if err := d.Set(names.AttrTags, keyValueTagsV2(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -48,7 +48,7 @@ func resourceDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -134,7 +134,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrARN, domain.Arn)
 	d.Set("asset_size_bytes", strconv.FormatInt(domain.AssetSizeBytes, 10))
-	d.Set("created_time", domain.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, domain.CreatedTime.Format(time.RFC3339))
 	d.Set(names.AttrDomain, domain.Name)
 	d.Set("encryption_key", domain.EncryptionKey)
 	d.Set(names.AttrOwner, domain.Owner)

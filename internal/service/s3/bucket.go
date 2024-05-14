@@ -167,7 +167,7 @@ func resourceBucket() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Set:      schema.HashString,
@@ -1988,7 +1988,7 @@ func expandBucketGrants(l []interface{}) []types.Grant {
 			continue
 		}
 
-		if v, ok := tfMap["permissions"].(*schema.Set); ok {
+		if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok {
 			for _, rawPermission := range v.List() {
 				permission, ok := rawPermission.(string)
 				if !ok {
@@ -2030,7 +2030,7 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
 		for _, grant := range grants {
 			tfMap := grant.(map[string]interface{})
-			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap["permissions"].(*schema.Set).Len() > 0 {
+			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap[names.AttrPermissions].(*schema.Set).Len() > 0 {
 				return grant, true
 			}
 		}
@@ -2055,9 +2055,9 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 		}
 
 		if v, ok := getGrant(results, m); ok {
-			v.(map[string]interface{})["permissions"].(*schema.Set).Add(string(apiObject.Permission))
+			v.(map[string]interface{})[names.AttrPermissions].(*schema.Set).Add(string(apiObject.Permission))
 		} else {
-			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
+			m[names.AttrPermissions] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
 			results = append(results, m)
 		}
 	}

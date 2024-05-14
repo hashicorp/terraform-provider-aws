@@ -82,7 +82,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

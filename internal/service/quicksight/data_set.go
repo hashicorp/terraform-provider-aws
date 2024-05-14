@@ -198,7 +198,7 @@ func ResourceDataSet() *schema.Resource {
 						},
 					},
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
@@ -877,7 +877,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.LogicalTableMap = expandDataSetLogicalTableMap(v.(*schema.Set))
 	}
 
-	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := d.Get(names.AttrPermissions).(*schema.Set); ok && v.Len() > 0 {
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
@@ -992,7 +992,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 
@@ -1017,7 +1017,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll, "refresh_properties") {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll, "refresh_properties") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
@@ -1051,13 +1051,13 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("permissions") {
+	if d.HasChange(names.AttrPermissions) {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		oraw, nraw := d.GetChange("permissions")
+		oraw, nraw := d.GetChange(names.AttrPermissions)
 		o := oraw.(*schema.Set)
 		n := nraw.(*schema.Set)
 

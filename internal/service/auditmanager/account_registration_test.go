@@ -111,21 +111,21 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 		},

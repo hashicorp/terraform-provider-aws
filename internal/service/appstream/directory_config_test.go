@@ -44,7 +44,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),
@@ -58,7 +58,7 @@ func TestAccAppStreamDirectoryConfig_basic(t *testing.T) {
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
 					testAccCheckDirectoryConfigNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN),
 					resource.TestCheckResourceAttr(resourceName, "service_account_credentials.#", "1"),

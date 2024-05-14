@@ -78,7 +78,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -340,7 +340,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.BounceAction != nil {
 			bounceAction := map[string]interface{}{
-				"message":         aws.StringValue(element.BounceAction.Message),
+				names.AttrMessage: aws.StringValue(element.BounceAction.Message),
 				"sender":          aws.StringValue(element.BounceAction.Sender),
 				"smtp_reply_code": aws.StringValue(element.BounceAction.SmtpReplyCode),
 				"position":        i + 1,
@@ -611,7 +611,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			bounceAction := &ses.BounceAction{
-				Message:       aws.String(elem["message"].(string)),
+				Message:       aws.String(elem[names.AttrMessage].(string)),
 				Sender:        aws.String(elem["sender"].(string)),
 				SmtpReplyCode: aws.String(elem["smtp_reply_code"].(string)),
 			}

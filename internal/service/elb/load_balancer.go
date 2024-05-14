@@ -156,7 +156,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Required:     true,
 							ValidateFunc: ValidHeathCheckTarget,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(2, 60),
@@ -622,7 +622,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
 					Interval:           aws.Int64(int64(check["interval"].(int))),
 					Target:             aws.String(check[names.AttrTarget].(string)),
-					Timeout:            aws.Int64(int64(check["timeout"].(int))),
+					Timeout:            aws.Int64(int64(check[names.AttrTimeout].(int))),
 					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
 				},
 				LoadBalancerName: aws.String(d.Id()),

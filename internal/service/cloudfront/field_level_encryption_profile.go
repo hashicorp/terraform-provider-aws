@@ -39,7 +39,7 @@ func resourceFieldLevelEncryptionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -104,7 +104,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 		Name:            aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -145,7 +145,7 @@ func resourceFieldLevelEncryptionProfileRead(ctx context.Context, d *schema.Reso
 
 	apiObject := output.FieldLevelEncryptionProfile.FieldLevelEncryptionProfileConfig
 	d.Set("caller_reference", apiObject.CallerReference)
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.EncryptionEntities != nil {
 		if err := d.Set("encryption_entities", []interface{}{flattenEncryptionEntities(apiObject.EncryptionEntities)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting encryption_entities: %s", err)
@@ -168,7 +168,7 @@ func resourceFieldLevelEncryptionProfileUpdate(ctx context.Context, d *schema.Re
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 

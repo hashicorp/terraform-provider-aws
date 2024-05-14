@@ -108,11 +108,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -346,11 +346,11 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

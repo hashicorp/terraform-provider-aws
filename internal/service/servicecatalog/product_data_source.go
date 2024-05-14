@@ -37,7 +37,7 @@ func DataSourceProduct() *schema.Resource {
 				Default:      "en",
 				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -108,7 +108,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set(names.AttrARN, output.ProductViewDetail.ProductARN)
 	if output.ProductViewDetail.CreatedTime != nil {
-		d.Set("created_time", output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, output.ProductViewDetail.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set(names.AttrDescription, pvs.ShortDescription)
 	d.Set("distributor", pvs.Distributor)

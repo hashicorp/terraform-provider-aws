@@ -60,7 +60,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -113,7 +113,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
-	d.Set("public_key", keyPair.PublicKey)
+	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
 	setTagsOutV2(ctx, keyPair.Tags)
 

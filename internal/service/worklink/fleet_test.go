@@ -40,7 +40,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{

@@ -41,7 +41,7 @@ func TestAccVPCFlowLog_basic(t *testing.T) {
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deliver_cross_account_role", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
@@ -108,7 +108,7 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_subnetID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
@@ -146,7 +146,7 @@ func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
@@ -183,7 +183,7 @@ func TestAccVPCFlowLog_transitGatewayAttachmentID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-flow-log/fl-.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),

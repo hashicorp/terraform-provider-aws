@@ -202,7 +202,7 @@ func ResourceMaintenanceWindowTask() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 100),
@@ -461,7 +461,7 @@ func expandTaskInvocationRunCommandParameters(config []interface{}) *ssm.Mainten
 
 	params := &ssm.MaintenanceWindowRunCommandParameters{}
 	configParam := config[0].(map[string]interface{})
-	if attr, ok := configParam["comment"]; ok && len(attr.(string)) != 0 {
+	if attr, ok := configParam[names.AttrComment]; ok && len(attr.(string)) != 0 {
 		params.Comment = aws.String(attr.(string))
 	}
 	if attr, ok := configParam["document_hash"]; ok && len(attr.(string)) != 0 {
@@ -502,7 +502,7 @@ func flattenTaskInvocationRunCommandParameters(parameters *ssm.MaintenanceWindow
 	result := make(map[string]interface{})
 
 	if parameters.Comment != nil {
-		result["comment"] = aws.StringValue(parameters.Comment)
+		result[names.AttrComment] = aws.StringValue(parameters.Comment)
 	}
 	if parameters.DocumentHash != nil {
 		result["document_hash"] = aws.StringValue(parameters.DocumentHash)

@@ -109,7 +109,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"iam_role_arn": {
+									names.AttrIAMRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -377,7 +377,7 @@ func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestinati
 	}
 
 	if v := apiObject.IamRoleArn; v != nil {
-		m["iam_role_arn"] = aws.ToString(v)
+		m[names.AttrIAMRoleARN] = aws.ToString(v)
 	}
 
 	return m
@@ -500,7 +500,7 @@ func expandKinesisFirehoseDestination(tfMap map[string]interface{}) *types.Kines
 		a.DeliveryStreamArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["iam_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIAMRoleARN].(string); ok && v != "" {
 		a.IamRoleArn = aws.String(v)
 	}
 

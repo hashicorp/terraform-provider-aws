@@ -83,7 +83,7 @@ func ResourceCluster() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -210,7 +210,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	clusterName := d.Get("cluster_name").(string)
-	iamRoleArn := d.Get("iam_role_arn").(string)
+	iamRoleArn := d.Get(names.AttrIAMRoleARN).(string)
 	nodeType := d.Get("node_type").(string)
 	numNodes := int32(d.Get("replication_factor").(int))
 	subnetGroupName := d.Get("subnet_group_name").(string)
@@ -335,7 +335,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("cluster_name", c.ClusterName)
 	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
 	d.Set(names.AttrDescription, c.Description)
-	d.Set("iam_role_arn", c.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, c.IamRoleArn)
 	d.Set("node_type", c.NodeType)
 	d.Set("replication_factor", c.TotalNodes)
 

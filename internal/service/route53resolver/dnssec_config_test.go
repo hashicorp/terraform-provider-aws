@@ -37,7 +37,7 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttr(resourceName, "validation_status", "ENABLED"),
 				),
 			},

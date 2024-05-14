@@ -99,7 +99,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(connect.EncryptionType_Values(), false),
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -155,7 +155,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(connect.EncryptionType_Values(), false),
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -436,7 +436,7 @@ func expandEncryptionConfig(tfList []interface{}) *connect.EncryptionConfig {
 
 	result := &connect.EncryptionConfig{
 		EncryptionType: aws.String(tfMap["encryption_type"].(string)),
-		KeyId:          aws.String(tfMap["key_id"].(string)),
+		KeyId:          aws.String(tfMap[names.AttrKeyID].(string)),
 	}
 
 	return result
@@ -534,7 +534,7 @@ func flattenEncryptionConfig(apiObject *connect.EncryptionConfig) []interface{} 
 
 	values := map[string]interface{}{
 		"encryption_type": aws.StringValue(apiObject.EncryptionType),
-		"key_id":          aws.StringValue(apiObject.KeyId),
+		names.AttrKeyID:   aws.StringValue(apiObject.KeyId),
 	}
 
 	return []interface{}{values}

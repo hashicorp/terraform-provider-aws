@@ -194,7 +194,7 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -336,7 +336,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
-	d.Set("timeout", function.Timeout)
+	d.Set(names.AttrTimeout, function.Timeout)
 	tracingConfigMode := awstypes.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = function.TracingConfig.Mode

@@ -1362,7 +1362,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "1"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Some comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
 				),
 			},
 			{
@@ -1383,7 +1383,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "2"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Some comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Some comment"),
 				),
 			},
 			{
@@ -1405,7 +1405,7 @@ func TestAccCloudFrontDistribution_preconditionFailed(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.#", "2"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.0", "test"),
 					resource.TestCheckResourceAttr("aws_cloudfront_response_headers_policy.example", "cors_config.0.access_control_allow_headers.0.items.1", "updated"),
-					resource.TestCheckResourceAttr(resourceName, "comment", "Updated comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "Updated comment"),
 				),
 			},
 		},

@@ -46,7 +46,7 @@ func sweepPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Swe
 			d := r.Data(nil)
 
 			d.Set(names.AttrPrincipal, v.Principal.DataLakePrincipalIdentifier)
-			d.Set("permissions", flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
+			d.Set(names.AttrPermissions, flattenResourcePermissions([]types.PrincipalResourcePermissions{v}))
 			d.Set("permissions_with_grant_option", flattenGrantPermissions([]types.PrincipalResourcePermissions{v}))
 
 			d.Set("catalog_resource", v.Resource.Catalog != nil)

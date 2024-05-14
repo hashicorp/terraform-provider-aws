@@ -261,7 +261,7 @@ func TestAccAthenaDatabase_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "athena is a goddess"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "athena is a goddess"),
 				),
 			},
 			{
@@ -291,7 +291,7 @@ func TestAccAthenaDatabase_unescaped_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "athena's a goddess"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "athena's a goddess"),
 				),
 			},
 			{

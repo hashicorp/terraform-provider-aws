@@ -198,14 +198,14 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 				Config: testAccZoneConfig_comment(zoneName, "comment1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment1"),
 				),
 			},
 			{
 				Config: testAccZoneConfig_comment(zoneName, "comment2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "comment2"),
 				),
 			},
 			{

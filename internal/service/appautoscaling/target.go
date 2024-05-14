@@ -51,7 +51,7 @@ func resourceTarget() *schema.Resource {
 				Type:     schema.TypeInt,
 				Required: true,
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -83,7 +83,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	resourceID := d.Get("resource_id").(string)
+	resourceID := d.Get(names.AttrResourceID).(string)
 	input := &applicationautoscaling.RegisterScalableTargetInput{
 		MaxCapacity:       aws.Int32(int32(d.Get("max_capacity").(int))),
 		MinCapacity:       aws.Int32(int32(d.Get("min_capacity").(int))),
@@ -134,7 +134,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, t.ScalableTargetARN)
 	d.Set("max_capacity", t.MaxCapacity)
 	d.Set("min_capacity", t.MinCapacity)
-	d.Set("resource_id", t.ResourceId)
+	d.Set(names.AttrResourceID, t.ResourceId)
 	d.Set(names.AttrRoleARN, t.RoleARN)
 	d.Set("scalable_dimension", t.ScalableDimension)
 	d.Set("service_namespace", t.ServiceNamespace)
@@ -252,7 +252,7 @@ func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("service_namespace", serviceNamespace)
-	d.Set("resource_id", resourceId)
+	d.Set(names.AttrResourceID, resourceId)
 	d.Set("scalable_dimension", scalableDimension)
 	d.SetId(resourceId)
 

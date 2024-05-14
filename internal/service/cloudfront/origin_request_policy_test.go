@@ -33,7 +33,7 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "0"),
@@ -95,7 +95,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "1"),
@@ -124,7 +124,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.0.items.#", "2"),

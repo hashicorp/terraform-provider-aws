@@ -33,7 +33,7 @@ func testAccGraph_basic(t *testing.T) {
 				Config: testAccGraphConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -83,7 +83,7 @@ func testAccGraph_tags(t *testing.T) {
 				Config: testAccGraphConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),

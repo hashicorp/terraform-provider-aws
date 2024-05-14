@@ -36,7 +36,7 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.ImageBuilderStateRunning),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.ImageBuilderStateRunning),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -138,7 +138,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, appstream.ImageBuilderStateRunning),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{

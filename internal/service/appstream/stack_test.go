@@ -36,7 +36,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "access_endpoints.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_settings.0.enabled", "false"),
@@ -104,7 +104,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
@@ -127,7 +127,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "embed_host_domains.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "embed_host_domains.*", "example.com"),
@@ -291,7 +291,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
@@ -300,7 +300,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),

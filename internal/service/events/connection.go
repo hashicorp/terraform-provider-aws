@@ -74,7 +74,7 @@ func resourceConnection() *schema.Resource {
 							Elem:         element(),
 							AtLeastOneOf: atLeastOneOf,
 						},
-						"header": {
+						names.AttrHeader: {
 							Type:         schema.TypeList,
 							Optional:     true,
 							Elem:         element(),
@@ -578,7 +578,7 @@ func expandConnectionHTTPParameters(config []interface{}) *types.ConnectionHttpP
 		if val, ok := param["body"]; ok {
 			httpParameters.BodyParameters = expandConnectionHTTPParametersBody(val.([]interface{}))
 		}
-		if val, ok := param["header"]; ok {
+		if val, ok := param[names.AttrHeader]; ok {
 			httpParameters.HeaderParameters = expandConnectionHTTPParametersHeader(val.([]interface{}))
 		}
 		if val, ok := param["query_string"]; ok {
@@ -800,7 +800,7 @@ func flattenConnectionHTTPParameters(httpParameters *types.ConnectionHttpParamet
 
 	parameters := make(map[string]interface{})
 	parameters["body"] = bodyParameters
-	parameters["header"] = headerParameters
+	parameters[names.AttrHeader] = headerParameters
 	parameters["query_string"] = queryStringParameters
 
 	result := []map[string]interface{}{parameters}

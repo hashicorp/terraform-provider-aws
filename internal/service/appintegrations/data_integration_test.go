@@ -49,7 +49,7 @@ func TestAccAppIntegrationsDataIntegration_basic(t *testing.T) {
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key", "aws_kms_key.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKey, "aws_kms_key.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "source_uri", sourceUri),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.#", "1"),

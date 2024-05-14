@@ -51,7 +51,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "key_management_service_arn", kmsKeyResourceName, names.AttrARN),
 					resource.TestMatchResourceAttr(resourceName, "key_tag", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestMatchResourceAttr(resourceName, "public_key", regexache.MustCompile(`^[0-9A-Za-z+/]+={0,3}$`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPublicKey, regexache.MustCompile(`^[0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_mnemonic", "ECDSAP256SHA256"),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_type", "13"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusActive),

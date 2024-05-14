@@ -43,7 +43,7 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tf
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, names.AttrID),
@@ -110,7 +110,7 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "replace_existing_association", "true"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayRouteTableResourceName, names.AttrID),

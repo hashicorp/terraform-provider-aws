@@ -165,7 +165,7 @@ func ResourceDocument() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -208,21 +208,21 @@ func ResourceDocument() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
-				if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+				if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
 					// Validates permissions keys, if set, to be type and account_ids
 					// since ValidateFunc validates only the value not the key.
 					tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 					if v, ok := tfMap[names.AttrType]; ok {
 						if v != ssm.DocumentPermissionTypeShare {
-							return fmt.Errorf("%q: only %s \"type\" supported", "permissions", ssm.DocumentPermissionTypeShare)
+							return fmt.Errorf("%q: only %s \"type\" supported", names.AttrPermissions, ssm.DocumentPermissionTypeShare)
 						}
 					} else {
-						return fmt.Errorf("%q: \"type\" must be defined", "permissions")
+						return fmt.Errorf("%q: \"type\" must be defined", names.AttrPermissions)
 					}
 
 					if _, ok := tfMap["account_ids"]; !ok {
-						return fmt.Errorf("%q: \"account_ids\" must be defined", "permissions")
+						return fmt.Errorf("%q: \"account_ids\" must be defined", names.AttrPermissions)
 					}
 				}
 
@@ -283,7 +283,7 @@ func resourceDocumentCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(output.DocumentDescription.Name))
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {
@@ -385,12 +385,12 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if accountsIDs := aws.StringValueSlice(output.AccountIds); len(accountsIDs) > 0 {
-			d.Set("permissions", map[string]string{
+			d.Set(names.AttrPermissions, map[string]string{
 				"account_ids":  strings.Join(accountsIDs, ","),
 				names.AttrType: ssm.DocumentPermissionTypeShare,
 			})
 		} else {
-			d.Set("permissions", nil)
+			d.Set(names.AttrPermissions, nil)
 		}
 	}
 
@@ -403,9 +403,9 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if d.HasChange("permissions") {
+	if d.HasChange(names.AttrPermissions) {
 		var oldAccountIDs, newAccountIDs itypes.Set[string]
-		o, n := d.GetChange("permissions")
+		o, n := d.GetChange(names.AttrPermissions)
 
 		if v := o.(map[string]interface{}); len(v) > 0 {
 			tfMap := flex.ExpandStringValueMap(v)
@@ -452,7 +452,7 @@ func resourceDocumentUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChangesExcept("permissions", names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrPermissions, names.AttrTags, names.AttrTagsAll) {
 		// Update for schema version 1.x is not allowed.
 		isSchemaVersion1, _ := regexp.MatchString(`^1[.][0-9]$`, d.Get("schema_version").(string))
 
@@ -510,7 +510,7 @@ func resourceDocumentDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrPermissions); ok && len(v.(map[string]interface{})) > 0 {
 		tfMap := flex.ExpandStringValueMap(v.(map[string]interface{}))
 
 		if v, ok := tfMap["account_ids"]; ok && v != "" {

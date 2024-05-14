@@ -500,7 +500,7 @@ func resourceVirtualNodeSpecSchema() *schema.Schema {
 									},
 								},
 							},
-							"timeout": {
+							names.AttrTimeout: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MinItems: 0,

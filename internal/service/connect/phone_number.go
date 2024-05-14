@@ -70,7 +70,7 @@ func ResourcePhoneNumber() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -274,8 +274,8 @@ func flattenPhoneNumberStatus(apiObject *connect.PhoneNumberStatus) []interface{
 	}
 
 	values := map[string]interface{}{
-		"message":        aws.StringValue(apiObject.Message),
-		names.AttrStatus: aws.StringValue(apiObject.Status),
+		names.AttrMessage: aws.StringValue(apiObject.Message),
+		names.AttrStatus:  aws.StringValue(apiObject.Status),
 	}
 
 	return []interface{}{values}

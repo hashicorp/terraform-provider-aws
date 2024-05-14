@@ -533,8 +533,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_CreateIDs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &entityrecognizer),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 1),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
 			},
 			{
@@ -626,8 +626,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v2),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 2),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume", names.AttrKeyID),
 				),
 			},
 			{
@@ -640,8 +640,8 @@ func TestAccComprehendEntityRecognizer_KMSKeys_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEntityRecognizerExists(ctx, resourceName, &v3),
 					testAccCheckEntityRecognizerPublishedVersions(ctx, resourceName, 3),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", "key_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_id", "aws_kms_key.model2", names.AttrKeyID),
+					resource.TestCheckResourceAttrPair(resourceName, "volume_kms_key_id", "aws_kms_key.volume2", names.AttrKeyID),
 				),
 			},
 			{
