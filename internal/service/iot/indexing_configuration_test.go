@@ -35,11 +35,11 @@ func testAccIndexingConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccIndexingConfigurationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.managed_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.thing_group_indexing_mode", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.device_defender_indexing_mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.managed_field.#", "0"),
@@ -70,11 +70,11 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 			{
 				Config: testAccIndexingConfigurationConfig_allAttributes,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.custom_field.#", "0"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "thing_group_indexing_configuration.0.managed_field.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.thing_group_indexing_mode", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
 						names.AttrName: "attributes.version",
