@@ -122,7 +122,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -134,7 +134,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -192,7 +192,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
@@ -217,7 +217,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -304,7 +304,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -315,7 +315,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_EmptyTag_OnCreate(t *testing.T
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -605,7 +605,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -619,7 +619,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_providerOnly(t *te
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -733,7 +733,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -747,7 +747,7 @@ func TestAccServiceCatalogProvisionedProduct_tags_DefaultTags_nonOverlapping(t *
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/ProvisionedProduct/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,

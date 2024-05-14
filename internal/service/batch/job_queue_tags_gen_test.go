@@ -111,7 +111,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -122,7 +122,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -175,7 +175,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
@@ -200,7 +200,7 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -279,7 +279,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -290,7 +290,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -553,7 +553,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -566,7 +566,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -670,7 +670,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -683,7 +683,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,

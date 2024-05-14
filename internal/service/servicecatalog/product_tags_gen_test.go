@@ -118,7 +118,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -129,7 +129,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -185,7 +185,7 @@ func TestAccServiceCatalogProduct_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
@@ -209,7 +209,7 @@ func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -295,7 +295,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -306,7 +306,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -591,7 +591,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -604,7 +604,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
@@ -716,7 +716,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -729,7 +729,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Product/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					"rName":                config.StringVariable(rName),
 					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
