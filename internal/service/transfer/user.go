@@ -110,7 +110,7 @@ func ResourceUser() *schema.Resource {
 					},
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -143,7 +143,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	userName := d.Get(names.AttrUserName).(string)
 	id := UserCreateResourceID(serverID, userName)
 	input := &transfer.CreateUserInput{
-		Role:     aws.String(d.Get("role").(string)),
+		Role:     aws.String(d.Get(names.AttrRole).(string)),
 		ServerId: aws.String(serverID),
 		Tags:     getTagsIn(ctx),
 		UserName: aws.String(userName),
@@ -223,7 +223,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("posix_profile", flattenUserPOSIXUser(user.PosixProfile)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting posix_profile: %s", err)
 	}
-	d.Set("role", user.Role)
+	d.Set(names.AttrRole, user.Role)
 	d.Set("server_id", serverID)
 	d.Set(names.AttrUserName, user.UserName)
 
@@ -273,8 +273,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			input.PosixProfile = expandUserPOSIXUser(d.Get("posix_profile").([]interface{}))
 		}
 
-		if d.HasChange("role") {
-			input.Role = aws.String(d.Get("role").(string))
+		if d.HasChange(names.AttrRole) {
+			input.Role = aws.String(d.Get(names.AttrRole).(string))
 		}
 
 		_, err = conn.UpdateUserWithContext(ctx, input)
