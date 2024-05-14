@@ -33,8 +33,8 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
@@ -63,15 +63,15 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceFleetConfig_zeroCount(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
@@ -101,9 +101,9 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 			{
 				Config: testAccInstanceFleetConfig_ebsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.CtOne),
 				),
 			},
 			{
