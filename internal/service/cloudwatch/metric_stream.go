@@ -178,7 +178,7 @@ func resourceMetricStream() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"metric_name": {
+									names.AttrMetricName: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
@@ -546,7 +546,7 @@ func expandMetricStreamStatisticsConfigurationsIncludeMetrics(tfList []interface
 
 		apiObject := types.MetricStreamStatisticsMetric{}
 
-		if v, ok := tfMap["metric_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrMetricName].(string); ok && v != "" {
 			apiObject.MetricName = aws.String(v)
 		}
 
@@ -599,7 +599,7 @@ func flattenMetricStreamStatisticsConfigurationsIncludeMetrics(apiObjects []type
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.MetricName; v != nil {
-			tfMap["metric_name"] = aws.ToString(v)
+			tfMap[names.AttrMetricName] = aws.ToString(v)
 		}
 
 		if v := apiObject.Namespace; v != nil {

@@ -48,8 +48,8 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
@@ -86,8 +86,8 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceUsers(rName, role, userID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
@@ -124,9 +124,9 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
 				},
@@ -162,9 +162,9 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceGroups(rName, role, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
 				},
@@ -205,10 +205,10 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
@@ -250,10 +250,10 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 					Config: testAccRoleAssociationConfig_workspaceUsersAndGroups(rName, role, userID, groupID),
 					Check: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckRoleAssociationExists(ctx, resourceName),
-						resource.TestCheckResourceAttr(resourceName, "group_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, "group_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "group_ids.*", groupID),
-						resource.TestCheckResourceAttr(resourceName, "role", role),
-						resource.TestCheckResourceAttr(resourceName, "user_ids.#", "1"),
+						resource.TestCheckResourceAttr(resourceName, names.AttrRole, role),
+						resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.CtOne),
 						resource.TestCheckTypeSetElemAttr(resourceName, "user_ids.*", userID),
 						resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 					),
@@ -302,7 +302,7 @@ func testAccCheckRoleAssociationExists(ctx context.Context, n string) resource.T
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn(ctx)
 
-		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
+		_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["workspace_id"])
 
 		return err
 	}
@@ -317,7 +317,7 @@ func testAccCheckRoleAssociationDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes["role"], rs.Primary.Attributes["workspace_id"])
+			_, err := tfgrafana.FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, rs.Primary.Attributes[names.AttrRole], rs.Primary.Attributes["workspace_id"])
 
 			if tfresource.NotFound(err) {
 				continue

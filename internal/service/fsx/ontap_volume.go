@@ -191,7 +191,7 @@ func resourceONTAPVolume() *schema.Resource {
 							Default:      fsx.PrivilegedDeleteDisabled,
 							ValidateFunc: validation.StringInSlice(fsx.PrivilegedDelete_Values(), false),
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							Computed:         true,
@@ -330,7 +330,7 @@ func resourceONTAPVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
 			},
-			"volume_type": {
+			names.AttrVolumeType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -403,7 +403,7 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:               aws.String(name),
 		OntapConfiguration: ontapConfig,
 		Tags:               getTagsIn(ctx),
-		VolumeType:         aws.String(d.Get("volume_type").(string)),
+		VolumeType:         aws.String(d.Get(names.AttrVolumeType).(string)),
 	}
 
 	output, err := conn.CreateVolumeWithContext(ctx, input)
@@ -474,7 +474,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("uuid", ontapConfig.UUID)
 	d.Set("volume_style", ontapConfig.VolumeStyle)
-	d.Set("volume_type", volume.VolumeType)
+	d.Set(names.AttrVolumeType, volume.VolumeType)
 
 	// Volume tags aren't set in the Describe response.
 	// setTagsOut(ctx, volume.Tags)
@@ -695,7 +695,7 @@ func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Create
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -729,7 +729,7 @@ func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Update
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -818,7 +818,7 @@ func flattenSnaplockConfiguration(apiObject *fsx.SnaplockConfiguration) map[stri
 	}
 
 	if v := apiObject.RetentionPeriod; v != nil {
-		tfMap["retention_period"] = []interface{}{flattenSnaplockRetentionPeriod(v)}
+		tfMap[names.AttrRetentionPeriod] = []interface{}{flattenSnaplockRetentionPeriod(v)}
 	}
 
 	if v := apiObject.SnaplockType; v != nil {

@@ -183,7 +183,7 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"function_arn": {
+						names.AttrFunctionARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -246,14 +246,14 @@ func ResourceDataSource() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-									"schema": {
+									names.AttrSchema: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
 								},
 							},
 						},
-						"source_type": {
+						names.AttrSourceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      appsync.RelationalDatabaseSourceTypeRdsHttpEndpoint,
@@ -263,7 +263,7 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -324,7 +324,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -386,7 +386,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
 	}
-	d.Set("service_role_arn", dataSource.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, dataSource.ServiceRoleArn)
 	d.Set(names.AttrType, dataSource.Type)
 
 	return diags
@@ -437,7 +437,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -787,7 +787,7 @@ func expandLambdaDataSourceConfig(l []interface{}) *appsync.LambdaDataSourceConf
 	configured := l[0].(map[string]interface{})
 
 	result := &appsync.LambdaDataSourceConfig{
-		LambdaFunctionArn: aws.String(configured["function_arn"].(string)),
+		LambdaFunctionArn: aws.String(configured[names.AttrFunctionARN].(string)),
 	}
 
 	return result
@@ -799,7 +799,7 @@ func flattenLambdaDataSourceConfig(config *appsync.LambdaDataSourceConfig) []map
 	}
 
 	result := map[string]interface{}{
-		"function_arn": aws.StringValue(config.LambdaFunctionArn),
+		names.AttrFunctionARN: aws.StringValue(config.LambdaFunctionArn),
 	}
 
 	return []map[string]interface{}{result}
@@ -813,7 +813,7 @@ func expandRelationalDatabaseDataSourceConfig(l []interface{}, currentRegion str
 	configured := l[0].(map[string]interface{})
 
 	result := &appsync.RelationalDatabaseDataSourceConfig{
-		RelationalDatabaseSourceType: aws.String(configured["source_type"].(string)),
+		RelationalDatabaseSourceType: aws.String(configured[names.AttrSourceType].(string)),
 		RdsHttpEndpointConfig:        testAccDataSourceConfig_expandRDSHTTPEndpoint(configured["http_endpoint_config"].([]interface{}), currentRegion),
 	}
 
@@ -826,7 +826,7 @@ func flattenRelationalDatabaseDataSourceConfig(config *appsync.RelationalDatabas
 	}
 
 	result := map[string]interface{}{
-		"source_type":          aws.StringValue(config.RelationalDatabaseSourceType),
+		names.AttrSourceType:   aws.StringValue(config.RelationalDatabaseSourceType),
 		"http_endpoint_config": flattenRDSHTTPEndpointConfig(config.RdsHttpEndpointConfig),
 	}
 
@@ -886,7 +886,7 @@ func testAccDataSourceConfig_expandRDSHTTPEndpoint(l []interface{}, currentRegio
 		result.DbClusterIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := configured["schema"]; ok && v.(string) != "" {
+	if v, ok := configured[names.AttrSchema]; ok && v.(string) != "" {
 		result.Schema = aws.String(v.(string))
 	}
 
@@ -917,7 +917,7 @@ func flattenRDSHTTPEndpointConfig(config *appsync.RdsHttpEndpointConfig) []map[s
 	}
 
 	if config.Schema != nil {
-		result["schema"] = aws.StringValue(config.Schema)
+		result[names.AttrSchema] = aws.StringValue(config.Schema)
 	}
 
 	return []map[string]interface{}{result}

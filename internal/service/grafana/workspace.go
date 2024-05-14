@@ -160,7 +160,7 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -244,7 +244,7 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.StackSetName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_configuration"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok {
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
@@ -305,7 +305,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrRoleARN, workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
-	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
+	if err := d.Set(names.AttrVPCConfiguration, flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
@@ -385,8 +385,8 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.StackSetName = aws.String(d.Get("stack_set_name").(string))
 		}
 
-		if d.HasChange("vpc_configuration") {
-			if v, ok := d.Get("vpc_configuration").([]interface{}); ok {
+		if d.HasChange(names.AttrVPCConfiguration) {
+			if v, ok := d.Get(names.AttrVPCConfiguration).([]interface{}); ok {
 				if len(v) > 0 {
 					input.VpcConfiguration = expandVPCConfiguration(v)
 				} else {

@@ -319,7 +319,7 @@ func expandCustomResponseBodies(m []interface{}) map[string]awstypes.CustomRespo
 		vm := v.(map[string]interface{})
 		key := vm[names.AttrKey].(string)
 		customResponseBodies[key] = awstypes.CustomResponseBody{
-			Content:     aws.String(vm["content"].(string)),
+			Content:     aws.String(vm[names.AttrContent].(string)),
 			ContentType: awstypes.ResponseContentType(vm[names.AttrContentType].(string)),
 		}
 	}
@@ -402,7 +402,7 @@ func expandVisibilityConfig(l []interface{}) *awstypes.VisibilityConfig {
 		configuration.CloudWatchMetricsEnabled = v.(bool)
 	}
 
-	if v, ok := m["metric_name"]; ok && len(v.(string)) > 0 {
+	if v, ok := m[names.AttrMetricName]; ok && len(v.(string)) > 0 {
 		configuration.MetricName = aws.String(v.(string))
 	}
 
@@ -819,7 +819,7 @@ func expandLabelMatchStatement(l []interface{}) *awstypes.LabelMatchStatement {
 
 	statement := &awstypes.LabelMatchStatement{
 		Key:   aws.String(m[names.AttrKey].(string)),
-		Scope: awstypes.LabelMatchScope(m["scope"].(string)),
+		Scope: awstypes.LabelMatchScope(m[names.AttrScope].(string)),
 	}
 
 	return statement
@@ -894,7 +894,7 @@ func expandSizeConstraintStatement(l []interface{}) *awstypes.SizeConstraintStat
 	return &awstypes.SizeConstraintStatement{
 		ComparisonOperator:  awstypes.ComparisonOperator(m["comparison_operator"].(string)),
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
-		Size:                int64(m["size"].(int)),
+		Size:                int64(m[names.AttrSize].(int)),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
 	}
 }
@@ -1372,10 +1372,10 @@ func expandResponseInspection(tfList []interface{}) *awstypes.ResponseInspection
 	if v, ok := m["body_contains"].([]interface{}); ok && len(v) > 0 {
 		out.BodyContains = expandBodyContains(v)
 	}
-	if v, ok := m["header"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrHeader].([]interface{}); ok && len(v) > 0 {
 		out.Header = expandHeader(v)
 	}
-	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		out.Json = expandResponseInspectionJSON(v)
 	}
 	if v, ok := m["status_code"].([]interface{}); ok && len(v) > 0 {
@@ -1527,7 +1527,7 @@ func expandRateBasedStatementCustomKeys(l []interface{}) []awstypes.RateBasedSta
 		if v, ok := m["http_method"]; ok && len(v.([]interface{})) > 0 {
 			r.HTTPMethod = &awstypes.RateLimitHTTPMethod{}
 		}
-		if v, ok := m["header"]; ok {
+		if v, ok := m[names.AttrHeader]; ok {
 			r.Header = expandRateLimitHeader(v.([]interface{}))
 		}
 		if v, ok := m["ip"]; ok && len(v.([]interface{})) > 0 {
@@ -1814,7 +1814,7 @@ func flattenCustomResponseBodies(b map[string]awstypes.CustomResponseBody) inter
 	for key, body := range b {
 		out[i] = map[string]interface{}{
 			names.AttrKey:         key,
-			"content":             aws.ToString(body.Content),
+			names.AttrContent:     aws.ToString(body.Content),
 			names.AttrContentType: string(body.ContentType),
 		}
 		i += 1
@@ -2241,8 +2241,8 @@ func flattenLabelMatchStatement(l *awstypes.LabelMatchStatement) interface{} {
 	}
 
 	m := map[string]interface{}{
-		names.AttrKey: aws.ToString(l.Key),
-		"scope":       string(l.Scope),
+		names.AttrKey:   aws.ToString(l.Key),
+		names.AttrScope: string(l.Scope),
 	}
 
 	return []interface{}{m}
@@ -2308,7 +2308,7 @@ func flattenSizeConstraintStatement(s *awstypes.SizeConstraintStatement) interfa
 	m := map[string]interface{}{
 		"comparison_operator": string(s.ComparisonOperator),
 		"field_to_match":      flattenFieldToMatch(s.FieldToMatch),
-		"size":                s.Size,
+		names.AttrSize:        s.Size,
 		"text_transformation": flattenTextTransformations(s.TextTransformations),
 	}
 
@@ -2348,7 +2348,7 @@ func flattenVisibilityConfig(config *awstypes.VisibilityConfig) interface{} {
 
 	m := map[string]interface{}{
 		"cloudwatch_metrics_enabled": aws.Bool(config.CloudWatchMetricsEnabled),
-		"metric_name":                aws.ToString(config.MetricName),
+		names.AttrMetricName:         aws.ToString(config.MetricName),
 		"sampled_requests_enabled":   aws.Bool(config.SampledRequestsEnabled),
 	}
 
@@ -2768,10 +2768,10 @@ func flattenResponseInspection(apiObject *awstypes.ResponseInspection) []interfa
 		m["body_contains"] = flattenBodyContains(apiObject.BodyContains)
 	}
 	if apiObject.Header != nil {
-		m["header"] = flattenHeader(apiObject.Header)
+		m[names.AttrHeader] = flattenHeader(apiObject.Header)
 	}
 	if apiObject.Json != nil {
-		m["json"] = flattenResponseInspectionJSON(apiObject.Json)
+		m[names.AttrJSON] = flattenResponseInspectionJSON(apiObject.Json)
 	}
 	if apiObject.StatusCode != nil {
 		m["status_code"] = flattenStatusCode(apiObject.StatusCode)
@@ -2925,7 +2925,7 @@ func flattenRateBasedStatementCustomKeys(apiObject []awstypes.RateBasedStatement
 			}
 		}
 		if o.Header != nil {
-			tfMap["header"] = flattenRateLimitHeader(o.Header)
+			tfMap[names.AttrHeader] = flattenRateLimitHeader(o.Header)
 		}
 		if o.IP != nil {
 			tfMap["ip"] = []interface{}{

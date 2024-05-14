@@ -37,8 +37,8 @@ func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 					testAccCheckTrustAnchorExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_data.0.acm_pca_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", "AWS_ACM_PCA"),
 				),
@@ -65,11 +65,11 @@ func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTrustAnchorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrustAnchorConfig_tags1(rName, caCommonName, "key1", "value1"),
+				Config: testAccTrustAnchorConfig_tags1(rName, caCommonName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -78,20 +78,20 @@ func TestAccRolesAnywhereTrustAnchor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTrustAnchorConfig_tags2(rName, caCommonName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTrustAnchorConfig_tags2(rName, caCommonName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTrustAnchorConfig_tags1(rName, caCommonName, "key2", "value2"),
+				Config: testAccTrustAnchorConfig_tags1(rName, caCommonName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustAnchorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -139,8 +139,8 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 					testAccCheckTrustAnchorExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", "CERTIFICATE_BUNDLE"),
 				),
 			},

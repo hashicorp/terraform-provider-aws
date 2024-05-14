@@ -51,7 +51,7 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -97,7 +97,7 @@ func resourceRepository() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -115,7 +115,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).CodeArtifactClient(ctx)
 
 	input := &codeartifact.CreateRepositoryInput{
-		Domain:     aws.String(d.Get("domain").(string)),
+		Domain:     aws.String(d.Get(names.AttrDomain).(string)),
 		Repository: aws.String(d.Get("repository").(string)),
 		Tags:       getTagsIn(ctx),
 	}
@@ -185,7 +185,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("administrator_account", repository.AdministratorAccount)
 	d.Set(names.AttrARN, repository.Arn)
 	d.Set(names.AttrDescription, repository.Description)
-	d.Set("domain", repository.DomainName)
+	d.Set(names.AttrDomain, repository.DomainName)
 	d.Set("domain_owner", repository.DomainOwner)
 	if err := d.Set("external_connections", flattenRepositoryExternalConnectionInfos(repository.ExternalConnections)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting external_connections: %s", err)
@@ -353,7 +353,7 @@ func expandUpstreams(tfList []interface{}) []types.UpstreamRepository {
 
 		apiObject := types.UpstreamRepository{}
 
-		if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 			apiObject.RepositoryName = aws.String(v)
 		}
 
@@ -374,7 +374,7 @@ func flattenUpstreamRepositoryInfos(apiObjects []types.UpstreamRepositoryInfo) [
 		tfMap := map[string]interface{}{}
 
 		if v := apiObject.RepositoryName; v != nil {
-			tfMap["repository_name"] = aws.ToString(v)
+			tfMap[names.AttrRepositoryName] = aws.ToString(v)
 		}
 
 		tfList = append(tfList, tfMap)

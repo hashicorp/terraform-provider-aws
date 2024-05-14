@@ -131,7 +131,7 @@ func resourceCluster() *schema.Resource {
 								},
 							},
 						},
-						"resources": {
+						names.AttrResources: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -156,7 +156,7 @@ func resourceCluster() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -222,7 +222,7 @@ func resourceCluster() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"group_name": {
+									names.AttrGroupName: {
 										Type:     schema.TypeString,
 										Required: true,
 										ForceNew: true,
@@ -262,7 +262,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MinItems: 1,
 				MaxItems: 1,
@@ -324,7 +324,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		ResourcesVpcConfig: expandVpcConfigRequest(d.Get("vpc_config").([]interface{})),
+		ResourcesVpcConfig: expandVpcConfigRequest(d.Get(names.AttrVPCConfig).([]interface{})),
 		RoleArn:            aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:               getTagsIn(ctx),
 	}
@@ -447,7 +447,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
 	d.Set(names.AttrVersion, cluster.Version)
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -861,7 +861,7 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 			Provider: expandProvider(tfMap["provider"].([]interface{})),
 		}
 
-		if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrResources].(*schema.Set); ok && v.Len() > 0 {
 			apiObject.Resources = flex.ExpandStringValueSet(v)
 		}
 
@@ -929,7 +929,7 @@ func expandControlPlanePlacementRequest(tfList []interface{}) *types.ControlPlan
 
 	apiObject := &types.ControlPlanePlacementRequest{}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -1031,7 +1031,7 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	}
 
 	m := map[string]interface{}{
-		"issuer": aws.ToString(oidc.Issuer),
+		names.AttrIssuer: aws.ToString(oidc.Issuer),
 	}
 
 	return []map[string]interface{}{m}
@@ -1062,8 +1062,8 @@ func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []interface{}
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"provider":  flattenProvider(apiObject.Provider),
-			"resources": apiObject.Resources,
+			"provider":          flattenProvider(apiObject.Provider),
+			names.AttrResources: apiObject.Resources,
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1153,7 +1153,7 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 	}
 
 	tfMap := map[string]interface{}{
-		"group_name": aws.ToString(apiObject.GroupName),
+		names.AttrGroupName: aws.ToString(apiObject.GroupName),
 	}
 
 	return []interface{}{tfMap}

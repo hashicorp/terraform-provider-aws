@@ -40,7 +40,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -81,12 +81,12 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -106,12 +106,12 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
 
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -185,7 +185,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			"subnets": {
+			names.AttrSubnets: {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
@@ -242,7 +242,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set(names.AttrARN, arn.String())
 	d.Set(names.AttrName, lb.LoadBalancerName)
-	d.Set("dns_name", lb.DNSName)
+	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
 
 	var scheme bool
@@ -273,7 +273,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
+	d.Set(names.AttrSubnets, flex.FlattenStringList(lb.Subnets))
 	if lbAttrs.ConnectionSettings != nil {
 		d.Set("idle_timeout", lbAttrs.ConnectionSettings.IdleTimeout)
 	}
@@ -325,7 +325,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
+		d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck))
 	}
 
 	return diags

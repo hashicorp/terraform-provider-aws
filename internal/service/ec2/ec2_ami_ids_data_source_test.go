@@ -43,7 +43,7 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_sorted(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test2", names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test1", names.AttrID),
 				),
@@ -51,7 +51,7 @@ func TestAccEC2AMIIDsDataSource_sorted(t *testing.T) {
 			{
 				Config: testAccAMIIDsDataSourceConfig_sorted(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.0", "data.aws_ami.test1", names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "ids.1", "data.aws_ami.test2", names.AttrID),
 				),

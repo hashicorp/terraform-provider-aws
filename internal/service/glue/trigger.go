@@ -65,7 +65,7 @@ func ResourceTrigger() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntAtLeast(1),
@@ -179,7 +179,7 @@ func ResourceTrigger() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -234,7 +234,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Predicate = expandPredicate(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("schedule"); ok {
+	if v, ok := d.GetOk(names.AttrSchedule); ok {
 		input.Schedule = aws.String(v.(string))
 	}
 
@@ -365,7 +365,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrName, trigger.Name)
-	d.Set("schedule", trigger.Schedule)
+	d.Set(names.AttrSchedule, trigger.Schedule)
 	d.Set(names.AttrType, trigger.Type)
 	d.Set("workflow_name", trigger.WorkflowName)
 
@@ -376,7 +376,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	if d.HasChanges("actions", names.AttrDescription, "predicate", "schedule", "event_batching_condition") {
+	if d.HasChanges("actions", names.AttrDescription, "predicate", names.AttrSchedule, "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
 			Actions: expandActions(d.Get("actions").([]interface{})),
 		}
@@ -389,7 +389,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			triggerUpdate.Predicate = expandPredicate(v.([]interface{}))
 		}
 
-		if v, ok := d.GetOk("schedule"); ok {
+		if v, ok := d.GetOk(names.AttrSchedule); ok {
 			triggerUpdate.Schedule = aws.String(v.(string))
 		}
 
@@ -500,7 +500,7 @@ func expandActions(l []interface{}) []*glue.Action {
 			action.Arguments = flex.ExpandStringMap(v)
 		}
 
-		if v, ok := m["timeout"].(int); ok && v > 0 {
+		if v, ok := m[names.AttrTimeout].(int); ok && v > 0 {
 			action.Timeout = aws.Int64(int64(v))
 		}
 
@@ -581,8 +581,8 @@ func flattenActions(actions []*glue.Action) []interface{} {
 
 	for _, action := range actions {
 		m := map[string]interface{}{
-			"arguments": aws.StringValueMap(action.Arguments),
-			"timeout":   int(aws.Int64Value(action.Timeout)),
+			"arguments":       aws.StringValueMap(action.Arguments),
+			names.AttrTimeout: int(aws.Int64Value(action.Timeout)),
 		}
 
 		if v := aws.StringValue(action.CrawlerName); v != "" {

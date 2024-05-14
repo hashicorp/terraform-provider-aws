@@ -46,17 +46,17 @@ func migrateRecordStateV1toV2(is *terraform.InstanceState) (*terraform.InstanceS
 		return is, nil
 	}
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	if is.Attributes["weight"] != "" && is.Attributes["weight"] != "-1" {
+	if is.Attributes[names.AttrWeight] != "" && is.Attributes[names.AttrWeight] != "-1" {
 		is.Attributes["weighted_routing_policy.#"] = "1"
 		key := "weighted_routing_policy.0.weight"
-		is.Attributes[key] = is.Attributes["weight"]
+		is.Attributes[key] = is.Attributes[names.AttrWeight]
 	}
 	if is.Attributes["failover"] != "" {
 		is.Attributes["failover_routing_policy.#"] = "1"
 		key := "failover_routing_policy.0.type"
 		is.Attributes[key] = is.Attributes["failover"]
 	}
-	delete(is.Attributes, "weight")
+	delete(is.Attributes, names.AttrWeight)
 	delete(is.Attributes, "failover")
 	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
 	return is, nil

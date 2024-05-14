@@ -52,7 +52,7 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -211,7 +211,7 @@ func resourceProvisioningArtifactRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("active", pad.Active)
 	if pad.CreatedTime != nil {
-		d.Set("created_time", pad.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, pad.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set(names.AttrDescription, pad.Description)
 	d.Set("guidance", pad.Guidance)

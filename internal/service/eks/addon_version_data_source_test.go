@@ -30,7 +30,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(versionDataSourceName, names.AttrVersion, addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "true"),
+					resource.TestCheckResourceAttr(versionDataSourceName, names.AttrMostRecent, "true"),
 				),
 			},
 			{
@@ -38,7 +38,7 @@ func TestAccEKSAddonVersionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(versionDataSourceName, names.AttrVersion, addonDataSourceName, "addon_version"),
 					resource.TestCheckResourceAttrPair(versionDataSourceName, "addon_name", addonDataSourceName, "addon_name"),
-					resource.TestCheckResourceAttr(versionDataSourceName, "most_recent", "false"),
+					resource.TestCheckResourceAttr(versionDataSourceName, names.AttrMostRecent, "false"),
 				),
 			},
 		},

@@ -47,7 +47,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"size": {
+										names.AttrSize: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(2, 10000),
@@ -68,7 +68,7 @@ func targetParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 											},
 										},
-										"environment": {
+										names.AttrEnvironment: {
 											Type:     schema.TypeList,
 											Optional: true,
 											Elem: &schema.Resource{
@@ -225,7 +225,7 @@ func targetParametersSchema() *schema.Schema {
 											Required:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
-										"weight": {
+										names.AttrWeight: {
 											Type:         schema.TypeInt,
 											Optional:     true,
 											ValidateFunc: validation.IntBetween(0, 1000),
@@ -280,7 +280,7 @@ func targetParametersSchema() *schema.Schema {
 															),
 														},
 													},
-													"subnets": {
+													names.AttrSubnets: {
 														Type:     schema.TypeSet,
 														Optional: true,
 														MaxItems: 16,
@@ -320,7 +320,7 @@ func targetParametersSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
-													"environment": {
+													names.AttrEnvironment: {
 														Type:     schema.TypeList,
 														Optional: true,
 														Elem: &schema.Resource{
@@ -443,7 +443,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"expression": {
+										names.AttrExpression: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 2000),
@@ -462,7 +462,7 @@ func targetParametersSchema() *schema.Schema {
 								MaxItems: 5,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field": {
+										names.AttrField: {
 											Type:         schema.TypeString,
 											Optional:     true,
 											ValidateFunc: validation.StringLenBetween(1, 255),
@@ -533,7 +533,7 @@ func targetParametersSchema() *schema.Schema {
 									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+[\.][0-9A-Za-z-]+$`), ""),
 								),
 							},
-							"resources": {
+							names.AttrResources: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								MaxItems: 10,
@@ -674,7 +674,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"database": {
+							names.AttrDatabase: {
 								Type:         schema.TypeString,
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 64),
@@ -917,7 +917,7 @@ func expandBatchArrayProperties(tfMap map[string]interface{}) *types.BatchArrayP
 
 	apiObject := &types.BatchArrayProperties{}
 
-	if v, ok := tfMap["size"].(int); ok {
+	if v, ok := tfMap[names.AttrSize].(int); ok {
 		apiObject.Size = aws.Int32(int32(v))
 	}
 
@@ -935,7 +935,7 @@ func expandBatchContainerOverrides(tfMap map[string]interface{}) *types.BatchCon
 		apiObject.Command = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEnvironment].([]interface{}); ok && len(v) > 0 {
 		apiObject.Environment = expandBatchEnvironmentVariables(v)
 	}
 
@@ -1201,7 +1201,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) *types.Cap
 		apiObject.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		apiObject.Weight = int32(v)
 	}
 
@@ -1263,7 +1263,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *types.AwsVpcConfigura
 		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -1323,7 +1323,7 @@ func expandECSContainerOverride(tfMap map[string]interface{}) *types.EcsContaine
 		apiObject.Cpu = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEnvironment].([]interface{}); ok && len(v) > 0 {
 		apiObject.Environment = expandECSEnvironmentVariables(v)
 	}
 
@@ -1573,7 +1573,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) *types.PlacementCon
 
 	apiObject := &types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		apiObject.Expression = aws.String(v)
 	}
 
@@ -1617,7 +1617,7 @@ func expandPlacementStrategy(tfMap map[string]interface{}) *types.PlacementStrat
 
 	apiObject := &types.PlacementStrategy{}
 
-	if v, ok := tfMap["field"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 		apiObject.Field = aws.String(v)
 	}
 
@@ -1669,7 +1669,7 @@ func expandPipeTargetEventBridgeEventBusParameters(tfMap map[string]interface{})
 		apiObject.EndpointId = aws.String(v)
 	}
 
-	if v, ok := tfMap["resources"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrResources].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Resources = flex.ExpandStringValueSet(v)
 	}
 
@@ -1741,7 +1741,7 @@ func expandPipeTargetRedshiftDataParameters(tfMap map[string]interface{}) *types
 
 	apiObject := &types.PipeTargetRedshiftDataParameters{}
 
-	if v, ok := tfMap["database"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDatabase].(string); ok && v != "" {
 		apiObject.Database = aws.String(v)
 	}
 
@@ -1962,7 +1962,7 @@ func flattenBatchArrayProperties(apiObject *types.BatchArrayProperties) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Size; v != nil {
-		tfMap["size"] = aws.ToInt32(v)
+		tfMap[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -1980,7 +1980,7 @@ func flattenBatchContainerOverrides(apiObject *types.BatchContainerOverrides) ma
 	}
 
 	if v := apiObject.Environment; v != nil {
-		tfMap["environment"] = flattenBatchEnvironmentVariables(v)
+		tfMap[names.AttrEnvironment] = flattenBatchEnvironmentVariables(v)
 	}
 
 	if v := apiObject.InstanceType; v != nil {
@@ -2183,8 +2183,8 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 
 func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrategyItem) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"base":   apiObject.Base,
-		"weight": apiObject.Weight,
+		"base":           apiObject.Base,
+		names.AttrWeight: apiObject.Weight,
 	}
 
 	if v := apiObject.CapacityProvider; v != nil {
@@ -2258,7 +2258,7 @@ func flattenECSContainerOverride(apiObject types.EcsContainerOverride) map[strin
 	}
 
 	if v := apiObject.Environment; v != nil {
-		tfMap["environment"] = flattenECSEnvironmentVariables(v)
+		tfMap[names.AttrEnvironment] = flattenECSEnvironmentVariables(v)
 	}
 
 	if v := apiObject.EnvironmentFiles; v != nil {
@@ -2452,7 +2452,7 @@ func flattenVPCConfiguration(apiObject *types.AwsVpcConfiguration) map[string]in
 	}
 
 	if v := apiObject.Subnets; v != nil {
-		tfMap["subnets"] = v
+		tfMap[names.AttrSubnets] = v
 	}
 
 	return tfMap
@@ -2462,7 +2462,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		tfMap["expression"] = aws.ToString(v)
+		tfMap[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
@@ -2490,7 +2490,7 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Field; v != nil {
-		tfMap["field"] = aws.ToString(v)
+		tfMap[names.AttrField] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != "" {
@@ -2530,7 +2530,7 @@ func flattenPipeTargetEventBridgeEventBusParameters(apiObject *types.PipeTargetE
 	}
 
 	if v := apiObject.Resources; v != nil {
-		tfMap["resources"] = v
+		tfMap[names.AttrResources] = v
 	}
 
 	if v := apiObject.Source; v != nil {
@@ -2604,7 +2604,7 @@ func flattenPipeTargetRedshiftDataParameters(apiObject *types.PipeTargetRedshift
 	}
 
 	if v := apiObject.Database; v != nil {
-		tfMap["database"] = aws.ToString(v)
+		tfMap[names.AttrDatabase] = aws.ToString(v)
 	}
 
 	if v := apiObject.DbUser; v != nil {

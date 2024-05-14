@@ -175,7 +175,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -271,7 +271,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
@@ -531,7 +531,7 @@ func ResourceCluster() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -548,7 +548,7 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			customdiff.ForceNewIf("storage_type", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf(names.AttrStorageType, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				// Aurora supports mutation of the storage_type parameter, other engines do not
 				return !strings.HasPrefix(d.Get("engine").(string), "aurora")
 			}),
@@ -557,10 +557,10 @@ func ResourceCluster() *schema.Resource {
 					return nil
 				}
 				// The control plane will always return an empty string if a cluster is created with a storage_type of aurora
-				old, new := diff.GetChange("storage_type")
+				old, new := diff.GetChange(names.AttrStorageType)
 
 				if new.(string) == "aurora" && old.(string) == "" {
-					if err := diff.SetNew("storage_type", ""); err != nil {
+					if err := diff.SetNew(names.AttrStorageType, ""); err != nil {
 						return err
 					}
 					return nil
@@ -627,7 +627,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -753,7 +753,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -877,7 +877,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1003,7 +1003,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSystemId = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -1039,7 +1039,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists("iops"); ok {
+		if v, ok := d.GetOkExists(names.AttrIOPS); ok {
 			input.Iops = aws.Int64(int64(v.(int)))
 		}
 
@@ -1103,7 +1103,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists("storage_type"); ok {
+		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1195,10 +1195,10 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("deletion_protection", dbc.DeletionProtection)
 	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
 		domainMembership := dbc.DomainMemberships[0]
-		d.Set("domain", domainMembership.Domain)
+		d.Set(names.AttrDomain, domainMembership.Domain)
 		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
 	} else {
-		d.Set("domain", nil)
+		d.Set(names.AttrDomain, nil)
 		d.Set("domain_iam_role_name", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
@@ -1214,7 +1214,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		iamRoleARNs = append(iamRoleARNs, aws.StringValue(v.RoleArn))
 	}
 	d.Set("iam_roles", iamRoleARNs)
-	d.Set("iops", dbc.Iops)
+	d.Set(names.AttrIOPS, dbc.Iops)
 	d.Set(names.AttrKMSKeyID, dbc.KmsKeyId)
 
 	// Note: the following attributes are not returned by the API
@@ -1257,7 +1257,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("serverlessv2_scaling_configuration", nil)
 	}
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("storage_type", dbc.StorageType)
+	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
@@ -1343,8 +1343,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		}
 
-		if d.HasChanges("domain", "domain_iam_role_name") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChanges(names.AttrDomain, "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		}
 
@@ -1386,8 +1386,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
 
-		if d.HasChange("iops") {
-			input.Iops = aws.Int64(int64(d.Get("iops").(int)))
+		if d.HasChange(names.AttrIOPS) {
+			input.Iops = aws.Int64(int64(d.Get(names.AttrIOPS).(int)))
 		}
 
 		if d.HasChange("manage_master_user_password") {
@@ -1432,8 +1432,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		if d.HasChange("storage_type") {
-			input.StorageType = aws.String(d.Get("storage_type").(string))
+		if d.HasChange(names.AttrStorageType) {
+			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 		}
 
 		if d.HasChange(names.AttrVPCSecurityGroupIDs) {

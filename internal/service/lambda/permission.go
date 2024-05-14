@@ -65,7 +65,7 @@ func resourcePermission() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionUrlAuthType](),
 			},
-			"principal": {
+			names.AttrPrincipal: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +129,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &lambda.AddPermissionInput{
 		Action:       aws.String(d.Get(names.AttrAction).(string)),
 		FunctionName: aws.String(functionName),
-		Principal:    aws.String(d.Get("principal").(string)),
+		Principal:    aws.String(d.Get(names.AttrPrincipal).(string)),
 		StatementId:  aws.String(statementID),
 	}
 
@@ -214,12 +214,12 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	// Check if the principal is a cross-account IAM role
 	if v, ok := statement.Principal.(map[string]interface{}); ok {
 		if _, ok := v["AWS"]; ok {
-			d.Set("principal", v["AWS"])
+			d.Set(names.AttrPrincipal, v["AWS"])
 		} else {
-			d.Set("principal", v["Service"])
+			d.Set(names.AttrPrincipal, v["Service"])
 		}
 	} else if v, ok := statement.Principal.(string); ok {
-		d.Set("principal", v)
+		d.Set(names.AttrPrincipal, v)
 	}
 
 	if v, ok := statement.Condition["StringEquals"]; ok {

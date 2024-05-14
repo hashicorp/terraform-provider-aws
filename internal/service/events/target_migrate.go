@@ -68,7 +68,7 @@ func resourceTargetV0() *schema.Resource {
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"subnets": {
+									names.AttrSubnets: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -132,7 +132,7 @@ func resourceTargetV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeString,
 				Required: true,
 			},

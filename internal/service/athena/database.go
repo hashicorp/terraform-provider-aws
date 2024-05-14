@@ -60,7 +60,7 @@ func resourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -78,7 +78,7 @@ func resourceDatabase() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -102,7 +102,7 @@ func resourceDatabase() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9a-z_]+$"), "must be lowercase letters, numbers, or underscore ('_')"),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				ForceNew: true,
@@ -121,12 +121,12 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var queryString bytes.Buffer
 	queryString.WriteString(createStmt)
 
-	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrComment); ok && v.(string) != "" {
 		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
 		queryString.WriteString(commentStmt)
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.(map[string]interface{})) > 0 {
 		var props []string
 		for k, v := range v.(map[string]interface{}) {
 			prop := fmt.Sprintf(" '%[1]s' = '%[2]s' ", k, v.(string))
@@ -175,9 +175,9 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Athena Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", db.Description)
+	d.Set(names.AttrComment, db.Description)
 	d.Set(names.AttrName, db.Name)
-	d.Set("properties", db.Parameters)
+	d.Set(names.AttrProperties, db.Parameters)
 
 	return diags
 }
@@ -264,7 +264,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
 	}
 
-	if v, ok := data["kms_key"].(string); ok && v != "" {
+	if v, ok := data[names.AttrKMSKey].(string); ok && v != "" {
 		encryptionConfig.KmsKey = aws.String(v)
 	}
 

@@ -130,7 +130,7 @@ func ResourceAppMonitor() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 253),
@@ -155,7 +155,7 @@ func resourceAppMonitorCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &cloudwatchrum.CreateAppMonitorInput{
 		Name:         aws.String(name),
 		CwLogEnabled: aws.Bool(d.Get("cw_log_enabled").(bool)),
-		Domain:       aws.String(d.Get("domain").(string)),
+		Domain:       aws.String(d.Get(names.AttrDomain).(string)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -212,7 +212,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, arn)
 	d.Set("cw_log_enabled", appMon.DataStorage.CwLog.CwLogEnabled)
 	d.Set("cw_log_group", appMon.DataStorage.CwLog.CwLogGroup)
-	d.Set("domain", appMon.Domain)
+	d.Set(names.AttrDomain, appMon.Domain)
 	d.Set(names.AttrName, appMon.Name)
 
 	setTagsOut(ctx, appMon.Tags)
@@ -240,8 +240,8 @@ func resourceAppMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.CwLogEnabled = aws.Bool(d.Get("cw_log_enabled").(bool))
 		}
 
-		if d.HasChange("domain") {
-			input.Domain = aws.String(d.Get("domain").(string))
+		if d.HasChange(names.AttrDomain) {
+			input.Domain = aws.String(d.Get(names.AttrDomain).(string))
 		}
 
 		_, err := conn.UpdateAppMonitorWithContext(ctx, input)

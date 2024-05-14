@@ -151,7 +151,7 @@ func pivotTableVisualSchema() *schema.Schema {
 																		},
 																	},
 																},
-																"field": fieldSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
+																names.AttrField: fieldSortSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSort.html
 															},
 														},
 													},
@@ -220,14 +220,14 @@ func pivotTableVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
-													"scope": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
+													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
 														MinItems: 1,
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"role": stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
+																names.AttrRole: stringSchema(false, validation.StringInSlice(quicksight.PivotTableConditionalFormattingScopeRole_Values(), false)),
 															},
 														},
 													},
@@ -593,7 +593,7 @@ func expandPivotTableSortBy(tfList []interface{}) *quicksight.PivotTableSortBy {
 	if v, ok := tfMap["data_path"].([]interface{}); ok && len(v) > 0 {
 		config.DataPath = expandDataPathSort(v)
 	}
-	if v, ok := tfMap["field"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrField].([]interface{}); ok && len(v) > 0 {
 		config.Field = expandFieldSort(v)
 	}
 
@@ -1147,7 +1147,7 @@ func expandPivotTableCellConditionalFormatting(tfList []interface{}) *quicksight
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
 	}
-	if v, ok := tfMap["scope"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrScope].([]interface{}); ok && len(v) > 0 {
 		options.Scope = expandPivotTableConditionalFormattingScope(v)
 	}
 	if v, ok := tfMap["text_format"].([]interface{}); ok && len(v) > 0 {
@@ -1169,7 +1169,7 @@ func expandPivotTableConditionalFormattingScope(tfList []interface{}) *quicksigh
 
 	options := &quicksight.PivotTableConditionalFormattingScope{}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
 		options.Role = aws.String(v)
 	}
 
@@ -1371,7 +1371,7 @@ func flattenPivotTableSortBy(apiObject *quicksight.PivotTableSortBy) []interface
 		tfMap["data_path"] = flattenDataPathSort(apiObject.DataPath)
 	}
 	if apiObject.Field != nil {
-		tfMap["field"] = flattenFieldSort(apiObject.Field)
+		tfMap[names.AttrField] = flattenFieldSort(apiObject.Field)
 	}
 
 	return []interface{}{tfMap}
@@ -1724,7 +1724,7 @@ func flattenPivotTableCellConditionalFormatting(apiObject *quicksight.PivotTable
 		"field_id": aws.StringValue(apiObject.FieldId),
 	}
 	if apiObject.Scope != nil {
-		tfMap["scope"] = flattenPivotTableConditionalFormattingScope(apiObject.Scope)
+		tfMap[names.AttrScope] = flattenPivotTableConditionalFormattingScope(apiObject.Scope)
 	}
 	if apiObject.TextFormat != nil {
 		tfMap["text_format"] = flattenTextConditionalFormat(apiObject.TextFormat)
@@ -1740,7 +1740,7 @@ func flattenPivotTableConditionalFormattingScope(apiObject *quicksight.PivotTabl
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Role != nil {
-		tfMap["role"] = aws.StringValue(apiObject.Role)
+		tfMap[names.AttrRole] = aws.StringValue(apiObject.Role)
 	}
 
 	return []interface{}{tfMap}

@@ -37,7 +37,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
 					},
 				},
@@ -98,7 +98,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
 									},
 								},
 							},
@@ -174,7 +174,7 @@ func calculatedFieldsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
-				"expression":          stringSchema(true, validation.StringLenBetween(1, 32000)),
+				names.AttrExpression:  stringSchema(true, validation.StringLenBetween(1, 32000)),
 				names.AttrName:        stringSchema(true, validation.StringLenBetween(1, 128)),
 			},
 		},
@@ -323,7 +323,7 @@ func rollingDateConfigurationSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_identifier": stringSchema(false, validation.StringLenBetween(1, 2048)),
-				"expression":          stringSchema(true, validation.StringLenBetween(1, 4096)),
+				names.AttrExpression:  stringSchema(true, validation.StringLenBetween(1, 4096)),
 			},
 		},
 	}
@@ -535,7 +535,7 @@ func expandCalculatedField(tfMap map[string]interface{}) *quicksight.CalculatedF
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		field.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		field.Expression = aws.String(v)
 	}
 	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
@@ -583,7 +583,7 @@ func expandColumnConfiguration(tfMap map[string]interface{}) *quicksight.ColumnC
 		column.FormatConfiguration = expandFormatConfiguration(v)
 	}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
 		column.Role = aws.String(v)
 	}
 
@@ -950,7 +950,7 @@ func expandRollingDateConfiguration(tfList []interface{}) *quicksight.RollingDat
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		config.DataSetIdentifier = aws.String(v)
 	}
-	if v, ok := tfMap["expression"].(string); ok {
+	if v, ok := tfMap[names.AttrExpression].(string); ok {
 		config.Expression = aws.String(v)
 	}
 
@@ -1073,7 +1073,7 @@ func flattenCalculatedFields(apiObject []*quicksight.CalculatedField) []interfac
 			tfMap["data_set_identifier"] = aws.StringValue(field.DataSetIdentifier)
 		}
 		if field.Expression != nil {
-			tfMap["expression"] = aws.StringValue(field.Expression)
+			tfMap[names.AttrExpression] = aws.StringValue(field.Expression)
 		}
 		if field.Name != nil {
 			tfMap[names.AttrName] = aws.StringValue(field.Name)
@@ -1103,7 +1103,7 @@ func flattenColumnConfigurations(apiObject []*quicksight.ColumnConfiguration) []
 			tfMap["format_configuration"] = flattenFormatConfiguration(column.FormatConfiguration)
 		}
 		if column.Role != nil {
-			tfMap["role"] = aws.StringValue(column.Role)
+			tfMap[names.AttrRole] = aws.StringValue(column.Role)
 		}
 		tfList = append(tfList, tfMap)
 	}
@@ -1330,7 +1330,7 @@ func flattenRollingDateConfiguration(apiObject *quicksight.RollingDateConfigurat
 		tfMap["data_set_identifier"] = aws.StringValue(apiObject.DataSetIdentifier)
 	}
 	if apiObject.Expression != nil {
-		tfMap["expression"] = aws.StringValue(apiObject.Expression)
+		tfMap[names.AttrExpression] = aws.StringValue(apiObject.Expression)
 	}
 
 	return []interface{}{tfMap}
@@ -1431,7 +1431,7 @@ func flattenTextBoxes(apiObject []*quicksight.SheetTextBox) []interface{} {
 			"sheet_text_box_id": aws.StringValue(config.SheetTextBoxId),
 		}
 		if config.Content != nil {
-			tfMap["content"] = aws.StringValue(config.Content)
+			tfMap[names.AttrContent] = aws.StringValue(config.Content)
 		}
 		tfList = append(tfList, tfMap)
 	}

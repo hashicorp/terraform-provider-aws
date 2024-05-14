@@ -86,7 +86,7 @@ func resourceCluster() *schema.Resource {
 													Optional: true,
 													ForceNew: true,
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													ForceNew: true,
@@ -102,12 +102,12 @@ func resourceCluster() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"iops": {
+												names.AttrIOPS: {
 													Type:     schema.TypeInt,
 													Optional: true,
 													ForceNew: true,
 												},
-												"size": {
+												names.AttrSize: {
 													Type:     schema.TypeInt,
 													Required: true,
 													ForceNew: true,
@@ -352,12 +352,12 @@ func resourceCluster() *schema.Resource {
 								ForceNew: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"iops": {
+										names.AttrIOPS: {
 											Type:     schema.TypeInt,
 											Optional: true,
 											ForceNew: true,
 										},
-										"size": {
+										names.AttrSize: {
 											Type:     schema.TypeInt,
 											Required: true,
 											ForceNew: true,
@@ -387,7 +387,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"instance_count": {
+							names.AttrInstanceCount: {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      1,
@@ -578,12 +578,12 @@ func resourceCluster() *schema.Resource {
 								ForceNew: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"iops": {
+										names.AttrIOPS: {
 											Type:     schema.TypeInt,
 											Optional: true,
 											ForceNew: true,
 										},
-										"size": {
+										names.AttrSize: {
 											Type:     schema.TypeInt,
 											Required: true,
 											ForceNew: true,
@@ -613,7 +613,7 @@ func resourceCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"instance_count": {
+							names.AttrInstanceCount: {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								ForceNew:     true,
@@ -725,7 +725,7 @@ func resourceCluster() *schema.Resource {
 											Optional: true,
 											ForceNew: true,
 										},
-										"properties": {
+										names.AttrProperties: {
 											Type:     schema.TypeMap,
 											Optional: true,
 											ForceNew: true,
@@ -805,7 +805,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
+			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -826,7 +826,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		m := l[0].(map[string]interface{})
 
 		instanceGroup := &emr.InstanceGroupConfig{
-			InstanceCount: aws.Int64(int64(m["instance_count"].(int))),
+			InstanceCount: aws.Int64(int64(m[names.AttrInstanceCount].(int))),
 			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(m[names.AttrInstanceType].(string)),
 			Market:        aws.String(emr.MarketTypeOnDemand),
@@ -1713,13 +1713,13 @@ func flattenCoreInstanceGroup(instanceGroup *emr.InstanceGroup) ([]interface{}, 
 	}
 
 	m := map[string]interface{}{
-		"autoscaling_policy":   autoscalingPolicy,
-		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:           aws.StringValue(instanceGroup.Id),
-		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:         aws.StringValue(instanceGroup.Name),
+		"autoscaling_policy":    autoscalingPolicy,
+		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:            aws.StringValue(instanceGroup.Id),
+		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:          aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}, nil
@@ -1731,12 +1731,12 @@ func flattenMasterInstanceGroup(instanceGroup *emr.InstanceGroup) []interface{} 
 	}
 
 	m := map[string]interface{}{
-		"bid_price":            aws.StringValue(instanceGroup.BidPrice),
-		"ebs_config":           flattenEBSConfig(instanceGroup.EbsBlockDevices),
-		names.AttrID:           aws.StringValue(instanceGroup.Id),
-		"instance_count":       aws.Int64Value(instanceGroup.RequestedInstanceCount),
-		names.AttrInstanceType: aws.StringValue(instanceGroup.InstanceType),
-		names.AttrName:         aws.StringValue(instanceGroup.Name),
+		"bid_price":             aws.StringValue(instanceGroup.BidPrice),
+		"ebs_config":            flattenEBSConfig(instanceGroup.EbsBlockDevices),
+		names.AttrID:            aws.StringValue(instanceGroup.Id),
+		names.AttrInstanceCount: aws.Int64Value(instanceGroup.RequestedInstanceCount),
+		names.AttrInstanceType:  aws.StringValue(instanceGroup.InstanceType),
+		names.AttrName:          aws.StringValue(instanceGroup.Name),
 	}
 
 	return []interface{}{m}
@@ -1783,10 +1783,10 @@ func flattenHadoopStepConfig(config *emr.HadoopStepConfig) map[string]interface{
 	}
 
 	m := map[string]interface{}{
-		"args":       aws.StringValueSlice(config.Args),
-		"jar":        aws.StringValue(config.Jar),
-		"main_class": aws.StringValue(config.MainClass),
-		"properties": aws.StringValueMap(config.Properties),
+		"args":               aws.StringValueSlice(config.Args),
+		"jar":                aws.StringValue(config.Jar),
+		"main_class":         aws.StringValue(config.MainClass),
+		names.AttrProperties: aws.StringValueMap(config.Properties),
 	}
 
 	return m
@@ -1826,10 +1826,10 @@ func flattenEBSConfig(ebsBlockDevices []*emr.EbsBlockDevice) *schema.Set {
 	for _, ebs := range ebsBlockDevices {
 		ebsAttrs := make(map[string]interface{})
 		if ebs.VolumeSpecification.Iops != nil {
-			ebsAttrs["iops"] = int(aws.Int64Value(ebs.VolumeSpecification.Iops))
+			ebsAttrs[names.AttrIOPS] = int(aws.Int64Value(ebs.VolumeSpecification.Iops))
 		}
 		if ebs.VolumeSpecification.SizeInGB != nil {
-			ebsAttrs["size"] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
+			ebsAttrs[names.AttrSize] = int(aws.Int64Value(ebs.VolumeSpecification.SizeInGB))
 		}
 		if ebs.VolumeSpecification.Throughput != nil {
 			ebsAttrs["throughput"] = aws.Int64Value(ebs.VolumeSpecification.Throughput)
@@ -1906,7 +1906,7 @@ func expandHadoopJarStepConfig(m map[string]interface{}) *emr.HadoopJarStepConfi
 		hadoopJarStepConfig.MainClass = aws.String(v.(string))
 	}
 
-	if v, ok := m["properties"]; ok {
+	if v, ok := m[names.AttrProperties]; ok {
 		hadoopJarStepConfig.Properties = expandKeyValues(v.(map[string]interface{}))
 	}
 
@@ -1978,14 +1978,14 @@ func expandEBSConfig(configAttributes map[string]interface{}, config *emr.Instan
 			ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
 				VolumesPerInstance: aws.Int64(int64(rawEbsConfig["volumes_per_instance"].(int))),
 				VolumeSpecification: &emr.VolumeSpecification{
-					SizeInGB:   aws.Int64(int64(rawEbsConfig["size"].(int))),
+					SizeInGB:   aws.Int64(int64(rawEbsConfig[names.AttrSize].(int))),
 					VolumeType: aws.String(rawEbsConfig[names.AttrType].(string)),
 				},
 			}
 			if v, ok := rawEbsConfig["throughput"].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 			}
-			if v, ok := rawEbsConfig["iops"].(int); ok && v != 0 {
+			if v, ok := rawEbsConfig[names.AttrIOPS].(int); ok && v != 0 {
 				ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 			}
 			ebsBlockDeviceConfigs = append(ebsBlockDeviceConfigs, ebsBlockDeviceConfig)
@@ -2077,13 +2077,13 @@ func findMasterGroup(instanceGroups []*emr.InstanceGroup) *emr.InstanceGroup {
 func resourceClusterEBSHashConfig(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%d-", m["size"].(int)))
+	buf.WriteString(fmt.Sprintf("%d-", m[names.AttrSize].(int)))
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrType].(string)))
 	buf.WriteString(fmt.Sprintf("%d-", m["volumes_per_instance"].(int)))
 	if v, ok := m["throughput"].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
-	if v, ok := m["iops"].(int); ok && v != 0 {
+	if v, ok := m[names.AttrIOPS].(int); ok && v != 0 {
 		buf.WriteString(fmt.Sprintf("%d-", v))
 	}
 	return create.StringHashcode(buf.String())
@@ -2261,14 +2261,14 @@ func expandEBSConfiguration(ebsConfigurations []interface{}) *emr.EbsConfigurati
 		ebsBlockDeviceConfig := &emr.EbsBlockDeviceConfig{
 			VolumesPerInstance: aws.Int64(int64(cfg["volumes_per_instance"].(int))),
 			VolumeSpecification: &emr.VolumeSpecification{
-				SizeInGB:   aws.Int64(int64(cfg["size"].(int))),
+				SizeInGB:   aws.Int64(int64(cfg[names.AttrSize].(int))),
 				VolumeType: aws.String(cfg[names.AttrType].(string)),
 			},
 		}
 		if v, ok := cfg["throughput"].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Throughput = aws.Int64(int64(v))
 		}
-		if v, ok := cfg["iops"].(int); ok && v != 0 {
+		if v, ok := cfg[names.AttrIOPS].(int); ok && v != 0 {
 			ebsBlockDeviceConfig.VolumeSpecification.Iops = aws.Int64(int64(v))
 		}
 		ebsConfigs = append(ebsConfigs, ebsBlockDeviceConfig)
@@ -2362,7 +2362,7 @@ func expandConfigurations(configurations []interface{}) []*emr.Configuration {
 			config.Configurations = expandConfigurations(v)
 		}
 
-		if v, ok := configAttributes["properties"].(map[string]interface{}); ok {
+		if v, ok := configAttributes[names.AttrProperties].(map[string]interface{}); ok {
 			properties := make(map[string]string)
 			for k, pv := range v {
 				properties[k] = pv.(string)

@@ -65,7 +65,7 @@ func ResourceRecord() *schema.Resource {
 		MigrateState:  RecordMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -91,7 +91,7 @@ func ResourceRecord() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf:  []string{"alias", "records"},
+				ExactlyOneOf:  []string{names.AttrAlias, "records"},
 				ConflictsWith: []string{"ttl"},
 			},
 			"allow_overwrite": {
@@ -284,7 +284,7 @@ func ResourceRecord() *schema.Resource {
 				Type:         schema.TypeSet,
 				Optional:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{"alias", "records"},
+				ExactlyOneOf: []string{names.AttrAlias, "records"},
 			},
 			"set_identifier": {
 				Type:     schema.TypeString,
@@ -293,7 +293,7 @@ func ResourceRecord() *schema.Resource {
 			"ttl": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ConflictsWith: []string{"alias"},
+				ConflictsWith: []string{names.AttrAlias},
 				RequiredWith:  []string{"records", "ttl"},
 			},
 			names.AttrType: {
@@ -307,7 +307,7 @@ func ResourceRecord() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"weight": {
+						names.AttrWeight: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -428,7 +428,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 			names.AttrName:           name,
 			"evaluate_target_health": aws.BoolValue(alias.EvaluateTargetHealth),
 		}}
-		if err := d.Set("alias", v); err != nil {
+		if err := d.Set(names.AttrAlias, v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting alias: %s", err)
 		}
 	}
@@ -490,7 +490,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if record.Weight != nil {
 		v := []map[string]interface{}{{
-			"weight": aws.Int64Value((record.Weight)),
+			names.AttrWeight: aws.Int64Value((record.Weight)),
 		}}
 		if err := d.Set("weighted_routing_policy", v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting weighted_routing_policy: %s", err)
@@ -617,7 +617,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if o, ok := v.([]interface{}); ok {
 			if len(o) == 1 {
 				if v, ok := o[0].(map[string]interface{}); ok {
-					oldRec.Weight = aws.Int64(int64(v["weight"].(int)))
+					oldRec.Weight = aws.Int64(int64(v[names.AttrWeight].(int)))
 				}
 			}
 		}
@@ -636,7 +636,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// Alias record
-	if v, _ := d.GetChange("alias"); v != nil {
+	if v, _ := d.GetChange(names.AttrAlias); v != nil {
 		aliases := v.([]interface{})
 		if len(aliases) == 1 {
 			alias := aliases[0].(map[string]interface{})
@@ -895,7 +895,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 	}
 
 	// Alias record
-	if v, ok := d.GetOk("alias"); ok {
+	if v, ok := d.GetOk(names.AttrAlias); ok {
 		aliases := v.([]interface{})
 		alias := aliases[0].(map[string]interface{})
 		rec.AliasTarget = &route53.AliasTarget{
@@ -968,7 +968,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		records := v.([]interface{})
 		weight := records[0].(map[string]interface{})
 
-		rec.Weight = aws.Int64(int64(weight["weight"].(int)))
+		rec.Weight = aws.Int64(int64(weight[names.AttrWeight].(int)))
 	}
 
 	return rec

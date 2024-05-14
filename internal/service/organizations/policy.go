@@ -41,7 +41,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:             schema.TypeString,
 				Required:         true,
 				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
@@ -55,7 +55,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -79,7 +79,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreatePolicyInput{
-		Content:     aws.String(d.Get("content").(string)),
+		Content:     aws.String(d.Get(names.AttrContent).(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Name:        aws.String(name),
 		Type:        aws.String(d.Get(names.AttrType).(string)),
@@ -116,7 +116,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	policySummary := policy.PolicySummary
 	d.Set(names.AttrARN, policySummary.Arn)
-	d.Set("content", policy.Content)
+	d.Set(names.AttrContent, policy.Content)
 	d.Set(names.AttrDescription, policySummary.Description)
 	d.Set(names.AttrName, policySummary.Name)
 	d.Set(names.AttrType, policySummary.Type)
@@ -142,8 +142,8 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			PolicyId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("content") {
-			input.Content = aws.String(d.Get("content").(string))
+		if d.HasChange(names.AttrContent) {
+			input.Content = aws.String(d.Get(names.AttrContent).(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {
@@ -167,7 +167,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
 		return nil
 	}

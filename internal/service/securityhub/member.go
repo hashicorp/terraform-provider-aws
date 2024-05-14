@@ -41,7 +41,7 @@ func resourceMember() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -74,7 +74,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}},
 	}
 
-	if v, ok := d.GetOk("email"); ok {
+	if v, ok := d.GetOk(names.AttrEmail); ok {
 		input.AccountDetails[0].Email = aws.String(v.(string))
 	}
 
@@ -126,7 +126,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrAccountID, member.AccountId)
-	d.Set("email", member.Email)
+	d.Set(names.AttrEmail, member.Email)
 	status := aws.ToString(member.MemberStatus)
 	const (
 		// Associated is the member status naming for Regions that do not support Organizations.

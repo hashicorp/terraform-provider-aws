@@ -53,7 +53,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 								},
 							},
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -76,7 +76,7 @@ func DataSourceHoursOfOperation() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(m["day"].(string))
 					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
-					buf.WriteString(fmt.Sprintf("%+v", m["start_time"].([]interface{})))
+					buf.WriteString(fmt.Sprintf("%+v", m[names.AttrStartTime].([]interface{})))
 					return create.StringHashcode(buf.String())
 				},
 			},

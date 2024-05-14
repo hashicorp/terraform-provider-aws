@@ -79,7 +79,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version"},
+				ConflictsWith: []string{names.AttrS3Bucket, "s3_key", "s3_object_version"},
 			},
 			"layer_arn": {
 				Type:     schema.TypeString,
@@ -96,7 +96,7 @@ func resourceLayerVersion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
@@ -122,7 +122,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				ForceNew: true,
@@ -152,7 +152,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
-	s3Bucket, bucketOk := d.GetOk("s3_bucket")
+	s3Bucket, bucketOk := d.GetOk(names.AttrS3Bucket)
 	s3Key, keyOk := d.GetOk("s3_key")
 	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
 
@@ -254,7 +254,7 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	if d.Get("skip_destroy").(bool) {
+	if d.Get(names.AttrSkipDestroy).(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return diags
 	}

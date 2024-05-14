@@ -51,7 +51,7 @@ func (r *customLogSourceResource) Metadata(_ context.Context, request resource.M
 func (r *customLogSourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"attributes": schema.ListAttribute{
+			names.AttrAttributes: schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceAttributesModel](ctx),
 				Computed:   true,
 				ElementType: types.ObjectType{
@@ -157,7 +157,7 @@ func (r *customLogSourceResource) Schema(ctx context.Context, request resource.S
 											stringplanmodifier.RequiresReplace(),
 										},
 									},
-									"principal": schema.StringAttribute{
+									names.AttrPrincipal: schema.StringAttribute{
 										Required: true,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

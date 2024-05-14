@@ -53,7 +53,7 @@ func ResourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -110,7 +110,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateDBParameterGroupInput{
-		DBParameterGroupFamily: aws.String(d.Get("family").(string)),
+		DBParameterGroupFamily: aws.String(d.Get(names.AttrFamily).(string)),
 		DBParameterGroupName:   aws.String(name),
 		Description:            aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                   getTagsIn(ctx),
@@ -148,7 +148,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := aws.StringValue(dbParameterGroup.DBParameterGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, dbParameterGroup.Description)
-	d.Set("family", dbParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrFamily, dbParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbParameterGroup.DBParameterGroupName)
 
 	input := &rds.DescribeDBParametersInput{

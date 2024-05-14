@@ -39,11 +39,11 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 					testAccCheckNotificationRuleExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codestar-notifications", regexache.MustCompile("notificationrule/.+")),
 					resource.TestCheckResourceAttr(resourceName, "detail_type", string(types.DetailTypeBasic)),
-					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.CtOne),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 				Config: testAccNotificationRuleConfig_targets1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.CtOne),
 				),
 			},
 			{
@@ -146,14 +146,14 @@ func TestAccCodeStarNotificationsNotificationRule_targets(t *testing.T) {
 				Config: testAccNotificationRuleConfig_targets2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.CtTwo),
 				),
 			},
 			{
 				Config: testAccNotificationRuleConfig_targets1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.CtOne),
 				),
 			},
 		},
@@ -172,11 +172,11 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNotificationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNotificationRuleConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNotificationRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -185,20 +185,20 @@ func TestAccCodeStarNotificationsNotificationRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNotificationRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNotificationRuleConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNotificationRuleConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNotificationRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},
@@ -220,7 +220,7 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 				Config: testAccNotificationRuleConfig_eventTypeIDs1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -232,14 +232,14 @@ func TestAccCodeStarNotificationsNotificationRule_eventTypeIDs(t *testing.T) {
 				Config: testAccNotificationRuleConfig_eventTypeIDs2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", acctest.CtTwo),
 				),
 			},
 			{
 				Config: testAccNotificationRuleConfig_eventTypeIDs3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNotificationRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", acctest.CtOne),
 				),
 			},
 		},

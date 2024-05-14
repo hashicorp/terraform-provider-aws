@@ -334,7 +334,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"role": {
+			names.AttrRole: {
 				Type:     schema.TypeString,
 				Required: true,
 				// Glue API always returns name
@@ -386,7 +386,7 @@ func ResourceCrawler() *schema.Resource {
 					},
 				},
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -505,13 +505,13 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, crawlerARN)
 	d.Set(names.AttrName, crawler.Name)
 	d.Set(names.AttrDatabaseName, crawler.DatabaseName)
-	d.Set("role", crawler.Role)
+	d.Set(names.AttrRole, crawler.Role)
 	d.Set(names.AttrConfiguration, crawler.Configuration)
 	d.Set(names.AttrDescription, crawler.Description)
 	d.Set("security_configuration", crawler.CrawlerSecurityConfiguration)
-	d.Set("schedule", "")
+	d.Set(names.AttrSchedule, "")
 	if crawler.Schedule != nil {
-		d.Set("schedule", crawler.Schedule.ScheduleExpression)
+		d.Set(names.AttrSchedule, crawler.Schedule.ScheduleExpression)
 	}
 	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
@@ -653,14 +653,14 @@ func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-		Role:         aws.String(d.Get("role").(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Targets:      expandCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	}
 	if classifiers, ok := d.GetOk("classifiers"); ok {
@@ -707,14 +707,14 @@ func updateCrawlerInput(d *schema.ResourceData, crawlerName string) (*glue.Updat
 	crawlerInput := &glue.UpdateCrawlerInput{
 		Name:         aws.String(crawlerName),
 		DatabaseName: aws.String(d.Get(names.AttrDatabaseName).(string)),
-		Role:         aws.String(d.Get("role").(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Targets:      expandCrawlerTargets(d),
 	}
 	if description, ok := d.GetOk(names.AttrDescription); ok {
 		crawlerInput.Description = aws.String(description.(string))
 	}
 
-	if schedule, ok := d.GetOk("schedule"); ok {
+	if schedule, ok := d.GetOk(names.AttrSchedule); ok {
 		crawlerInput.Schedule = aws.String(schedule.(string))
 	} else {
 		crawlerInput.Schedule = aws.String("")

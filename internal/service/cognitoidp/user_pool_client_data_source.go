@@ -79,11 +79,11 @@ func dataSourceUserPoolClient() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"client_id": {
+			names.AttrClientID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"client_secret": {
+			names.AttrClientSecret: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -187,7 +187,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	clientId := d.Get("client_id").(string)
+	clientId := d.Get(names.AttrClientID).(string)
 	d.SetId(clientId)
 
 	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
@@ -204,7 +204,7 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("refresh_token_validity", userPoolClient.RefreshTokenValidity)
 	d.Set("access_token_validity", userPoolClient.AccessTokenValidity)
 	d.Set("id_token_validity", userPoolClient.IdTokenValidity)
-	d.Set("client_secret", userPoolClient.ClientSecret)
+	d.Set(names.AttrClientSecret, userPoolClient.ClientSecret)
 	d.Set("allowed_oauth_flows", flex.FlattenStringSet(userPoolClient.AllowedOAuthFlows))
 	d.Set("allowed_oauth_flows_user_pool_client", userPoolClient.AllowedOAuthFlowsUserPoolClient)
 	d.Set("allowed_oauth_scopes", flex.FlattenStringSet(userPoolClient.AllowedOAuthScopes))

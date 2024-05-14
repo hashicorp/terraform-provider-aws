@@ -30,7 +30,7 @@ func DataSourceConnections() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", connectionIDs)
+	d.Set(names.AttrIDs, connectionIDs)
 
 	return diags
 }

@@ -35,10 +35,10 @@ func expandClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolicy {
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+				if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
 				}
-				if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+				if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 					file.PrivateKey = aws.String(vPrivateKey)
 				}
 
@@ -115,7 +115,7 @@ func expandClientPolicy(vClientPolicy []interface{}) *appmesh.ClientPolicy {
 
 					mFile := vFile[0].(map[string]interface{})
 
-					if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+					if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 						file.CertificateChain = aws.String(vCertificateChain)
 					}
 
@@ -188,7 +188,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
-				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
 				}
 
@@ -310,7 +310,7 @@ func expandGRPCRoute(vGrpcRoute []interface{}) *appmesh.GrpcRoute {
 		grpcRoute.RetryPolicy = grpcRetryPolicy
 	}
 
-	if vGrpcTimeout, ok := mGrpcRoute["timeout"].([]interface{}); ok {
+	if vGrpcTimeout, ok := mGrpcRoute[names.AttrTimeout].([]interface{}); ok {
 		grpcRoute.Timeout = expandGRPCTimeout(vGrpcTimeout)
 	}
 
@@ -360,7 +360,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
-				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
 				}
 
@@ -395,7 +395,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 			httpRouteMatch.Scheme = aws.String(vScheme)
 		}
 
-		if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
+		if vHttpRouteHeaders, ok := mHttpRouteMatch[names.AttrHeader].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
 			httpRouteHeaders := []*appmesh.HttpRouteHeader{}
 
 			for _, vHttpRouteHeader := range vHttpRouteHeaders.List() {
@@ -518,7 +518,7 @@ func expandHTTPRoute(vHttpRoute []interface{}) *appmesh.HttpRoute {
 		httpRoute.RetryPolicy = httpRetryPolicy
 	}
 
-	if vHttpTimeout, ok := mHttpRoute["timeout"].([]interface{}); ok {
+	if vHttpTimeout, ok := mHttpRoute[names.AttrTimeout].([]interface{}); ok {
 		httpRoute.Timeout = expandHTTPTimeout(vHttpTimeout)
 	}
 
@@ -632,7 +632,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 					weightedTarget.VirtualNode = aws.String(vVirtualNode)
 				}
-				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+				if vWeight, ok := mWeightedTarget[names.AttrWeight].(int); ok {
 					weightedTarget.Weight = aws.Int64(int64(vWeight))
 				}
 
@@ -660,7 +660,7 @@ func expandTCPRoute(vTcpRoute []interface{}) *appmesh.TcpRoute {
 		tcpRoute.Match = tcpRouteMatch
 	}
 
-	if vTcpTimeout, ok := mTcpRoute["timeout"].([]interface{}); ok {
+	if vTcpTimeout, ok := mTcpRoute[names.AttrTimeout].([]interface{}); ok {
 		tcpRoute.Timeout = expandTCPTimeout(vTcpTimeout)
 	}
 
@@ -801,7 +801,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				listener.ConnectionPool = connectionPool
 			}
 
-			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+			if vHealthCheck, ok := mListener[names.AttrHealthCheck].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
 				healthCheck := &appmesh.HealthCheckPolicy{}
 
 				mHealthCheck := vHealthCheck[0].(map[string]interface{})
@@ -847,7 +847,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 					outlierDetection.BaseEjectionDuration = expandDuration(vBaseEjectionDuration)
 				}
 
-				if vInterval, ok := mOutlierDetection["interval"].([]interface{}); ok {
+				if vInterval, ok := mOutlierDetection[names.AttrInterval].([]interface{}); ok {
 					outlierDetection.Interval = expandDuration(vInterval)
 				}
 
@@ -869,7 +869,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 				listener.PortMapping = portMapping
 			}
 
-			if vTimeout, ok := mListener["timeout"].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
+			if vTimeout, ok := mListener[names.AttrTimeout].([]interface{}); ok && len(vTimeout) > 0 && vTimeout[0] != nil {
 				mTimeout := vTimeout[0].(map[string]interface{})
 
 				listenerTimeout := &appmesh.ListenerTimeout{}
@@ -924,10 +924,10 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 						mFile := vFile[0].(map[string]interface{})
 
-						if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+						if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
 						}
-						if vPrivateKey, ok := mFile["private_key"].(string); ok && vPrivateKey != "" {
+						if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
 							file.PrivateKey = aws.String(vPrivateKey)
 						}
 
@@ -984,7 +984,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 							mFile := vFile[0].(map[string]interface{})
 
-							if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+							if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 								file.CertificateChain = aws.String(vCertificateChain)
 							}
 
@@ -1038,7 +1038,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 					mFormat := vFormat[0].(map[string]interface{})
 
-					if vJsonFormatRefs, ok := mFormat["json"].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
+					if vJsonFormatRefs, ok := mFormat[names.AttrJSON].([]interface{}); ok && len(vJsonFormatRefs) > 0 {
 						jsonFormatRefs := []*appmesh.JsonFormatRef{}
 						for _, vJsonFormatRef := range vJsonFormatRefs {
 							mJsonFormatRef := &appmesh.JsonFormatRef{
@@ -1080,7 +1080,7 @@ func expandVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec {
 
 			mAwsCloudMap := vAwsCloudMap[0].(map[string]interface{})
 
-			if vAttributes, ok := mAwsCloudMap["attributes"].(map[string]interface{}); ok && len(vAttributes) > 0 {
+			if vAttributes, ok := mAwsCloudMap[names.AttrAttributes].(map[string]interface{}); ok && len(vAttributes) > 0 {
 				attributes := []*appmesh.AwsCloudMapInstanceAttribute{}
 
 				for k, v := range vAttributes {
@@ -1221,8 +1221,8 @@ func flattenClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
 
 			if file := certificate.File; file != nil {
 				mFile := map[string]interface{}{
-					"certificate_chain": aws.StringValue(file.CertificateChain),
-					"private_key":       aws.StringValue(file.PrivateKey),
+					names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
+					names.AttrPrivateKey:       aws.StringValue(file.PrivateKey),
 				}
 
 				mCertificate["file"] = []interface{}{mFile}
@@ -1269,7 +1269,7 @@ func flattenClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{} {
 
 				if file := trust.File; file != nil {
 					mFile := map[string]interface{}{
-						"certificate_chain": aws.StringValue(file.CertificateChain),
+						names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
 					}
 
 					mTrust["file"] = []interface{}{mFile}
@@ -1321,9 +1321,9 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
-					names.AttrPort: int(aws.Int64Value(weightedTarget.Port)),
+					"virtual_node":   aws.StringValue(weightedTarget.VirtualNode),
+					names.AttrWeight: int(aws.Int64Value(weightedTarget.Weight)),
+					names.AttrPort:   int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1391,7 +1391,7 @@ func flattenGRPCRoute(grpcRoute *appmesh.GrpcRoute) []interface{} {
 		mGrpcRoute["retry_policy"] = []interface{}{mGrpcRetryPolicy}
 	}
 
-	mGrpcRoute["timeout"] = flattenGRPCTimeout(grpcRoute.Timeout)
+	mGrpcRoute[names.AttrTimeout] = flattenGRPCTimeout(grpcRoute.Timeout)
 
 	return []interface{}{mGrpcRoute}
 }
@@ -1422,9 +1422,9 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
-					names.AttrPort: int(aws.Int64Value(weightedTarget.Port)),
+					"virtual_node":   aws.StringValue(weightedTarget.VirtualNode),
+					names.AttrWeight: int(aws.Int64Value(weightedTarget.Weight)),
+					names.AttrPort:   int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1501,7 +1501,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 
 		mHttpRoute["match"] = []interface{}{
 			map[string]interface{}{
-				"header":          vHttpRouteHeaders,
+				names.AttrHeader:  vHttpRouteHeaders,
 				"method":          aws.StringValue(httpRouteMatch.Method),
 				names.AttrPath:    vHttpRoutePath,
 				names.AttrPort:    int(aws.Int64Value(httpRouteMatch.Port)),
@@ -1523,7 +1523,7 @@ func flattenHTTPRoute(httpRoute *appmesh.HttpRoute) []interface{} {
 		mHttpRoute["retry_policy"] = []interface{}{mHttpRetryPolicy}
 	}
 
-	mHttpRoute["timeout"] = flattenHTTPTimeout(httpRoute.Timeout)
+	mHttpRoute[names.AttrTimeout] = flattenHTTPTimeout(httpRoute.Timeout)
 
 	return []interface{}{mHttpRoute}
 }
@@ -1596,9 +1596,9 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 
 			for _, weightedTarget := range weightedTargets {
 				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
-					names.AttrPort: int(aws.Int64Value(weightedTarget.Port)),
+					"virtual_node":   aws.StringValue(weightedTarget.VirtualNode),
+					names.AttrWeight: int(aws.Int64Value(weightedTarget.Weight)),
+					names.AttrPort:   int(aws.Int64Value(weightedTarget.Port)),
 				}
 
 				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
@@ -1620,7 +1620,7 @@ func flattenTCPRoute(tcpRoute *appmesh.TcpRoute) []interface{} {
 		}
 	}
 
-	mTcpRoute["timeout"] = flattenTCPTimeout(tcpRoute.Timeout)
+	mTcpRoute[names.AttrTimeout] = flattenTCPTimeout(tcpRoute.Timeout)
 
 	return []interface{}{mTcpRoute}
 }
@@ -1724,13 +1724,13 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
 					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
 				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+				mListener[names.AttrHealthCheck] = []interface{}{mHealthCheck}
 			}
 
 			if outlierDetection := listener.OutlierDetection; outlierDetection != nil {
 				mOutlierDetection := map[string]interface{}{
 					"base_ejection_duration": flattenDuration(outlierDetection.BaseEjectionDuration),
-					"interval":               flattenDuration(outlierDetection.Interval),
+					names.AttrInterval:       flattenDuration(outlierDetection.Interval),
 					"max_ejection_percent":   int(aws.Int64Value(outlierDetection.MaxEjectionPercent)),
 					"max_server_errors":      int(aws.Int64Value(outlierDetection.MaxServerErrors)),
 				}
@@ -1752,7 +1752,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 					"http2": flattenHTTPTimeout(listenerTimeout.Http2),
 					"tcp":   flattenTCPTimeout(listenerTimeout.Tcp),
 				}
-				mListener["timeout"] = []interface{}{mListenerTimeout}
+				mListener[names.AttrTimeout] = []interface{}{mListenerTimeout}
 			}
 
 			if tls := listener.Tls; tls != nil {
@@ -1773,8 +1773,8 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 					if file := certificate.File; file != nil {
 						mFile := map[string]interface{}{
-							"certificate_chain": aws.StringValue(file.CertificateChain),
-							"private_key":       aws.StringValue(file.PrivateKey),
+							names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
+							names.AttrPrivateKey:       aws.StringValue(file.PrivateKey),
 						}
 
 						mCertificate["file"] = []interface{}{mFile}
@@ -1813,7 +1813,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 						if file := trust.File; file != nil {
 							mFile := map[string]interface{}{
-								"certificate_chain": aws.StringValue(file.CertificateChain),
+								names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
 							}
 
 							mTrust["file"] = []interface{}{mFile}
@@ -1864,7 +1864,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 							vJsons = append(vJsons, mJson)
 						}
 
-						mFormat["json"] = vJsons
+						mFormat[names.AttrJSON] = vJsons
 					}
 
 					if text := format.Text; text != nil {
@@ -1897,7 +1897,7 @@ func flattenVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} {
 
 			mServiceDiscovery["aws_cloud_map"] = []interface{}{
 				map[string]interface{}{
-					"attributes":          vAttributes,
+					names.AttrAttributes:  vAttributes,
 					"namespace_name":      aws.StringValue(awsCloudMap.NamespaceName),
 					names.AttrServiceName: aws.StringValue(awsCloudMap.ServiceName),
 				},

@@ -81,9 +81,9 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "license_arn", licenseARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING_ACCEPT"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{

@@ -32,7 +32,7 @@ func DataSourceContactFlow() *schema.Resource {
 				Computed:     true,
 				ExactlyOneOf: []string{"contact_flow_id", names.AttrName},
 			},
-			"content": {
+			names.AttrContent: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -105,7 +105,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("contact_flow_id", contactFlow.Id)
 	d.Set(names.AttrName, contactFlow.Name)
 	d.Set(names.AttrDescription, contactFlow.Description)
-	d.Set("content", contactFlow.Content)
+	d.Set(names.AttrContent, contactFlow.Content)
 	d.Set(names.AttrType, contactFlow.Type)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, contactFlow.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

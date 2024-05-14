@@ -116,7 +116,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Environment", "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
 				),
@@ -130,7 +130,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Environment", "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccMediaPackageChannel_tags(t *testing.T) {
 				Config: testAccChannelConfig_tags(rName, "Update", "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
 				),
 			},

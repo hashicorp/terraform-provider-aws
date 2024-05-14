@@ -55,7 +55,7 @@ func resourceServerCertificate() *schema.Resource {
 				DiffSuppressFunc: suppressNormalizeCertRemoval,
 				StateFunc:        StateTrimSpace,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
@@ -88,7 +88,7 @@ func resourceServerCertificate() *schema.Resource {
 				Default:  "/",
 				ForceNew: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -115,12 +115,12 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 	sslCertName := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &iam.UploadServerCertificateInput{
 		CertificateBody:       aws.String(d.Get("certificate_body").(string)),
-		PrivateKey:            aws.String(d.Get("private_key").(string)),
+		PrivateKey:            aws.String(d.Get(names.AttrPrivateKey).(string)),
 		ServerCertificateName: aws.String(sslCertName),
 		Tags:                  getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("certificate_chain"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 		input.CertificateChain = aws.String(v.(string))
 	}
 
@@ -182,7 +182,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
 	d.Set(names.AttrARN, metadata.Arn)
 	d.Set("certificate_body", cert.CertificateBody)
-	d.Set("certificate_chain", cert.CertificateChain)
+	d.Set(names.AttrCertificateChain, cert.CertificateChain)
 	if metadata.Expiration != nil {
 		d.Set("expiration", aws.ToTime(metadata.Expiration).Format(time.RFC3339))
 	} else {

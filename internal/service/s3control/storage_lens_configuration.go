@@ -290,7 +290,7 @@ func resourceStorageLensConfiguration() *schema.Resource {
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"key_id": {
+																		names.AttrKeyID: {
 																			Type:         schema.TypeString,
 																			Required:     true,
 																			ValidateFunc: verify.ValidARN,
@@ -961,7 +961,7 @@ func expandSSEKMS(tfMap map[string]interface{}) *types.SSEKMS {
 
 	apiObject := &types.SSEKMS{}
 
-	if v, ok := tfMap["key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKeyID].(string); ok && v != "" {
 		apiObject.KeyId = aws.String(v)
 	}
 
@@ -1290,7 +1290,7 @@ func flattenSSEKMS(apiObject *types.SSEKMS) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.KeyId; v != nil {
-		tfMap["key_id"] = aws.ToString(v)
+		tfMap[names.AttrKeyID] = aws.ToString(v)
 	}
 
 	return tfMap

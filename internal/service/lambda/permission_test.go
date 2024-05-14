@@ -243,7 +243,7 @@ func TestAccLambdaPermission_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttr(resourceName, "event_source_token", "test-event-source-token"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromCloudWatch"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", ""),
@@ -278,7 +278,7 @@ func TestAccLambdaPermission_principalOrgID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_org_id", "data.aws_organizations_organization.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromCloudWatch"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
@@ -338,7 +338,7 @@ func TestAccLambdaPermission_rawFunctionName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithRawFuncName"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 				),
@@ -372,7 +372,7 @@ func TestAccLambdaPermission_statementIDPrefix(t *testing.T) {
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "events.amazonaws.com"),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "statement_id", "AllowExecutionWithStatementIdPrefix-"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id_prefix", "AllowExecutionWithStatementIdPrefix-"),
 				),
@@ -407,7 +407,7 @@ func TestAccLambdaPermission_qualifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithQualifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", rName),
@@ -477,13 +477,13 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 					// 1st
 					testAccCheckPermissionExists(ctx, resourceNameFirst, &firstStatement),
 					resource.TestCheckResourceAttr(resourceNameFirst, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceNameFirst, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceNameFirst, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "statement_id", "AllowExecutionFirst"),
 					resource.TestCheckResourceAttrPair(resourceNameFirst, "function_name", functionResourceName, names.AttrARN),
 					// 2nd
 					testAccCheckPermissionExists(ctx, resourceNameSecond, &firstStatementModified),
 					resource.TestCheckResourceAttr(resourceNameSecond, names.AttrAction, "lambda:*"),
-					resource.TestCheckResourceAttr(resourceNameSecond, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceNameSecond, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameSecond, "statement_id", "AllowExecutionSecond"),
 					resource.TestCheckResourceAttrPair(resourceNameSecond, "function_name", functionResourceName, names.AttrARN),
 				),
@@ -494,19 +494,19 @@ func TestAccLambdaPermission_multiplePerms(t *testing.T) {
 					// 1st
 					testAccCheckPermissionExists(ctx, resourceNameFirst, &secondStatement),
 					resource.TestCheckResourceAttr(resourceNameFirst, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceNameFirst, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceNameFirst, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameFirst, "statement_id", "AllowExecutionFirst"),
 					resource.TestCheckResourceAttrPair(resourceNameFirst, "function_name", functionResourceName, names.AttrARN),
 					// 2nd
 					testAccCheckPermissionExists(ctx, resourceNameSecondModified, &secondStatementModified),
 					resource.TestCheckResourceAttr(resourceNameSecondModified, names.AttrAction, "lambda:*"),
-					resource.TestCheckResourceAttr(resourceNameSecondModified, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceNameSecondModified, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameSecondModified, "statement_id", "AllowExecutionSec0nd"),
 					resource.TestCheckResourceAttrPair(resourceNameSecondModified, "function_name", functionResourceName, names.AttrARN),
 					// 3rd
 					testAccCheckPermissionExists(ctx, resourceNameThird, &thirdStatement),
 					resource.TestCheckResourceAttr(resourceNameThird, names.AttrAction, "lambda:*"),
-					resource.TestCheckResourceAttr(resourceNameThird, "principal", "events.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceNameThird, names.AttrPrincipal, "events.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceNameThird, "statement_id", "AllowExecutionThird"),
 					resource.TestCheckResourceAttrPair(resourceNameThird, "function_name", functionResourceName, names.AttrARN),
 				),
@@ -548,7 +548,7 @@ func TestAccLambdaPermission_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "s3.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "s3.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromS3"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", bucketResourceName, names.AttrARN),
@@ -585,7 +585,7 @@ func TestAccLambdaPermission_sns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "sns.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "sns.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromSNS"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "source_arn", snsTopicResourceName, names.AttrARN),
@@ -622,7 +622,7 @@ func TestAccLambdaPermission_iamRole(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunction"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromIAMRole"),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 				),
@@ -656,7 +656,7 @@ func TestAccLambdaPermission_FunctionURLs_iam(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionWithIAM"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
@@ -692,7 +692,7 @@ func TestAccLambdaPermission_FunctionURLs_none(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &statement),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:InvokeFunctionUrl"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "AllowExecutionFromWithoutAuth"),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),

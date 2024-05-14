@@ -223,7 +223,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -294,7 +294,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -434,7 +434,7 @@ func ResourceApplication() *schema.Resource {
 							),
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -489,7 +489,7 @@ func ResourceApplication() *schema.Resource {
 							},
 						},
 
-						"schema": {
+						names.AttrSchema: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
@@ -560,7 +560,7 @@ func ResourceApplication() *schema.Resource {
 																},
 															},
 
-															"json": {
+															names.AttrJSON: {
 																Type:     schema.TypeList,
 																Optional: true,
 																MaxItems: 1,
@@ -1302,7 +1302,7 @@ func expandInput(vInput []interface{}) *kinesisanalytics.Input {
 		input.InputProcessingConfiguration = expandInputProcessingConfiguration(vInputProcessingConfiguration)
 	}
 
-	if vInputSchema, ok := mInput["schema"].([]interface{}); ok {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok {
 		input.InputSchema = expandSourceSchema(vInputSchema)
 	}
 
@@ -1418,7 +1418,7 @@ func expandInputUpdate(vInput []interface{}) *kinesisanalytics.InputUpdate {
 		inputUpdate.InputProcessingConfigurationUpdate = inputProcessingConfigurationUpdate
 	}
 
-	if vInputSchema, ok := mInput["schema"].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
+	if vInputSchema, ok := mInput[names.AttrSchema].([]interface{}); ok && len(vInputSchema) > 0 && vInputSchema[0] != nil {
 		inputSchemaUpdate := &kinesisanalytics.InputSchemaUpdate{}
 
 		mInputSchema := vInputSchema[0].(map[string]interface{})
@@ -1484,7 +1484,7 @@ func expandOutput(vOutput interface{}) *kinesisanalytics.Output {
 
 	mOutput := vOutput.(map[string]interface{})
 
-	if vDestinationSchema, ok := mOutput["schema"].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
+	if vDestinationSchema, ok := mOutput[names.AttrSchema].([]interface{}); ok && len(vDestinationSchema) > 0 && vDestinationSchema[0] != nil {
 		destinationSchema := &kinesisanalytics.DestinationSchema{}
 
 		mDestinationSchema := vDestinationSchema[0].(map[string]interface{})
@@ -1621,7 +1621,7 @@ func expandRecordFormat(vRecordFormat []interface{}) *kinesisanalytics.RecordFor
 			recordFormat.RecordFormatType = aws.String(kinesisanalytics.RecordFormatTypeCsv)
 		}
 
-		if vJsonMappingParameters, ok := mMappingParameters["json"].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
+		if vJsonMappingParameters, ok := mMappingParameters[names.AttrJSON].([]interface{}); ok && len(vJsonMappingParameters) > 0 && vJsonMappingParameters[0] != nil {
 			jsonMappingParameters := &kinesisanalytics.JSONMappingParameters{}
 
 			mJsonMappingParameters := vJsonMappingParameters[0].(map[string]interface{})
@@ -1650,7 +1650,7 @@ func expandReferenceDataSource(vReferenceDataSource []interface{}) *kinesisanaly
 
 	mReferenceDataSource := vReferenceDataSource[0].(map[string]interface{})
 
-	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
 		referenceDataSource.ReferenceSchema = expandSourceSchema(vReferenceSchema)
 	}
 
@@ -1692,7 +1692,7 @@ func expandReferenceDataSourceUpdate(vReferenceDataSource []interface{}) *kinesi
 		referenceDataSourceUpdate.ReferenceId = aws.String(vReferenceId)
 	}
 
-	if vReferenceSchema, ok := mReferenceDataSource["schema"].([]interface{}); ok {
+	if vReferenceSchema, ok := mReferenceDataSource[names.AttrSchema].([]interface{}); ok {
 		referenceDataSourceUpdate.ReferenceSchemaUpdate = expandSourceSchema(vReferenceSchema)
 	}
 
@@ -1783,7 +1783,7 @@ func flattenInputDescriptions(inputDescriptions []*kinesisanalytics.InputDescrip
 	}
 
 	if inputSchema := inputDescription.InputSchema; inputSchema != nil {
-		mInput["schema"] = flattenSourceSchema(inputSchema)
+		mInput[names.AttrSchema] = flattenSourceSchema(inputSchema)
 	}
 
 	if inputProcessingConfigurationDescription := inputDescription.InputProcessingConfigurationDescription; inputProcessingConfigurationDescription != nil {
@@ -1849,7 +1849,7 @@ func flattenOutputDescriptions(outputDescriptions []*kinesisanalytics.OutputDesc
 					"record_format_type": aws.StringValue(destinationSchema.RecordFormatType),
 				}
 
-				mOutput["schema"] = []interface{}{mDestinationSchema}
+				mOutput[names.AttrSchema] = []interface{}{mDestinationSchema}
 			}
 
 			if kinesisFirehoseOutputDescription := outputDescription.KinesisFirehoseOutputDescription; kinesisFirehoseOutputDescription != nil {
@@ -1899,7 +1899,7 @@ func flattenReferenceDataSourceDescriptions(referenceDataSourceDescriptions []*k
 	}
 
 	if referenceSchema := referenceDataSourceDescription.ReferenceSchema; referenceSchema != nil {
-		mReferenceDataSource["schema"] = flattenSourceSchema(referenceSchema)
+		mReferenceDataSource[names.AttrSchema] = flattenSourceSchema(referenceSchema)
 	}
 
 	if s3ReferenceDataSource := referenceDataSourceDescription.S3ReferenceDataSourceDescription; s3ReferenceDataSource != nil {
@@ -1964,7 +1964,7 @@ func flattenSourceSchema(sourceSchema *kinesisanalytics.SourceSchema) []interfac
 					"record_row_path": aws.StringValue(jsonMappingParameters.RecordRowPath),
 				}
 
-				mMappingParameters["json"] = []interface{}{mJsonMappingParameters}
+				mMappingParameters[names.AttrJSON] = []interface{}{mJsonMappingParameters}
 			}
 
 			mRecordFormat["mapping_parameters"] = []interface{}{mMappingParameters}

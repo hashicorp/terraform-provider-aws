@@ -45,8 +45,8 @@ func testAccPermissions_basic(t *testing.T) {
 				Config: testAccPermissionsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionCreateDatabase)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "true"),
 				),
@@ -95,16 +95,16 @@ func testAccPermissions_database(t *testing.T) {
 				Config: testAccPermissionsConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "database.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
@@ -128,13 +128,13 @@ func testAccPermissions_databaseIAMAllowed(t *testing.T) {
 				Config: testAccPermissionsConfig_databaseIAMAllowed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "principal", tflakeformation.IAMAllowedPrincipals),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, tflakeformation.IAMAllowedPrincipals),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "database.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -160,27 +160,27 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 				Config: testAccPermissionsConfig_databaseMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "database.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 					testAccCheckPermissionsExists(ctx, resourceName2),
-					resource.TestCheckResourceAttrPair(resourceName2, "principal", roleName2, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrPrincipal, roleName2, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName2, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName2, "principal", roleName2, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName2, "database.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrPrincipal, roleName2, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName2, "database.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName2, "database.0.name", dbName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName2, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName2, "permissions.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.1", string(awstypes.PermissionDrop)),
-					resource.TestCheckResourceAttr(resourceName2, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName2, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -203,10 +203,10 @@ func testAccPermissions_dataCellsFilter(t *testing.T) {
 				Config: testAccPermissionsConfig_dataCellsFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionDescribe)),
-					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", acctest.CtOne),
 				),
 			},
 		},
@@ -230,11 +230,11 @@ func testAccPermissions_dataLocation(t *testing.T) {
 				Config: testAccPermissionsConfig_dataLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionDataLocationAccess)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttr(resourceName, "data_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "data_location.0.arn", bucketName, names.AttrARN),
 				),
 			},
@@ -259,16 +259,16 @@ func testAccPermissions_lfTag(t *testing.T) {
 				Config: testAccPermissionsConfig_lfTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.key", tagName, names.AttrKey),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag.0.values", tagName, names.AttrValues),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ASSOCIATE"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", "DESCRIBE"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", "ASSOCIATE"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.1", "DESCRIBE"),
 				),
@@ -294,19 +294,19 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 				Config: testAccPermissionsConfig_lfTagPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, names.AttrKey),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, names.AttrValues),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
@@ -331,29 +331,29 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 				Config: testAccPermissionsConfig_lfTagPolicyMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.resource_type", "DATABASE"),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag_policy.0.expression.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
 						names.AttrKey: rName + "-0",
-						"values.#":    "2",
+						"values.#":    acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
 						names.AttrKey: rName + "-1",
-						"values.#":    "2",
+						"values.#":    acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
 						names.AttrKey: rName + "-2",
-						"values.#":    "2",
+						"values.#":    acctest.CtTwo,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
@@ -378,8 +378,8 @@ func testAccPermissions_tableBasic(t *testing.T) {
 				Config: testAccPermissionsConfig_tableBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
@@ -408,14 +408,14 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 				Config: testAccPermissionsConfig_tableIAMAllowed(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "principal", tflakeformation.IAMAllowedPrincipals),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, tflakeformation.IAMAllowedPrincipals),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -439,8 +439,8 @@ func testAccPermissions_tableImplicit(t *testing.T) {
 				Config: testAccPermissionsConfig_tableImplicit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
@@ -470,8 +470,8 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 				Config: testAccPermissionsConfig_tableMultipleRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
@@ -479,11 +479,11 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionDelete)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDescribe)),
 					testAccCheckPermissionsExists(ctx, resourceName2),
-					resource.TestCheckResourceAttrPair(roleName2, names.AttrARN, resourceName2, "principal"),
-					resource.TestCheckResourceAttr(resourceName2, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(roleName2, names.AttrARN, resourceName2, names.AttrPrincipal),
+					resource.TestCheckResourceAttr(resourceName2, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName2, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -508,11 +508,11 @@ func testAccPermissions_tableSelectOnly(t *testing.T) {
 				Config: testAccPermissionsConfig_tableSelectOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -536,7 +536,7 @@ func testAccPermissions_tableSelectPlus(t *testing.T) {
 				Config: testAccPermissionsConfig_tableSelectPlus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "7"),
 				),
@@ -561,7 +561,7 @@ func testAccPermissions_tableWildcardNoSelect(t *testing.T) {
 				Config: testAccPermissionsConfig_tableWildcardNoSelect(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", databaseResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "table.0.wildcard", "true"),
 				),
@@ -586,10 +586,10 @@ func testAccPermissions_tableWildcardSelectOnly(t *testing.T) {
 				Config: testAccPermissionsConfig_tableWildcardSelectOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -612,7 +612,7 @@ func testAccPermissions_tableWildcardSelectPlus(t *testing.T) {
 				Config: testAccPermissionsConfig_tableWildcardSelectPlus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "7"),
 				),
@@ -638,14 +638,14 @@ func testAccPermissions_twcBasic(t *testing.T) {
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -653,14 +653,14 @@ func testAccPermissions_twcBasic(t *testing.T) {
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"timestamp\", \"event\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -668,15 +668,15 @@ func testAccPermissions_twcBasic(t *testing.T) {
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"timestamp\", \"event\", \"transactionamount\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.2", "transactionamount"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -684,13 +684,13 @@ func testAccPermissions_twcBasic(t *testing.T) {
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -715,8 +715,8 @@ func testAccPermissions_twcImplicit(t *testing.T) {
 				Config: testAccPermissionsConfig_twcImplicit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.wildcard", "true"),
@@ -744,9 +744,9 @@ func testAccPermissions_twcWildcardExcludedColumns(t *testing.T) {
 				Config: testAccPermissionsConfig_twcWildcardExcludedColumns(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -770,13 +770,13 @@ func testAccPermissions_twcWildcardSelectOnly(t *testing.T) {
 				Config: testAccPermissionsConfig_twcWildcardSelectOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.database_name", tableName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "table_with_columns.0.name", tableName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.wildcard", "true"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
@@ -800,9 +800,9 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 				Config: testAccPermissionsConfig_twcWildcardSelectPlus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, roleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", acctest.CtZero),
 				),
 			},
 		},
@@ -862,7 +862,7 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 func permissionCountForResource(ctx context.Context, conn *lakeformation.Client, rs *terraform.ResourceState) (int, error) {
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &awstypes.DataLakePrincipal{
-			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes["principal"]),
+			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes[names.AttrPrincipal]),
 		},
 		Resource: &awstypes.Resource{},
 	}
@@ -881,7 +881,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["data_location.#"]; ok && v != "" && v != acctest.CtZero {
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["data_location.0.catalog_id"]; v != "" {
@@ -897,7 +897,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["database.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["database.#"]; ok && v != "" && v != acctest.CtZero {
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["database.0.catalog_id"]; v != "" {
@@ -913,7 +913,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["lf_tag.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["lf_tag.#"]; ok && v != "" && v != acctest.CtZero {
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["lf_tag.0.catalog_id"]; v != "" {
@@ -937,7 +937,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["lf_tag_policy.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["lf_tag_policy.#"]; ok && v != "" && v != acctest.CtZero {
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["lf_tag_policy.0.catalog_id"]; v != "" {
@@ -967,7 +967,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 				expressionSlice[i] = expression
 			}
 			// The exact details of the set hash function don't matter, elements just have distinct values.
-			tfMap["expression"] = schema.NewSet(func(_ interface{}) int { return sdkacctest.RandInt() }, expressionSlice)
+			tfMap[names.AttrExpression] = schema.NewSet(func(_ interface{}) int { return sdkacctest.RandInt() }, expressionSlice)
 		}
 
 		input.Resource.LFTagPolicy = tflakeformation.ExpandLFTagPolicyResource(tfMap)
@@ -977,7 +977,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 
 	tableType := ""
 
-	if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["table.#"]; ok && v != "" && v != acctest.CtZero {
 		tableType = tflakeformation.TableTypeTable
 
 		tfMap := map[string]interface{}{}
@@ -1003,7 +1003,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["table_with_columns.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["table_with_columns.#"]; ok && v != "" && v != acctest.CtZero {
 		tableType = tflakeformation.TableTypeTableWithColumns
 
 		tfMap := map[string]interface{}{}
@@ -1025,7 +1025,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 		noResource = false
 	}
 
-	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
+	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != acctest.CtZero {
 		tfMap := map[string]interface{}{}
 
 		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {

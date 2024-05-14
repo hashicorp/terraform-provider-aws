@@ -54,7 +54,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -116,7 +116,7 @@ func ResourceKxVolume() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
@@ -435,7 +435,7 @@ func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
 
 	a := &types.KxNAS1Configuration{}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
 	}
 
@@ -453,7 +453,7 @@ func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{
 	m := map[string]interface{}{}
 
 	if v := apiObject.Size; v != nil {
-		m["size"] = aws.ToInt32(v)
+		m[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Type; v != "" {
@@ -471,7 +471,7 @@ func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.ClusterName; aws.ToString(v) != "" {
-		m["cluster_name"] = aws.ToString(v)
+		m[names.AttrClusterName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ClusterStatus; v != "" {

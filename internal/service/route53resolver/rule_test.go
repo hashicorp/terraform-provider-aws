@@ -43,8 +43,8 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtZero),
 				),
 			},
 			{
@@ -93,11 +93,11 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_tags1(domainName, "key1", "value1"),
+				Config: testAccRuleConfig_tags1(domainName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -106,20 +106,20 @@ func TestAccRoute53ResolverRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_tags2(domainName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccRuleConfig_tags2(domainName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccRuleConfig_tags1(domainName, "key2", "value2"),
+				Config: testAccRuleConfig_tags1(domainName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -145,7 +145,7 @@ func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -176,7 +176,7 @@ func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -249,7 +249,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":           "192.0.2.6",
 						names.AttrPort: "53",
@@ -270,7 +270,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":           "192.0.2.7",
 						names.AttrPort: "53",
@@ -290,7 +290,7 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":           "192.0.2.7",
 						names.AttrPort: "53",
@@ -327,7 +327,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":               "192.0.2.6",
 						names.AttrPort:     "53",
@@ -348,7 +348,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":               "192.0.2.6",
 						names.AttrPort:     "53",
@@ -364,7 +364,7 @@ func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":               "192.0.2.6",
 						names.AttrPort:     "53",
@@ -398,7 +398,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":           "192.0.2.6",
 						names.AttrPort: "53",
@@ -414,7 +414,7 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":           "192.0.2.6",
 						names.AttrPort: "53",

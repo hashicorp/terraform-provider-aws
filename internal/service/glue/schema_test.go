@@ -43,13 +43,13 @@ func TestAccGlueSchema_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "compatibility", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "data_format", "AVRO"),
-					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schema_checkpoint", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_name", registryResourceName, "registry_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "registry_arn", registryResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -206,11 +206,11 @@ func TestAccGlueSchema_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -219,20 +219,20 @@ func TestAccGlueSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -257,8 +257,8 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
-					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", acctest.CtTwo),
 				),
 			},
 			{
@@ -266,7 +266,7 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"string\"}, {\"name\": \"f2\", \"type\": \"int\"} ]}"),
-					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "3"),
 				),
 			},

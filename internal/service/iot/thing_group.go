@@ -63,7 +63,7 @@ func ResourceThingGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"group_name": {
+									names.AttrGroupName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -85,7 +85,7 @@ func ResourceThingGroup() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"properties": {
+			names.AttrProperties: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -97,7 +97,7 @@ func ResourceThingGroup() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"attributes": {
+									names.AttrAttributes: {
 										Type:     schema.TypeMap,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -142,7 +142,7 @@ func resourceThingGroupCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.ParentGroupName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -184,11 +184,11 @@ func resourceThingGroupRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("metadata", nil)
 	}
 	if v := flattenThingGroupProperties(output.ThingGroupProperties); len(v) > 0 {
-		if err := d.Set("properties", []interface{}{v}); err != nil {
+		if err := d.Set(names.AttrProperties, []interface{}{v}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
 		}
 	} else {
-		d.Set("properties", nil)
+		d.Set(names.AttrProperties, nil)
 	}
 
 	if output.ThingGroupMetadata != nil {
@@ -211,7 +211,7 @@ func resourceThingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			ThingGroupName:  aws.String(d.Get(names.AttrName).(string)),
 		}
 
-		if v, ok := d.GetOk("properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.ThingGroupProperties = expandThingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
 		} else {
 			input.ThingGroupProperties = &iot.ThingGroupProperties{}
@@ -291,7 +291,7 @@ func expandAttributePayload(tfMap map[string]interface{}) *iot.AttributePayload 
 
 	apiObject := &iot.AttributePayload{}
 
-	if v, ok := tfMap["attributes"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrAttributes].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Attributes = flex.ExpandStringMap(v)
 	}
 
@@ -332,7 +332,7 @@ func flattenGroupNameAndARN(apiObject *iot.GroupNameAndArn) map[string]interface
 	}
 
 	if v := apiObject.GroupName; v != nil {
-		tfMap["group_name"] = aws.StringValue(v)
+		tfMap[names.AttrGroupName] = aws.StringValue(v)
 	}
 
 	return tfMap
@@ -382,7 +382,7 @@ func flattenAttributePayload(apiObject *iot.AttributePayload) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Attributes; v != nil {
-		tfMap["attributes"] = aws.StringValueMap(v)
+		tfMap[names.AttrAttributes] = aws.StringValueMap(v)
 	}
 
 	return tfMap

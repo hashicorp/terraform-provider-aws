@@ -68,7 +68,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"iops": {
+			names.AttrIOPS: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -80,7 +80,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -117,7 +117,7 @@ func DataSourceSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -170,7 +170,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	var snapshot *rds.DBSnapshot
 	if len(snapshots) > 1 {
-		if d.Get("most_recent").(bool) {
+		if d.Get(names.AttrMostRecent).(bool) {
 			snapshot = mostRecentDBSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
@@ -188,7 +188,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrEncrypted, snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set("iops", snapshot.Iops)
+	d.Set(names.AttrIOPS, snapshot.Iops)
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("option_group_name", snapshot.OptionGroupName)
@@ -203,7 +203,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set(names.AttrStatus, snapshot.Status)
-	d.Set("storage_type", snapshot.StorageType)
+	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
 	setTagsOut(ctx, snapshot.TagList)

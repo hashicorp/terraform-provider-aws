@@ -148,7 +148,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				ValidateFunc:     validation.StringInSlice(httpDesyncMitigationMode_Values(), false),
 				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
 			},
-			"dns_name": {
+			names.AttrDNSName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -219,7 +219,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -290,14 +290,14 @@ func ResourceLoadBalancer() *schema.Resource {
 						},
 					},
 				},
-				ExactlyOneOf: []string{"subnet_mapping", "subnets"},
+				ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
 			},
-			"subnets": {
+			names.AttrSubnets: {
 				Type:         schema.TypeSet,
 				Optional:     true,
 				Computed:     true,
 				Elem:         &schema.Schema{Type: schema.TypeString},
-				ExactlyOneOf: []string{"subnet_mapping", "subnets"},
+				ExactlyOneOf: []string{"subnet_mapping", names.AttrSubnets},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -370,7 +370,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Scheme = aws.String(elbv2.LoadBalancerSchemeEnumInternal)
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		input.IpAddressType = aws.String(v.(string))
 	}
 
@@ -382,7 +382,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.SubnetMappings = expandSubnetMappings(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("subnets"); ok {
+	if v, ok := d.GetOk(names.AttrSubnets); ok {
 		input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
@@ -501,10 +501,10 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrARN, lb.LoadBalancerArn)
 	d.Set("arn_suffix", SuffixFromARN(lb.LoadBalancerArn))
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
-	d.Set("dns_name", lb.DNSName)
+	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
-	d.Set("ip_address_type", lb.IpAddressType)
+	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	lbType := aws.StringValue(lb.Type)
 	d.Set("load_balancer_type", lbType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
@@ -513,7 +513,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
-	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
+	if err := d.Set(names.AttrSubnets, flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
 	}
 	d.Set(names.AttrVPCID, lb.VpcId)
@@ -595,7 +595,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChanges("subnet_mapping", "subnets") {
+	if d.HasChanges("subnet_mapping", names.AttrSubnets) {
 		input := &elbv2.SetSubnetsInput{
 			LoadBalancerArn: aws.String(d.Id()),
 		}
@@ -606,8 +606,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
-		if d.HasChange("subnets") {
-			if v, ok := d.GetOk("subnets"); ok {
+		if d.HasChange(names.AttrSubnets) {
+			if v, ok := d.GetOk(names.AttrSubnets); ok {
 				input.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 			}
 		}
@@ -619,9 +619,9 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		input := &elbv2.SetIpAddressTypeInput{
-			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),
+			IpAddressType:   aws.String(d.Get(names.AttrIPAddressType).(string)),
 			LoadBalancerArn: aws.String(d.Id()),
 		}
 
@@ -1102,7 +1102,7 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 
 	// Subnet diffs.
 	// Check for changes here -- SetNewComputed will modify HasChange.
-	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange("subnets")
+	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange(names.AttrSubnets)
 	if hasSubnetMappingChanges {
 		if v := config.GetAttr("subnet_mapping"); v.IsWhollyKnown() {
 			o, n := diff.GetChange("subnet_mapping")
@@ -1128,18 +1128,18 @@ func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, 
 			}
 		}
 
-		if err := diff.SetNewComputed("subnets"); err != nil {
+		if err := diff.SetNewComputed(names.AttrSubnets); err != nil {
 			return err
 		}
 	}
 	if hasSubnetsChanges {
-		if v := config.GetAttr("subnets"); v.IsWhollyKnown() {
-			o, n := diff.GetChange("subnets")
+		if v := config.GetAttr(names.AttrSubnets); v.IsWhollyKnown() {
+			o, n := diff.GetChange(names.AttrSubnets)
 			os, ns := o.(*schema.Set), n.(*schema.Set)
 
 			// In-place increase in number of subnets only.
 			if deltaN := ns.Len() - os.Len(); deltaN <= 0 {
-				if err := diff.ForceNew("subnets"); err != nil {
+				if err := diff.ForceNew(names.AttrSubnets); err != nil {
 					return err
 				}
 			}
@@ -1180,7 +1180,7 @@ func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, 
 
 	// Subnet diffs.
 	// Check for changes here -- SetNewComputed will modify HasChange.
-	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange("subnets")
+	hasSubnetMappingChanges, hasSubnetsChanges := diff.HasChange("subnet_mapping"), diff.HasChange(names.AttrSubnets)
 	if hasSubnetMappingChanges {
 		if v := config.GetAttr("subnet_mapping"); v.IsWhollyKnown() {
 			o, n := diff.GetChange("subnet_mapping")
@@ -1210,7 +1210,7 @@ func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, 
 			}
 		}
 
-		if err := diff.SetNewComputed("subnets"); err != nil {
+		if err := diff.SetNewComputed(names.AttrSubnets); err != nil {
 			return err
 		}
 	}

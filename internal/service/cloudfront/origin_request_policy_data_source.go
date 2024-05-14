@@ -21,7 +21,7 @@ func dataSourceOriginRequestPolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOriginRequestPolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -164,7 +164,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 	d.SetId(originRequestPolicyID)
 
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
 		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)

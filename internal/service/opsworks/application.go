@@ -143,7 +143,7 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -187,7 +187,7 @@ func ResourceApplication() *schema.Resource {
 								}
 							},
 						},
-						"private_key": {
+						names.AttrPrivateKey: {
 							Type:      schema.TypeString,
 							Required:  true,
 							Sensitive: true,
@@ -407,14 +407,14 @@ func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVaria
 
 func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
 	if len(vs) == 0 {
-		d.Set("environment", nil)
+		d.Set(names.AttrEnvironment, nil)
 		return
 	}
 
 	// sensitive variables are returned obfuscated from the API, this creates a
 	// permadiff between the obfuscated API response and the config value. We
 	// start with the existing state so it can passthrough when the key is secure
-	values := d.Get("environment").(*schema.Set).List()
+	values := d.Get(names.AttrEnvironment).(*schema.Set).List()
 
 	for i := 0; i < len(values); i++ {
 		value := values[i].(map[string]interface{})
@@ -431,11 +431,11 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*ops
 		}
 	}
 
-	d.Set("environment", values)
+	d.Set(names.AttrEnvironment, values)
 }
 
 func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
-	environmentVariables := d.Get("environment").(*schema.Set).List()
+	environmentVariables := d.Get(names.AttrEnvironment).(*schema.Set).List()
 	result := make([]*opsworks.EnvironmentVariable, len(environmentVariables))
 
 	for i := 0; i < len(environmentVariables); i++ {
@@ -545,7 +545,7 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m["private_key"] = aws.StringValue(v.PrivateKey)
+			m[names.AttrPrivateKey] = aws.StringValue(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {

@@ -90,7 +90,7 @@ func resourceDeploymentConfig() *schema.Resource {
 							ConflictsWith: []string{"traffic_routing_config.0.time_based_linear"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"interval": {
+									names.AttrInterval: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
@@ -111,7 +111,7 @@ func resourceDeploymentConfig() *schema.Resource {
 							ConflictsWith: []string{"traffic_routing_config.0.time_based_canary"},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"interval": {
+									names.AttrInterval: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
@@ -280,7 +280,7 @@ func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingCon
 
 func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary {
 	canary := types.TimeBasedCanary{}
-	if interval, ok := config["interval"]; ok {
+	if interval, ok := config[names.AttrInterval]; ok {
 		canary.CanaryInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
@@ -291,7 +291,7 @@ func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary
 
 func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear {
 	linear := types.TimeBasedLinear{}
-	if interval, ok := config["interval"]; ok {
+	if interval, ok := config[names.AttrInterval]; ok {
 		linear.LinearInterval = int32(interval.(int))
 	}
 	if percentage, ok := config["percentage"]; ok {
@@ -336,7 +336,7 @@ func flattenTimeBasedCanary(canary *types.TimeBasedCanary) []map[string]interfac
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = canary.CanaryInterval
+	item[names.AttrInterval] = canary.CanaryInterval
 	item["percentage"] = canary.CanaryPercentage
 
 	return append(result, item)
@@ -349,7 +349,7 @@ func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interfac
 	}
 
 	item := make(map[string]interface{})
-	item["interval"] = linear.LinearInterval
+	item[names.AttrInterval] = linear.LinearInterval
 	item["percentage"] = linear.LinearPercentage
 
 	return append(result, item)

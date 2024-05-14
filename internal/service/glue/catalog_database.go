@@ -65,7 +65,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -73,7 +73,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(glue.Permission_Values(), false),
 							},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -456,11 +456,11 @@ func expandDatabasePrincipalPermission(tfMap map[string]interface{}) *glue.Princ
 
 	apiObject := &glue.PrincipalPermissions{}
 
-	if v, ok := tfMap["permissions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Permissions = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["principal"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrPrincipal].([]interface{}); ok && len(v) > 0 {
 		apiObject.Principal = expandDatabasePrincipal(v[0].(map[string]interface{}))
 	}
 
@@ -507,11 +507,11 @@ func flattenDatabasePrincipalPermission(apiObject *glue.PrincipalPermissions) ma
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Permissions; v != nil {
-		tfMap["permissions"] = flex.FlattenStringSet(v)
+		tfMap[names.AttrPermissions] = flex.FlattenStringSet(v)
 	}
 
 	if v := apiObject.Principal; v != nil {
-		tfMap["principal"] = []interface{}{flattenDatabasePrincipal(v)}
+		tfMap[names.AttrPrincipal] = []interface{}{flattenDatabasePrincipal(v)}
 	}
 
 	return tfMap

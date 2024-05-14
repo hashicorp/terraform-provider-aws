@@ -50,7 +50,7 @@ func ResourcePortfolio() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,7 +126,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	portfolioDetail := output.PortfolioDetail
 	d.Set(names.AttrARN, portfolioDetail.ARN)
-	d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, portfolioDetail.CreatedTime.Format(time.RFC3339))
 	d.Set(names.AttrDescription, portfolioDetail.Description)
 	d.Set(names.AttrName, portfolioDetail.DisplayName)
 	d.Set("provider_name", portfolioDetail.ProviderName)

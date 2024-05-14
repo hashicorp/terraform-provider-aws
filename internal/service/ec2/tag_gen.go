@@ -28,7 +28,7 @@ func resourceTag() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -50,7 +50,7 @@ func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	identifier := d.Get("resource_id").(string)
+	identifier := d.Get(names.AttrResourceID).(string)
 	key := d.Get(names.AttrKey).(string)
 	value := d.Get(names.AttrValue).(string)
 
@@ -84,7 +84,7 @@ func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading %s resource (%s) tag (%s): %s", names.EC2, identifier, key, err)
 	}
 
-	d.Set("resource_id", identifier)
+	d.Set(names.AttrResourceID, identifier)
 	d.Set(names.AttrKey, key)
 	d.Set(names.AttrValue, value)
 

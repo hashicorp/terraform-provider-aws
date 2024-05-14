@@ -112,7 +112,7 @@ func ResourceIndex() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
@@ -336,7 +336,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 100),
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 65),
@@ -771,7 +771,7 @@ func expandRelevance(relevance []interface{}, documentAttributeValueType string)
 
 	result := &types.Relevance{}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		result.Duration = aws.String(v)
 	}
 
@@ -927,7 +927,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.GroupAttributeField = aws.String(v)
 	}
 
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		result.Issuer = aws.String(v)
 	}
 
@@ -986,7 +986,7 @@ func flattenRelevance(relevance *types.Relevance, documentAttributeValueType str
 	}
 
 	if v := relevance.Duration; v != nil {
-		values["duration"] = aws.ToString(v)
+		values[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := relevance.Freshness; v != nil && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
@@ -1134,7 +1134,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.Issuer; v != nil {
-		values["issuer"] = aws.ToString(v)
+		values[names.AttrIssuer] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.SecretManagerArn; v != nil {

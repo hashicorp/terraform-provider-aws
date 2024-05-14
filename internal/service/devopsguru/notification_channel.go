@@ -98,7 +98,7 @@ func (r *resourceNotificationChannel) Schema(ctx context.Context, req resource.S
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"topic_arn": schema.StringAttribute{
+						names.AttrTopicARN: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.ARNType,
 							PlanModifiers: []planmodifier.String{

@@ -42,7 +42,7 @@ func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.CtOne),
 				),
 			},
 			{
@@ -104,9 +104,9 @@ func testAccVoiceConnectorStreaming_update(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_retention", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "media_insights_configuration.0.disabled", "false"),
 					acctest.MatchResourceAttrRegionalARN(resourceName,
 						"media_insights_configuration.0.configuration_arn",

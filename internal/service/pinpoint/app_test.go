@@ -38,12 +38,12 @@ func TestAccPinpointApp_basic(t *testing.T) {
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "limits.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -138,11 +138,11 @@ func TestAccPinpointApp_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
+				Config: testAccAppConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -151,20 +151,20 @@ func TestAccPinpointApp_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAppConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
+				Config: testAccAppConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -187,7 +187,7 @@ func TestAccPinpointApp_campaignHookLambda(t *testing.T) {
 				Config: testAccAppConfig_campaignHookLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "campaign_hook.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "campaign_hook.0.mode", "DELIVERY"),
 				),
 			},
@@ -216,7 +216,7 @@ func TestAccPinpointApp_limits(t *testing.T) {
 				Config: testAccAppConfig_limits(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "limits.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "limits.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "limits.0.total", "100"),
 				),
 			},
@@ -245,7 +245,7 @@ func TestAccPinpointApp_quietTime(t *testing.T) {
 				Config: testAccAppConfig_quietTime(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "quiet_time.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "quiet_time.0.start", "00:00"),
 				),
 			},

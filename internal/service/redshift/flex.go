@@ -27,7 +27,7 @@ func flattenLogging(ls *redshift.LoggingStatus) []interface{} {
 		cfg["log_exports"] = flex.FlattenStringSet(ls.LogExports)
 	}
 	if ls.S3KeyPrefix != nil {
-		cfg["s3_key_prefix"] = aws.StringValue(ls.S3KeyPrefix)
+		cfg[names.AttrS3KeyPrefix] = aws.StringValue(ls.S3KeyPrefix)
 	}
 	return []interface{}{cfg}
 }
@@ -42,7 +42,7 @@ func flattenSnapshotCopy(scs *redshift.ClusterSnapshotCopyStatus) []interface{} 
 		cfg["destination_region"] = aws.StringValue(scs.DestinationRegion)
 	}
 	if scs.RetentionPeriod != nil {
-		cfg["retention_period"] = aws.Int64Value(scs.RetentionPeriod)
+		cfg[names.AttrRetentionPeriod] = aws.Int64Value(scs.RetentionPeriod)
 	}
 	if scs.SnapshotCopyGrantName != nil {
 		cfg["grant_name"] = aws.StringValue(scs.SnapshotCopyGrantName)

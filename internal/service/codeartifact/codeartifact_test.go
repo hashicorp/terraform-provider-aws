@@ -15,9 +15,9 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"AuthorizationTokenDataSource": {
-			"basic":    testAccAuthorizationTokenDataSource_basic,
-			"duration": testAccAuthorizationTokenDataSource_duration,
-			"owner":    testAccAuthorizationTokenDataSource_owner,
+			"basic":            testAccAuthorizationTokenDataSource_basic,
+			names.AttrDuration: testAccAuthorizationTokenDataSource_duration,
+			names.AttrOwner:    testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
 			"basic":                         testAccDomain_basic,
@@ -29,7 +29,7 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 		"DomainPermissionsPolicy": {
 			"basic":            testAccDomainPermissionsPolicy_basic,
 			"disappears":       testAccDomainPermissionsPolicy_disappears,
-			"owner":            testAccDomainPermissionsPolicy_owner,
+			names.AttrOwner:    testAccDomainPermissionsPolicy_owner,
 			"disappearsDomain": testAccDomainPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent": testAccDomainPermissionsPolicy_ignoreEquivalent,
 		},
@@ -38,18 +38,18 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			names.AttrDescription: testAccRepository_description,
 			"disappears":          testAccRepository_disappears,
 			"externalConnection":  testAccRepository_externalConnection,
-			"owner":               testAccRepository_owner,
+			names.AttrOwner:       testAccRepository_owner,
 			names.AttrTags:        testAccRepository_tags,
 			"upstreams":           testAccRepository_upstreams,
 		},
 		"RepositoryEndpointDataSource": {
-			"basic": testAccRepositoryEndpointDataSource_basic,
-			"owner": testAccRepositoryEndpointDataSource_owner,
+			"basic":         testAccRepositoryEndpointDataSource_basic,
+			names.AttrOwner: testAccRepositoryEndpointDataSource_owner,
 		},
 		"RepositoryPermissionsPolicy": {
 			"basic":            testAccRepositoryPermissionsPolicy_basic,
 			"disappears":       testAccRepositoryPermissionsPolicy_disappears,
-			"owner":            testAccRepositoryPermissionsPolicy_owner,
+			names.AttrOwner:    testAccRepositoryPermissionsPolicy_owner,
 			"disappearsDomain": testAccRepositoryPermissionsPolicy_Disappears_domain,
 			"ignoreEquivalent": testAccRepositoryPermissionsPolicy_ignoreEquivalent,
 		},

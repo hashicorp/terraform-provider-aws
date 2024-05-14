@@ -42,7 +42,7 @@ func dataSourcePublicKey() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateKeyOrAlias,
@@ -51,7 +51,7 @@ func dataSourcePublicKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.GetPublicKeyInput{
 		KeyId: aws.String(keyID),
 	}
@@ -92,7 +92,7 @@ func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)
 	d.Set("encryption_algorithms", output.EncryptionAlgorithms)
 	d.Set("key_usage", output.KeyUsage)
-	d.Set("public_key", itypes.Base64Encode(output.PublicKey))
+	d.Set(names.AttrPublicKey, itypes.Base64Encode(output.PublicKey))
 	d.Set("public_key_pem", string(pem.EncodeToMemory(&pem.Block{
 		Type:  "PUBLIC KEY",
 		Bytes: output.PublicKey,

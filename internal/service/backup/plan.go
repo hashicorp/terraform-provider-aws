@@ -71,7 +71,7 @@ func ResourcePlan() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -152,7 +152,7 @@ func ResourcePlan() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 							),
 						},
-						"schedule": {
+						names.AttrSchedule: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -194,7 +194,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		BackupPlan: &backup.PlanInput{
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			BackupPlanName:         aws.String(name),
-			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 		},
 		BackupPlanTags: getTagsIn(ctx),
 	}
@@ -233,7 +233,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrARN, output.BackupPlanArn)
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
-	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
@@ -245,13 +245,13 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.HasChanges("rule", "advanced_backup_setting") {
+	if d.HasChanges(names.AttrRule, "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
-				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+				Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 			},
 		}
 
@@ -331,7 +331,7 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
 		}
-		if vSchedule, ok := mRule["schedule"].(string); ok && vSchedule != "" {
+		if vSchedule, ok := mRule[names.AttrSchedule].(string); ok && vSchedule != "" {
 			rule.ScheduleExpression = aws.String(vSchedule)
 		}
 		if vEnableContinuousBackup, ok := mRule["enable_continuous_backup"].(bool); ok {
@@ -437,7 +437,7 @@ func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 		mRule := map[string]interface{}{
 			"rule_name":                aws.StringValue(rule.RuleName),
 			"target_vault_name":        aws.StringValue(rule.TargetBackupVaultName),
-			"schedule":                 aws.StringValue(rule.ScheduleExpression),
+			names.AttrSchedule:         aws.StringValue(rule.ScheduleExpression),
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
@@ -522,7 +522,7 @@ func planHash(vRule interface{}) int {
 	if v, ok := mRule["target_vault_name"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if v, ok := mRule["schedule"].(string); ok {
+	if v, ok := mRule[names.AttrSchedule].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	if v, ok := mRule["enable_continuous_backup"].(bool); ok {

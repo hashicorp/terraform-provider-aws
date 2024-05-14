@@ -36,7 +36,7 @@ func TestAccSSMDocument_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "document_format", "JSON"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("document/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "document_version"),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 				),
@@ -169,14 +169,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "schema_version", "2.0"),
-					resource.TestCheckResourceAttr(resourceName, "document_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
-					resource.TestCheckOutput("default_version", "1"),
-					resource.TestCheckOutput("document_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.CtOne),
+					resource.TestCheckOutput("default_version", acctest.CtOne),
+					resource.TestCheckOutput("document_version", acctest.CtOne),
 					resource.TestCheckOutput("hash", "1a200df3fefa0e7f8814829781d6295e616474945a239a956561876b4c820cde"),
-					resource.TestCheckOutput("latest_version", "1"),
-					resource.TestCheckOutput("parameter_len", "0"),
+					resource.TestCheckOutput("latest_version", acctest.CtOne),
+					resource.TestCheckOutput("parameter_len", acctest.CtZero),
 				),
 			},
 			{
@@ -188,14 +188,14 @@ func TestAccSSMDocument_update(t *testing.T) {
 				Config: testAccDocumentConfig_20Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "document_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
-					resource.TestCheckOutput("default_version", "2"),
-					resource.TestCheckOutput("document_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_version", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "default_version", acctest.CtTwo),
+					resource.TestCheckOutput("default_version", acctest.CtTwo),
+					resource.TestCheckOutput("document_version", acctest.CtTwo),
 					resource.TestCheckOutput("hash", "214c51d87f98ae07b868a63cd866955578c1ef41c3ab8c36f80039dfd9565f53"),
-					resource.TestCheckOutput("latest_version", "2"),
-					resource.TestCheckOutput("parameter_len", "1"),
+					resource.TestCheckOutput("latest_version", acctest.CtTwo),
+					resource.TestCheckOutput("parameter_len", acctest.CtOne),
 				),
 			},
 		},
@@ -526,7 +526,7 @@ mainSteps:
 				Config: testAccDocumentConfig_formatYAML(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content", content1+"\n"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content1+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
 			},
@@ -539,7 +539,7 @@ mainSteps:
 				Config: testAccDocumentConfig_formatYAML(rName, content2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "content", content2+"\n"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content2+"\n"),
 					resource.TestCheckResourceAttr(resourceName, "document_format", "YAML"),
 				),
 			},
@@ -559,11 +559,11 @@ func TestAccSSMDocument_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDocumentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDocumentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -572,19 +572,19 @@ func TestAccSSMDocument_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDocumentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDocumentConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDocumentConfig_tags1(rName, "key2", "value2updated"),
+				Config: testAccDocumentConfig_tags1(rName, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2updated"),
 				),
 			},
@@ -622,11 +622,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Document ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		_, err := tfssm.FindDocumentByName(ctx, conn, rs.Primary.ID)
 
@@ -636,7 +632,7 @@ func testAccCheckDocumentExists(ctx context.Context, n string) resource.TestChec
 
 func testAccCheckDocumentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_document" {

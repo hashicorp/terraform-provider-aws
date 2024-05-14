@@ -81,7 +81,7 @@ func DataSourceImagePipeline() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -123,7 +123,7 @@ func DataSourceImagePipeline() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"schedule": {
+			names.AttrSchedule: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -195,9 +195,9 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrName, imagePipeline.Name)
 	d.Set("platform", imagePipeline.Platform)
 	if imagePipeline.Schedule != nil {
-		d.Set("schedule", []interface{}{flattenSchedule(imagePipeline.Schedule)})
+		d.Set(names.AttrSchedule, []interface{}{flattenSchedule(imagePipeline.Schedule)})
 	} else {
-		d.Set("schedule", nil)
+		d.Set(names.AttrSchedule, nil)
 	}
 
 	d.Set(names.AttrStatus, imagePipeline.Status)

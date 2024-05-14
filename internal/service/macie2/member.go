@@ -39,7 +39,7 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -106,7 +106,7 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &macie2.CreateMemberInput{
 		Account: &macie2.AccountDetail{
 			AccountId: aws.String(accountId),
-			Email:     aws.String(d.Get("email").(string)),
+			Email:     aws.String(d.Get(names.AttrEmail).(string)),
 		},
 		Tags: getTagsIn(ctx),
 	}
@@ -214,7 +214,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set(names.AttrAccountID, resp.AccountId)
-	d.Set("email", resp.Email)
+	d.Set(names.AttrEmail, resp.Email)
 	d.Set("relationship_status", resp.RelationshipStatus)
 	d.Set("administrator_account_id", resp.AdministratorAccountId)
 	d.Set("master_account_id", resp.MasterAccountId)

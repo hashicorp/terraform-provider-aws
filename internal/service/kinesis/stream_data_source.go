@@ -45,7 +45,7 @@ func DataSourceStream() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"retention_period": {
+			names.AttrRetentionPeriod: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_timestamp", aws.ToTime(stream.StreamCreationTimestamp).Unix())
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set("open_shards", aws.ToStringSlice(openShards))
-	d.Set("retention_period", stream.RetentionPeriodHours)
+	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)
 	var shardLevelMetrics []types.MetricsName
 	for _, v := range stream.EnhancedMonitoring {
 		shardLevelMetrics = append(shardLevelMetrics, v.ShardLevelMetrics...)

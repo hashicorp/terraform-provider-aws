@@ -36,7 +36,7 @@ func TestAccKafkaScramSecretAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_arn", clusterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 				Config: testAccScramSecretAssociationConfig_basic(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScramSecretAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secret_arn_list.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
 				),

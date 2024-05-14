@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ecs_cluster_capacity_providers")
@@ -39,7 +40,7 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +64,7 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"weight": {
+						names.AttrWeight: {
 							Type:         schema.TypeInt,
 							Default:      0,
 							Optional:     true,
@@ -81,7 +82,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	input := &ecs.PutClusterCapacityProvidersInput{
 		CapacityProviders:               flex.ExpandStringSet(d.Get("capacity_providers").(*schema.Set)),
 		Cluster:                         aws.String(clusterName),
@@ -125,7 +126,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 	if err := d.Set("capacity_providers", aws.StringValueSlice(cluster.CapacityProviders)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_providers: %s", err)
 	}
-	d.Set("cluster_name", cluster.ClusterName)
+	d.Set(names.AttrClusterName, cluster.ClusterName)
 	if err := d.Set("default_capacity_provider_strategy", flattenCapacityProviderStrategy(cluster.DefaultCapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_capacity_provider_strategy: %s", err)
 	}

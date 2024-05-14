@@ -55,12 +55,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -72,12 +72,12 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"principal": {
+						names.AttrPrincipal: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

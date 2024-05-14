@@ -49,7 +49,7 @@ func testAccGrantsDataSource_noMatch(t *testing.T) {
 			{
 				Config: testAccGrantsDataSourceConfig_noMatch(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "arns.#", acctest.CtZero),
 				),
 			},
 		},

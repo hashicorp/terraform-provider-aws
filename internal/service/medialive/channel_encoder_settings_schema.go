@@ -4094,7 +4094,7 @@ func expandInputLocation(tfList []interface{}) *types.InputLocation {
 	m := tfList[0].(map[string]interface{})
 
 	var out types.InputLocation
-	if v, ok := m["uri"].(string); ok && v != "" {
+	if v, ok := m[names.AttrURI].(string); ok && v != "" {
 		out.Uri = aws.String(v)
 	}
 	if v, ok := m["password_param"].(string); ok && v != "" {
@@ -6522,7 +6522,7 @@ func flattenInputLocation(in *types.InputLocation) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"uri":              aws.ToString(in.Uri),
+		names.AttrURI:      aws.ToString(in.Uri),
 		"password_param":   aws.ToString(in.PasswordParam),
 		names.AttrUsername: aws.ToString(in.Username),
 	}

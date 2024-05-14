@@ -29,7 +29,7 @@ func expandCapacityProviderStrategyItem(tfMap map[string]interface{}) types.Capa
 		a.CapacityProvider = aws.String(v)
 	}
 
-	if v, ok := tfMap["weight"].(int); ok {
+	if v, ok := tfMap[names.AttrWeight].(int); ok {
 		a.Weight = int32(v)
 	}
 
@@ -45,7 +45,7 @@ func flattenCapacityProviderStrategyItem(apiObject types.CapacityProviderStrateg
 		m["capacity_provider"] = aws.ToString(v)
 	}
 
-	m["weight"] = apiObject.Weight
+	m[names.AttrWeight] = apiObject.Weight
 
 	return m
 }
@@ -374,7 +374,7 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 		awsvpcConfig.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnets"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnets].(*schema.Set); ok && v.Len() > 0 {
 		awsvpcConfig.Subnets = flex.ExpandStringValueSet(v)
 	}
 
@@ -402,7 +402,7 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	}
 
 	if v := apiObject.AwsvpcConfiguration.Subnets; v != nil {
-		m["subnets"] = flex.FlattenStringValueSet(v)
+		m[names.AttrSubnets] = flex.FlattenStringValueSet(v)
 	}
 
 	return m
@@ -415,7 +415,7 @@ func expandPlacementConstraint(tfMap map[string]interface{}) types.PlacementCons
 
 	a := types.PlacementConstraint{}
 
-	if v, ok := tfMap["expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 		a.Expression = aws.String(v)
 	}
 
@@ -430,7 +430,7 @@ func flattenPlacementConstraint(apiObject types.PlacementConstraint) map[string]
 	m := map[string]interface{}{}
 
 	if v := apiObject.Expression; v != nil {
-		m["expression"] = aws.ToString(v)
+		m[names.AttrExpression] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {
@@ -447,7 +447,7 @@ func expandPlacementStrategy(tfMap map[string]interface{}) types.PlacementStrate
 
 	a := types.PlacementStrategy{}
 
-	if v, ok := tfMap["field"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 		a.Field = aws.String(v)
 	}
 
@@ -462,7 +462,7 @@ func flattenPlacementStrategy(apiObject types.PlacementStrategy) map[string]inte
 	m := map[string]interface{}{}
 
 	if v := apiObject.Field; v != nil {
-		m["field"] = aws.ToString(v)
+		m[names.AttrField] = aws.ToString(v)
 	}
 
 	if v := string(apiObject.Type); v != "" {

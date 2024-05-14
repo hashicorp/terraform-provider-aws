@@ -48,7 +48,7 @@ func TestAccCloudFrontFunction_basic(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("function/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code"),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
 					resource.TestCheckResourceAttr(resourceName, "etag", "ETVPDKIKX0DER"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "publish", "true"),
@@ -271,14 +271,14 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 				Config: testAccFunctionConfig_comment(rName, "test 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test 1"),
 				),
 			},
 			{
 				Config: testAccFunctionConfig_comment(rName, "test 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "comment", "test 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "test 2"),
 				),
 			},
 			{

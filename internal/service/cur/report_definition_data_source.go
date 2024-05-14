@@ -50,7 +50,7 @@ func dataSourceReportDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"s3_bucket": {
+			names.AttrS3Bucket: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,7 +89,7 @@ func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_name", reportDefinition.ReportName)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
-	d.Set("s3_bucket", reportDefinition.S3Bucket)
+	d.Set(names.AttrS3Bucket, reportDefinition.S3Bucket)
 	d.Set("s3_prefix", reportDefinition.S3Prefix)
 	d.Set("s3_region", reportDefinition.S3Region)
 	d.Set("time_unit", reportDefinition.TimeUnit)

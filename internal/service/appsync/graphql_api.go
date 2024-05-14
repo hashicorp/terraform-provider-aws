@@ -87,7 +87,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -95,7 +95,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -210,7 +210,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"client_id": {
+						names.AttrClientID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -218,7 +218,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -237,7 +237,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntBetween(0, 10000),
 			},
-			"schema": {
+			names.AttrSchema: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -351,7 +351,7 @@ func resourceGraphQLAPICreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.GraphqlApi.ApiId))
 
-	if v, ok := d.GetOk("schema"); ok {
+	if v, ok := d.GetOk(names.AttrSchema); ok {
 		if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -461,8 +461,8 @@ func resourceGraphQLAPIUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating AppSync GraphQL API (%s): %s", d.Id(), err)
 		}
 
-		if d.HasChange("schema") {
-			if v, ok := d.GetOk("schema"); ok {
+		if d.HasChange(names.AttrSchema) {
+			if v, ok := d.GetOk(names.AttrSchema); ok {
 				if err := putSchema(ctx, conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 					return sdkdiag.AppendFromErr(diags, err)
 				}
@@ -619,14 +619,14 @@ func expandGraphQLAPIOpenIDConnectConfig(l []interface{}) *appsync.OpenIDConnect
 	m := l[0].(map[string]interface{})
 
 	openIDConnectConfig := &appsync.OpenIDConnectConfig{
-		Issuer: aws.String(m["issuer"].(string)),
+		Issuer: aws.String(m[names.AttrIssuer].(string)),
 	}
 
 	if v, ok := m["auth_ttl"].(int); ok && v != 0 {
 		openIDConnectConfig.AuthTTL = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["client_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
 		openIDConnectConfig.ClientId = aws.String(v)
 	}
 
@@ -757,10 +757,10 @@ func flattenGraphQLAPIOpenIDConnectConfig(openIDConnectConfig *appsync.OpenIDCon
 	}
 
 	m := map[string]interface{}{
-		"auth_ttl":  aws.Int64Value(openIDConnectConfig.AuthTTL),
-		"client_id": aws.StringValue(openIDConnectConfig.ClientId),
-		"iat_ttl":   aws.Int64Value(openIDConnectConfig.IatTTL),
-		"issuer":    aws.StringValue(openIDConnectConfig.Issuer),
+		"auth_ttl":         aws.Int64Value(openIDConnectConfig.AuthTTL),
+		names.AttrClientID: aws.StringValue(openIDConnectConfig.ClientId),
+		"iat_ttl":          aws.Int64Value(openIDConnectConfig.IatTTL),
+		names.AttrIssuer:   aws.StringValue(openIDConnectConfig.Issuer),
 	}
 
 	return []interface{}{m}
