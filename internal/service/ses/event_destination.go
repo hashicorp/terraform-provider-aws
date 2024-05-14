@@ -46,7 +46,7 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"kinesis_destination", "sns_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -297,7 +297,7 @@ func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionCo
 	for i, vI := range v {
 		cloudwatch := vI.(map[string]interface{})
 		b[i] = &ses.CloudWatchDimensionConfiguration{
-			DefaultDimensionValue: aws.String(cloudwatch["default_value"].(string)),
+			DefaultDimensionValue: aws.String(cloudwatch[names.AttrDefaultValue].(string)),
 			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
 			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
 		}
@@ -315,9 +315,9 @@ func flattenCloudWatchDestination(destination *ses.CloudWatchDestination) []inte
 
 	for _, dimensionConfiguration := range destination.DimensionConfigurations {
 		mDimensionConfiguration := map[string]interface{}{
-			"default_value":  aws.StringValue(dimensionConfiguration.DefaultDimensionValue),
-			"dimension_name": aws.StringValue(dimensionConfiguration.DimensionName),
-			"value_source":   aws.StringValue(dimensionConfiguration.DimensionValueSource),
+			names.AttrDefaultValue: aws.StringValue(dimensionConfiguration.DefaultDimensionValue),
+			"dimension_name":       aws.StringValue(dimensionConfiguration.DimensionName),
+			"value_source":         aws.StringValue(dimensionConfiguration.DimensionValueSource),
 		}
 
 		vDimensionConfigurations = append(vDimensionConfigurations, mDimensionConfiguration)

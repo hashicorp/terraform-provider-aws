@@ -116,7 +116,7 @@ func ResourceReceiptRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"function_arn": {
+						names.AttrFunctionARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -359,8 +359,8 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.LambdaAction != nil {
 			lambdaAction := map[string]interface{}{
-				"function_arn": aws.StringValue(element.LambdaAction.FunctionArn),
-				"position":     i + 1,
+				names.AttrFunctionARN: aws.StringValue(element.LambdaAction.FunctionArn),
+				"position":            i + 1,
 			}
 
 			if element.LambdaAction.InvocationType != nil {
@@ -635,7 +635,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			lambdaAction := &ses.LambdaAction{
-				FunctionArn: aws.String(elem["function_arn"].(string)),
+				FunctionArn: aws.String(elem[names.AttrFunctionARN].(string)),
 			}
 
 			if elem["invocation_type"] != "" {
