@@ -40,7 +40,7 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 				),
