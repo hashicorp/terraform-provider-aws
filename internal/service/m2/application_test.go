@@ -45,8 +45,8 @@ func TestAccM2Application_basic(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -118,7 +118,7 @@ func TestAccM2Application_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -140,7 +140,7 @@ func TestAccM2Application_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -171,8 +171,8 @@ func TestAccM2Application_full(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
@@ -215,7 +215,7 @@ func TestAccM2Application_update(t *testing.T) {
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
 				),
 			},
 			{
