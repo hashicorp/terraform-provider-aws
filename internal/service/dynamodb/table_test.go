@@ -2078,11 +2078,11 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "false",
+						names.AttrPropagateTags: "false",
 					}),
 				),
 			},
@@ -2118,11 +2118,11 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2157,7 +2157,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2170,11 +2170,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2186,7 +2186,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2199,11 +2199,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "false",
+						names.AttrPropagateTags: "false",
 					}),
 				),
 			},
@@ -2216,11 +2216,11 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "false",
+						names.AttrPropagateTags: "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "false",
+						names.AttrPropagateTags: "false",
 					}),
 				),
 			},
@@ -2255,7 +2255,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2267,7 +2267,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2280,11 +2280,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2297,11 +2297,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
@@ -2314,11 +2314,11 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.ThirdRegion(),
-						"propagate_tags": "true",
+						names.AttrPropagateTags: "true",
 					}),
 				),
 			},
