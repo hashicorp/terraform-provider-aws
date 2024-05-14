@@ -249,7 +249,7 @@ func ResourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"max_capacity": {
+						names.AttrMaxCapacity: {
 							Type:     schema.TypeFloat,
 							Optional: true,
 							Default:  ServerlessMaxNCUs,
@@ -979,7 +979,7 @@ func expandServerlessConfiguration(l []interface{}) *neptune.ServerlessV2Scaling
 	tfMap := l[0].(map[string]interface{})
 	return &neptune.ServerlessV2ScalingConfiguration{
 		MinCapacity: aws.Float64(tfMap["min_capacity"].(float64)),
-		MaxCapacity: aws.Float64(tfMap["max_capacity"].(float64)),
+		MaxCapacity: aws.Float64(tfMap[names.AttrMaxCapacity].(float64)),
 	}
 }
 
@@ -990,7 +990,7 @@ func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.Serve
 
 	m := map[string]interface{}{
 		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
-		"max_capacity": aws.Float64Value(serverlessConfig.MaxCapacity),
+		names.AttrMaxCapacity: aws.Float64Value(serverlessConfig.MaxCapacity),
 	}
 
 	return []map[string]interface{}{m}
