@@ -390,7 +390,7 @@ func resourceClusterResourceV0() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,

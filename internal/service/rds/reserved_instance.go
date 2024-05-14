@@ -63,7 +63,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -139,8 +139,8 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
-		input.DBInstanceCount = aws.Int64(int64(d.Get("instance_count").(int)))
+	if v, ok := d.Get(names.AttrInstanceCount).(int); ok && v > 0 {
+		input.DBInstanceCount = aws.Int64(int64(d.Get(names.AttrInstanceCount).(int)))
 	}
 
 	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
@@ -181,7 +181,7 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("db_instance_class", reservation.DBInstanceClass)
 	d.Set(names.AttrDuration, reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
-	d.Set("instance_count", reservation.DBInstanceCount)
+	d.Set(names.AttrInstanceCount, reservation.DBInstanceCount)
 	d.Set("lease_id", reservation.LeaseId)
 	d.Set("multi_az", reservation.MultiAZ)
 	d.Set("offering_id", reservation.ReservedDBInstancesOfferingId)

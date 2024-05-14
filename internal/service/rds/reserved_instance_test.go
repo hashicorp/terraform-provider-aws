@@ -49,7 +49,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", instanceCount),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, instanceCount),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),

@@ -501,7 +501,7 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io1"),
 				),
 			},
 		},
@@ -528,7 +528,7 @@ func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "io2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "io2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
 				),
 			},
 		},
@@ -558,7 +558,7 @@ func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAurora),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 		},
@@ -586,7 +586,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageType),
 				),
 			},
 		},
@@ -615,7 +615,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageTypeNotDefined(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 			{
@@ -623,7 +623,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
 				),
 			},
 		},
@@ -681,7 +681,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 				Config: testAccClusterConfig_auroraStorageType(rName, storageTypeAuroraIOPT1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeAuroraIOPT1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeAuroraIOPT1),
 				),
 			},
 			{
@@ -689,7 +689,7 @@ func TestAccRDSCluster_storageTypeAuroraIopt1UpdateAurora(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", storageTypeEmpty),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, storageTypeEmpty),
 				),
 			},
 		},

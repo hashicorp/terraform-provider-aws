@@ -117,7 +117,7 @@ func (r *resourceExportTask) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
 			},
-			"source_type": schema.StringAttribute{
+			names.AttrSourceType: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrStatus: schema.StringAttribute{
