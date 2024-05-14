@@ -127,11 +127,11 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -141,20 +141,20 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"storage_location"},
 			},
 			{
-				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
+				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
