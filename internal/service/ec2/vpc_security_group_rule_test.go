@@ -458,13 +458,13 @@ func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_partialMatching(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "10.0.2.0/24"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.1", "10.0.3.0/24"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.2", "10.0.4.0/24"),
 					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.0", "10.0.5.0/24"),
-					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.0", "10.0.2.0/24"),
 					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.1", "10.0.3.0/24"),
 					resource.TestCheckResourceAttr(resource3Name, "cidr_blocks.2", "10.0.4.0/24"),
@@ -509,7 +509,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resource1Name, "source_security_group_id"),
-					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.0", "10.0.2.0/24"),
 					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.1", "10.0.3.0/24"),
 					resource.TestCheckResourceAttr(resource2Name, "cidr_blocks.2", "10.0.4.0/24"),
