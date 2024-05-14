@@ -374,11 +374,11 @@ func TestAccEKSNodeGroup_labels(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_labels2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccNodeGroupConfig_labels2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, "labels.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "labels.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "labels.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "labels.key2", acctest.CtValue2),
 				),
 			},
@@ -813,7 +813,7 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -822,13 +822,13 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNodeGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccNodeGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup1, &nodeGroup2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -837,7 +837,7 @@ func TestAccEKSNodeGroup_tags(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup3),
 					testAccCheckNodeGroupNotRecreated(&nodeGroup2, &nodeGroup3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -875,14 +875,14 @@ func TestAccEKSNodeGroup_taints(t *testing.T) {
 			},
 			{
 				Config: testAccNodeGroupConfig_taints2(rName,
-					acctest.CtKey1, "value1updated", "NO_EXECUTE",
+					acctest.CtKey1, acctest.CtValue1Updated, "NO_EXECUTE",
 					acctest.CtKey2, acctest.CtValue2, "NO_SCHEDULE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
 					resource.TestCheckResourceAttr(resourceName, "taint.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
 						names.AttrKey:   acctest.CtKey1,
-						names.AttrValue: "value1updated",
+						names.AttrValue: acctest.CtValue1Updated,
 						"effect":        "NO_EXECUTE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "taint.*", map[string]string{
