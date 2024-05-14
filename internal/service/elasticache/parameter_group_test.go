@@ -40,7 +40,7 @@ func TestAccElastiCacheParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redis2.8"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redis2.8"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
