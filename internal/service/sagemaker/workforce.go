@@ -76,7 +76,7 @@ func ResourceWorkforce() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"client_secret": {
+						names.AttrClientSecret: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
@@ -388,7 +388,7 @@ func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 	config := &sagemaker.OidcConfig{
 		AuthorizationEndpoint: aws.String(m["authorization_endpoint"].(string)),
 		ClientId:              aws.String(m[names.AttrClientID].(string)),
-		ClientSecret:          aws.String(m["client_secret"].(string)),
+		ClientSecret:          aws.String(m[names.AttrClientSecret].(string)),
 		Issuer:                aws.String(m[names.AttrIssuer].(string)),
 		JwksUri:               aws.String(m["jwks_uri"].(string)),
 		LogoutEndpoint:        aws.String(m["logout_endpoint"].(string)),
@@ -407,7 +407,7 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 	m := map[string]interface{}{
 		"authorization_endpoint": aws.StringValue(config.AuthorizationEndpoint),
 		names.AttrClientID:       aws.StringValue(config.ClientId),
-		"client_secret":          clientSecret,
+		names.AttrClientSecret:   clientSecret,
 		names.AttrIssuer:         aws.StringValue(config.Issuer),
 		"jwks_uri":               aws.StringValue(config.JwksUri),
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
