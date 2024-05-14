@@ -34,7 +34,7 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, dataSourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLastUpdatedDate, dataSourceName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 				),
 			},

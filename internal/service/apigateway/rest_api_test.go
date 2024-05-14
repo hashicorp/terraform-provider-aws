@@ -41,7 +41,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.CtZero),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -49,9 +49,9 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtZero),
 					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -81,7 +81,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -108,7 +108,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -808,7 +808,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName2, names.AttrID),
 				),
@@ -1097,18 +1097,18 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated minimum compression size still overrides
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.CtTwo, 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.CtTwo),
 				),
 			},
 			// Verify updated body minimum compression size is still overridden
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 1048576),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.CtTwo, 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.CtTwo),
 				),
 			},
 		},

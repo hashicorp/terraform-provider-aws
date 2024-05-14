@@ -39,7 +39,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.header.Content-Type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", "true"),
 				),
@@ -125,7 +125,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 					testAccCheckMethodExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttrSet(resourceName, "authorizer_id"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", acctest.CtTwo),
 				),
 			},
 
