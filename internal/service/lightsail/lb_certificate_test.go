@@ -52,7 +52,7 @@ func testAccLoadBalancerCertificate_basic(t *testing.T) {
 					// When using a .test domain, Domain Validation Records return a single FAILED entry
 					resource.TestCheckResourceAttr(resourceName, "domain_validation_records.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func testAccLoadBalancerCertificate_subjectAlternativeNames(t *testing.T) {
 				Config: testAccLoadBalancerCertificateConfig_subjectAlternativeNames(rName, lbName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", subjectAlternativeName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 				),

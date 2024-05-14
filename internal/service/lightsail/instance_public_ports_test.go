@@ -70,7 +70,7 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
 						"from_port":        "80",
@@ -111,7 +111,7 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 						names.AttrProtocol: "tcp",
 						"from_port":        "125",
 						"to_port":          "125",
-						"cidrs.#":          "2",
+						"cidrs.#":          acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "1.1.1.1/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "192.168.1.0/24"),
