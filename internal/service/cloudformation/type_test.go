@@ -50,7 +50,7 @@ func TestAccCloudFormationType_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An example resource schema demonstrating some basic constructs and validation rules."),
 					resource.TestCheckResourceAttr(resourceName, names.AttrExecutionRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "is_default_version", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_type", string(awstypes.ProvisioningTypeFullyMutable)),
 					resource.TestCheckResourceAttr(resourceName, "schema_handler_package", fmt.Sprintf("s3://%s/test", rName)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrSchema, regexache.MustCompile(`^\{.*`)),
