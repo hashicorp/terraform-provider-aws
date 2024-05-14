@@ -135,6 +135,7 @@ import (
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
 	resourcegroupstaggingapi_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi"
 	rolesanywhere_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	route53_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53"
 	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
 	route53profiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
@@ -233,7 +234,6 @@ import (
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
-	route53_sdkv1 "github.com/aws/aws-sdk-go/service/route53"
 	route53recoverycontrolconfig_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	route53recoveryreadiness_sdkv1 "github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	route53resolver_sdkv1 "github.com/aws/aws-sdk-go/service/route53resolver"
@@ -1025,8 +1025,8 @@ func (c *AWSClient) RolesAnywhereClient(ctx context.Context) *rolesanywhere_sdkv
 	return errs.Must(client[*rolesanywhere_sdkv2.Client](ctx, c, names.RolesAnywhere, make(map[string]any)))
 }
 
-func (c *AWSClient) Route53Conn(ctx context.Context) *route53_sdkv1.Route53 {
-	return errs.Must(conn[*route53_sdkv1.Route53](ctx, c, names.Route53, make(map[string]any)))
+func (c *AWSClient) Route53Client(ctx context.Context) *route53_sdkv2.Client {
+	return errs.Must(client[*route53_sdkv2.Client](ctx, c, names.Route53, make(map[string]any)))
 }
 
 func (c *AWSClient) Route53DomainsClient(ctx context.Context) *route53domains_sdkv2.Client {
