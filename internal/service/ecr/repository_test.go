@@ -42,7 +42,7 @@ func TestAccECRRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					testAccCheckRepositoryRegistryID(resourceName),
 					testAccCheckRepositoryRepositoryURL(resourceName, rName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 				),
@@ -96,7 +96,7 @@ func TestAccECRRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccECRRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -172,7 +172,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "true"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 				Config: testAccRepositoryConfig_imageScanningConfiguration(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "image_scanning_configuration.0.scan_on_push", "false"),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 				Config: testAccRepositoryConfig_encryptionKMSDefaultkey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexache.MustCompile(fmt.Sprintf("key/%s$", verify.UUIDRegexPattern))),
@@ -239,7 +239,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", kmsKeyDataSourceName, names.AttrARN),
 				),
@@ -277,7 +277,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v2),
 					testAccCheckRepositoryNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
 				),
