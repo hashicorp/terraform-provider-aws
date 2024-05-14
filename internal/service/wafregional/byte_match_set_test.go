@@ -38,7 +38,7 @@ func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, byteMatchSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "byte_match_tuples.#", "2"),
+						resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -86,7 +86,7 @@ func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, byteMatchSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "byte_match_tuples.#", "2"),
+						resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -112,7 +112,7 @@ func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, byteMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						resourceName, "byte_match_tuples.#", "2"),
+						resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -159,7 +159,7 @@ func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, byteMatchSetName),
 					resource.TestCheckResourceAttr(
-						resourceName, "byte_match_tuples.#", "2"),
+						resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
@@ -183,7 +183,7 @@ func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, byteMatchSetName),
 					resource.TestCheckResourceAttr(
-						resourceName, "byte_match_tuples.#", "2"),
+						resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
@@ -228,7 +228,7 @@ func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &byteMatchSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtZero),
 				),
 			},
 			{

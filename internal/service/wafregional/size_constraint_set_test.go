@@ -206,7 +206,7 @@ func TestAccWAFRegionalSizeConstraintSet_noConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "size_constraints.#", "0"),
+						resourceName, "size_constraints.#", acctest.CtZero),
 				),
 			},
 			{

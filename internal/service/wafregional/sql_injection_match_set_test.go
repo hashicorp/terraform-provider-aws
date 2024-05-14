@@ -192,7 +192,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "0"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtZero),
 				),
 			},
 			{
