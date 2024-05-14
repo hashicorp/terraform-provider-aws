@@ -318,7 +318,7 @@ func ResourceKxCluster() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.KxClusterType](),
 			},
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -478,7 +478,7 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 		in.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
@@ -558,7 +558,7 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
-	if err := d.Set("vpc_configuration", flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
+	if err := d.Set(names.AttrVPCConfiguration, flattenVPCConfiguration(out.VpcConfiguration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 

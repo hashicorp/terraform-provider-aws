@@ -39,7 +39,7 @@ func resourceUser() *schema.Resource {
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
 		Schema: map[string]*schema.Schema{
-			"attributes": {
+			names.AttrAttributes: {
 				Type: schema.TypeMap,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -173,7 +173,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		params.MessageAction = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("attributes"); ok {
+	if v, ok := d.GetOk(names.AttrAttributes); ok {
 		attributes := v.(map[string]interface{})
 		params.UserAttributes = expandAttribute(attributes)
 	}
@@ -243,7 +243,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get(names.AttrUsername).(string), err)
 	}
 
-	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
+	if err := d.Set(names.AttrAttributes, flattenUserAttributes(user.UserAttributes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user attributes (%s): %s", d.Id(), err)
 	}
 
@@ -267,8 +267,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	log.Println("[DEBUG] Updating Cognito User")
 
-	if d.HasChange("attributes") {
-		old, new := d.GetChange("attributes")
+	if d.HasChange(names.AttrAttributes) {
+		old, new := d.GetChange(names.AttrAttributes)
 
 		upd, del := computeUserAttributesUpdate(old, new)
 

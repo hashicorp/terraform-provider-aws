@@ -712,7 +712,7 @@ func ResourceTopicRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"target_arn": {
+									names.AttrTargetARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -1080,7 +1080,7 @@ func ResourceTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1871,7 +1871,7 @@ func expandSNSAction(tfList []interface{}) *iot.SnsAction {
 		apiObject.RoleArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTargetARN].(string); ok && v != "" {
 		apiObject.TargetArn = aws.String(v)
 	}
 
@@ -3148,7 +3148,7 @@ func flattenSNSAction(apiObject *iot.SnsAction) []interface{} {
 	}
 
 	if v := apiObject.TargetArn; v != nil {
-		tfMap["target_arn"] = aws.StringValue(v)
+		tfMap[names.AttrTargetARN] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

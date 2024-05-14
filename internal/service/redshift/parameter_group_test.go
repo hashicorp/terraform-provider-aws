@@ -37,7 +37,7 @@ func TestAccRedshiftParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
@@ -106,7 +106,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -123,7 +123,7 @@ func TestAccRedshiftParameterGroup_update(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", fmt.Sprintf("parametergroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "redshift-1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "redshift-1.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{

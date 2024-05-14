@@ -88,7 +88,7 @@ func resourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -311,7 +311,7 @@ func resourceFunction() *schema.Resource {
 				Default:      -1,
 				ValidateFunc: validation.IntAtLeast(-1),
 			},
-			"role": {
+			names.AttrRole: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -475,7 +475,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		MemorySize:   aws.Int32(int32(d.Get("memory_size").(int))),
 		PackageType:  packageType,
 		Publish:      d.Get("publish").(bool),
-		Role:         aws.String(d.Get("role").(string)),
+		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
 	}
@@ -517,7 +517,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		input.DeadLetterConfig = &awstypes.DeadLetterConfig{
-			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})[names.AttrTargetARN].(string)),
 		}
 	}
 
@@ -648,7 +648,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": aws.ToString(function.DeadLetterConfig.TargetArn),
+				names.AttrTargetARN: aws.ToString(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
@@ -689,7 +689,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	} else {
 		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("role", function.Role)
+	d.Set(names.AttrRole, function.Role)
 	d.Set("runtime", function.Runtime)
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
@@ -804,7 +804,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
-					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})[names.AttrTargetARN].(string)),
 				}
 			} else {
 				input.DeadLetterConfig = &awstypes.DeadLetterConfig{
@@ -875,8 +875,8 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.MemorySize = aws.Int32(int32(d.Get("memory_size").(int)))
 		}
 
-		if d.HasChange("role") {
-			input.Role = aws.String(d.Get("role").(string))
+		if d.HasChange(names.AttrRole) {
+			input.Role = aws.String(d.Get(names.AttrRole).(string))
 		}
 
 		if d.HasChange("runtime") {
@@ -1297,7 +1297,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("image_config") ||
 		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
-		d.HasChange("role") ||
+		d.HasChange(names.AttrRole) ||
 		d.HasChange(names.AttrTimeout) ||
 		d.HasChange(names.AttrKMSKeyARN) ||
 		d.HasChange("layers") ||

@@ -30,7 +30,7 @@ func dataSourceUsers() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringIsValidRegExp,
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -65,7 +65,7 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 		arns = append(arns, aws.ToString(r.Arn))
 	}
 
-	if err := d.Set("names", nms); err != nil {
+	if err := d.Set(names.AttrNames, nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 

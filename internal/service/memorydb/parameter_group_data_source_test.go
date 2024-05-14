@@ -30,7 +30,7 @@ func TestAccMemoryDBParameterGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "family", resourceName, "family"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFamily, resourceName, names.AttrFamily),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "parameter.*", map[string]string{

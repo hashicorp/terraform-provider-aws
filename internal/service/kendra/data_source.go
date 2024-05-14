@@ -347,7 +347,7 @@ func ResourceDataSource() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"condition": func() *schema.Schema {
+									names.AttrCondition: func() *schema.Schema {
 										schema := documentAttributeConditionSchema()
 										return schema
 									}(),
@@ -1221,7 +1221,7 @@ func expandInlineCustomDocumentEnrichmentConfiguration(tfList []interface{}) []t
 		data := inlineConfig.(map[string]interface{})
 		inlineConfigExpanded := types.InlineCustomDocumentEnrichmentConfiguration{}
 
-		if v, ok := data["condition"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := data[names.AttrCondition].([]interface{}); ok && len(v) > 0 {
 			inlineConfigExpanded.Condition = expandDocumentAttributeCondition(v)
 		}
 
@@ -1588,7 +1588,7 @@ func flattenInlineConfigurations(inlineConfigurations []types.InlineCustomDocume
 		}
 
 		if v := inlineConfiguration.Condition; v != nil {
-			m["condition"] = flattenDocumentAttributeCondition(v)
+			m[names.AttrCondition] = flattenDocumentAttributeCondition(v)
 		}
 
 		if v := inlineConfiguration.Target; v != nil {

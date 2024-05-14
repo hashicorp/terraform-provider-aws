@@ -166,7 +166,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 		}
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
-			if strings.Contains(errors.Error(), "role") {
+			if strings.Contains(errors.Error(), names.AttrRole) {
 				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}

@@ -507,7 +507,7 @@ func ResourceService() *schema.Resource {
 			},
 			// modeled after null_resource & aws_api_gateway_deployment
 			// only for _updates in-place_ rather than replacements
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
@@ -748,7 +748,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("platform_version", service.PlatformVersion)
 	d.Set("enable_execute_command", service.EnableExecuteCommand)
 
-	d.Set("triggers", d.Get("triggers"))
+	d.Set(names.AttrTriggers, d.Get(names.AttrTriggers))
 
 	// Save cluster in the same format
 	if strings.HasPrefix(d.Get("cluster").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
@@ -1098,14 +1098,14 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta inter
 		fnd = v.(bool)
 	}
 
-	if d.HasChange("triggers") && !fnd {
-		return d.Clear("triggers")
+	if d.HasChange(names.AttrTriggers) && !fnd {
+		return d.Clear(names.AttrTriggers)
 	}
 
-	if d.HasChange("triggers") && fnd {
-		o, n := d.GetChange("triggers")
+	if d.HasChange(names.AttrTriggers) && fnd {
+		o, n := d.GetChange(names.AttrTriggers)
 		if len(o.(map[string]interface{})) > 0 && len(n.(map[string]interface{})) == 0 {
-			return d.Clear("triggers")
+			return d.Clear(names.AttrTriggers)
 		}
 
 		return nil

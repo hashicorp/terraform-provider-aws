@@ -40,7 +40,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
 						names.AttrValue: "utf8",
@@ -67,7 +67,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "collation_connection",
 						names.AttrValue: "utf8_unicode_ci",
@@ -223,7 +223,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_server",
@@ -402,7 +402,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated RDS default parameter group: Exceed default AWS parameter group limit of twenty"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_server",
@@ -633,7 +633,7 @@ func TestAccRDSParameterGroup_withApplyMethod(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_server",
@@ -674,7 +674,7 @@ func TestAccRDSParameterGroup_only(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 				),
 			},
 			{
@@ -703,7 +703,7 @@ func TestAccRDSParameterGroup_matchDefault(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "postgres9.4"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "postgres9.4"),
 				),
 			},
 			{
@@ -734,7 +734,7 @@ func TestAccRDSParameterGroup_updateParameters(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "character_set_results",
 						names.AttrValue: "utf8",
@@ -795,7 +795,7 @@ func TestAccRDSParameterGroup_caseParameters(t *testing.T) {
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "mysql5.6"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "Max_connections",
 						names.AttrValue: "LEAST({DBInstanceClassMemory/6000000},10)",

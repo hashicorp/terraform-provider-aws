@@ -27,7 +27,7 @@ func dataSourceNodeGroups() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -58,7 +58,7 @@ func dataSourceNodeGroupsRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(clusterName)
 	d.Set(names.AttrClusterName, clusterName)
-	d.Set("names", nodeGroups)
+	d.Set(names.AttrNames, nodeGroups)
 
 	return diags
 }

@@ -157,7 +157,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"launch_template": {
+									names.AttrLaunchTemplate: {
 										Type:     schema.TypeSet,
 										Computed: true,
 										Elem: &schema.Resource{

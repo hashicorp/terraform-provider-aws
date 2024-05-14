@@ -108,7 +108,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"actions": setOfStringSchema(),
-							"condition": {
+							names.AttrCondition: {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Resource{
@@ -137,11 +137,11 @@ func dataSourcePolicyDocument() *schema.Resource {
 								Default:      "Allow",
 								ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
 							},
-							"not_actions":    setOfStringSchema(),
-							"not_principals": principalsSchema(),
-							"not_resources":  setOfStringSchema(),
-							"principals":     principalsSchema(),
-							"resources":      setOfStringSchema(),
+							"not_actions":       setOfStringSchema(),
+							"not_principals":    principalsSchema(),
+							"not_resources":     setOfStringSchema(),
+							"principals":        principalsSchema(),
+							names.AttrResources: setOfStringSchema(),
 							"sid": {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -238,7 +238,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				stmt.NotActions = policyDecodeConfigStringList(actions)
 			}
 
-			if resources := cfgStmt["resources"].(*schema.Set).List(); len(resources) > 0 {
+			if resources := cfgStmt[names.AttrResources].(*schema.Set).List(); len(resources) > 0 {
 				var err error
 				stmt.Resources, err = dataSourcePolicyDocumentReplaceVarsInList(
 					policyDecodeConfigStringList(resources), doc.Version,
@@ -273,7 +273,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if conditions := cfgStmt["condition"].(*schema.Set).List(); len(conditions) > 0 {
+			if conditions := cfgStmt[names.AttrCondition].(*schema.Set).List(); len(conditions) > 0 {
 				var err error
 				stmt.Conditions, err = dataSourcePolicyDocumentMakeConditions(conditions, doc.Version)
 				if err != nil {

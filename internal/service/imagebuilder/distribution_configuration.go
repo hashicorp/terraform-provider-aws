@@ -191,7 +191,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Type:     schema.TypeBool,
 										Required: true,
 									},
-									"launch_template": {
+									names.AttrLaunchTemplate: {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
@@ -649,7 +649,7 @@ func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.F
 		apiObject.Enabled = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrLaunchTemplate].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.LaunchTemplate = expandFastLaunchLaunchTemplateSpecification(v[0].(map[string]interface{}))
 	}
 
@@ -948,7 +948,7 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
-		tfMap["launch_template"] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}
+		tfMap[names.AttrLaunchTemplate] = []interface{}{flattenFastLaunchLaunchTemplateSpecification(v)}
 	}
 
 	if v := apiObject.MaxParallelLaunches; v != nil {

@@ -105,7 +105,7 @@ func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "login_assertion", "mail"),
 					resource.TestCheckResourceAttr(resourceName, "name_assertion", "displayName"),
 					resource.TestCheckResourceAttr(resourceName, "org_assertion", "org"),
-					resource.TestCheckResourceAttr(resourceName, "role_assertion", "role"),
+					resource.TestCheckResourceAttr(resourceName, "role_assertion", names.AttrRole),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},

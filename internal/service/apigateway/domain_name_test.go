@@ -115,7 +115,7 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"certificate_body", "certificate_chain", "certificate_private_key"},
+				ImportStateVerifyIgnore: []string{"certificate_body", names.AttrCertificateChain, "certificate_private_key"},
 			},
 		},
 	})
@@ -185,7 +185,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", certificate),
-					resource.TestCheckResourceAttr(resourceName, "certificate_chain", caCertificate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrCertificateChain, caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_private_key", key),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_upload_date"),

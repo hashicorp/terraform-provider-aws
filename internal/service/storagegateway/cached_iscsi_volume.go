@@ -78,7 +78,7 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,7 +208,7 @@ func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("network_interface_port", volume.VolumeiSCSIAttributes.NetworkInterfacePort)
 
 		targetARN := aws.StringValue(volume.VolumeiSCSIAttributes.TargetARN)
-		d.Set("target_arn", targetARN)
+		d.Set(names.AttrTargetARN, targetARN)
 
 		gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {

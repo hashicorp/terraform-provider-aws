@@ -369,7 +369,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"condition": conditionLNB,
+				names.AttrCondition: conditionLNB,
 				"next_step": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),

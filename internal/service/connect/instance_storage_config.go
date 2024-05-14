@@ -74,7 +74,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -377,7 +377,7 @@ func expandKinesisStreamConfig(tfList []interface{}) *connect.KinesisStreamConfi
 	}
 
 	result := &connect.KinesisStreamConfig{
-		StreamArn: aws.String(tfMap["stream_arn"].(string)),
+		StreamArn: aws.String(tfMap[names.AttrStreamARN].(string)),
 	}
 
 	return result
@@ -488,7 +488,7 @@ func flattenKinesisStreamConfig(apiObject *connect.KinesisStreamConfig) []interf
 	}
 
 	values := map[string]interface{}{
-		"stream_arn": aws.StringValue(apiObject.StreamArn),
+		names.AttrStreamARN: aws.StringValue(apiObject.StreamArn),
 	}
 
 	return []interface{}{values}

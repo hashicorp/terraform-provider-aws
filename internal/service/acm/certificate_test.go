@@ -1547,7 +1547,7 @@ func TestAccACMCertificate_Imported_domainName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 		},
 	})
@@ -1588,7 +1588,7 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// These are not returned by the API
-				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", "certificate_chain"},
+				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain},
 			},
 		},
 	})

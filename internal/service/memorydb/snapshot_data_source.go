@@ -75,7 +75,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

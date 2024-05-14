@@ -94,7 +94,7 @@ func ResourceEventDestination() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-						"stream_arn": {
+						names.AttrStreamARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -129,7 +129,7 @@ func ResourceEventDestination() *schema.Resource {
 				ConflictsWith: []string{"cloudwatch_destination", "kinesis_destination"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -172,7 +172,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 
 		kinesis := destination[0].(map[string]interface{})
 		createOpts.EventDestination.KinesisFirehoseDestination = &ses.KinesisFirehoseDestination{
-			DeliveryStreamARN: aws.String(kinesis["stream_arn"].(string)),
+			DeliveryStreamARN: aws.String(kinesis[names.AttrStreamARN].(string)),
 			IAMRoleARN:        aws.String(kinesis[names.AttrRoleARN].(string)),
 		}
 		log.Printf("[DEBUG] Creating kinesis destination: %#v", kinesis)
@@ -182,7 +182,7 @@ func resourceEventDestinationCreate(ctx context.Context, d *schema.ResourceData,
 		destination := v.([]interface{})
 		sns := destination[0].(map[string]interface{})
 		createOpts.EventDestination.SNSDestination = &ses.SNSDestination{
-			TopicARN: aws.String(sns["topic_arn"].(string)),
+			TopicARN: aws.String(sns[names.AttrTopicARN].(string)),
 		}
 		log.Printf("[DEBUG] Creating sns destination: %#v", sns)
 	}
@@ -332,8 +332,8 @@ func flattenKinesisFirehoseDestination(destination *ses.KinesisFirehoseDestinati
 	}
 
 	mDestination := map[string]interface{}{
-		names.AttrRoleARN: aws.StringValue(destination.IAMRoleARN),
-		"stream_arn":      aws.StringValue(destination.DeliveryStreamARN),
+		names.AttrRoleARN:   aws.StringValue(destination.IAMRoleARN),
+		names.AttrStreamARN: aws.StringValue(destination.DeliveryStreamARN),
 	}
 
 	return []interface{}{mDestination}
@@ -345,7 +345,7 @@ func flattenSNSDestination(destination *ses.SNSDestination) []interface{} {
 	}
 
 	mDestination := map[string]interface{}{
-		"topic_arn": aws.StringValue(destination.TopicARN),
+		names.AttrTopicARN: aws.StringValue(destination.TopicARN),
 	}
 
 	return []interface{}{mDestination}

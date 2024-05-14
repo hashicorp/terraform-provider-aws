@@ -37,7 +37,7 @@ func ResourceThing() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -74,7 +74,7 @@ func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThingName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
 		input.AttributePayload = &iot.AttributePayload{
 			Attributes: flex.ExpandStringMap(v.(map[string]interface{})),
 		}
@@ -115,7 +115,7 @@ func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, output.ThingArn)
 	d.Set("default_client_id", output.DefaultClientId)
 	d.Set(names.AttrName, output.ThingName)
-	d.Set("attributes", aws.StringValueMap(output.Attributes))
+	d.Set(names.AttrAttributes, aws.StringValueMap(output.Attributes))
 	d.Set("thing_type_name", output.ThingTypeName)
 	d.Set(names.AttrVersion, output.Version)
 
@@ -130,10 +130,10 @@ func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		ThingName: aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if d.HasChange("attributes") {
+	if d.HasChange(names.AttrAttributes) {
 		attributes := map[string]*string{}
 
-		if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
+		if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
 			attributes = flex.ExpandStringMap(v.(map[string]interface{}))
 		}
 

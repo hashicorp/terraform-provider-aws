@@ -38,7 +38,7 @@ func TestAccNeptuneClusterParameterGroup_basic(t *testing.T) {
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),

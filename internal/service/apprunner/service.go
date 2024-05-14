@@ -80,7 +80,7 @@ func resourceService() *schema.Resource {
 							Default:      1,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
@@ -768,7 +768,7 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 		result.HealthyThreshold = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval"].(int); ok {
+	if v, ok := tfMap[names.AttrInterval].(int); ok {
 		result.Interval = aws.Int32(int32(v))
 	}
 
@@ -1170,7 +1170,7 @@ func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfigurati
 
 	m := map[string]interface{}{
 		"healthy_threshold":   config.HealthyThreshold,
-		"interval":            config.Interval,
+		names.AttrInterval:    config.Interval,
 		names.AttrPath:        aws.ToString(config.Path),
 		names.AttrProtocol:    string(config.Protocol),
 		names.AttrTimeout:     config.Timeout,

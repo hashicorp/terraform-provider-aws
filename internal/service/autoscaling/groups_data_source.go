@@ -46,7 +46,7 @@ func dataSourceGroups() *schema.Resource {
 					},
 				},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -89,7 +89,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
-	if v, ok := d.GetOk("names"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrNames); ok && len(v.([]interface{})) > 0 {
 		input.AutoScalingGroupNames = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -115,7 +115,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("names", nms)
+	d.Set(names.AttrNames, nms)
 
 	return diags
 }

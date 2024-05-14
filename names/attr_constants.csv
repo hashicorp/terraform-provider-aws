@@ -6,6 +6,7 @@ alias,Alias
 apply_immediately,ApplyImmediately
 arn,ARN
 arns,ARNs
+attributes,Attributes
 auto_minor_version_upgrade,AutoMinorVersionUpgrade
 availability_zone,AvailabilityZone
 availability_zones,AvailabilityZones
@@ -15,11 +16,13 @@ bucket_prefix,BucketPrefix
 catalog_id,CatalogID
 certificate,Certificate
 certificate_arn,CertificateARN
+certificate_chain,CertificateChain
 client_id,ClientID
 client_secret,ClientSecret
 cluster_identifier,ClusterIdentifier
 cluster_name,ClusterName
 comment,Comment
+condition,Condition
 configuration,Configuration
 content,Content
 content_type,ContentType
@@ -53,6 +56,7 @@ engine_version,EngineVersion
 environment,Environment
 execution_role_arn,ExecutionRoleARN
 expression,Expression
+family,Family
 field,Field
 file_system_id,FileSystemID
 filter,Filter
@@ -70,6 +74,7 @@ ids,IDs
 instance_count,InstanceCount
 instance_id,InstanceID
 instance_type,InstanceType
+interval,Interval
 iops,IOPS
 ip_address,IPAddress
 ip_address_type,IPAddressType
@@ -81,6 +86,7 @@ kms_key,KMSKey
 kms_key_arn,KMSKeyARN
 kms_key_id,KMSKeyID
 last_updated_date,LastUpdatedDate
+launch_template,LaunchTemplate
 log_group_name,LogGroupName
 logging_configuration,LoggingConfiguration
 max,Max
@@ -91,6 +97,7 @@ mode,Mode
 most_recent,MostRecent
 name,Name
 name_prefix,NamePrefix
+names,Names
 namespace,Namespace
 network_configuration,NetworkConfiguration
 network_interface_id,NetworkInterfaceID
@@ -118,7 +125,9 @@ repository_name,RepositoryName
 resource_arn,ResourceARN
 resource_id,ResourceID
 resource_type,ResourceType
+resources,Resources
 retention_period,RetentionPeriod
+role,Role
 role_arn,RoleARN
 rule,Rule
 s3_bucket,S3Bucket
@@ -132,6 +141,7 @@ secret_key,SecretKey
 security_group_ids,SecurityGroupIDs
 security_groups,SecurityGroups
 service_name,ServiceName
+service_role_arn,ServiceRoleARN
 session,Session
 shared_config_files,SharedConfigFiles
 size,Size
@@ -141,11 +151,13 @@ skip_requesting_account_id,SkipRequestingAccountID
 sns_topic_arn,SNSTopicARN
 source,Source
 source_type,SourceType
+stage,Stage
 start_time,StartTime
 state,State
 status,Status
 status_message,StatusMessage
 storage_type,StorageType
+stream_arn,StreamARN
 subnet_id,SubnetID
 subnet_ids,SubnetIDs
 subnets,Subnets
@@ -153,10 +165,13 @@ table_name,TableName
 tags,Tags
 tags_all,TagsAll
 target,Target
+target_arn,TargetARN
 timeout,Timeout
 timeouts,Timeouts
+topic_arn,TopicARN
 transit_gateway_attachment_id,TransitGatewayAttachmentID
 transit_gateway_id,TransitGatewayID
+triggers,Triggers
 type,Type
 unit,Unit
 uri,URI
@@ -169,6 +184,7 @@ version,Version
 volume_size,VolumeSize
 volume_type,VolumeType
 vpc_config,VPCConfig
+vpc_configuration,VPCConfiguration
 vpc_endpoint_id,VPCEndpointID
 vpc_id,VPCID
 vpc_security_group_ids,VPCSecurityGroupIDs

@@ -42,7 +42,7 @@ func testAccPhoneNumber_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestCheckResourceAttr(resourceName, "status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "status.0.status", connect.PhoneNumberWorkflowStatusClaimed),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, connect.PhoneNumberTypeDid),
 				),
 			},
@@ -133,7 +133,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test", names.AttrARN),
 				),
 			},
 			{
@@ -145,7 +145,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 				Config: testAccPhoneNumberConfig_targetARN(rName, rName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPhoneNumberExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_connect_instance.test2", names.AttrARN),
 				),
 			},
 		},

@@ -98,7 +98,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -131,7 +131,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -183,7 +183,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -211,7 +211,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -233,7 +233,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -261,7 +261,7 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -351,7 +351,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.BounceAction.TopicArn != nil {
-				bounceAction["topic_arn"] = aws.StringValue(element.BounceAction.TopicArn)
+				bounceAction[names.AttrTopicARN] = aws.StringValue(element.BounceAction.TopicArn)
 			}
 
 			bounceActionList = append(bounceActionList, bounceAction)
@@ -368,7 +368,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.LambdaAction.TopicArn != nil {
-				lambdaAction["topic_arn"] = aws.StringValue(element.LambdaAction.TopicArn)
+				lambdaAction[names.AttrTopicARN] = aws.StringValue(element.LambdaAction.TopicArn)
 			}
 
 			lambdaActionList = append(lambdaActionList, lambdaAction)
@@ -389,7 +389,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.S3Action.TopicArn != nil {
-				s3Action["topic_arn"] = aws.StringValue(element.S3Action.TopicArn)
+				s3Action[names.AttrTopicARN] = aws.StringValue(element.S3Action.TopicArn)
 			}
 
 			s3ActionList = append(s3ActionList, s3Action)
@@ -397,9 +397,9 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 
 		if element.SNSAction != nil {
 			snsAction := map[string]interface{}{
-				"topic_arn": aws.StringValue(element.SNSAction.TopicArn),
-				"encoding":  aws.StringValue(element.SNSAction.Encoding),
-				"position":  i + 1,
+				names.AttrTopicARN: aws.StringValue(element.SNSAction.TopicArn),
+				"encoding":         aws.StringValue(element.SNSAction.Encoding),
+				"position":         i + 1,
 			}
 
 			snsActionList = append(snsActionList, snsAction)
@@ -412,7 +412,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.StopAction.TopicArn != nil {
-				stopAction["topic_arn"] = aws.StringValue(element.StopAction.TopicArn)
+				stopAction[names.AttrTopicARN] = aws.StringValue(element.StopAction.TopicArn)
 			}
 
 			stopActionList = append(stopActionList, stopAction)
@@ -425,7 +425,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 			}
 
 			if element.WorkmailAction.TopicArn != nil {
-				workmailAction["topic_arn"] = aws.StringValue(element.WorkmailAction.TopicArn)
+				workmailAction[names.AttrTopicARN] = aws.StringValue(element.WorkmailAction.TopicArn)
 			}
 
 			workmailActionList = append(workmailActionList, workmailAction)
@@ -620,8 +620,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				bounceAction.StatusCode = aws.String(elem["status_code"].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				bounceAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				bounceAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -642,8 +642,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				lambdaAction.InvocationType = aws.String(elem["invocation_type"].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				lambdaAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				lambdaAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -668,8 +668,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				s3Action.ObjectKeyPrefix = aws.String(elem["object_key_prefix"].(string))
 			}
 
-			if elem["topic_arn"] != "" {
-				s3Action.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				s3Action.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -683,7 +683,7 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 			elem := element.(map[string]interface{})
 
 			snsAction := &ses.SNSAction{
-				TopicArn: aws.String(elem["topic_arn"].(string)),
+				TopicArn: aws.String(elem[names.AttrTopicARN].(string)),
 				Encoding: aws.String(elem["encoding"].(string)),
 			}
 
@@ -701,8 +701,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				Scope: aws.String(elem[names.AttrScope].(string)),
 			}
 
-			if elem["topic_arn"] != "" {
-				stopAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				stopAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{
@@ -719,8 +719,8 @@ func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
 				OrganizationArn: aws.String(elem["organization_arn"].(string)),
 			}
 
-			if elem["topic_arn"] != "" {
-				workmailAction.TopicArn = aws.String(elem["topic_arn"].(string))
+			if elem[names.AttrTopicARN] != "" {
+				workmailAction.TopicArn = aws.String(elem[names.AttrTopicARN].(string))
 			}
 
 			actions[elem["position"].(int)] = &ses.ReceiptAction{

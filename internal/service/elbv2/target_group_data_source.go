@@ -62,7 +62,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

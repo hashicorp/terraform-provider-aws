@@ -242,7 +242,7 @@ func ResourceEnvironment() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -460,7 +460,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("requirements_s3_object_version", environment.RequirementsS3ObjectVersion)
 	d.Set("requirements_s3_path", environment.RequirementsS3Path)
 	d.Set("schedulers", environment.Schedulers)
-	d.Set("service_role_arn", environment.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, environment.ServiceRoleArn)
 	d.Set("source_bucket_arn", environment.SourceBucketArn)
 	d.Set("startup_script_s3_object_version", environment.StartupScriptS3ObjectVersion)
 	d.Set("startup_script_s3_path", environment.StartupScriptS3Path)

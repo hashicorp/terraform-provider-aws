@@ -37,7 +37,7 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -67,7 +67,7 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 				Config: testAccInstanceProfileConfig_noRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckNoResourceAttr(resourceName, "role"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrRole),
 				),
 			},
 			{
@@ -202,7 +202,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -216,7 +216,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -225,7 +225,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -234,7 +234,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -248,7 +248,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("instance-profile/%s", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role", "aws_iam_role.test", names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},

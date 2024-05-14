@@ -129,7 +129,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"certificate_chain": {
+																			names.AttrCertificateChain: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -249,7 +249,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																				MaxItems: 1,
 																				Elem: &schema.Resource{
 																					Schema: map[string]*schema.Schema{
-																						"certificate_chain": {
+																						names.AttrCertificateChain: {
 																							Type:         schema.TypeString,
 																							Required:     true,
 																							ValidateFunc: validation.StringLenBetween(1, 255),
@@ -464,7 +464,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"certificate_chain": {
+																names.AttrCertificateChain: {
 																	Type:         schema.TypeString,
 																	Required:     true,
 																	ValidateFunc: validation.StringLenBetween(1, 255),
@@ -545,7 +545,7 @@ func resourceVirtualGatewaySpecSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"certificate_chain": {
+																			names.AttrCertificateChain: {
 																				Type:         schema.TypeString,
 																				Required:     true,
 																				ValidateFunc: validation.StringLenBetween(1, 255),
@@ -989,7 +989,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 						mFile := vFile[0].(map[string]interface{})
 
-						if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+						if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 							file.CertificateChain = aws.String(vCertificateChain)
 						}
 						if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
@@ -1049,7 +1049,7 @@ func expandVirtualGatewaySpec(vSpec []interface{}) *appmesh.VirtualGatewaySpec {
 
 							mFile := vFile[0].(map[string]interface{})
 
-							if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+							if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 								file.CertificateChain = aws.String(vCertificateChain)
 							}
 
@@ -1162,7 +1162,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.Virt
 
 				mFile := vFile[0].(map[string]interface{})
 
-				if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+				if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 					file.CertificateChain = aws.String(vCertificateChain)
 				}
 				if vPrivateKey, ok := mFile[names.AttrPrivateKey].(string); ok && vPrivateKey != "" {
@@ -1242,7 +1242,7 @@ func expandVirtualGatewayClientPolicy(vClientPolicy []interface{}) *appmesh.Virt
 
 					mFile := vFile[0].(map[string]interface{})
 
-					if vCertificateChain, ok := mFile["certificate_chain"].(string); ok && vCertificateChain != "" {
+					if vCertificateChain, ok := mFile[names.AttrCertificateChain].(string); ok && vCertificateChain != "" {
 						file.CertificateChain = aws.String(vCertificateChain)
 					}
 
@@ -1360,8 +1360,8 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 					if file := certificate.File; file != nil {
 						mFile := map[string]interface{}{
-							"certificate_chain":  aws.StringValue(file.CertificateChain),
-							names.AttrPrivateKey: aws.StringValue(file.PrivateKey),
+							names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
+							names.AttrPrivateKey:       aws.StringValue(file.PrivateKey),
 						}
 
 						mCertificate["file"] = []interface{}{mFile}
@@ -1400,7 +1400,7 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 
 						if file := trust.File; file != nil {
 							mFile := map[string]interface{}{
-								"certificate_chain": aws.StringValue(file.CertificateChain),
+								names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
 							}
 
 							mTrust["file"] = []interface{}{mFile}
@@ -1493,8 +1493,8 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClien
 
 			if file := certificate.File; file != nil {
 				mFile := map[string]interface{}{
-					"certificate_chain":  aws.StringValue(file.CertificateChain),
-					names.AttrPrivateKey: aws.StringValue(file.PrivateKey),
+					names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
+					names.AttrPrivateKey:       aws.StringValue(file.PrivateKey),
 				}
 
 				mCertificate["file"] = []interface{}{mFile}
@@ -1541,7 +1541,7 @@ func flattenVirtualGatewayClientPolicy(clientPolicy *appmesh.VirtualGatewayClien
 
 				if file := trust.File; file != nil {
 					mFile := map[string]interface{}{
-						"certificate_chain": aws.StringValue(file.CertificateChain),
+						names.AttrCertificateChain: aws.StringValue(file.CertificateChain),
 					}
 
 					mTrust["file"] = []interface{}{mFile}

@@ -95,7 +95,7 @@ func ResourceStorediSCSIVolume() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"target_arn": {
+			names.AttrTargetARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -217,7 +217,7 @@ func resourceStorediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("network_interface_port", attr.NetworkInterfacePort)
 
 	targetARN := aws.StringValue(attr.TargetARN)
-	d.Set("target_arn", targetARN)
+	d.Set(names.AttrTargetARN, targetARN)
 
 	gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 	if err != nil {

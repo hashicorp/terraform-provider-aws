@@ -356,7 +356,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -520,7 +520,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 
 	var err error
 
-	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+	input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -673,7 +673,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		conditions[i] = conditionMap
 	}
-	if err := d.Set("condition", conditions); err != nil {
+	if err := d.Set(names.AttrCondition, conditions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
@@ -714,9 +714,9 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			requestUpdate = true
 		}
 
-		if d.HasChange("condition") {
+		if d.HasChange(names.AttrCondition) {
 			var err error
-			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}

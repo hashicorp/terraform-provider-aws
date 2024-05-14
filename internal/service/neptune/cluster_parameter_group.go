@@ -50,7 +50,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -108,7 +108,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &neptune.CreateDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(name),
-		DBParameterGroupFamily:      aws.String(d.Get("family").(string)),
+		DBParameterGroupFamily:      aws.String(d.Get(names.AttrFamily).(string)),
 		Description:                 aws.String(d.Get(names.AttrDescription).(string)),
 		Tags:                        getTagsIn(ctx),
 	}
@@ -149,7 +149,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrDescription, dbClusterParameterGroup.Description)
-	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
+	d.Set(names.AttrFamily, dbClusterParameterGroup.DBParameterGroupFamily)
 	d.Set(names.AttrName, dbClusterParameterGroup.DBClusterParameterGroupName)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 

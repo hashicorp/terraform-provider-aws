@@ -1329,7 +1329,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"stage": {
+												names.AttrStage: {
 													Type:     schema.TypeString,
 													Required: true,
 													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -2150,7 +2150,7 @@ func expandSlackConnectorProfileProperties(m map[string]interface{}) *types.Slac
 func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.SnowflakeConnectorProfileProperties {
 	properties := &types.SnowflakeConnectorProfileProperties{
 		BucketName: aws.String(m[names.AttrBucketName].(string)),
-		Stage:      aws.String(m["stage"].(string)),
+		Stage:      aws.String(m[names.AttrStage].(string)),
 		Warehouse:  aws.String(m["warehouse"].(string)),
 	}
 
@@ -2376,7 +2376,7 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 		m[names.AttrRegion] = aws.ToString(properties.Region)
 	}
 
-	m["stage"] = aws.ToString(properties.Stage)
+	m[names.AttrStage] = aws.ToString(properties.Stage)
 	m["warehouse"] = aws.ToString(properties.Warehouse)
 
 	return []interface{}{m}
