@@ -44,7 +44,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "power", string(types.ContainerServicePowerNameNano)),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "is_disabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
@@ -240,8 +240,8 @@ func TestAccLightsailContainerService_privateRegistryAccess(t *testing.T) {
 				Config: testAccContainerServiceConfig_privateRegistryAccess(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "private_registry_access.0.ecr_image_puller_role.0.is_active", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "private_registry_access.0.ecr_image_puller_role.0.principal_arn"),
 				),
@@ -269,7 +269,7 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 				Config: testAccContainerServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale", acctest.CtOne),
 				),
 			},
 			{
@@ -302,7 +302,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -324,7 +324,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
