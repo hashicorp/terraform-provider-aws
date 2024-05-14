@@ -132,7 +132,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.CtOne),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_FunctionName_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.CtOne),
 				),
 			},
@@ -218,7 +218,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	filename1 := "test-fixtures/lambdapinpoint.zip"
 	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
-	version2 := "2"
+	version2 := acctest.CtTwo
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
@@ -253,7 +253,7 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 				Config: testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, filename2), // remove the provisioned concurrency config completely
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, acctest.CtOne),
-					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, version2),
+					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, acctest.CtTwo),
 				),
 			},
 		},
