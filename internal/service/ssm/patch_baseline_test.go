@@ -45,7 +45,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", ssm.PatchComplianceLevelCritical),
@@ -53,7 +53,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", "false"),
-					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.CtOne),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Name", resourceName, names.AttrName),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Description", resourceName, names.AttrDescription),
@@ -113,7 +113,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 				Config: testAccPatchBaselineConfig_basicTags1(name, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 				Config: testAccPatchBaselineConfig_basicTags1(name, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -182,7 +182,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Config: testAccPatchBaselineConfig_operatingSystem(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
@@ -199,7 +199,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Config: testAccPatchBaselineConfig_operatingSystemUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelInformational),
@@ -227,7 +227,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 				Config: testAccPatchBaselineConfig_approveUntilDate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-01-01"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
@@ -244,7 +244,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 				Config: testAccPatchBaselineConfig_approveUntilDateUpdated(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_until_date", "2020-02-02"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", ssm.PatchComplianceLevelCritical),
@@ -277,10 +277,10 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 				Config: testAccPatchBaselineConfig_source(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.products.0", "AmazonLinux2017.09"),
 				),
 			},
@@ -296,11 +296,11 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.name", "My-AL2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.products.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.products.0", "AmazonLinux2017.09"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.name", "My-AL2018.03"),
 					resource.TestCheckResourceAttr(resourceName, "source.1.configuration", "[amzn-main] \nname=amzn-main-Base\nmirrorlist=http://repo./$awsregion./$awsdomain//$releasever/main/mirror.list //nmirrorlist_expire=300//nmetadata_expire=300 \npriority=10 \nfailovermethod=priority \nfastestmirror_enabled=0 \ngpgcheck=1 \ngpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-amazon-ga \nenabled=1 \nretries=3 \ntimeout=5\nreport_instanceid=yes"),
-					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.1.products.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.1.products.0", "AmazonLinux2018.03"),
 
 					func(*terraform.State) error {

@@ -36,7 +36,7 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cutoff", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
@@ -110,7 +110,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
-					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cutoff", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, "3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
@@ -219,7 +219,7 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_cutoff(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
-					resource.TestCheckResourceAttr(resourceName, "cutoff", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cutoff", acctest.CtOne),
 				),
 			},
 			{

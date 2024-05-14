@@ -40,7 +40,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`windowtask/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "window_task_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "window_id", "aws_ssm_maintenance_window.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtOne),
 				),
 			},
 			{
