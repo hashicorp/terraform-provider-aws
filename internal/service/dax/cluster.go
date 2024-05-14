@@ -68,7 +68,7 @@ func ResourceCluster() *schema.Resource {
 					return old == new
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -209,7 +209,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	iamRoleArn := d.Get(names.AttrIAMRoleARN).(string)
 	nodeType := d.Get("node_type").(string)
 	numNodes := int32(d.Get("replication_factor").(int))
@@ -332,7 +332,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	c := res.Clusters[0]
 	d.Set(names.AttrARN, c.ClusterArn)
-	d.Set("cluster_name", c.ClusterName)
+	d.Set(names.AttrClusterName, c.ClusterName)
 	d.Set("cluster_endpoint_encryption_type", c.ClusterEndpointEncryptionType)
 	d.Set(names.AttrDescription, c.Description)
 	d.Set(names.AttrIAMRoleARN, c.IamRoleArn)
