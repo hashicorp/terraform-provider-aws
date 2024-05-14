@@ -185,7 +185,7 @@ func TestAccWAFIPSet_noDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.#", acctest.CtZero),
 				),
 			},
 			{

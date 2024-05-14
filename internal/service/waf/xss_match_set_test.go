@@ -38,7 +38,7 @@ func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`xssmatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
@@ -80,7 +80,7 @@ func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func TestAccWAFXSSMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, xssMatchSetNewName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccWAFXSSMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
@@ -161,7 +161,7 @@ func TestAccWAFXSSMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
@@ -202,7 +202,7 @@ func TestAccWAFXSSMatchSet_noTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", acctest.CtZero),
 				),
 			},
 			{
