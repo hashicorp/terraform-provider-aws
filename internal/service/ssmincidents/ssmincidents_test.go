@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // only one replication set resource can be active at once, so we must have serialised tests
@@ -36,7 +35,7 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 			"displayName":            testAccResponsePlan_displayName,
 			"chatChannel":            testAccResponsePlan_chatChannel,
 			"engagement":             testAccResponsePlan_engagement,
-			names.AttrAction:         testAccResponsePlan_action,
+			"action":                 testAccResponsePlan_action,
 		},
 		"Response Plan Data Source Tests": {
 			acctest.CtBasic: testAccResponsePlanDataSource_basic,

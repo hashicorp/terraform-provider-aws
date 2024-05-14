@@ -7,7 +7,9 @@ rules:
     paths:
       include:
         - "internal/service/**/*.go"
-    pattern: '"{{ .Literal }}"'
+    patterns:
+      - pattern: '"{{ .Literal }}"'
+      - pattern-not-regex: '"{{ .Literal }}":\s+test\w+,'
     severity: ERROR
     fix: "names.Attr{{ .Constant }}"
 {{- end }}

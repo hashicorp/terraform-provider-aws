@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Serialized acceptance tests due to Connect account limits (max 2 parallel tests)
@@ -37,7 +36,7 @@ func TestAccConnect_serial(t *testing.T) {
 		"HoursOfOperation": {
 			acctest.CtBasic:   testAccHoursOfOperation_basic,
 			"disappears":      testAccHoursOfOperation_disappears,
-			names.AttrTags:    testAccHoursOfOperation_updateTags,
+			"tags":            testAccHoursOfOperation_updateTags,
 			"config":          testAccHoursOfOperation_updateConfig,
 			"dataSource_id":   testAccHoursOfOperationDataSource_hoursOfOperationID,
 			"dataSource_name": testAccHoursOfOperationDataSource_name,
@@ -70,12 +69,12 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_basic": testAccLambdaFunctionAssociationDataSource_basic,
 		},
 		"PhoneNumber": {
-			acctest.CtBasic:       testAccPhoneNumber_basic,
-			"disappears":          testAccPhoneNumber_disappears,
-			names.AttrTags:        testAccPhoneNumber_tags,
-			names.AttrDescription: testAccPhoneNumber_description,
-			names.AttrPrefix:      testAccPhoneNumber_prefix,
-			"targetARN":           testAccPhoneNumber_targetARN,
+			acctest.CtBasic: testAccPhoneNumber_basic,
+			"disappears":    testAccPhoneNumber_disappears,
+			"tags":          testAccPhoneNumber_tags,
+			"description":   testAccPhoneNumber_description,
+			"prefix":        testAccPhoneNumber_prefix,
+			"targetARN":     testAccPhoneNumber_targetARN,
 		},
 		"Prompt": {
 			"dataSource_name": testAccPromptDataSource_name,
@@ -83,11 +82,11 @@ func TestAccConnect_serial(t *testing.T) {
 		"Queue": {
 			acctest.CtBasic:        testAccQueue_basic,
 			"disappears":           testAccQueue_disappears,
-			names.AttrTags:         testAccQueue_updateTags,
+			"tags":                 testAccQueue_updateTags,
 			"hoursOfOperationId":   testAccQueue_updateHoursOfOperationId,
 			"maxContacts":          testAccQueue_updateMaxContacts,
 			"outboundCallerConfig": testAccQueue_updateOutboundCallerConfig,
-			names.AttrStatus:       testAccQueue_updateStatus,
+			"status":               testAccQueue_updateStatus,
 			"quickConnectIds":      testAccQueue_updateQuickConnectIds,
 			"dataSource_id":        testAccQueueDataSource_queueID,
 			"dataSource_name":      testAccQueueDataSource_name,
@@ -95,14 +94,14 @@ func TestAccConnect_serial(t *testing.T) {
 		"QuickConnect": {
 			acctest.CtBasic:   testAccQuickConnect_phoneNumber,
 			"disappears":      testAccQuickConnect_disappears,
-			names.AttrTags:    testAccQuickConnect_updateTags,
+			"tags":            testAccQuickConnect_updateTags,
 			"dataSource_id":   testAccQuickConnectDataSource_id,
 			"dataSource_name": testAccQuickConnectDataSource_name,
 		},
 		"RoutingProfile": {
 			acctest.CtBasic:                testAccRoutingProfile_basic,
 			"disappears":                   testAccRoutingProfile_disappears,
-			names.AttrTags:                 testAccRoutingProfile_updateTags,
+			"tags":                         testAccRoutingProfile_updateTags,
 			"concurrency":                  testAccRoutingProfile_updateConcurrency,
 			"defaultOutboundQueue":         testAccRoutingProfile_updateDefaultOutboundQueue,
 			"queues":                       testAccRoutingProfile_updateQueues,
@@ -112,17 +111,17 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":              testAccRoutingProfileDataSource_name,
 		},
 		"SecurityProfile": {
-			acctest.CtBasic:       testAccSecurityProfile_basic,
-			"disappears":          testAccSecurityProfile_disappears,
-			names.AttrTags:        testAccSecurityProfile_updateTags,
-			names.AttrPermissions: testAccSecurityProfile_updatePermissions,
-			"dataSource_id":       testAccSecurityProfileDataSource_securityProfileID,
-			"dataSource_name":     testAccSecurityProfileDataSource_name,
+			acctest.CtBasic:   testAccSecurityProfile_basic,
+			"disappears":      testAccSecurityProfile_disappears,
+			"tags":            testAccSecurityProfile_updateTags,
+			"permissions":     testAccSecurityProfile_updatePermissions,
+			"dataSource_id":   testAccSecurityProfileDataSource_securityProfileID,
+			"dataSource_name": testAccSecurityProfileDataSource_name,
 		},
 		"User": {
 			acctest.CtBasic:      testAccUser_basic,
 			"disappears":         testAccUser_disappears,
-			names.AttrTags:       testAccUser_updateTags,
+			"tags":               testAccUser_updateTags,
 			"hierarchyGroupId":   testAccUser_updateHierarchyGroupId,
 			"identityInfo":       testAccUser_updateIdentityInfo,
 			"phoneConfig":        testAccUser_updatePhoneConfig,
@@ -147,7 +146,7 @@ func TestAccConnect_serial(t *testing.T) {
 		"Vocabulary": {
 			acctest.CtBasic:   testAccVocabulary_basic,
 			"disappears":      testAccVocabulary_disappears,
-			names.AttrTags:    testAccVocabulary_updateTags,
+			"tags":            testAccVocabulary_updateTags,
 			"dataSource_id":   testAccVocabularyDataSource_vocabularyID,
 			"dataSource_name": testAccVocabularyDataSource_name,
 		},
