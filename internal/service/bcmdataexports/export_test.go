@@ -251,7 +251,7 @@ func TestAccBCMDataExportsExport_curSubset(t *testing.T) {
 		"reservation_unused_quantity",
 		"reservation_unused_recurring_fee",
 		"reservation_upfront_value",
-		"resource_tags",
+		acctest.CtResourceTags,
 		"savings_plan_amortized_upfront_commitment_for_billing_period",
 		"savings_plan_end_time",
 		"savings_plan_instance_type_family",
@@ -354,7 +354,7 @@ func TestAccBCMDataExportsExport_tags(t *testing.T) {
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -363,13 +363,13 @@ func TestAccBCMDataExportsExport_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExportConfig_tag2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccExportConfig_tag2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -378,7 +378,7 @@ func TestAccBCMDataExportsExport_tags(t *testing.T) {
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
