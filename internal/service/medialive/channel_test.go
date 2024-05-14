@@ -462,7 +462,7 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h264Settings(t *tes
 						"look_ahead_rate_control": "HIGH",
 						"max_bitrate":             acctest.CtZero,
 						"min_i_interval":          acctest.CtZero,
-						"num_ref_frames":          "3",
+						"num_ref_frames":          acctest.CtThree,
 						"par_control":             "INITIALIZE_FROM_SOURCE",
 						"par_denominator":         acctest.CtZero,
 						"par_numerator":           acctest.CtZero,
@@ -832,7 +832,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -840,8 +840,8 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -849,7 +849,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
