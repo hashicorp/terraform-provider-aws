@@ -115,8 +115,8 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationDefaultNetmask(p, m, s),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					testAccCheckVPCIPv6CIDRBlockAssociationExistsV2(ctx, assocName, &associationIPv6),
-					testAccCheckVPCAssociationIPv6CIDRPrefixV2(&associationIPv6, strconv.Itoa(netmaskLength)),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
+					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
 				),
 			},
 			// disassociate ipv6
@@ -135,8 +135,8 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 			{
 				Config: testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitNetmask(p, m, s, netmaskLength),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExistsV2(ctx, assocName, &associationIPv6),
-					testAccCheckVPCAssociationIPv6CIDRPrefixV2(&associationIPv6, strconv.Itoa(netmaskLength)),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
+					testAccCheckVPCAssociationIPv6CIDRPrefix(&associationIPv6, strconv.Itoa(netmaskLength)),
 				),
 			},
 			// disassociate ipv6
@@ -156,7 +156,7 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 				Config:   testAccIPAMBYOIPConfig_ipv6CIDRBlockAssociationExplicitCIDR(p, m, s, ipv6CidrAssoc),
 				SkipFunc: testAccIPAMConfig_ipv6BYOIPSkipExplicitCIDR(t, ipv6CidrAssoc),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCIPv6CIDRBlockAssociationExistsV2(ctx, assocName, &associationIPv6),
+					testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx, assocName, &associationIPv6),
 					resource.TestCheckResourceAttr(assocName, "ipv6_cidr_block", ipv6CidrAssoc),
 				),
 			},

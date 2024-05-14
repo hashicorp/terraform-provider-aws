@@ -8,9 +8,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -45,42 +44,7 @@ func testAccCheckVPCIPv6CIDRBlockAssociationDestroy(ctx context.Context) resourc
 	}
 }
 
-func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string, v *ec2.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPC IPv6 CIDR Block Association is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, _, err := tfec2.FindVPCIPv6CIDRBlockAssociationByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
-	}
-}
-
-func testAccCheckVPCAssociationIPv6CIDRPrefix(association *ec2.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(association.Ipv6CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(association.Ipv6CidrBlock))
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckVPCIPv6CIDRBlockAssociationExistsV2(ctx context.Context, n string, v *awstypes.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
+func testAccCheckVPCIPv6CIDRBlockAssociationExists(ctx context.Context, n string, v *awstypes.VpcIpv6CidrBlockAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -105,10 +69,10 @@ func testAccCheckVPCIPv6CIDRBlockAssociationExistsV2(ctx context.Context, n stri
 	}
 }
 
-func testAccCheckVPCAssociationIPv6CIDRPrefixV2(association *awstypes.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
+func testAccCheckVPCAssociationIPv6CIDRPrefix(association *awstypes.VpcIpv6CidrBlockAssociation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if strings.Split(aws.StringValue(association.Ipv6CidrBlock), "/")[1] != expected {
-			return fmt.Errorf("Bad cidr prefix: %s", aws.StringValue(association.Ipv6CidrBlock))
+		if strings.Split(aws.ToString(association.Ipv6CidrBlock), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: %s", aws.ToString(association.Ipv6CidrBlock))
 		}
 
 		return nil
