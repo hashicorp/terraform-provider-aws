@@ -39,13 +39,13 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_config.0.subnet_arn", subnetResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "efs_file_system_arn", efsFileSystemResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^efs://.+/`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^efs://.+/`)),
 				),
 			},
 			{
@@ -152,11 +152,11 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationEFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationEFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -165,20 +165,20 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLocationEFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLocationEFSConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLocationEFSConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

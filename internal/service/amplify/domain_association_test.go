@@ -46,7 +46,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",
@@ -119,7 +119,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "false"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",
@@ -140,7 +140,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",

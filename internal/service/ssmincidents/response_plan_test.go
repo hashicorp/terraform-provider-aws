@@ -80,7 +80,6 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 
 	iniTitle := "initialTitle"
 	updTitle := "updatedTitle"
-	iniImpact := "1"
 	updImpact := "5"
 
 	resourceName := "aws_ssmincidents_response_plan.test"
@@ -95,12 +94,12 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, iniImpact),
+				Config: testAccResponsePlanConfig_basic(iniName, iniTitle, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, iniName),
 					resource.TestCheckResourceAttr(resourceName, "incident_template.0.title", iniTitle),
-					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", iniImpact),
+					resource.TestCheckResourceAttr(resourceName, "incident_template.0.impact", acctest.CtOne),
 
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "ssm-incidents", fmt.Sprintf("response-plan/%s", iniName)),
 				),
@@ -192,9 +191,9 @@ func testResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
 				),
 			},
@@ -211,9 +210,9 @@ func testResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Upd),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
 				),
 			},
@@ -230,7 +229,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
@@ -275,7 +274,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
 			},
@@ -289,7 +288,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoTags(rName, rTitle, rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
 				),
@@ -304,7 +303,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 				Config: testAccResponsePlanConfig_oneTag(rName, rTitle, rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 				),
 			},
@@ -499,7 +498,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic1, names.AttrARN),
 				),
 			},
@@ -513,7 +512,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_chatChannel(rName, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.0", chatChannelTopic2, names.AttrARN),
 				),
 			},
@@ -527,7 +526,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoChatChannels(rName, chatChannelTopic1, chatChannelTopic2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic1, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "chat_channel.*", chatChannelTopic2, names.AttrARN),
 				),
@@ -542,7 +541,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 				Config: testAccResponsePlanConfig_emptyChatChannel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "chat_channel.#", acctest.CtZero),
 				),
 			},
 			{
@@ -584,7 +583,7 @@ func testResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 				),
 			},
@@ -598,7 +597,7 @@ func testResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_engagement(rName, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn2),
 				),
 			},
@@ -612,7 +611,7 @@ func testResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_twoEngagements(rName, contactArn1, contactArn2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "engagements.0", contactArn1),
 					resource.TestCheckResourceAttr(resourceName, "engagements.1", contactArn2),
 				),
@@ -627,7 +626,7 @@ func testResponsePlan_engagement(t *testing.T) {
 				Config: testAccResponsePlanConfig_emptyEngagements(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "engagements.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "engagements.#", acctest.CtZero),
 				),
 			},
 			{
@@ -663,8 +662,8 @@ func testResponsePlan_action(t *testing.T) {
 				Config: testAccResponsePlanConfig_action1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
@@ -695,17 +694,17 @@ func testResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.#",
-						"2",
+						acctest.CtTwo,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.0",
-						"value1",
+						acctest.CtValue1,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.1",
-						"value2",
+						acctest.CtValue2,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,
@@ -724,8 +723,8 @@ func testResponsePlan_action(t *testing.T) {
 				Config: testAccResponsePlanConfig_action2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResponsePlanExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "action.0.ssm_automation.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(
 						resourceName,
 						"action.0.ssm_automation.0.document_name",
@@ -756,7 +755,7 @@ func testResponsePlan_action(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"action.0.ssm_automation.0.parameter.0.values.#",
-						"1",
+						acctest.CtOne,
 					),
 					resource.TestCheckResourceAttr(
 						resourceName,

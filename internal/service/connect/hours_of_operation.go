@@ -72,7 +72,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 								},
 							},
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -96,7 +96,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 					m := v.(map[string]interface{})
 					buf.WriteString(m["day"].(string))
 					buf.WriteString(fmt.Sprintf("%+v", m["end_time"].([]interface{})))
-					buf.WriteString(fmt.Sprintf("%+v", m["start_time"].([]interface{})))
+					buf.WriteString(fmt.Sprintf("%+v", m[names.AttrStartTime].([]interface{})))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -281,7 +281,7 @@ func expandConfigs(configs []interface{}) []*connect.HoursOfOperationConfig {
 		}
 		hoursOfOperationConfig.EndTime = &et
 
-		tst := data["start_time"].([]interface{})
+		tst := data[names.AttrStartTime].([]interface{})
 		vst := tst[0].(map[string]interface{})
 		st := connect.HoursOfOperationTimeSlice{
 			Hours:   aws.Int64(int64(vst["hours"].(int))),
@@ -311,7 +311,7 @@ func flattenConfigs(configs []*connect.HoursOfOperationConfig) []interface{} {
 			"hours":   aws.Int64Value(config.StartTime.Hours),
 			"minutes": aws.Int64Value(config.StartTime.Minutes),
 		}
-		values["start_time"] = []interface{}{st}
+		values[names.AttrStartTime] = []interface{}{st}
 		configsList = append(configsList, values)
 	}
 	return configsList

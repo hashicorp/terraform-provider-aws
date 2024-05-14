@@ -41,7 +41,7 @@ func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,7 +109,7 @@ func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.Res
 
 	d.Set(names.AttrARN, admin_account.Arn)
 	d.Set("delegated_admin_account_id", admin_account.Id)
-	d.Set("email", admin_account.Email)
+	d.Set(names.AttrEmail, admin_account.Email)
 	d.Set(names.AttrName, admin_account.Name)
 	d.Set("service_principal", IPAMServicePrincipal)
 

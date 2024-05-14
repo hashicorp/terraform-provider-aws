@@ -82,7 +82,7 @@ func TestAccVerifiedAccessTrustProvider_deviceOptions(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_deviceOptions(policyReferenceName, trustProviderType, deviceTrustProviderType, tenantId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "device_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "device_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "device_options.0.tenant_id", tenantId),
 					resource.TestCheckResourceAttr(resourceName, "device_trust_provider_type", deviceTrustProviderType),
 					resource.TestCheckResourceAttr(resourceName, "policy_reference_name", policyReferenceName),
@@ -159,7 +159,7 @@ func TestAccVerifiedAccessTrustProvider_oidcOptions(t *testing.T) {
 				Config: testAccVerifiedAccessTrustProviderConfig_oidcOptions(policyReferenceName, trustProviderType, userTrustProviderType, authorizationEndpoint, clientId, clientSecret, issuer, scope, tokenEndpoint, userInfoEndpoint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.authorization_endpoint", authorizationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_id", clientId),
 					resource.TestCheckResourceAttr(resourceName, "oidc_options.0.client_secret", clientSecret),
@@ -202,28 +202,28 @@ func TestAccVerifiedAccessTrustProvider_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVerifiedAccessTrustProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags2(policyReferenceName, trustProviderType, userTrustProviderType, description, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, "key2", "value2"),
+				Config: testAccVerifiedAccessTrustProviderConfig_tags1(policyReferenceName, trustProviderType, userTrustProviderType, description, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessTrustProviderExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{

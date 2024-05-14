@@ -37,7 +37,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
 				),
 			},
@@ -67,9 +67,9 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`observabilityconfiguration/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "observability_configuration_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "observability_configuration_revision", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ObservabilityConfigurationStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trace_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "trace_configuration.0.vendor", "AWSXRAY"),
 				),
 			},
@@ -117,11 +117,11 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccObservabilityConfigurationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -130,20 +130,20 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccObservabilityConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccObservabilityConfigurationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccObservabilityConfigurationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccObservabilityConfigurationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObservabilityConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

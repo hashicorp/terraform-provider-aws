@@ -55,7 +55,7 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 				Default:          types.ObjectLockEnabledEnabled,
 				ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -108,7 +108,7 @@ func resourceBucketObjectLockConfigurationCreate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get("rule").([]interface{})),
+			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 	if expectedBucketOwner != "" {
@@ -171,7 +171,7 @@ func resourceBucketObjectLockConfigurationRead(ctx context.Context, d *schema.Re
 	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("object_lock_enabled", objLockConfig.ObjectLockEnabled)
-	if err := d.Set("rule", flattenObjectLockRule(objLockConfig.Rule)); err != nil {
+	if err := d.Set(names.AttrRule, flattenObjectLockRule(objLockConfig.Rule)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -192,7 +192,7 @@ func resourceBucketObjectLockConfigurationUpdate(ctx context.Context, d *schema.
 			// ObjectLockEnabled is required by the API, even if configured directly on the S3 bucket
 			// during creation, else a MalformedXML error will be returned.
 			ObjectLockEnabled: types.ObjectLockEnabled(d.Get("object_lock_enabled").(string)),
-			Rule:              expandObjectLockRule(d.Get("rule").([]interface{})),
+			Rule:              expandObjectLockRule(d.Get(names.AttrRule).([]interface{})),
 		},
 	}
 	if expectedBucketOwner != "" {

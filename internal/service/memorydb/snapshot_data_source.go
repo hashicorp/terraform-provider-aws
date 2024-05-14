@@ -75,7 +75,7 @@ func DataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -86,7 +86,7 @@ func DataSourceSnapshot() *schema.Resource {
 					},
 				},
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,7 +127,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
 	}
-	d.Set("cluster_name", snapshot.ClusterConfiguration.Name)
+	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
 	d.Set(names.AttrSource, snapshot.Source)

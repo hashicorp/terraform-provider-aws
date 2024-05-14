@@ -106,7 +106,7 @@ func resourceWebACL() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -208,7 +208,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
+	if rules := d.Get(names.AttrRule).(*schema.Set).List(); len(rules) > 0 {
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,
@@ -257,7 +257,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set(names.AttrMetricName, webACL.MetricName)
 	d.Set(names.AttrName, webACL.Name)
-	if err := d.Set("rule", flattenWebACLRules(webACL.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenWebACLRules(webACL.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -288,8 +288,8 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if d.HasChanges("default_action", "rule") {
-		o, n := d.GetChange("rule")
+	if d.HasChanges("default_action", names.AttrRule) {
+		o, n := d.GetChange(names.AttrRule)
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -340,7 +340,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
+	if rules := d.Get(names.AttrRule).(*schema.Set).List(); len(rules) > 0 {
 		_, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
 			input := &wafregional.UpdateWebACLInput{
 				ChangeToken:   token,

@@ -70,7 +70,7 @@ func resourceSizeConstraintSet() *schema.Resource {
 								},
 							},
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -244,7 +244,7 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 			SizeConstraint: &awstypes.SizeConstraint{
 				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
-				Size:               int64(constraint["size"].(int)),
+				Size:               int64(constraint[names.AttrSize].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
 			},
 		})
@@ -258,7 +258,7 @@ func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetU
 			SizeConstraint: &awstypes.SizeConstraint{
 				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
-				Size:               int64(constraint["size"].(int)),
+				Size:               int64(constraint[names.AttrSize].(int)),
 				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
 			},
 		})
@@ -274,7 +274,7 @@ func flattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
 		if c.FieldToMatch != nil {
 			m["field_to_match"] = flattenFieldToMatch(c.FieldToMatch)
 		}
-		m["size"] = c.Size
+		m[names.AttrSize] = c.Size
 		m["text_transformation"] = c.TextTransformation
 		out[i] = m
 	}

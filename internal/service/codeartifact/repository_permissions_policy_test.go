@@ -37,7 +37,7 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{
@@ -53,7 +53,7 @@ func testAccRepositoryPermissionsPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:ListRepositoriesInDomain")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 		},
@@ -78,7 +78,7 @@ func testAccRepositoryPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func testAccRepositoryPermissionsPolicy_owner(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_codeartifact_repository.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexache.MustCompile("codeartifact:CreateRepository")),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", "owner"),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 				),
 			},
 			{

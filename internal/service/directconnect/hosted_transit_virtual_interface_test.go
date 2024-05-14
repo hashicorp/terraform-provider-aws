@@ -76,7 +76,7 @@ func testAccHostedTransitVirtualInterface_basic(t *testing.T) {
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, names.AttrID),
 				),
 			},
@@ -136,7 +136,7 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2a"),
@@ -162,7 +162,7 @@ func testAccHostedTransitVirtualInterface_accepterTags(t *testing.T) {
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "dx_gateway_id", dxGatewayResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key3", "Value3"),

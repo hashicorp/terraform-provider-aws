@@ -37,9 +37,9 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					testAccCheckMethodExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_models.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.header.Content-Type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", "true"),
 				),
@@ -57,9 +57,9 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 					testAccCheckMethodExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_models.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "request_models.application/json", "Error"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.method.request.querystring.page", "false"),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 					testAccCheckMethodExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "authorization", "COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttrSet(resourceName, "authorizer_id"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", acctest.CtTwo),
 				),
 			},
 
@@ -256,7 +256,7 @@ func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.GetMe
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 		if err != nil {
 			return err
@@ -277,7 +277,7 @@ func testAccCheckMethodDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+			_, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -301,7 +301,7 @@ func testAccMethodImportStateIdFunc(resourceName string) resource.ImportStateIdF
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
 }
 

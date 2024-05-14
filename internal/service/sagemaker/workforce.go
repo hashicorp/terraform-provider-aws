@@ -76,13 +76,13 @@ func ResourceWorkforce() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"client_secret": {
+						names.AttrClientSecret: {
 							Type:         schema.TypeString,
 							Required:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.All(
@@ -171,7 +171,7 @@ func ResourceWorkforce() *schema.Resource {
 							MaxItems: 16,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -388,8 +388,8 @@ func expandWorkforceOIDCConfig(l []interface{}) *sagemaker.OidcConfig {
 	config := &sagemaker.OidcConfig{
 		AuthorizationEndpoint: aws.String(m["authorization_endpoint"].(string)),
 		ClientId:              aws.String(m[names.AttrClientID].(string)),
-		ClientSecret:          aws.String(m["client_secret"].(string)),
-		Issuer:                aws.String(m["issuer"].(string)),
+		ClientSecret:          aws.String(m[names.AttrClientSecret].(string)),
+		Issuer:                aws.String(m[names.AttrIssuer].(string)),
 		JwksUri:               aws.String(m["jwks_uri"].(string)),
 		LogoutEndpoint:        aws.String(m["logout_endpoint"].(string)),
 		TokenEndpoint:         aws.String(m["token_endpoint"].(string)),
@@ -407,8 +407,8 @@ func flattenWorkforceOIDCConfig(config *sagemaker.OidcConfigForResponse, clientS
 	m := map[string]interface{}{
 		"authorization_endpoint": aws.StringValue(config.AuthorizationEndpoint),
 		names.AttrClientID:       aws.StringValue(config.ClientId),
-		"client_secret":          clientSecret,
-		"issuer":                 aws.StringValue(config.Issuer),
+		names.AttrClientSecret:   clientSecret,
+		names.AttrIssuer:         aws.StringValue(config.Issuer),
 		"jwks_uri":               aws.StringValue(config.JwksUri),
 		"logout_endpoint":        aws.StringValue(config.LogoutEndpoint),
 		"token_endpoint":         aws.StringValue(config.TokenEndpoint),
@@ -442,7 +442,7 @@ func flattenWorkforceVPCConfig(config *sagemaker.WorkforceVpcConfigResponse) []m
 	m := map[string]interface{}{
 		names.AttrSecurityGroupIDs: flex.FlattenStringSet(config.SecurityGroupIds),
 		names.AttrSubnets:          flex.FlattenStringSet(config.Subnets),
-		"vpc_endpoint_id":          aws.StringValue(config.VpcEndpointId),
+		names.AttrVPCEndpointID:    aws.StringValue(config.VpcEndpointId),
 		names.AttrVPCID:            aws.StringValue(config.VpcId),
 	}
 

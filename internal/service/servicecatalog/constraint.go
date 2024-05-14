@@ -52,7 +52,7 @@ func ResourceConstraint() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -178,7 +178,7 @@ func resourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta in
 	detail := output.ConstraintDetail
 
 	d.Set(names.AttrDescription, detail.Description)
-	d.Set("owner", detail.Owner)
+	d.Set(names.AttrOwner, detail.Owner)
 	d.Set("portfolio_id", detail.PortfolioId)
 	d.Set("product_id", detail.ProductId)
 	d.Set(names.AttrType, detail.Type)

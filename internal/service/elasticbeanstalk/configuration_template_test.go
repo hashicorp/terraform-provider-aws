@@ -127,7 +127,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 				Config: testAccConfigurationTemplateConfig_setting(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "setting.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrValue: "m1.small",
 					}),

@@ -32,7 +32,7 @@ func DataSourceRouteCalculator() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -70,7 +70,7 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(out.CalculatorName))
 	d.Set("calculator_arn", out.CalculatorArn)
 	d.Set("calculator_name", out.CalculatorName)
-	d.Set("create_time", aws.TimeValue(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.TimeValue(out.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", out.DataSource)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))

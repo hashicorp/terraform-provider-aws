@@ -249,7 +249,7 @@ func resourceCluster() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -382,7 +382,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Default:  7,
@@ -1059,7 +1059,7 @@ func enableLogging(ctx context.Context, conn *redshift.Redshift, clusterID strin
 		input.LogExports = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		input.S3KeyPrefix = aws.String(v)
 	}
 
@@ -1102,7 +1102,7 @@ func enableSnapshotCopy(ctx context.Context, conn *redshift.Redshift, clusterID 
 		DestinationRegion: aws.String(tfMap["destination_region"].(string)),
 	}
 
-	if v, ok := tfMap["retention_period"]; ok {
+	if v, ok := tfMap[names.AttrRetentionPeriod]; ok {
 		input.RetentionPeriod = aws.Int64(int64(v.(int)))
 	}
 

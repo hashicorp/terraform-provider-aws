@@ -320,7 +320,7 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
@@ -341,7 +341,7 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
@@ -368,19 +368,19 @@ func TestAccCloudControlResource_DesiredState_objectValueUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1"`)),
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key1", "value1updated"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey1, "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value1updated"`)),
 				),
 			},
 			{
-				Config: testAccResourceConfig_desiredStateObjectValue1(rName, "key2", "value2"),
+				Config: testAccResourceConfig_desiredStateObjectValue1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr(resourceName, names.AttrProperties, regexache.MustCompile(`"Value":"value2"`)),
 				),

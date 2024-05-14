@@ -28,7 +28,7 @@ func TestAccNetworkManagerDevicesDataSource_basic(t *testing.T) {
 				Config: testAccDevicesDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceAllName, "ids.#", 1),
-					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceByTagsName, "ids.#", acctest.CtOne),
 				),
 			},
 		},

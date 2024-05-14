@@ -30,7 +30,7 @@ func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeIDDataSource(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSize, resourceName, names.AttrSize),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
@@ -56,8 +56,8 @@ func TestAccEC2EBSVolumeDataSource_multipleFilters(t *testing.T) {
 				Config: testAccEBSVolumeDataSourceConfig_multipleFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSVolumeIDDataSource(dataSourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
-					resource.TestCheckResourceAttr(dataSourceName, "volume_type", "gp2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrSize, resourceName, names.AttrSize),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVolumeType, "gp2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 				),
 			},

@@ -16,6 +16,7 @@ import (
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	appintegrations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appintegrations"
+	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
@@ -124,6 +125,7 @@ import (
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	ram_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ram"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -170,7 +172,6 @@ import (
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	workspacesweb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspacesweb"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
@@ -230,7 +231,6 @@ import (
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
-	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
 	redshiftserverless_sdkv1 "github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -247,7 +247,6 @@ import (
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
-	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	worklink_sdkv1 "github.com/aws/aws-sdk-go/service/worklink"
@@ -287,8 +286,8 @@ func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify_sdkv2.Client {
 	return errs.Must(client[*amplify_sdkv2.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
 
-func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
-	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling, make(map[string]any)))
+func (c *AWSClient) AppAutoScalingClient(ctx context.Context) *applicationautoscaling_sdkv2.Client {
+	return errs.Must(client[*applicationautoscaling_sdkv2.Client](ctx, c, names.AppAutoScaling, make(map[string]any)))
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
@@ -971,8 +970,8 @@ func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickS
 	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
-func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {
-	return errs.Must(conn[*ram_sdkv1.RAM](ctx, c, names.RAM, make(map[string]any)))
+func (c *AWSClient) RAMClient(ctx context.Context) *ram_sdkv2.Client {
+	return errs.Must(client[*ram_sdkv2.Client](ctx, c, names.RAM, make(map[string]any)))
 }
 
 func (c *AWSClient) RBinClient(ctx context.Context) *rbin_sdkv2.Client {
@@ -1085,10 +1084,6 @@ func (c *AWSClient) SNSClient(ctx context.Context) *sns_sdkv2.Client {
 
 func (c *AWSClient) SQSClient(ctx context.Context) *sqs_sdkv2.Client {
 	return errs.Must(client[*sqs_sdkv2.Client](ctx, c, names.SQS, make(map[string]any)))
-}
-
-func (c *AWSClient) SSMConn(ctx context.Context) *ssm_sdkv1.SSM {
-	return errs.Must(conn[*ssm_sdkv1.SSM](ctx, c, names.SSM, make(map[string]any)))
 }
 
 func (c *AWSClient) SSMClient(ctx context.Context) *ssm_sdkv2.Client {

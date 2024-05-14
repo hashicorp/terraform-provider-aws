@@ -69,7 +69,7 @@ func ResourceImageBuilder() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -112,7 +112,7 @@ func ResourceImageBuilder() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -215,7 +215,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.EnableDefaultInternetAccess = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
@@ -271,7 +271,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("appstream_agent_version", imageBuilder.AppstreamAgentVersion)
 	arn := aws.StringValue(imageBuilder.Arn)
 	d.Set(names.AttrARN, arn)
-	d.Set("created_time", aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.TimeValue(imageBuilder.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, imageBuilder.Description)
 	d.Set(names.AttrDisplayName, imageBuilder.DisplayName)
 	if imageBuilder.DomainJoinInfo != nil {
@@ -282,7 +282,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("domain_join_info", nil)
 	}
 	d.Set("enable_default_internet_access", imageBuilder.EnableDefaultInternetAccess)
-	d.Set("iam_role_arn", imageBuilder.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, imageBuilder.IamRoleArn)
 	d.Set("image_arn", imageBuilder.ImageArn)
 	d.Set(names.AttrInstanceType, imageBuilder.InstanceType)
 	d.Set(names.AttrName, imageBuilder.Name)

@@ -63,7 +63,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Default:  true, //verified default result from ListInstanceAttributes()
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,7 +188,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.SetId(aws.StringValue(instance.Id))
 	d.Set(names.AttrARN, instance.Arn)
 	if instance.CreatedTime != nil {
-		d.Set("created_time", instance.CreatedTime.Format(time.RFC3339))
+		d.Set(names.AttrCreatedTime, instance.CreatedTime.Format(time.RFC3339))
 	}
 	d.Set("identity_management_type", instance.IdentityManagementType)
 	d.Set("inbound_calls_enabled", instance.InboundCallsEnabled)

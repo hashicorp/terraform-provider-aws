@@ -47,7 +47,7 @@ func ResourceOrganizationalUnit() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -225,10 +225,10 @@ func flattenOrganizationalUnitAccounts(accounts []*organizations.Account) []map[
 
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
-			names.AttrARN:  aws.StringValue(account.Arn),
-			"email":        aws.StringValue(account.Email),
-			names.AttrID:   aws.StringValue(account.Id),
-			names.AttrName: aws.StringValue(account.Name),
+			names.AttrARN:   aws.StringValue(account.Arn),
+			names.AttrEmail: aws.StringValue(account.Email),
+			names.AttrID:    aws.StringValue(account.Id),
+			names.AttrName:  aws.StringValue(account.Name),
 		})
 	}
 

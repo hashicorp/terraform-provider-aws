@@ -38,7 +38,7 @@ func TestAccWAFV2RegexPatternSetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "regular_expression", resourceName, "regular_expression"),
-					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrScope, resourceName, names.AttrScope),
 				),
 			},
 		},

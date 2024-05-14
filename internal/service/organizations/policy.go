@@ -55,7 +55,7 @@ func ResourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -167,7 +167,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
 		return nil
 	}

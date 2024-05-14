@@ -35,7 +35,7 @@ func TestAccNetworkManagerDeviceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "location.#", resourceName, "location.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "model", resourceName, "model"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "site_id", resourceName, "site_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vendor", resourceName, "vendor"),
 				),

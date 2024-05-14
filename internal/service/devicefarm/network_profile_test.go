@@ -48,7 +48,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
@@ -66,7 +66,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
@@ -94,11 +94,11 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccNetworkProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -107,20 +107,20 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccNetworkProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccNetworkProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccNetworkProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

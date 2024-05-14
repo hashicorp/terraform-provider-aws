@@ -116,8 +116,8 @@ func TestAccSchemasSchema_openAPI3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "OpenApi3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "version_created_date"),
 				),
 			},
@@ -153,8 +153,8 @@ func TestAccSchemasSchema_jsonSchemaDraftv4(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "registry_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "JSONSchemaDraft4"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "version_created_date"),
 				),
 			},
@@ -209,7 +209,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContent),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, testAccSchemaContentUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtTwo),
 				),
 			},
 			{
@@ -251,11 +251,11 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -264,20 +264,20 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSchemaConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSchemaConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

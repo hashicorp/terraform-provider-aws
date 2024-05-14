@@ -43,7 +43,7 @@ var routeTableValidTargets = []string{
 	"nat_gateway_id",
 	names.AttrNetworkInterfaceID,
 	names.AttrTransitGatewayID,
-	"vpc_endpoint_id",
+	names.AttrVPCEndpointID,
 	"vpc_peering_connection_id",
 }
 
@@ -140,7 +140,7 @@ func resourceRouteTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -440,7 +440,7 @@ func resourceRouteTableHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := m["vpc_endpoint_id"]; ok {
+	if v, ok := m[names.AttrVPCEndpointID]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -702,7 +702,7 @@ func expandCreateRouteInput(tfMap map[string]interface{}) *ec2.CreateRouteInput 
 		apiObject.TransitGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
@@ -768,7 +768,7 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 		apiObject.TransitGatewayId = aws.String(v)
 	}
 
-	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
@@ -812,7 +812,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 
 	if v := apiObject.GatewayId; v != nil {
 		if strings.HasPrefix(aws.StringValue(v), "vpce-") {
-			tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+			tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 		} else {
 			tfMap["gateway_id"] = aws.StringValue(v)
 		}

@@ -57,7 +57,7 @@ func ResourceTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"health_check": {
+						names.AttrHealthCheck: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
@@ -137,7 +137,7 @@ func ResourceTargetGroup() *schema.Resource {
 							},
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -429,14 +429,14 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"ip_address_type":                apiObject.IpAddressType,
+		names.AttrIPAddressType:          apiObject.IpAddressType,
 		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
 		names.AttrProtocol:               apiObject.Protocol,
 		"protocol_version":               apiObject.ProtocolVersion,
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap["health_check"] = []interface{}{flattenHealthCheckConfig(v)}
+		tfMap[names.AttrHealthCheck] = []interface{}{flattenHealthCheckConfig(v)}
 	}
 
 	if v := apiObject.Port; v != nil {
@@ -514,11 +514,11 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 
 	apiObject := &types.TargetGroupConfig{}
 
-	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 

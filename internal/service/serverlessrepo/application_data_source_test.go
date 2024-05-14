@@ -61,7 +61,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version1),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.CtZero),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "semantic_version", version2),
 					resource.TestCheckResourceAttrSet(datasourceName, "source_code_url"),
 					resource.TestCheckResourceAttrSet(datasourceName, "template_url"),
-					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "required_capabilities.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_IAM"),
 					resource.TestCheckTypeSetElemAttr(datasourceName, "required_capabilities.*", "CAPABILITY_RESOURCE_POLICY"),
 				),

@@ -163,7 +163,7 @@ func resourceGroupV0() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"triggers": {
+						names.AttrTriggers: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
@@ -177,7 +177,7 @@ func resourceGroupV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -279,7 +279,7 @@ func resourceGroupV0() *schema.Resource {
 								},
 							},
 						},
-						"launch_template": {
+						names.AttrLaunchTemplate: {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,

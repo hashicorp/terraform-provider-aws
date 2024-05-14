@@ -58,7 +58,7 @@ func resourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -80,7 +80,7 @@ func resourceService() *schema.Resource {
 							Default:      1,
 							ValidateFunc: validation.IntBetween(1, 20),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      5,
@@ -98,7 +98,7 @@ func resourceService() *schema.Resource {
 							Default:          types.HealthCheckProtocolTcp,
 							ValidateDiagFunc: enum.Validate[types.HealthCheckProtocol](),
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      2,
@@ -190,7 +190,7 @@ func resourceService() *schema.Resource {
 								},
 							},
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.IpAddressTypeIpv4,
@@ -744,7 +744,7 @@ func expandServiceEncryptionConfiguration(l []interface{}) *types.EncryptionConf
 
 	result := &types.EncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKey].(string); ok && v != "" {
 		result.KmsKey = aws.String(v)
 	}
 
@@ -768,7 +768,7 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 		result.HealthyThreshold = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["interval"].(int); ok {
+	if v, ok := tfMap[names.AttrInterval].(int); ok {
 		result.Interval = aws.Int32(int32(v))
 	}
 
@@ -780,7 +780,7 @@ func expandServiceHealthCheckConfiguration(l []interface{}) *types.HealthCheckCo
 		result.Protocol = types.HealthCheckProtocol(v)
 	}
 
-	if v, ok := tfMap["timeout"].(int); ok {
+	if v, ok := tfMap[names.AttrTimeout].(int); ok {
 		result.Timeout = aws.Int32(int32(v))
 	}
 
@@ -840,7 +840,7 @@ func expandNetworkConfiguration(l []interface{}) *types.NetworkConfiguration {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		result.IpAddressType = types.IpAddressType(v)
 	}
 
@@ -1157,7 +1157,7 @@ func flattenServiceEncryptionConfiguration(config *types.EncryptionConfiguration
 	}
 
 	m := map[string]interface{}{
-		"kms_key": aws.ToString(config.KmsKey),
+		names.AttrKMSKey: aws.ToString(config.KmsKey),
 	}
 
 	return []interface{}{m}
@@ -1170,10 +1170,10 @@ func flattenServiceHealthCheckConfiguration(config *types.HealthCheckConfigurati
 
 	m := map[string]interface{}{
 		"healthy_threshold":   config.HealthyThreshold,
-		"interval":            config.Interval,
+		names.AttrInterval:    config.Interval,
 		names.AttrPath:        aws.ToString(config.Path),
 		names.AttrProtocol:    string(config.Protocol),
-		"timeout":             config.Timeout,
+		names.AttrTimeout:     config.Timeout,
 		"unhealthy_threshold": config.UnhealthyThreshold,
 	}
 
@@ -1202,7 +1202,7 @@ func flattenNetworkConfiguration(config *types.NetworkConfiguration) []interface
 	m := map[string]interface{}{
 		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
 		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
-		"ip_address_type":       config.IpAddressType,
+		names.AttrIPAddressType: config.IpAddressType,
 	}
 
 	return []interface{}{m}

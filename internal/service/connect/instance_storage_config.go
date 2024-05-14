@@ -74,7 +74,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -99,7 +99,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(connect.EncryptionType_Values(), false),
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -155,7 +155,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 													Required:     true,
 													ValidateFunc: validation.StringInSlice(connect.EncryptionType_Values(), false),
 												},
-												"key_id": {
+												names.AttrKeyID: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -166,7 +166,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(connect.StorageType_Values(), false),
@@ -327,7 +327,7 @@ func expandStorageConfig(tfList []interface{}) *connect.InstanceStorageConfig {
 	}
 
 	result := &connect.InstanceStorageConfig{
-		StorageType: aws.String(tfMap["storage_type"].(string)),
+		StorageType: aws.String(tfMap[names.AttrStorageType].(string)),
 	}
 
 	if v, ok := tfMap["kinesis_firehose_config"].([]interface{}); ok && len(v) > 0 {
@@ -377,7 +377,7 @@ func expandKinesisStreamConfig(tfList []interface{}) *connect.KinesisStreamConfi
 	}
 
 	result := &connect.KinesisStreamConfig{
-		StreamArn: aws.String(tfMap["stream_arn"].(string)),
+		StreamArn: aws.String(tfMap[names.AttrStreamARN].(string)),
 	}
 
 	return result
@@ -436,7 +436,7 @@ func expandEncryptionConfig(tfList []interface{}) *connect.EncryptionConfig {
 
 	result := &connect.EncryptionConfig{
 		EncryptionType: aws.String(tfMap["encryption_type"].(string)),
-		KeyId:          aws.String(tfMap["key_id"].(string)),
+		KeyId:          aws.String(tfMap[names.AttrKeyID].(string)),
 	}
 
 	return result
@@ -448,7 +448,7 @@ func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{
 	}
 
 	values := map[string]interface{}{
-		"storage_type": aws.StringValue(apiObject.StorageType),
+		names.AttrStorageType: aws.StringValue(apiObject.StorageType),
 	}
 
 	if v := apiObject.KinesisFirehoseConfig; v != nil {
@@ -488,7 +488,7 @@ func flattenKinesisStreamConfig(apiObject *connect.KinesisStreamConfig) []interf
 	}
 
 	values := map[string]interface{}{
-		"stream_arn": aws.StringValue(apiObject.StreamArn),
+		names.AttrStreamARN: aws.StringValue(apiObject.StreamArn),
 	}
 
 	return []interface{}{values}
@@ -534,7 +534,7 @@ func flattenEncryptionConfig(apiObject *connect.EncryptionConfig) []interface{} 
 
 	values := map[string]interface{}{
 		"encryption_type": aws.StringValue(apiObject.EncryptionType),
-		"key_id":          aws.StringValue(apiObject.KeyId),
+		names.AttrKeyID:   aws.StringValue(apiObject.KeyId),
 	}
 
 	return []interface{}{values}

@@ -175,7 +175,7 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 				Config: testAccEnvironmentConfig_template(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					testAccCheckEnvironmentConfigValue(ctx, resourceName, "1"),
+					testAccCheckEnvironmentConfigValue(ctx, resourceName, acctest.CtOne),
 				),
 			},
 			{
@@ -192,7 +192,7 @@ func TestAccElasticBeanstalkEnvironment_beanstalkEnv(t *testing.T) {
 				Config: testAccEnvironmentConfig_template(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					testAccCheckEnvironmentConfigValue(ctx, resourceName, "2"),
+					testAccCheckEnvironmentConfigValue(ctx, resourceName, acctest.CtTwo),
 				),
 			},
 			{
@@ -250,11 +250,11 @@ func TestAccElasticBeanstalkEnvironment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -267,20 +267,20 @@ func TestAccElasticBeanstalkEnvironment_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccEnvironmentConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccEnvironmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -463,7 +463,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue1Str),
@@ -485,7 +485,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue2Str),

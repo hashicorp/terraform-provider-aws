@@ -38,7 +38,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sqlInjectionMatchSet),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
 						"text_transformation":   "URL_DECODE",
@@ -74,7 +74,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sqlInjectionMatchSet),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "1"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtOne),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, sqlInjectionMatchSetNewName),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "1"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtOne),
 				),
 			},
 			{
@@ -139,9 +139,9 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "1"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
 						"text_transformation":   "URL_DECODE",
@@ -155,9 +155,9 @@ func TestAccWAFRegionalSQLInjectionMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "1"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "user-agent",
 						"field_to_match.0.type": "HEADER",
 						"text_transformation":   "NONE",
@@ -192,7 +192,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrName, setName),
 					resource.TestCheckResourceAttr(
-						resourceName, "sql_injection_match_tuple.#", "0"),
+						resourceName, "sql_injection_match_tuple.#", acctest.CtZero),
 				),
 			},
 			{

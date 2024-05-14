@@ -67,7 +67,7 @@ func ResourceCatalogTable() *schema.Resource {
 					validation.StringDoesNotMatch(regexache.MustCompile(`[A-Z]`), "uppercase characters cannot be used"),
 				),
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -81,7 +81,7 @@ func ResourceCatalogTable() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"comment": {
+						names.AttrComment: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -124,7 +124,7 @@ func ResourceCatalogTable() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"comment": {
+									names.AttrComment: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
@@ -456,7 +456,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDatabaseName, dbName)
 	d.Set(names.AttrDescription, table.Description)
 	d.Set(names.AttrName, table.Name)
-	d.Set("owner", table.Owner)
+	d.Set(names.AttrOwner, table.Owner)
 	d.Set("retention", table.Retention)
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(table.StorageDescriptor)); err != nil {
@@ -609,7 +609,7 @@ func expandTableInput(d *schema.ResourceData) *glue.TableInput {
 		tableInput.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("owner"); ok {
+	if v, ok := d.GetOk(names.AttrOwner); ok {
 		tableInput.Owner = aws.String(v.(string))
 	}
 
@@ -763,7 +763,7 @@ func expandColumns(columns []interface{}) []*glue.Column {
 			Name: aws.String(elementMap[names.AttrName].(string)),
 		}
 
-		if v, ok := elementMap["comment"]; ok {
+		if v, ok := elementMap[names.AttrComment]; ok {
 			column.Comment = aws.String(v.(string))
 		}
 
@@ -952,7 +952,7 @@ func flattenColumn(c *glue.Column) map[string]interface{} {
 	}
 
 	if v := aws.StringValue(c.Comment); v != "" {
-		column["comment"] = v
+		column[names.AttrComment] = v
 	}
 
 	if v := c.Parameters; v != nil {

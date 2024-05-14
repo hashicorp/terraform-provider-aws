@@ -37,11 +37,11 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "catalog", regexache.MustCompile(`portfolio/.+`)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test-2"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", "test-3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{

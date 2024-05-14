@@ -52,7 +52,7 @@ func resourceIdentityProviderConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -135,7 +135,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	configName, oidc := expandOIDCIdentityProviderConfigRequest(d.Get("oidc").([]interface{})[0].(map[string]interface{}))
 	idpID := IdentityProviderConfigCreateResourceID(clusterName, configName)
 	input := &eks.AssociateIdentityProviderConfigInput{
@@ -183,7 +183,7 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set(names.AttrARN, oidc.IdentityProviderConfigArn)
-	d.Set("cluster_name", oidc.ClusterName)
+	d.Set(names.AttrClusterName, oidc.ClusterName)
 	if err := d.Set("oidc", []interface{}{flattenOIDCIdentityProviderConfig(oidc)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting oidc: %s", err)
 	}

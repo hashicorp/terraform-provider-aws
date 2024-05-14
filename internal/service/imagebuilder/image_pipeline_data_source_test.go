@@ -45,7 +45,7 @@ func TestAccImageBuilderImagePipelineDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform", resourceName, "platform"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "schedule.#", resourceName, "schedule.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

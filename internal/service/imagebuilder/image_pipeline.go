@@ -106,7 +106,7 @@ func ResourceImagePipeline() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -441,7 +441,7 @@ func expandECRConfiguration(tfMap map[string]interface{}) *imagebuilder.EcrConfi
 		apiObject.ContainerTags = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["repository_name"].(string); ok {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
@@ -514,7 +514,7 @@ func flattenECRConfiguration(apiObject *imagebuilder.EcrConfiguration) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.StringValue(v)
+		tfMap[names.AttrRepositoryName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ContainerTags; v != nil {

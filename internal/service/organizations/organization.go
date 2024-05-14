@@ -54,7 +54,7 @@ func ResourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -121,7 +121,7 @@ func ResourceOrganization() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -550,7 +550,7 @@ func flattenAccounts(accounts []*organizations.Account) []map[string]interface{}
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
 			names.AttrARN:    aws.StringValue(account.Arn),
-			"email":          aws.StringValue(account.Email),
+			names.AttrEmail:  aws.StringValue(account.Email),
 			names.AttrID:     aws.StringValue(account.Id),
 			names.AttrName:   aws.StringValue(account.Name),
 			names.AttrStatus: aws.StringValue(account.Status),

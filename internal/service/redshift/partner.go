@@ -58,7 +58,7 @@ func resourcePartner() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -111,7 +111,7 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("partner_name", out.PartnerName)
 	d.Set(names.AttrDatabaseName, out.DatabaseName)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_message", out.StatusMessage)
+	d.Set(names.AttrStatusMessage, out.StatusMessage)
 
 	return diags
 }

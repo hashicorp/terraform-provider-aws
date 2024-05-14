@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tffirehose "github.com/hashicorp/terraform-provider-aws/internal/service/firehose"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,7 +35,7 @@ func TestMigrateState(t *testing.T) {
 				"s3_data_compression": "GZIP",
 			},
 			Expected: map[string]string{
-				"s3_configuration.#":                    "1",
+				"s3_configuration.#":                    acctest.CtOne,
 				"s3_configuration.0.bucket_arn":         "arn:aws:s3:::tf-test-bucket", //lintignore:AWSAT005
 				"s3_configuration.0.buffer_interval":    "400",
 				"s3_configuration.0.buffer_size":        "10",
@@ -50,7 +51,7 @@ func TestMigrateState(t *testing.T) {
 				"s3_bucket_arn":   "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 			},
 			Expected: map[string]string{
-				"s3_configuration.#":            "1",
+				"s3_configuration.#":            acctest.CtOne,
 				"s3_configuration.0.bucket_arn": "arn:aws:s3:::tf-test-bucket",                                 //lintignore:AWSAT005
 				"s3_configuration.0.role_arn":   "arn:aws:iam::somenumber:role/tf_acctest_4271506651559170635", //lintignore:AWSAT005
 			},
@@ -120,12 +121,12 @@ func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 		return is, err
 	}
 	// seed count fields for new types
-	is.Attributes["ebs_block_device.#"] = "0"
-	is.Attributes["ephemeral_block_device.#"] = "0"
+	is.Attributes["ebs_block_device.#"] = acctest.CtZero
+	is.Attributes["ephemeral_block_device.#"] = acctest.CtZero
 	// depending on if state was v0.3.7 or an earlier version, it might have
 	// root_block_device defined already
 	if _, ok := is.Attributes["root_block_device.#"]; !ok {
-		is.Attributes["root_block_device.#"] = "0"
+		is.Attributes["root_block_device.#"] = acctest.CtZero
 	}
 	for _, oldBd := range oldBds {
 		tfec2.WriteV1BlockDevice(is, oldBd)

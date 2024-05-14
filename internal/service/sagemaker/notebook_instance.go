@@ -40,7 +40,7 @@ func ResourceNotebookInstance() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("volume_size", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange(names.AttrVolumeSize, func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
 			}),
 			verify.SetTagsDiff,
@@ -153,7 +153,7 @@ func ResourceNotebookInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"volume_size": {
+			names.AttrVolumeSize: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Default:  5,
@@ -212,7 +212,7 @@ func resourceNotebookInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.SubnetId = aws.String(s.(string))
 	}
 
-	if v, ok := d.GetOk("volume_size"); ok {
+	if v, ok := d.GetOk(names.AttrVolumeSize); ok {
 		input.VolumeSizeInGB = aws.Int64(int64(v.(int)))
 	}
 
@@ -264,7 +264,7 @@ func resourceNotebookInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrSecurityGroups, aws.StringValueSlice(notebookInstance.SecurityGroups))
 	d.Set(names.AttrSubnetID, notebookInstance.SubnetId)
 	d.Set(names.AttrURL, notebookInstance.Url)
-	d.Set("volume_size", notebookInstance.VolumeSizeInGB)
+	d.Set(names.AttrVolumeSize, notebookInstance.VolumeSizeInGB)
 
 	if err := d.Set("instance_metadata_service_configuration", flattenNotebookInstanceMetadataServiceConfiguration(notebookInstance.InstanceMetadataServiceConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting instance_metadata_service_configuration: %s", err)
@@ -330,8 +330,8 @@ func resourceNotebookInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.RootAccess = aws.String(d.Get("root_access").(string))
 		}
 
-		if d.HasChange("volume_size") {
-			input.VolumeSizeInGB = aws.Int64(int64(d.Get("volume_size").(int)))
+		if d.HasChange(names.AttrVolumeSize) {
+			input.VolumeSizeInGB = aws.Int64(int64(d.Get(names.AttrVolumeSize).(int)))
 		}
 
 		// Stop notebook.

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,27 +89,24 @@ func TestAccSSMPatchGroup_multipleBaselines(t *testing.T) {
 
 func testAccCheckPatchGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_patch_group" {
 				continue
 			}
 
-			patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
+			_, err := tfssm.FindPatchGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["patch_group"], rs.Primary.Attributes["baseline_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			group, err := tfssm.FindPatchGroup(ctx, conn, patchGroup, baselineId)
-
-			if err != nil {
-				return fmt.Errorf("error describing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
-			}
-
-			if group != nil {
-				return fmt.Errorf("SSM Patch Group %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("SSM Patch Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -122,28 +120,11 @@ func testAccCheckPatchGroupExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No SSM Patch Baseline ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
 
-		patchGroup, baselineId, err := tfssm.ParsePatchGroupID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", rs.Primary.ID, err)
-		}
+		_, err := tfssm.FindPatchGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["patch_group"], rs.Primary.Attributes["baseline_id"])
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn(ctx)
-
-		group, err := tfssm.FindPatchGroup(ctx, conn, patchGroup, baselineId)
-
-		if err != nil {
-			return fmt.Errorf("error reading SSM Patch Group (%s): %w", rs.Primary.ID, err)
-		}
-
-		if group == nil {
-			return fmt.Errorf("No SSM Patch Group found")
-		}
-
-		return nil
+		return err
 	}
 }
 

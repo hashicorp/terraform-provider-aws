@@ -225,7 +225,7 @@ func DataSourceTheme() *schema.Resource {
 						},
 					},
 				},
-				"created_time": {
+				names.AttrCreatedTime: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -241,7 +241,7 @@ func DataSourceTheme() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -301,7 +301,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrARN, out.Arn)
 	d.Set("aws_account_id", awsAccountId)
 	d.Set("base_theme_id", out.Version.BaseThemeId)
-	d.Set("created_time", out.CreatedTime.Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, out.CreatedTime.Format(time.RFC3339))
 	d.Set("last_updated_time", out.LastUpdatedTime.Format(time.RFC3339))
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrStatus, out.Version.Status)
@@ -322,7 +322,7 @@ func dataSourceThemeRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("describing QuickSight Theme (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 

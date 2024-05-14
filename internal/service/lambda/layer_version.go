@@ -122,7 +122,7 @@ func resourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				ForceNew: true,
@@ -254,7 +254,7 @@ func resourceLayerVersionDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	if d.Get("skip_destroy").(bool) {
+	if d.Get(names.AttrSkipDestroy).(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Layer Version %q", d.Id())
 		return diags
 	}
