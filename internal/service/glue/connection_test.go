@@ -40,7 +40,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("connection/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
@@ -78,7 +78,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -87,12 +87,12 @@ func TestAccGlueConnection_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectionConfig_tags2(rName, jdbcConnectionUrl, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccConnectionConfig_tags2(rName, jdbcConnectionUrl, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -124,7 +124,7 @@ func TestAccGlueConnection_mongoDB(t *testing.T) {
 				Config: testAccConnectionConfig_mongoDB(rName, connectionURL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", connectionURL),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
@@ -288,7 +288,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 				Config: testAccConnectionConfig_matchCriteriaThird(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.0", "criteria2"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.1", "criteria3"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.2", "criteria4"),
@@ -320,7 +320,7 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 				Config: testAccConnectionConfig_physicalRequirements(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.CtThree),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.JDBC_CONNECTION_URL"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.PASSWORD"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.USERNAME"),
