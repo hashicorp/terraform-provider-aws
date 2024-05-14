@@ -56,7 +56,7 @@ func testRotationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "time_zone_id", dataSourceName, "time_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.#", dataSourceName, "contact_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.0", dataSourceName, "contact_ids.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", dataSourceName, "tags.key1"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key2", dataSourceName, "tags.key2"),
 				),

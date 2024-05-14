@@ -216,7 +216,7 @@ func testContactChannel_name(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.CtOne)
-	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + "2")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix + acctest.CtTwo)
 	contactResourceName := "aws_ssmcontacts_contact.test"
 	channelResourceName := "aws_ssmcontacts_contact_channel.test"
 
