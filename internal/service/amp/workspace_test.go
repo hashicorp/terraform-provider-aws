@@ -41,9 +41,9 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -144,7 +144,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -245,7 +245,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtZero),
 				),
 			},
 			{

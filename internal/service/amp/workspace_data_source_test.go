@@ -36,7 +36,7 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, dataSourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttrPair(resourceName, "prometheus_endpoint", dataSourceName, "prometheus_endpoint"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
