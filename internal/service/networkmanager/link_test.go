@@ -39,7 +39,7 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
 				),
 			},
@@ -91,7 +91,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +114,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

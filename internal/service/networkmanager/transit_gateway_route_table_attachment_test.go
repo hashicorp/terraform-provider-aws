@@ -37,14 +37,14 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "TRANSIT_GATEWAY_ROUTE_TABLE"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -118,7 +118,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

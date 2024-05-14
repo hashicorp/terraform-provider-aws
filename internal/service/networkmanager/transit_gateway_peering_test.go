@@ -53,7 +53,7 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, tgwResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_arn", tgwResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "transit_gateway_peering_attachment_id"),
 				),
@@ -107,7 +107,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 				Config: testAccTransitGatewayPeeringConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -120,7 +120,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 				Config: testAccTransitGatewayPeeringConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -129,7 +129,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 				Config: testAccTransitGatewayPeeringConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

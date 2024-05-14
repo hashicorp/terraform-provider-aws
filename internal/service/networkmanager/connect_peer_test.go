@@ -53,7 +53,7 @@ func TestAccNetworkManagerConnectPeer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccNetworkManagerConnectPeer_noDependsOn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccNetworkManagerConnectPeer_subnetARN(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connect_attachment_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_arn", subnetResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags2(rName, "Name", "test", "env", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.env", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
@@ -190,7 +190,7 @@ func TestAccNetworkManagerConnectPeer_tags(t *testing.T) {
 				Config: testAccConnectPeerConfig_tags1(rName, "Name", "test", insideCidrBlocksv4, peerAddress, asn, protocol),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectPeerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
 			},
