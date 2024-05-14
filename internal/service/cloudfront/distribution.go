@@ -188,7 +188,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -421,7 +421,7 @@ func resourceDistribution() *schema.Resource {
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -1719,7 +1719,7 @@ func expandFunctionAssociation(tfMap map[string]interface{}) *awstypes.FunctionA
 		apiObject.EventType = awstypes.EventType(v.(string))
 	}
 
-	if v, ok := tfMap["function_arn"]; ok {
+	if v, ok := tfMap[names.AttrFunctionARN]; ok {
 		apiObject.FunctionARN = aws.String(v.(string))
 	}
 
@@ -1789,7 +1789,7 @@ func flattenFunctionAssociation(apiObject *awstypes.FunctionAssociation) map[str
 
 	if apiObject != nil {
 		tfMap["event_type"] = apiObject.EventType
-		tfMap["function_arn"] = aws.ToString(apiObject.FunctionARN)
+		tfMap[names.AttrFunctionARN] = aws.ToString(apiObject.FunctionARN)
 	}
 
 	return tfMap
