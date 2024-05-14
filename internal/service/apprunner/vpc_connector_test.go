@@ -37,8 +37,8 @@ func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
 					testAccCheckVPCConnectorExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "apprunner", regexache.MustCompile(fmt.Sprintf(`vpcconnector/%s/1/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connector_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 				Config: testAccVPCConnectorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 				Config: testAccVPCConnectorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccAppRunnerVPCConnector_defaultTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
