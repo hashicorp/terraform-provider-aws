@@ -40,7 +40,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -106,7 +106,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 							Computed: true,
 						},
 
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},

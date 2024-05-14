@@ -86,7 +86,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Optional: true,
 							Default:  true,
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      60,
@@ -146,7 +146,7 @@ func ResourceLoadBalancer() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IntBetween(2, 10),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntBetween(5, 300),
@@ -552,7 +552,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			l := logs[0].(map[string]interface{})
 			input.LoadBalancerAttributes.AccessLog = &elb.AccessLog{
 				Enabled:        aws.Bool(l[names.AttrEnabled].(bool)),
-				EmitInterval:   aws.Int64(int64(l["interval"].(int))),
+				EmitInterval:   aws.Int64(int64(l[names.AttrInterval].(int))),
 				S3BucketName:   aws.String(l[names.AttrBucket].(string)),
 				S3BucketPrefix: aws.String(l[names.AttrBucketPrefix].(string)),
 			}
@@ -620,7 +620,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			input := &elb.ConfigureHealthCheckInput{
 				HealthCheck: &elb.HealthCheck{
 					HealthyThreshold:   aws.Int64(int64(check["healthy_threshold"].(int))),
-					Interval:           aws.Int64(int64(check["interval"].(int))),
+					Interval:           aws.Int64(int64(check[names.AttrInterval].(int))),
 					Target:             aws.String(check[names.AttrTarget].(string)),
 					Timeout:            aws.Int64(int64(check[names.AttrTimeout].(int))),
 					UnhealthyThreshold: aws.Int64(int64(check["unhealthy_threshold"].(int))),
