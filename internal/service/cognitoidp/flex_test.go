@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -143,7 +144,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 				Mutable:                aws.Bool(true),
 				Name:                   aws.String("updated_at"),
 				NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
-					MinValue: aws.String("0"),
+					MinValue: aws.String(acctest.CtZero),
 				},
 				Required: aws.Bool(false),
 			},
@@ -191,7 +192,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"),
+					MinLength: aws.String(acctest.CtZero),
 				},
 			},
 			want: true,
@@ -207,7 +208,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 						MaxLength: aws.String("2048"),
-						MinLength: aws.String("0"),
+						MinLength: aws.String(acctest.CtZero),
 					},
 				},
 			},
@@ -219,7 +220,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"),
+					MinLength: aws.String(acctest.CtZero),
 				},
 			},
 			want: false,
@@ -247,7 +248,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
-					MinLength: aws.String("0"),
+					MinLength: aws.String(acctest.CtZero),
 				},
 			},
 			want: false,
