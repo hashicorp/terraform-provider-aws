@@ -56,7 +56,7 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccBatchJobQueue_basicCEO(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, batch.JQStateEnabled),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -257,7 +257,7 @@ func TestAccBatchJobQueue_ComputeEnvironmentOrder_multiple(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.0.order", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.1.order", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "compute_environment_order.2.order", "3"),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environment_order.0.compute_environment", "aws_batch_compute_environment.test", names.AttrARN),
@@ -321,7 +321,7 @@ func TestAccBatchJobQueue_priority(t *testing.T) {
 				Config: testAccJobQueueConfig_priority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.CtTwo),
 				),
 			},
 			{
