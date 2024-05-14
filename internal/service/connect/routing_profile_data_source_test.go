@@ -37,7 +37,7 @@ func testAccRoutingProfileDataSource_routingProfileID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",
-						"concurrency": "1",
+						"concurrency": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "CHAT",
@@ -90,7 +90,7 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "media_concurrencies.#", resourceName, "media_concurrencies.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "VOICE",
-						"concurrency": "1",
+						"concurrency": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "media_concurrencies.*", map[string]string{
 						"channel":     "CHAT",
@@ -99,13 +99,13 @@ func testAccRoutingProfileDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "queue_configs.#", resourceName, "queue_configs.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.channel"),
-					resource.TestCheckResourceAttr(datasourceName, "queue_configs.0.delay", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "queue_configs.0.delay", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.0.priority"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.default_outbound_queue", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.default_outbound_queue", "queue_id"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_name", "aws_connect_queue.default_outbound_queue", names.AttrName),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.channel"),
-					resource.TestCheckResourceAttr(datasourceName, "queue_configs.1.delay", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "queue_configs.1.delay", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(datasourceName, "queue_configs.1.priority"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_arn", "aws_connect_queue.test", names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "queue_configs.*.queue_id", "aws_connect_queue.test", "queue_id"),
