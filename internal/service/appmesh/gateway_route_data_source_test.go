@@ -44,7 +44,7 @@ func testAccGatewayRouteDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.#", dataSourceName, "spec.0.http_route.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.#", dataSourceName, "spec.0.http2_route.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.priority", dataSourceName, "spec.0.priority"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

@@ -42,7 +42,7 @@ func testAccVirtualRouterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.#", dataSourceName, "spec.0.listener.0.port_mapping.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.0.port", dataSourceName, "spec.0.listener.0.port_mapping.0.port"),
 					resource.TestCheckResourceAttrPair(resourceName, "spec.0.listener.0.port_mapping.0.protocol", dataSourceName, "spec.0.listener.0.port_mapping.0.protocol"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

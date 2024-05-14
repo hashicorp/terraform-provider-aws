@@ -23,12 +23,12 @@ func TestVirtualNodeMigrateState(t *testing.T) {
 		"v0_1-noBackendsOrDns": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"spec.0.backends.#":          "0",
-				"spec.0.service_discovery.#": "0",
+				"spec.0.backends.#":          acctest.CtZero,
+				"spec.0.service_discovery.#": acctest.CtZero,
 			},
 			Expected: map[string]string{
-				"spec.0.backend.#":           "0",
-				"spec.0.service_discovery.#": "0",
+				"spec.0.backend.#":           acctest.CtZero,
+				"spec.0.service_discovery.#": acctest.CtZero,
 			},
 		},
 		"v0_1-withBackendAndDns": {

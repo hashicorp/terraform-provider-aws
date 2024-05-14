@@ -48,7 +48,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
@@ -108,7 +108,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "grpc"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -173,7 +173,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				Config: testAccVirtualRouterConfig_tags2(meshName, vrName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -182,7 +182,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
