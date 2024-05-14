@@ -72,7 +72,7 @@ func TestAccECSTaskSet_withExternalId(t *testing.T) {
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "external_id", "TEST_ID"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExternalID, "TEST_ID"),
 				),
 			},
 			{

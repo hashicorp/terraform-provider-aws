@@ -1548,21 +1548,21 @@ func TestAccECSService_Tags_propagate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &first),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsService),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsService),
 				),
 			},
 			{
 				Config: testAccServiceConfig_propagateTags(rName, "TASK_DEFINITION"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &second),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsTaskDefinition),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsTaskDefinition),
 				),
 			},
 			{
 				Config: testAccServiceConfig_propagateTags(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &third),
-					resource.TestCheckResourceAttr(resourceName, "propagate_tags", ecs.PropagateTagsNone),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, ecs.PropagateTagsNone),
 				),
 			},
 		},
