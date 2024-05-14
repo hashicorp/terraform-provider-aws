@@ -114,7 +114,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	excludeZoneIDs := d.Get("exclude_zone_ids").(*schema.Set)
 
 	groupNames := schema.NewSet(schema.HashString, nil)
-	names := []string{}
+	nms := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
 		groupName := aws.StringValue(v.GroupName)
@@ -133,7 +133,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 			groupNames.Add(groupName)
 		}
 
-		names = append(names, name)
+		nms = append(nms, name)
 		zoneIds = append(zoneIds, zoneID)
 	}
 
@@ -142,7 +142,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
-	if err := d.Set(names.AttrNames, names); err != nil {
+	if err := d.Set(names.AttrNames, nms); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {
