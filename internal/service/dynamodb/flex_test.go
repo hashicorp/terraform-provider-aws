@@ -13,6 +13,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +63,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: "2"},
+						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -73,7 +74,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: "2"},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -215,7 +216,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: "2"},
+						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -226,7 +227,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: "2"},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
