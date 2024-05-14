@@ -59,7 +59,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FunctionStage](),
@@ -77,7 +77,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
-	stage := awstypes.FunctionStage(d.Get("stage").(string))
+	stage := awstypes.FunctionStage(d.Get(names.AttrStage).(string))
 	outputDF, err := findFunctionByTwoPartKey(ctx, conn, name, stage)
 
 	if err != nil {
