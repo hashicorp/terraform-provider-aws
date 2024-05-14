@@ -43,7 +43,7 @@ func TestAccKinesisStreamDataSource_basic(t *testing.T) {
 				Config: testAccStreamDataSourceConfig_basic(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "closed_shards.#", "4"),
-					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", acctest.CtThree),
 				),
 			},
 		},
