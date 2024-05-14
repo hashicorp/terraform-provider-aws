@@ -38,7 +38,7 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`core-network-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, networkmanager.CoreNetworkStateAvailable),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -84,11 +84,11 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCoreNetworkConfig_tags1("key1", "value1"),
+				Config: testAccCoreNetworkConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -98,20 +98,20 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"create_base_policy"},
 			},
 			{
-				Config: testAccCoreNetworkConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccCoreNetworkConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCoreNetworkConfig_tags1("key2", "value2"),
+				Config: testAccCoreNetworkConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -173,13 +173,13 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
-						"shared_segments.#": "0",
+						"shared_segments.#": acctest.CtZero,
 					}),
 				),
 			},
@@ -212,13 +212,13 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *test
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.AlternateRegion(),
 						names.AttrName:      "segment",
-						"shared_segments.#": "0",
+						"shared_segments.#": acctest.CtZero,
 					}),
 				),
 			},
@@ -247,23 +247,23 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithMultiRegion(t 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
-					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "base_policy_regions.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.AlternateRegion()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "base_policy_regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64513",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "2",
+						"edge_locations.#":  acctest.CtTwo,
 						names.AttrName:      "segment",
-						"shared_segments.#": "0",
+						"shared_segments.#": acctest.CtZero,
 					}),
 				),
 			},
@@ -297,17 +297,17 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithPolicyDocument
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn1,
 						"edge_location":        acctest.AlternateRegion(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  edgeAsn2,
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "2",
+						"edge_locations.#":  acctest.CtTwo,
 						names.AttrName:      "segment",
-						"shared_segments.#": "0",
+						"shared_segments.#": acctest.CtZero,
 					}),
 				),
 			},
@@ -352,13 +352,13 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "64512",
 						"edge_location":        acctest.Region(),
-						"inside_cidr_blocks.#": "0",
+						"inside_cidr_blocks.#": acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
-						"shared_segments.#": "0",
+						"shared_segments.#": acctest.CtZero,
 					}),
 				),
 			},

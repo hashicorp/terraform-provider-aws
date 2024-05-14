@@ -56,7 +56,7 @@ func ResourceZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      "Managed by Terraform",
@@ -135,7 +135,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		CallerReference: aws.String(id.UniqueId()),
 		Name:            aws.String(d.Get(names.AttrName).(string)),
 		HostedZoneConfig: &route53.HostedZoneConfig{
-			Comment: aws.String(d.Get("comment").(string)),
+			Comment: aws.String(d.Get(names.AttrComment).(string)),
 		},
 	}
 
@@ -205,7 +205,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
-	d.Set("comment", "")
+	d.Set(names.AttrComment, "")
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
@@ -221,7 +221,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if output.HostedZone.Config != nil {
-		d.Set("comment", output.HostedZone.Config.Comment)
+		d.Set(names.AttrComment, output.HostedZone.Config.Comment)
 
 		if aws.BoolValue(output.HostedZone.Config.PrivateZone) {
 			var err error
@@ -250,9 +250,9 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if d.HasChange("comment") {
+	if d.HasChange(names.AttrComment) {
 		input := route53.UpdateHostedZoneCommentInput{
-			Comment: aws.String(d.Get("comment").(string)),
+			Comment: aws.String(d.Get(names.AttrComment).(string)),
 			Id:      aws.String(d.Id()),
 		}
 

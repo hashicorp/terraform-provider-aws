@@ -132,6 +132,19 @@ func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
 	return option.Some(a[0]), nil
 }
 
+// AssertMaybeSingleValueResult returns the single non-nil value in the specified slice, or `None` if the slice is empty.
+// Returns a `NotFound` error otherwise.
+func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
+	if l := len(a); l == 0 {
+		return option.None[T](), nil
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	} else if v := &a[0]; v == nil {
+		return nil, NewEmptyResultError(nil)
+	}
+	return option.Some(a[0]), nil
+}
+
 // AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
 // Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T, fs ...FoundFunc[T]) (*T, error) {

@@ -42,7 +42,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),
@@ -151,11 +151,11 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, "key1", "value1"),
+				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -166,20 +166,20 @@ func TestAccIAMServerCertificate_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPrivateKey},
 			},
 			{
-				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServerCertificateConfig_tags2(rName, key, certificate, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, "key2", "value2"),
+				Config: testAccServerCertificateConfig_tags1(rName, key, certificate, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

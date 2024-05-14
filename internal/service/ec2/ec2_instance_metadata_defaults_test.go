@@ -46,7 +46,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
-					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),
 				),
@@ -56,7 +56,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "no-preference"),
-					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "no-preference"),
 				),

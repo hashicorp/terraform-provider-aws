@@ -241,11 +241,11 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, "key1", "value1"),
+				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -254,20 +254,20 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig_tags2(rName, address, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAnomalySubscriptionConfig_tags2(rName, address, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, "key2", "value2"),
+				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

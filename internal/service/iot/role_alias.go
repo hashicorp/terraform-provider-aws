@@ -36,7 +36,7 @@ func ResourceRoleAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -63,7 +63,7 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	roleAlias := d.Get("alias").(string)
+	roleAlias := d.Get(names.AttrAlias).(string)
 	roleArn := d.Get(names.AttrRoleARN).(string)
 	credentialDuration := d.Get("credential_duration").(int)
 
@@ -117,7 +117,7 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.Set(names.AttrARN, roleAliasDescription.RoleAliasArn)
-	d.Set("alias", roleAliasDescription.RoleAlias)
+	d.Set(names.AttrAlias, roleAliasDescription.RoleAlias)
 	d.Set(names.AttrRoleARN, roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)
 
@@ -128,7 +128,7 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
-	alias := d.Get("alias").(string)
+	alias := d.Get(names.AttrAlias).(string)
 
 	_, err := conn.DeleteRoleAlias(ctx, &iot.DeleteRoleAliasInput{
 		RoleAlias: aws.String(d.Id()),

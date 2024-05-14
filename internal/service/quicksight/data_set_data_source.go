@@ -137,7 +137,7 @@ func DataSourceDataSet() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"permissions": {
+				names.AttrPermissions: {
 					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
@@ -239,7 +239,7 @@ func DataSourceDataSet() *schema.Resource {
 func logicalTableMapDataSourceSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -703,7 +703,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set(names.AttrPermissions, flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("setting permissions: %s", err)
 	}
 	return nil

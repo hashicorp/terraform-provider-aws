@@ -81,7 +81,7 @@ func ResourceKeySigningKey() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
 				),
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -194,7 +194,7 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("key_management_service_arn", keySigningKey.KmsArn)
 	d.Set("key_tag", keySigningKey.KeyTag)
 	d.Set(names.AttrName, keySigningKey.Name)
-	d.Set("public_key", keySigningKey.PublicKey)
+	d.Set(names.AttrPublicKey, keySigningKey.PublicKey)
 	d.Set("signing_algorithm_mnemonic", keySigningKey.SigningAlgorithmMnemonic)
 	d.Set("signing_algorithm_type", keySigningKey.SigningAlgorithmType)
 	d.Set(names.AttrStatus, keySigningKey.Status)

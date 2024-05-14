@@ -39,7 +39,7 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
 					resource.TestCheckResourceAttrSet(resourceName, "studio_lifecycle_config_content"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -64,11 +64,11 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key1", "value1"),
+				Config: testAccStudioLifecycleConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -77,20 +77,20 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStudioLifecycleConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStudioLifecycleConfigConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key2", "value2"),
+				Config: testAccStudioLifecycleConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

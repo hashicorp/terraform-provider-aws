@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -77,13 +78,13 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				names.AttrWeight: "0",
+				names.AttrWeight: acctest.CtZero,
 				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        "1",
-				"weighted_routing_policy.0.weight": "0",
-				"failover_routing_policy.#":        "1",
+				"weighted_routing_policy.#":        acctest.CtOne,
+				"weighted_routing_policy.0.weight": acctest.CtZero,
+				"failover_routing_policy.#":        acctest.CtOne,
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},

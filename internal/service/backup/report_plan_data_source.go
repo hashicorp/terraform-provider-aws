@@ -58,7 +58,7 @@ func DataSourceReportPlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

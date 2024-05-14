@@ -38,7 +38,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 				),
 			},
 			{
@@ -223,7 +223,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
 					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
 					resource.TestCheckResourceAttr(resourceName, "tags.shooting", "Stars"),
@@ -253,7 +253,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 				Config: testAccTableReplicaConfig_tags3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},

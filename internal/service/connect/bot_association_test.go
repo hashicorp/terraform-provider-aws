@@ -35,7 +35,7 @@ func testAccBotAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
-					resource.TestCheckResourceAttr(resourceName, "lex_bot.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lex_bot.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "lex_bot.0.name", "aws_lex_bot.test", names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "lex_bot.0.lex_region"),
 				),

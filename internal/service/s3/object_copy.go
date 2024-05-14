@@ -173,7 +173,7 @@ func resourceObjectCopy() *schema.Resource {
 				ConflictsWith: []string{"acl"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -181,7 +181,7 @@ func resourceObjectCopy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
@@ -200,7 +200,7 @@ func resourceObjectCopy() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.Type](),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -689,7 +689,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 
 	apiObject := &types.Grantee{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		apiObject.EmailAddress = aws.String(v)
 	}
 
@@ -701,7 +701,7 @@ func expandObjectCopyGrant(tfMap map[string]interface{}) string {
 		apiObject.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		apiObject.URI = aws.String(v)
 	}
 
@@ -738,7 +738,7 @@ func expandObjectCopyGrants(tfList []interface{}) *s3Grants {
 			continue
 		}
 
-		for _, perm := range tfMap["permissions"].(*schema.Set).List() {
+		for _, perm := range tfMap[names.AttrPermissions].(*schema.Set).List() {
 			if v := expandObjectCopyGrant(tfMap); v != "" {
 				switch types.Permission(perm.(string)) {
 				case types.PermissionFullControl:
@@ -789,10 +789,10 @@ func grantHash(v interface{}) int {
 	if v, ok := m[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if v, ok := m["uri"]; ok {
+	if v, ok := m[names.AttrURI]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if p, ok := m["permissions"]; ok {
+	if p, ok := m[names.AttrPermissions]; ok {
 		buf.WriteString(fmt.Sprintf("%v-", p.(*schema.Set).List()))
 	}
 	return create.StringHashcode(buf.String())

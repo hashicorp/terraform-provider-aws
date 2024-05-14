@@ -15,8 +15,9 @@ resource "aws_accessanalyzer_analyzer" "test" {
 resource "null_resource" "test" {}
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "unknownTagKey" {

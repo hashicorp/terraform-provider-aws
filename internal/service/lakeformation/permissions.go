@@ -252,7 +252,7 @@ func ResourcePermissions() *schema.Resource {
 					},
 				},
 			},
-			"permissions": {
+			names.AttrPermissions: {
 				Type:     schema.TypeList,
 				ForceNew: true,
 				MinItems: 1,
@@ -421,7 +421,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
+		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get(names.AttrPermissions).([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),
 		},
@@ -633,7 +633,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrPrincipal, cleanPermissions[0].Principal.DataLakePrincipalIdentifier)
-	d.Set("permissions", flattenResourcePermissions(cleanPermissions))
+	d.Set(names.AttrPermissions, flattenResourcePermissions(cleanPermissions))
 	d.Set("permissions_with_grant_option", flattenGrantPermissions(cleanPermissions))
 
 	if cleanPermissions[0].Resource.Catalog != nil {
@@ -740,7 +740,7 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
+		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get(names.AttrPermissions).([]interface{})),
 		PermissionsWithGrantOption: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions_with_grant_option").([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get(names.AttrPrincipal).(string)),

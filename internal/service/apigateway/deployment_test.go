@@ -296,11 +296,11 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_variables(rName, "key1", "value1"),
+				Config: testAccDeploymentConfig_variables(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variables.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "variables.key1", acctest.CtValue1),
 				),
 			},
 		},

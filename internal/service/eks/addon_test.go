@@ -42,10 +42,10 @@ func TestAccEKSAddon_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
 					acctest.MatchResourceAttrRegionalARN(addonResourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
-					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(addonResourceName, names.AttrClusterName, clusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
-					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(addonResourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -365,11 +365,11 @@ func TestAccEKSAddon_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddonConfig_tags1(rName, addonName, "key1", "value1"),
+				Config: testAccAddonConfig_tags1(rName, addonName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -378,20 +378,20 @@ func TestAccEKSAddon_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAddonConfig_tags2(rName, addonName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAddonConfig_tags2(rName, addonName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAddonConfig_tags1(rName, addonName, "key2", "value2"),
+				Config: testAccAddonConfig_tags1(rName, addonName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

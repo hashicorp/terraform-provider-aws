@@ -88,7 +88,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 							Default:      provisioningHookPayloadVersion2020_04_01,
 							ValidateFunc: validation.StringInSlice(provisioningHookPayloadVersion_Values(), false),
 						},
-						"target_arn": {
+						names.AttrTargetARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -285,7 +285,7 @@ func flattenProvisioningHook(apiObject *awstypes.ProvisioningHook) map[string]in
 	}
 
 	if v := apiObject.TargetArn; v != nil {
-		tfMap["target_arn"] = aws.ToString(v)
+		tfMap[names.AttrTargetARN] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -302,7 +302,7 @@ func expandProvisioningHook(tfMap map[string]interface{}) *awstypes.Provisioning
 		apiObject.PayloadVersion = aws.String(v)
 	}
 
-	if v, ok := tfMap["target_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTargetARN].(string); ok && v != "" {
 		apiObject.TargetArn = aws.String(v)
 	}
 

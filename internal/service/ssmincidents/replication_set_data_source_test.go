@@ -38,7 +38,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "deletion_protected", dataSourceName, "deletion_protected"),
 					resource.TestCheckResourceAttrPair(resourceName, "last_modified_by", dataSourceName, "last_modified_by"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.name", dataSourceName, "region.0.name"),

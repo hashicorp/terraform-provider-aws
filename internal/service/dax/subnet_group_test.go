@@ -35,7 +35,7 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, "aws_dax_subnet_group.test"),
-					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr("aws_dax_subnet_group.test", "subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", names.AttrVPCID),
 				),
 			},

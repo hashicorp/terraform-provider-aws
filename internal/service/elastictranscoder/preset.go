@@ -219,7 +219,7 @@ func ResourcePreset() *schema.Resource {
 								"png",
 							}, false),
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -559,7 +559,7 @@ func expandETThumbnails(d *schema.ResourceData) *elastictranscoder.Thumbnails {
 		thumbnails.AspectRatio = aws.String(v.(string))
 	}
 
-	if v, ok := t["interval"]; ok && v.(string) != "" {
+	if v, ok := t[names.AttrInterval]; ok && v.(string) != "" {
 		thumbnails.Interval = aws.String(v.(string))
 	}
 
@@ -860,14 +860,14 @@ func flattenETThumbnails(thumbs *elastictranscoder.Thumbnails) []map[string]inte
 	}
 
 	result := map[string]interface{}{
-		"aspect_ratio":   aws.StringValue(thumbs.AspectRatio),
-		names.AttrFormat: aws.StringValue(thumbs.Format),
-		"interval":       aws.StringValue(thumbs.Interval),
-		"max_height":     aws.StringValue(thumbs.MaxHeight),
-		"max_width":      aws.StringValue(thumbs.MaxWidth),
-		"padding_policy": aws.StringValue(thumbs.PaddingPolicy),
-		"resolution":     aws.StringValue(thumbs.Resolution),
-		"sizing_policy":  aws.StringValue(thumbs.SizingPolicy),
+		"aspect_ratio":     aws.StringValue(thumbs.AspectRatio),
+		names.AttrFormat:   aws.StringValue(thumbs.Format),
+		names.AttrInterval: aws.StringValue(thumbs.Interval),
+		"max_height":       aws.StringValue(thumbs.MaxHeight),
+		"max_width":        aws.StringValue(thumbs.MaxWidth),
+		"padding_policy":   aws.StringValue(thumbs.PaddingPolicy),
+		"resolution":       aws.StringValue(thumbs.Resolution),
+		"sizing_policy":    aws.StringValue(thumbs.SizingPolicy),
 	}
 
 	return []map[string]interface{}{result}

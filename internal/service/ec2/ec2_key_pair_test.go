@@ -45,14 +45,14 @@ func TestAccEC2KeyPair_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "fingerprint", regexache.MustCompile(`[0-9a-f]{2}(:[0-9a-f]{2}){15}`)),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_name_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -76,34 +76,34 @@ func TestAccEC2KeyPair_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key1", "value1"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 			{
-				Config: testAccKeyPairConfig_tags2(rName, publicKey, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKeyPairConfig_tags2(rName, publicKey, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccKeyPairConfig_tags1(rName, publicKey, "key2", "value2"),
+				Config: testAccKeyPairConfig_tags1(rName, publicKey, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -138,7 +138,7 @@ func TestAccEC2KeyPair_nameGenerated(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -172,7 +172,7 @@ func TestAccEC2KeyPair_namePrefix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})

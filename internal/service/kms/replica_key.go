@@ -70,7 +70,7 @@ func resourceReplicaKey() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -153,7 +153,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica Key (%s) create: %s", d.Id(), err)
 	}
 
-	d.Set("key_id", d.Id())
+	d.Set(names.AttrKeyID, d.Id())
 
 	if enabled := d.Get(names.AttrEnabled).(bool); !enabled {
 		if err := updateKeyEnabled(ctx, conn, "KMS Replica Key", d.Id(), enabled); err != nil {
@@ -210,7 +210,7 @@ func resourceReplicaKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrARN, key.metadata.Arn)
 	d.Set(names.AttrDescription, key.metadata.Description)
 	d.Set(names.AttrEnabled, key.metadata.Enabled)
-	d.Set("key_id", key.metadata.KeyId)
+	d.Set(names.AttrKeyID, key.metadata.KeyId)
 	d.Set("key_rotation_enabled", key.rotation)
 	d.Set("key_spec", key.metadata.KeySpec)
 	d.Set("key_usage", key.metadata.KeyUsage)

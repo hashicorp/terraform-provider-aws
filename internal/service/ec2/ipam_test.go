@@ -38,13 +38,13 @@ func TestAccIPAM_basic(t *testing.T) {
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "scope_count", acctest.CtTwo),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_association_id", regexache.MustCompile(`^ipam-res-disco-assoc-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "default_resource_discovery_id", regexache.MustCompile(`^ipam-res-disco-[0-9a-f]+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -128,7 +128,7 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -140,14 +140,14 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -228,11 +228,11 @@ func TestAccIPAM_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMConfig_tags("key1", "value1"),
+				Config: testAccIPAMConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -241,20 +241,20 @@ func TestAccIPAM_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPAMConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIPAMConfig_tags("key2", "value2"),
+				Config: testAccIPAMConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

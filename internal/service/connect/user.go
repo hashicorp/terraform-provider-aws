@@ -55,7 +55,7 @@ func ResourceUser() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -392,7 +392,7 @@ func expandIdentityInfo(identityInfo []interface{}) *connect.UserIdentityInfo {
 
 	result := &connect.UserIdentityInfo{}
 
-	if v, ok := tfMap["email"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrEmail].(string); ok && v != "" {
 		result.Email = aws.String(v)
 	}
 
@@ -444,7 +444,7 @@ func flattenIdentityInfo(identityInfo *connect.UserIdentityInfo) []interface{} {
 	values := map[string]interface{}{}
 
 	if v := identityInfo.Email; v != nil {
-		values["email"] = aws.StringValue(v)
+		values[names.AttrEmail] = aws.StringValue(v)
 	}
 
 	if v := identityInfo.FirstName; v != nil {

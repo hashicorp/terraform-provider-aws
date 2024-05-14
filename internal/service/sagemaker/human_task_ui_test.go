@@ -37,8 +37,8 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "human_task_ui_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "ui_template.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ui_template.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -64,11 +64,11 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckHumanTaskUIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHumanTaskUIConfig_tags1(rName, "key1", "value1"),
+				Config: testAccHumanTaskUIConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -78,20 +78,20 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"ui_template.0.content", "ui_template.0.url"},
 			},
 			{
-				Config: testAccHumanTaskUIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccHumanTaskUIConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccHumanTaskUIConfig_tags1(rName, "key2", "value2"),
+				Config: testAccHumanTaskUIConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

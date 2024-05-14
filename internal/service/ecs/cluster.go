@@ -83,7 +83,7 @@ func ResourceCluster() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"s3_key_prefix": {
+												names.AttrS3KeyPrefix: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -570,7 +570,7 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 	}
 
 	if apiObject.S3KeyPrefix != nil {
-		tfMap["s3_key_prefix"] = aws.StringValue(apiObject.S3KeyPrefix)
+		tfMap[names.AttrS3KeyPrefix] = aws.StringValue(apiObject.S3KeyPrefix)
 	}
 
 	return []interface{}{tfMap}
@@ -628,7 +628,7 @@ func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) 
 		config.S3BucketName = aws.String(v)
 	}
 
-	if v, ok := raw["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := raw[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		config.S3KeyPrefix = aws.String(v)
 	}
 

@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package dynamodb
+package dynamodb_test
 
 import (
 	"bytes"
@@ -13,6 +13,8 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,7 +64,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: "2"},
+						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -73,7 +75,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: "2"},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -125,7 +127,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := expandTableItemAttributes(tc.input)
+			actual, err := tfdynamodb.ExpandTableItemAttributes(tc.input)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
@@ -215,7 +217,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: "2"},
+						&awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -226,7 +228,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: "2"},
+						"two": &awstypes.AttributeValueMemberN{Value: acctest.CtTwo},
 					},
 				},
 			},
@@ -279,7 +281,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			actual, err := flattenTableItemAttributes(tc.attrs)
+			actual, err := tfdynamodb.FlattenTableItemAttributes(tc.attrs)
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}

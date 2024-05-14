@@ -28,7 +28,7 @@ func DataSourceLocalGateways() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +69,7 @@ func dataSourceLocalGatewaysRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", gatewayIDs)
+	d.Set(names.AttrIDs, gatewayIDs)
 
 	return diags
 }

@@ -78,7 +78,7 @@ func dataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -154,7 +154,7 @@ func dataSourceGroup() *schema.Resource {
 								},
 							},
 						},
-						"launch_template": {
+						names.AttrLaunchTemplate: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -586,11 +586,11 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
-		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
+		if err := d.Set(names.AttrLaunchTemplate, []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 		}
 	} else {
-		d.Set("launch_template", nil)
+		d.Set(names.AttrLaunchTemplate, nil)
 	}
 	d.Set("load_balancers", group.LoadBalancerNames)
 	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)

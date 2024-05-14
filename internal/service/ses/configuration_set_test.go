@@ -40,8 +40,8 @@ func TestAccSESConfigurationSet_basic(t *testing.T) {
 					testAccCheckConfigurationSetExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("configuration-set/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tracking_options.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "sending_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "reputation_metrics_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_fresh_start"),
@@ -165,7 +165,7 @@ func TestAccSESConfigurationSet_deliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyRequire),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyRequire),
 				),
 			},
@@ -215,7 +215,7 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_deliveryOptions(rName, ses.TlsPolicyOptional),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccSESConfigurationSet_Update_deliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtZero),
 				),
 			},
 			{
@@ -253,7 +253,7 @@ func TestAccSESConfigurationSet_emptyDeliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
 			},
@@ -284,14 +284,14 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccConfigurationSetConfig_emptyDeliveryOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delivery_options.0.tls_policy", ses.TlsPolicyOptional),
 				),
 			},
@@ -304,7 +304,7 @@ func TestAccSESConfigurationSet_Update_emptyDeliveryOptions(t *testing.T) {
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "delivery_options.#", acctest.CtZero),
 				),
 			},
 			{

@@ -53,7 +53,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
-			"vpc_configuration": {
+			names.AttrVPCConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
@@ -99,7 +99,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 		DestinationConfiguration: &awstypes.TopicRuleDestinationConfiguration{},
 	}
 
-	if v, ok := d.GetOk("vpc_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DestinationConfiguration.VpcConfiguration = expandVPCDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -157,11 +157,11 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrARN, output.Arn)
 	d.Set(names.AttrEnabled, (output.Status == awstypes.TopicRuleDestinationStatusEnabled))
 	if output.VpcProperties != nil {
-		if err := d.Set("vpc_configuration", []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
+		if err := d.Set(names.AttrVPCConfiguration, []interface{}{flattenVPCDestinationProperties(output.VpcProperties)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 		}
 	} else {
-		d.Set("vpc_configuration", nil)
+		d.Set(names.AttrVPCConfiguration, nil)
 	}
 
 	return diags

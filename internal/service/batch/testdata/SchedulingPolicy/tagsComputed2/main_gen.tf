@@ -20,8 +20,9 @@ resource "aws_batch_scheduling_policy" "test" {
 resource "null_resource" "test" {}
 
 variable "rName" {
-  type     = string
-  nullable = false
+  description = "Name for resource"
+  type        = string
+  nullable    = false
 }
 
 variable "unknownTagKey" {

@@ -77,7 +77,7 @@ func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, "openid_connect_provider_arns", resourceName, "openid_connect_provider_arns"),
-					resource.TestCheckResourceAttr(dataSourceName, "openid_connect_provider_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "openid_connect_provider_arns.#", acctest.CtOne),
 				),
 			},
 		},
@@ -111,7 +111,7 @@ func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "cognito_identity_providers.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "cognito_identity_providers.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -146,7 +146,7 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "saml_provider_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "saml_provider_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "saml_provider_arns.0", "aws_iam_saml_provider.default", names.AttrARN)),
 			},
 		},
@@ -180,7 +180,7 @@ func TestAccCognitoIdentityPoolDataSource_supportedLoginProviders(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "supported_login_providers.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_login_providers.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_login_providers.graph.facebook.com", "7346241598935555")),
 			},
 		},
@@ -210,12 +210,12 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolDataSourceConfig_tags(name, "key1", "value1"),
+				Config: testAccPoolDataSourceConfig_tags(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

@@ -38,7 +38,7 @@ func testAccLandingZone_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
 				),
@@ -95,11 +95,11 @@ func testAccLandingZone_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_tags1("key1", "value1"),
+				Config: testAccLandingZoneConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -108,20 +108,20 @@ func testAccLandingZone_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLandingZoneConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccLandingZoneConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLandingZoneConfig_tags1("key2", "value2"),
+				Config: testAccLandingZoneConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

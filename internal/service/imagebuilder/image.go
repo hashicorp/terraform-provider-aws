@@ -102,7 +102,7 @@ func ResourceImage() *schema.Resource {
 											Type: schema.TypeString,
 										},
 									},
-									"repository_name": {
+									names.AttrRepositoryName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},

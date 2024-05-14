@@ -77,7 +77,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,

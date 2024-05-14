@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipam_pool_cidr")
@@ -62,7 +63,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"message": {
+						names.AttrMessage: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -235,7 +236,7 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamC
 
 	apiObject := &ec2.IpamCidrAuthorizationContext{}
 
-	if v, ok := tfMap["message"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrMessage].(string); ok && v != "" {
 		apiObject.Message = aws.String(v)
 	}
 

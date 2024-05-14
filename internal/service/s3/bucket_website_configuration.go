@@ -106,7 +106,7 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"condition": {
+						names.AttrCondition: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -526,7 +526,7 @@ func expandRoutingRules(l []interface{}) []types.RoutingRule {
 
 		rule := types.RoutingRule{}
 
-		if v, ok := tfMap["condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if v, ok := tfMap[names.AttrCondition].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			rule.Condition = expandCondition(v)
 		}
 
@@ -649,7 +649,7 @@ func flattenRoutingRules(rules []types.RoutingRule) []interface{} {
 		m := make(map[string]interface{})
 
 		if rule.Condition != nil {
-			m["condition"] = flattenCondition(rule.Condition)
+			m[names.AttrCondition] = flattenCondition(rule.Condition)
 		}
 
 		if rule.Redirect != nil {

@@ -36,7 +36,7 @@ func dataSourceOpenzfsSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrFilter: snapshotFiltersSchema(),
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -92,7 +92,7 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if len(snapshots) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}

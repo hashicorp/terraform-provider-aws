@@ -37,7 +37,7 @@ func TestAccVPCNetworkInsightsPathDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrSource, resourceName, names.AttrSource),
 					resource.TestCheckResourceAttrPair(datasourceName, "source_arn", resourceName, "source_arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "source_ip", resourceName, "source_ip"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

@@ -48,9 +48,9 @@ func TestAccVPCSecurityGroupsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtOne),
 				),
 			},
 		},
@@ -70,9 +70,9 @@ func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtZero),
 				),
 			},
 		},

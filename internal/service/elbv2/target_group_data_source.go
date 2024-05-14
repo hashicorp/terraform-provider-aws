@@ -49,7 +49,7 @@ func DataSourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -62,7 +62,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"interval": {
+						names.AttrInterval: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -82,7 +82,7 @@ func DataSourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"timeout": {
+						names.AttrTimeout: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -238,7 +238,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 
-	if err := d.Set("health_check", flattenTargetGroupHealthCheck(targetGroup)); err != nil {
+	if err := d.Set(names.AttrHealthCheck, flattenTargetGroupHealthCheck(targetGroup)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 	d.Set(names.AttrName, targetGroup.TargetGroupName)

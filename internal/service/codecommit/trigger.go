@@ -35,7 +35,7 @@ func resourceTrigger() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -89,7 +89,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	repositoryName := d.Get("repository_name").(string)
+	repositoryName := d.Get(names.AttrRepositoryName).(string)
 	input := &codecommit.PutRepositoryTriggersInput{
 		RepositoryName: aws.String(repositoryName),
 		Triggers:       expandRepositoryTriggers(d.Get("trigger").(*schema.Set).List()),
@@ -123,7 +123,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("configuration_id", output.ConfigurationId)
-	d.Set("repository_name", d.Id())
+	d.Set(names.AttrRepositoryName, d.Id())
 	if err := d.Set("trigger", flattenRepositoryTriggers(output.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
 	}

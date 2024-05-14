@@ -36,7 +36,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
 					},
 				},

@@ -31,7 +31,7 @@ func testAccTransitGatewayAttachmentsDataSource_Filter(t *testing.T, semaphore t
 			{
 				Config: testAccTransitGatewayAttachmentsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
 				),
 			},
 		},

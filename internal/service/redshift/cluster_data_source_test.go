@@ -27,7 +27,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "allow_version_upgrade"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "automated_snapshot_retention_period"),
@@ -53,7 +53,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_relocation_enabled", resourceName, "availability_zone_relocation_enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -75,7 +75,7 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 				Config: testAccClusterDataSourceConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_security_group_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_subnet_group_name", subnetGroupResourceName, names.AttrName),
 				),
@@ -100,7 +100,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "enable_logging", "true"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrBucketName, bucketResourceName, names.AttrBucket),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_key_prefix", "cluster-logging/"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrS3KeyPrefix, "cluster-logging/"),
 				),
 			},
 		},

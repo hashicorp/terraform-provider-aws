@@ -84,7 +84,7 @@ func resourceCertificate() *schema.Resource {
 				RequiredWith:  []string{names.AttrPrivateKey},
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
@@ -96,7 +96,7 @@ func resourceCertificate() *schema.Resource {
 				ForceNew:      true,
 				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey},
-				ConflictsWith: []string{"certificate_body", "certificate_chain", names.AttrPrivateKey},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"domain_validation_options": {
 				Type:     schema.TypeSet,
@@ -127,7 +127,7 @@ func resourceCertificate() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateDiagFunc: validateHybridDuration,
-				ConflictsWith:    []string{"certificate_body", "certificate_chain", names.AttrPrivateKey, "validation_method"},
+				ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey, "validation_method"},
 			},
 			"key_algorithm": {
 				Type:             schema.TypeString,
@@ -135,7 +135,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
-				ConflictsWith:    []string{"certificate_body", "certificate_chain", names.AttrPrivateKey},
+				ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"not_after": {
 				Type:     schema.TypeString,
@@ -157,7 +157,7 @@ func resourceCertificate() *schema.Resource {
 							Optional:         true,
 							Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
 							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
-							ConflictsWith:    []string{"certificate_body", "certificate_chain", names.AttrPrivateKey},
+							ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 						},
 					},
 				},
@@ -212,7 +212,7 @@ func resourceCertificate() *schema.Resource {
 						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
-				ConflictsWith: []string{"certificate_body", "certificate_chain", names.AttrPrivateKey},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -231,7 +231,7 @@ func resourceCertificate() *schema.Resource {
 				Computed:         true,
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.ValidationMethod](),
-				ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", "certificate_chain", names.AttrPrivateKey},
+				ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 			"validation_option": {
 				Type:     schema.TypeSet,
@@ -251,7 +251,7 @@ func resourceCertificate() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"certificate_body", "certificate_chain", names.AttrPrivateKey},
+				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 			},
 		},
 
@@ -386,7 +386,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			Tags:        getTagsIn(ctx),
 		}
 
-		if v, ok := d.GetOk("certificate_chain"); ok {
+		if v, ok := d.GetOk(names.AttrCertificateChain); ok {
 			input.CertificateChain = []byte(v.(string))
 		}
 
@@ -482,9 +482,9 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if d.HasChanges(names.AttrPrivateKey, "certificate_body", "certificate_chain") {
+	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain) {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
-		oCCRaw, nCCRaw := d.GetChange("certificate_chain")
+		oCCRaw, nCCRaw := d.GetChange(names.AttrCertificateChain)
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
@@ -494,7 +494,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 				PrivateKey:     []byte(d.Get(names.AttrPrivateKey).(string)),
 			}
 
-			if chain, ok := d.GetOk("certificate_chain"); ok {
+			if chain, ok := d.GetOk(names.AttrCertificateChain); ok {
 				input.CertificateChain = []byte(chain.(string))
 			}
 

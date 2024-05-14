@@ -205,8 +205,8 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_redirect_location", resourceName, "website_redirect"),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -355,7 +355,7 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName2, names.AttrContentType),
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
 				),

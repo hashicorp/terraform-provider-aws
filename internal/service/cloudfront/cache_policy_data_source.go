@@ -21,7 +21,7 @@ func dataSourceCachePolicy() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCachePolicyRead,
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -191,7 +191,7 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(cachePolicyID)
 
 	apiObject := output.CachePolicy.CachePolicyConfig
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("default_ttl", apiObject.DefaultTTL)
 	d.Set("etag", output.ETag)
 	d.Set("max_ttl", apiObject.MaxTTL)

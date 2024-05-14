@@ -39,7 +39,7 @@ func DataSourceUser() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"email": {
+				names.AttrEmail: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -100,7 +100,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("active", out.User.Active)
 	d.Set(names.AttrARN, out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)
-	d.Set("email", out.User.Email)
+	d.Set(names.AttrEmail, out.User.Email)
 	d.Set("identity_type", out.User.IdentityType)
 	d.Set("principal_id", out.User.PrincipalId)
 	d.Set(names.AttrUserName, out.User.UserName)

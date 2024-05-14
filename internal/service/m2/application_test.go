@@ -45,8 +45,8 @@ func TestAccM2Application_basic(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -54,7 +54,7 @@ func TestAccM2Application_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -115,11 +115,11 @@ func TestAccM2Application_tags(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -128,20 +128,20 @@ func TestAccM2Application_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccApplicationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -171,8 +171,8 @@ func TestAccM2Application_full(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "m2", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "definition.0.content"),
 					resource.TestCheckNoResourceAttr(resourceName, "definition.0.s3_location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testing"),
@@ -180,7 +180,7 @@ func TestAccM2Application_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -215,14 +215,14 @@ func TestAccM2Application_update(t *testing.T) {
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_versioned(rName, "bluage", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "current_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "current_version", acctest.CtTwo),
 				),
 			},
 			{

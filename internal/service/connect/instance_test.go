@@ -40,7 +40,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "true"), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "false"),       //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),             //verified default result from ListInstanceAttributes()
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "true"), //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
@@ -64,7 +64,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_resolve_best_voices_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "contact_flow_logs_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "false"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),

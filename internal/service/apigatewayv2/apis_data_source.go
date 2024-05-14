@@ -24,7 +24,7 @@ func dataSourceAPIs() *schema.Resource {
 		ReadWithoutTimeout: dataSourceAPIsRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -76,7 +76,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("ids", flex.FlattenStringSet(ids)); err != nil {
+	if err := d.Set(names.AttrIDs, flex.FlattenStringSet(ids)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 

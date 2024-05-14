@@ -48,7 +48,7 @@ func resourceGrant() *schema.Resource {
 				}
 
 				d.SetId(grantCreateResourceID(keyID, grantID))
-				d.Set("key_id", keyID)
+				d.Set(names.AttrKeyID, keyID)
 				d.Set("grant_id", grantID)
 
 				return []*schema.ResourceData{d}, nil
@@ -103,7 +103,7 @@ func resourceGrant() *schema.Resource {
 					verify.ValidServicePrincipal,
 				),
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -146,7 +146,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.CreateGrantInput{
 		GranteePrincipal: aws.String(d.Get("grantee_principal").(string)),
 		KeyId:            aws.String(keyID),
@@ -222,7 +222,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if grant.GranteePrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("grantee_principal", grant.GranteePrincipal)
 	}
-	d.Set("key_id", keyID)
+	d.Set(names.AttrKeyID, keyID)
 	if aws.ToString(grant.Name) != "" {
 		d.Set(names.AttrName, grant.Name)
 	}

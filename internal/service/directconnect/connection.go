@@ -99,7 +99,7 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -219,7 +219,7 @@ func ResourceConnection() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -339,7 +339,7 @@ func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
-	if _, ok := d.GetOk("skip_destroy"); ok {
+	if _, ok := d.GetOk(names.AttrSkipDestroy); ok {
 		return diags
 	}
 

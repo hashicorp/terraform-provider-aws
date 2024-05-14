@@ -69,7 +69,7 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -86,7 +86,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get("repository_name").(string)
+	name := d.Get(names.AttrRepositoryName).(string)
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName: aws.String(name),
 		Tags:           getTagsIn(ctx),
@@ -146,7 +146,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrDescription, repository.RepositoryDescription)
 	d.Set(names.AttrKMSKeyID, repository.KmsKeyId)
 	d.Set("repository_id", repository.RepositoryId)
-	d.Set("repository_name", repository.RepositoryName)
+	d.Set(names.AttrRepositoryName, repository.RepositoryName)
 
 	return diags
 }
@@ -155,8 +155,8 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	if d.HasChange("repository_name") {
-		newName := d.Get("repository_name").(string)
+	if d.HasChange(names.AttrRepositoryName) {
+		newName := d.Get(names.AttrRepositoryName).(string)
 		input := &codecommit.UpdateRepositoryNameInput{
 			NewName: aws.String(newName),
 			OldName: aws.String(d.Id()),

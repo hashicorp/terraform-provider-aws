@@ -31,9 +31,9 @@ func TestAccRDSClustersDataSource_filter(t *testing.T) {
 				Config: testAccClustersDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(dataSourceName, "cluster_arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arns.0", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "cluster_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_identifiers.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_identifiers.0", resourceName, names.AttrClusterIdentifier),
 				),
 			},

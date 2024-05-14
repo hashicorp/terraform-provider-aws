@@ -9,8 +9,8 @@ import (
 	"log"
 	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ram"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -43,15 +43,15 @@ const (
 
 func resourceSharingWithOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RAMConn(ctx)
+	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
-	output, err := conn.EnableSharingWithAwsOrganizationWithContext(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
+	output, err := conn.EnableSharingWithAwsOrganization(ctx, &ram.EnableSharingWithAwsOrganizationInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "enabling RAM Sharing With Organization: %s", err)
 	}
 
-	if !aws.BoolValue(output.ReturnValue) {
+	if !aws.ToBool(output.ReturnValue) {
 		return sdkdiag.AppendErrorf(diags, "RAM Sharing With Organization failed")
 	}
 

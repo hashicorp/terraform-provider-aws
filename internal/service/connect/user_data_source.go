@@ -42,7 +42,7 @@ func DataSourceUser() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

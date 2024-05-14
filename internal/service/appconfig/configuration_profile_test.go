@@ -43,9 +43,9 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexache.MustCompile(`[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS.Freeform"),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtZero),
 				),
 			},
 			{
@@ -117,7 +117,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
@@ -132,7 +132,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorNoJSONContent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
@@ -149,7 +149,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtZero),
 				),
 			},
 		},
@@ -171,7 +171,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeLambda),
@@ -188,7 +188,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtZero),
 				),
 			},
 		},
@@ -210,7 +210,7 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
@@ -317,11 +317,11 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConfigurationProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -330,20 +330,20 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigurationProfileConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConfigurationProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConfigurationProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

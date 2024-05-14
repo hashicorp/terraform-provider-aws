@@ -59,9 +59,9 @@ func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_region", dataSourceRegion, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -156,11 +156,11 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMResourceDiscoveryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMResourceDiscoveryConfig_tags("key1", "value1"),
+				Config: testAccIPAMResourceDiscoveryConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -169,18 +169,18 @@ func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIPAMResourceDiscoveryConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccIPAMResourceDiscoveryConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccIPAMResourceDiscoveryConfig_tags("key2", "value2"),
+				Config: testAccIPAMResourceDiscoveryConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

@@ -76,7 +76,7 @@ func resourceGroup() *schema.Resource {
 				Default:      0,
 				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -155,7 +155,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
 	// Support in-place update of non-refreshable attribute.
-	d.Set("skip_destroy", d.Get("skip_destroy"))
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 
 	tags, err := listLogGroupTags(ctx, conn, d.Id())
 
@@ -233,7 +233,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining CloudWatch Logs Log Group: %s", d.Id())
 		return diags
 	}
