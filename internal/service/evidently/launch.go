@@ -283,7 +283,7 @@ func ResourceLaunch() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -392,7 +392,7 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("project", launch.Project)
 	d.Set("randomization_salt", launch.RandomizationSalt)
 	d.Set(names.AttrStatus, launch.Status)
-	d.Set("status_reason", launch.StatusReason)
+	d.Set(names.AttrStatusReason, launch.StatusReason)
 	d.Set(names.AttrType, launch.Type)
 
 	setTagsOut(ctx, launch.Tags)
