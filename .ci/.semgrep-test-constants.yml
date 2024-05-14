@@ -10,3 +10,33 @@ rules:
       - pattern: '"1"'
     severity: ERROR
     fix: "acctest.CtOne"
+  - id: literal-TagsPercent-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsPercent` for the string literal "tags.%"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags.%"'
+    severity: ERROR
+    fix: "acctest.CtTagsPercent"
+  - id: literal-Two-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTwo` for the string literal "2"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"2"'
+    severity: ERROR
+    fix: "acctest.CtTwo"
+  - id: literal-Zero-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtZero` for the string literal "0"
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"0"'
+    severity: ERROR
+    fix: "acctest.CtZero"
