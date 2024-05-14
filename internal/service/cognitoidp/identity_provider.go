@@ -61,7 +61,7 @@ func resourceIdentityProvider() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"provider_name": {
+			names.AttrProviderName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -89,7 +89,7 @@ func resourceIdentityProviderCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	providerName := d.Get("provider_name").(string)
+	providerName := d.Get(names.AttrProviderName).(string)
 	userPoolID := d.Get("user_pool_id").(string)
 	id := identityProviderCreateResourceID(userPoolID, providerName)
 	input := &cognitoidentityprovider.CreateIdentityProviderInput{
@@ -145,7 +145,7 @@ func resourceIdentityProviderRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("attribute_mapping", aws.StringValueMap(idp.AttributeMapping))
 	d.Set("idp_identifiers", aws.StringValueSlice(idp.IdpIdentifiers))
 	d.Set("provider_details", aws.StringValueMap(idp.ProviderDetails))
-	d.Set("provider_name", idp.ProviderName)
+	d.Set(names.AttrProviderName, idp.ProviderName)
 	d.Set("provider_type", idp.ProviderType)
 	d.Set("user_pool_id", idp.UserPoolId)
 
