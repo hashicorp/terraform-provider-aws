@@ -909,6 +909,30 @@ func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_emptyRetryStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_emptyRetryStrategy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckJobDefinitionExists(ctx context.Context, n string, jd *batch.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1789,4 +1813,21 @@ resource "aws_batch_job_definition" "test" {
   ]
 }
 `, rName, sp, pt, rsa, timeout, dereg)
+}
+
+func testAccJobDefinitionConfig_emptyRetryStrategy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name                = %[1]q
+  type                = "container"
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  retry_strategy {
+  }
+}
+`, rName)
 }
