@@ -53,12 +53,12 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_type", "ml.t3.medium"),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
-					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -535,7 +535,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -548,7 +548,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -557,7 +557,7 @@ func TestAccSageMakerDataQualityJobDefinition_tags(t *testing.T) {
 				Config: testAccDataQualityJobDefinitionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

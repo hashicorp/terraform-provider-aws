@@ -40,9 +40,9 @@ func testAccUserProfile_basic(t *testing.T) {
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "user_profile_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", acctest.CtZero),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`user-profile/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
 				),
 			},
@@ -71,7 +71,7 @@ func testAccUserProfile_tags(t *testing.T) {
 				Config: testAccUserProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -84,7 +84,7 @@ func testAccUserProfile_tags(t *testing.T) {
 				Config: testAccUserProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -93,7 +93,7 @@ func testAccUserProfile_tags(t *testing.T) {
 				Config: testAccUserProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserProfileExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

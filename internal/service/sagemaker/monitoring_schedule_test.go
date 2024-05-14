@@ -38,7 +38,7 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.monitoring_type", "DataQuality"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -65,7 +65,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -87,7 +87,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

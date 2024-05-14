@@ -39,12 +39,12 @@ func TestAccSageMakerModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "primary_container.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "primary_container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.mode", "SingleModel"),
-					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.environment.%", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("model/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_network_isolation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "inference_execution_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 				Config: testAccModelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 				Config: testAccModelConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,7 +116,7 @@ func TestAccSageMakerModel_tags(t *testing.T) {
 				Config: testAccModelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -336,7 +336,7 @@ func TestAccSageMakerModel_containers(t *testing.T) {
 				Config: testAccModelConfig_containers(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "container.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "container.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "container.0.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 					resource.TestCheckResourceAttrPair(resourceName, "container.1.image", "data.aws_sagemaker_prebuilt_ecr_image.test", "registry_path"),
 				),
@@ -366,8 +366,8 @@ func TestAccSageMakerModel_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnets.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtTwo),
 				),
 			},
 			{

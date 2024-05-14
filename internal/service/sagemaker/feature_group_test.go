@@ -67,7 +67,7 @@ func testAccFeatureGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("feature-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -156,7 +156,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -170,7 +170,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -180,7 +180,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -205,7 +205,7 @@ func testAccFeatureGroup_multipleFeatures(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
@@ -321,7 +321,7 @@ func testAccFeatureGroup_offlineConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.disable_glue_table_creation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.table_format", "Glue"),
 				),
 			},
