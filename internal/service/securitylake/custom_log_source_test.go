@@ -188,7 +188,7 @@ func testAccCustomLogSource_eventClasses(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_eventClasses(rName, "MEMORY_ACTIVITY", "FILE_ACTIVITY"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "MEMORY_ACTIVITY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
 				),
