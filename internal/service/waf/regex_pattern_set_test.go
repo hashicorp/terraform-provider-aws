@@ -94,7 +94,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, patternSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regex_pattern_strings.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "two"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "three"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regex_pattern_strings.*", "four"),
