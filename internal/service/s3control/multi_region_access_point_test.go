@@ -186,7 +186,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_three(bucket1Name, bucket2Name, bucket3Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "details.0.region.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "details.0.region.*", map[string]string{
 						names.AttrBucket: bucket1Name,
 					}),
