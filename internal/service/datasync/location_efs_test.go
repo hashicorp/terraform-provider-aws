@@ -39,8 +39,8 @@ func TestAccDataSyncLocationEFS_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ec2_config.0.security_group_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "ec2_config.0.subnet_arn", subnetResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "efs_file_system_arn", efsFileSystemResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
@@ -155,7 +155,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -177,7 +177,7 @@ func TestAccDataSyncLocationEFS_tags(t *testing.T) {
 				Config: testAccLocationEFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
