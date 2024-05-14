@@ -429,11 +429,11 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetConfig_parameters1(rName, "value1"),
+				Config: testAccStackSetConfig_parameters1(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
 				),
 			},
 			{
@@ -446,13 +446,13 @@ func TestAccCloudFormationStackSet_parameters(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetConfig_parameters2(rName, "value1updated", "value2"),
+				Config: testAccStackSetConfig_parameters2(rName, "value1updated", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter2", acctest.CtValue2),
 				),
 			},
 			{
@@ -508,12 +508,12 @@ func TestAccCloudFormationStackSet_Parameters_default(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetConfig_parametersDefault1(rName, "value1"),
+				Config: testAccStackSetConfig_parametersDefault1(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.Parameter1", acctest.CtValue1),
 				),
 			},
 			{
@@ -545,7 +545,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetConfig_parametersNoEcho1(rName, "value1"),
+				Config: testAccStackSetConfig_parametersNoEcho1(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
@@ -562,7 +562,7 @@ func TestAccCloudFormationStackSet_Parameters_noEcho(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetConfig_parametersNoEcho1(rName, "value2"),
+				Config: testAccStackSetConfig_parametersNoEcho1(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
@@ -630,11 +630,11 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackSetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccStackSetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -647,21 +647,21 @@ func TestAccCloudFormationStackSet_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccStackSetConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet2),
 					testAccCheckStackSetNotRecreated(&stackSet1, &stackSet2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccStackSetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccStackSetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
