@@ -131,7 +131,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.role_arn", role2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint.0.kinesis_stream_config.0.stream_arn", stream2ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "fields.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fields.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "c-ip"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "cs-host"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "fields.*", "sc-status"),

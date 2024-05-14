@@ -92,7 +92,7 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -105,12 +105,12 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDistributionConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDistributionConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func TestAccCloudFrontDistribution_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -866,7 +866,7 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValuesCookies_wh
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.CtThree),
 				),
 			},
 			{
@@ -910,7 +910,7 @@ func TestAccCloudFrontDistribution_DefaultCacheBehaviorForwardedValues_headers(t
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1146,7 +1146,7 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValuesCookies_wh
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.cookies.0.whitelisted_names.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1194,7 +1194,7 @@ func TestAccCloudFrontDistribution_OrderedCacheBehaviorForwardedValues_headers(t
 					testAccCheckDistributionExists(ctx, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ordered_cache_behavior.0.forwarded_values.0.headers.#", acctest.CtThree),
 				),
 			},
 			{
