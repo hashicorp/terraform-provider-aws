@@ -106,9 +106,8 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 				},
 			},
 			"task_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"task_invocation_parameters": {
 				Type:     schema.TypeList,
