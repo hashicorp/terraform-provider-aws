@@ -38,7 +38,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSet),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
 						"positional_constraint": "CONTAINS",
@@ -46,7 +46,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 						"text_transformation":   "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
 						"positional_constraint": "CONTAINS",
@@ -121,7 +121,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
 						"positional_constraint": "CONTAINS",
@@ -129,7 +129,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 						"text_transformation":   "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
 						"positional_constraint": "CONTAINS",
@@ -145,7 +145,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
 					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
 						"field_to_match.0.type": "HEADER",
 						"positional_constraint": "CONTAINS",
@@ -153,7 +153,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 						"text_transformation":   "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "METHOD",
 						"positional_constraint": "CONTAINS_WORD",
