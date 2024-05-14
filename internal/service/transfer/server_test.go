@@ -150,11 +150,11 @@ func testAccServer_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerConfig_tags1("key1", "value1"),
+				Config: testAccServerConfig_tags1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -164,20 +164,20 @@ func testAccServer_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccServerConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Config: testAccServerConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccServerConfig_tags1("key2", "value2"),
+				Config: testAccServerConfig_tags1(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
