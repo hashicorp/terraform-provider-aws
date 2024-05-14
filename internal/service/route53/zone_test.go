@@ -314,7 +314,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag1key", "tag1value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag1key", "tag1value"),
 				),
 			},
@@ -337,7 +337,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 				Config: testAccZoneConfig_tags1(zoneName, "tag2key", "tag2value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tag2key", "tag2value"),
 				),
 			},
@@ -363,7 +363,7 @@ func TestAccRoute53Zone_VPC_single(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtOne),
 					testAccCheckZoneAssociatesVPC(vpcResourceName, &zone),
 				),
 			},
@@ -430,7 +430,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtOne),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
 			},
@@ -447,7 +447,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtOne),
 					testAccCheckZoneAssociatesVPC(vpcResourceName1, &zone),
 				),
 			},
@@ -477,7 +477,7 @@ func TestAccRoute53Zone_VPC_single_forceDestroy(t *testing.T) {
 				Config: testAccZoneConfig_vpcSingle_forceDestroy(rName, zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					resource.TestCheckResourceAttr(resourceName, "vpc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc.#", acctest.CtOne),
 					testAccCheckZoneAssociatesVPC(vpcResourceName, &zone),
 					// Add >100 records to verify pagination works ok
 					testAccCreateRandomRecordsInZoneID(ctx, &zone, 100),
