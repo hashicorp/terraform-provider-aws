@@ -39,7 +39,7 @@ func TestAccIoTTopicRuleDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_groups.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_configuration.0.vpc_id"),
 				),
 			},
