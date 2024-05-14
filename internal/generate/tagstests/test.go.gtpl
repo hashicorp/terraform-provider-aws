@@ -97,13 +97,13 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -121,15 +121,15 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -137,8 +137,8 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -148,13 +148,13 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 				{{ if .NoRemoveTags -}}
 				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
@@ -165,7 +165,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -216,7 +216,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -229,7 +229,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -269,13 +269,13 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -283,7 +283,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -306,7 +306,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -320,7 +320,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -362,13 +362,13 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -376,14 +376,14 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
 			},
@@ -392,8 +392,8 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -403,13 +403,13 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -417,7 +417,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -440,13 +440,13 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -454,7 +454,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
@@ -468,7 +468,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -489,7 +489,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -497,7 +497,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -506,7 +506,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -518,8 +518,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -528,7 +528,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -537,8 +537,8 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -550,7 +550,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -558,7 +558,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 				{{ if .NoRemoveTags -}}
 				SkipFunc: testAcc{{ .ProviderNameUpper }}{{ .Name }}_removingTagNotSupported(t),
@@ -570,7 +570,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -853,15 +853,15 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -870,7 +870,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -878,7 +878,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -887,7 +887,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -909,7 +909,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -917,7 +917,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -926,15 +926,15 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -943,7 +943,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -967,10 +967,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -987,10 +987,10 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -1014,10 +1014,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1033,10 +1033,10 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
@@ -1147,13 +1147,13 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1162,13 +1162,13 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1190,8 +1190,8 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
@@ -1211,13 +1211,13 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1225,7 +1225,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					{{- template "ExistsCheck" . -}}
@@ -1235,7 +1235,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey("key1"){{ end}}),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrTags){{ if eq .Implementation "framework" }}.AtMapKey(acctest.CtKey1){{ end}}),
 					},
 					PostApplyPreRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -1250,7 +1250,7 @@ func {{ template "testname" . }}_tags_ComputedTag_OnUpdate_Replace(t *testing.T)
 				ConfigDirectory:          config.StaticDirectory("testdata/{{ .Name }}/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
