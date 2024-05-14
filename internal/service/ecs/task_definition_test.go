@@ -101,7 +101,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -131,7 +131,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -174,7 +174,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -209,7 +209,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -243,7 +243,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -277,7 +277,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -310,7 +310,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -345,7 +345,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -381,7 +381,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -419,7 +419,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -457,7 +457,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -494,7 +494,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -535,7 +535,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -583,7 +583,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -646,7 +646,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -675,7 +675,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -705,7 +705,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -735,7 +735,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -765,7 +765,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -796,7 +796,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -832,7 +832,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -862,7 +862,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -894,7 +894,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 			{
 				ExpectNonEmptyPlan: false,
@@ -933,7 +933,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -962,7 +962,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -1022,7 +1022,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 			{
 				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1078,7 +1078,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -1108,7 +1108,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})
@@ -1158,7 +1158,7 @@ func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
 		},
 	})

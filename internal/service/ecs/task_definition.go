@@ -265,7 +265,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					},
 				},
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Default:  false,
 				Optional: true,
@@ -678,7 +678,7 @@ func resourceTaskDefinitionUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining ECS Task Definition Revision %q", d.Id())
 		return diags
 	}

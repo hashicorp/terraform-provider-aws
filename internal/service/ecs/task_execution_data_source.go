@@ -124,7 +124,7 @@ func DataSourceTaskExecution() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
-									"environment": {
+									names.AttrEnvironment: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
@@ -433,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 		if v, ok := tfMap["cpu"]; ok {
 			co.Cpu = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := tfMap["environment"]; ok {
+		if v, ok := tfMap[names.AttrEnvironment]; ok {
 			co.Environment = expandTaskEnvironment(v.(*schema.Set))
 		}
 		if v, ok := tfMap["memory"]; ok {
