@@ -146,7 +146,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
-					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.CtOne),
 				),
 			},
 			{

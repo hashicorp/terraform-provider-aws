@@ -117,7 +117,7 @@ func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_prefixes(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/rubicon"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.#", "4"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "common_prefixes.0", "arch/courthouse_towers/"),
@@ -199,7 +199,7 @@ func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_startAfter(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/three_gossips/turret"),
 				),
 			},

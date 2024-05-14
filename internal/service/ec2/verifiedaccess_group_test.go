@@ -85,7 +85,7 @@ func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
 				),
@@ -127,7 +127,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDoc),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "verifiedaccess_instance_id"),
@@ -144,7 +144,7 @@ func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semapho
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
-					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sse_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.customer_managed_key_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "sse_configuration.0.customer_managed_key_enabled", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "sse_configuration.0.kms_key_arn"),
@@ -207,7 +207,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -230,7 +230,7 @@ func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccVerifiedAccessGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -136,7 +136,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_updatePublishers(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
 			},

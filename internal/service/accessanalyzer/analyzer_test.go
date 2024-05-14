@@ -127,8 +127,8 @@ func testAccAnalyzer_configuration(t *testing.T) {
 				Config: testAccAnalyzerConfig_configuration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
 				),
 			},

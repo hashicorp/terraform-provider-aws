@@ -60,7 +60,7 @@ func TestAccRedshiftServerlessNamespaceDataSource_iamRole(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_iam_role_arn", resourceName, "default_iam_role_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "iam_roles.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "iam_roles.*", "aws_iam_role.test", names.AttrARN),
 				),
 			},
@@ -109,7 +109,7 @@ func TestAccRedshiftServerlessNamespaceDataSource_logExports(t *testing.T) {
 				Config: testAccNamespaceDataSourceConfig_logExports(rName, logExport),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "namespace_name", resourceName, "namespace_name"),
-					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_exports.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "log_exports.0", logExport),
 				),
 			},

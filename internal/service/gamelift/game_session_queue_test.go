@@ -137,7 +137,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

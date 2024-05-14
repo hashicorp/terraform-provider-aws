@@ -34,7 +34,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					// these attributes set.
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(datasourceName, names.AttrARN, "ec2", regexache.MustCompile(`image/ami-.+`)),
-					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", acctest.CtOne),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrCreationDate, regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestMatchResourceAttr(datasourceName, names.AttrDescription, regexache.MustCompile("^Amazon Linux AMI")),

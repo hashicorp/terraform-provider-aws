@@ -41,7 +41,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.5.3"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "custom_configure_recipes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_deploy_recipes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_instance_profile_arn", ""),
@@ -115,7 +115,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

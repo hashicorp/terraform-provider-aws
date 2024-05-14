@@ -60,7 +60,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
@@ -71,7 +71,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("DISABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
@@ -82,7 +82,7 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 				Config: testAccDetectorFeatureConfig_additionalConfiguration("ENABLED", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDetectorFeatureExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),

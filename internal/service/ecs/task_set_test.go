@@ -102,7 +102,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 				Config: testAccTaskSetConfig_scale(rName, 0.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "0"),
 				),
@@ -119,7 +119,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 				Config: testAccTaskSetConfig_scale(rName, 100.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "100"),
 				),
@@ -217,7 +217,7 @@ func TestAccECSTaskSet_withAlb(t *testing.T) {
 				Config: testAccTaskSetConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", acctest.CtOne),
 				),
 			},
 			{
@@ -248,7 +248,7 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
@@ -327,7 +327,7 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 				Config: testAccTaskSetConfig_serviceRegistries(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", acctest.CtOne),
 				),
 			},
 			{
@@ -357,7 +357,7 @@ func TestAccECSTaskSet_tags(t *testing.T) {
 				Config: testAccTaskSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -382,7 +382,7 @@ func TestAccECSTaskSet_tags(t *testing.T) {
 				Config: testAccTaskSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

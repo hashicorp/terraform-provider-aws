@@ -84,7 +84,7 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", policyTypeName),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.CtOne),
 				),
 			},
 		},
@@ -183,7 +183,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicy),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  tfelb.ReferenceSecurityPolicy,
 						names.AttrValue: predefinedSecurityPolicy,
@@ -195,7 +195,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicyUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						names.AttrName:  tfelb.ReferenceSecurityPolicy,
 						names.AttrValue: predefinedSecurityPolicyUpdated,

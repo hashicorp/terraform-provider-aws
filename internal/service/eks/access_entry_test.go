@@ -146,7 +146,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
@@ -251,7 +251,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),

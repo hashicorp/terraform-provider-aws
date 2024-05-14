@@ -194,7 +194,7 @@ func testAccReportDefinition_athena(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrS3Bucket, bucketName),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix", bucketPrefix),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_region", s3BucketResourceName, names.AttrRegion),
-					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_artifacts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "refresh_closed_reports", "false"),
 					resource.TestCheckResourceAttr(resourceName, "report_versioning", reportVersioning),
 				),

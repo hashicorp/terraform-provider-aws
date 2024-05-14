@@ -93,7 +93,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				Config: testAccDeviceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -116,7 +116,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				Config: testAccDeviceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -142,7 +142,7 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "1.1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-1.1"),
@@ -164,7 +164,7 @@ func TestAccNetworkManagerDevice_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "22"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-22"),
@@ -195,7 +195,7 @@ func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws
 				Config: testAccDeviceConfig_awsLocation(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.subnet_arn", subnetResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.0.zone", ""),
 				),
@@ -210,7 +210,7 @@ func TestAccNetworkManagerDevice_awsLocation(t *testing.T) { // nosemgrep:ci.aws
 				Config: testAccDeviceConfig_awsLocationUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "aws_location.0.subnet_arn", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "aws_location.0.zone", subnetResourceName, names.AttrAvailabilityZone),
 				),

@@ -72,7 +72,7 @@ func TestAccAthenaDatabase_properties(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
-					resource.TestCheckResourceAttr(resourceName, "properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "properties.creator", "Jane D."),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccAthenaDatabase_acl(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
-					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "acl_configuration.0.s3_acl_option", "BUCKET_OWNER_FULL_CONTROL"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccAthenaDatabase_encryption(t *testing.T) {
 				Config: testAccDatabaseConfig_kms(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_option", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key", "aws_kms_key.test", names.AttrARN),
 				),

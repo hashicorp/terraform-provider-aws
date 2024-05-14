@@ -28,7 +28,7 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches_compliance_level", "UNSPECIFIED"),
 					resource.TestCheckResourceAttr(dataSourceName, "approved_patches_enable_non_security", "false"),
-					resource.TestCheckResourceAttr(dataSourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "approval_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "default_baseline", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, "Default Patch Baseline for CentOS Provided by AWS."),
 					resource.TestCheckResourceAttr(dataSourceName, "global_filter.#", "0"),

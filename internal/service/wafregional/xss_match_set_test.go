@@ -38,13 +38,13 @@ func TestAccWAFRegionalXSSMatchSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
 						"text_transformation":   "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "URI",
 						"text_transformation":   "NONE",
@@ -141,13 +141,13 @@ func TestAccWAFRegionalXSSMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "QUERY_STRING",
 						"text_transformation":   "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "URI",
 						"text_transformation":   "NONE",
@@ -166,13 +166,13 @@ func TestAccWAFRegionalXSSMatchSet_changeTuples(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuple.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "METHOD",
 						"text_transformation":   "HTML_ENTITY_DECODE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuple.*", map[string]string{
-						"field_to_match.#":      "1",
+						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "",
 						"field_to_match.0.type": "BODY",
 						"text_transformation":   "CMD_LINE",

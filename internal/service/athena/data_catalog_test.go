@@ -37,7 +37,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -90,7 +90,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				Config: testAccDataCatalogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				Config: testAccDataCatalogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -170,7 +170,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Hive"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HIVE"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 				),
 			},
@@ -201,7 +201,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Glue"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "GLUE"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", "123456789012"),
 				),
 			},
@@ -230,7 +230,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				Config: testAccDataCatalogConfig_parameters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-1"), //lintignore:AWSAT003,AWSAT005
 				),
 			},

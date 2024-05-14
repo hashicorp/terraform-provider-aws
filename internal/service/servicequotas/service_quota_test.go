@@ -126,7 +126,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric.0.metric_name", dataSourceName, "usage_metric.0.metric_name"),
-					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", acctest.CtOne),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},

@@ -46,7 +46,7 @@ func TestAccVPCNetworkInterfacesDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkInterfacesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_network_interfaces.test", "ids.#", acctest.CtOne),
 				),
 			},
 		},

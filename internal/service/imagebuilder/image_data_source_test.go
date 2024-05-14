@@ -39,7 +39,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Amazon Linux 2 x86"),
 					resource.TestCheckResourceAttr(dataSourceName, "os_version", "Amazon Linux 2"),
-					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "platform", imagebuilder.PlatformLinux),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),

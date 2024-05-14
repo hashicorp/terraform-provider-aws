@@ -1063,7 +1063,7 @@ func TestAccS3BucketObject_tags_EmptyTag_OnCreate(t *testing.T) {
 				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -1095,7 +1095,7 @@ func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1136,7 +1136,7 @@ func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1144,7 +1144,7 @@ func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},

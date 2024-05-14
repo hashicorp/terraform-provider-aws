@@ -95,7 +95,7 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -117,7 +117,7 @@ func TestAccVPCNetworkACL_tags(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -217,7 +217,7 @@ func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "6",
-						"rule_no":          "1",
+						"rule_no":          acctest.CtOne,
 						"from_port":        "80",
 						"to_port":          "80",
 						names.AttrAction:   "allow",
@@ -286,7 +286,7 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "6",
-						"rule_no":          "1",
+						"rule_no":          acctest.CtOne,
 						"from_port":        "0",
 						"to_port":          "22",
 						names.AttrAction:   "deny",
@@ -302,10 +302,10 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_ingressChange(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "6",
-						"rule_no":          "1",
+						"rule_no":          acctest.CtOne,
 						"from_port":        "0",
 						"to_port":          "22",
 						names.AttrAction:   "deny",
@@ -377,7 +377,7 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_subnet(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 				),
 			},
@@ -390,7 +390,7 @@ func TestAccVPCNetworkACL_subnetChange(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_subnetChange(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", names.AttrID),
 				),
 			},
@@ -468,7 +468,7 @@ func TestAccVPCNetworkACL_subnetsDelete(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_subnetSubnetIDsDeleteOne(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 				),
 			},
@@ -493,10 +493,10 @@ func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
-						resourceName, "ingress.#", "1"),
+						resourceName, "ingress.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "6",
-						"rule_no":          "1",
+						"rule_no":          acctest.CtOne,
 						"from_port":        "0",
 						"to_port":          "22",
 						names.AttrAction:   "allow",
@@ -546,7 +546,7 @@ func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_ipv6VPC(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"ipv6_cidr_block": "2600:1f16:d1e:9a00::/56",
 					}),

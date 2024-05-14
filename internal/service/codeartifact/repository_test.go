@@ -68,7 +68,7 @@ func testAccRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -90,7 +90,7 @@ func testAccRepository_tags(t *testing.T) {
 				Config: testAccRepositoryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -181,7 +181,7 @@ func testAccRepository_upstreams(t *testing.T) {
 				Config: testAccRepositoryConfig_upstreams1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
 				),
 			},
@@ -203,7 +203,7 @@ func testAccRepository_upstreams(t *testing.T) {
 				Config: testAccRepositoryConfig_upstreams1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "upstream.0.repository_name", fmt.Sprintf("%s-upstream1", rName)),
 				),
 			},
@@ -226,7 +226,7 @@ func testAccRepository_externalConnection(t *testing.T) {
 				Config: testAccRepositoryConfig_externalConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.external_connection_name", "public:npmjs"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.package_format", "npm"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.status", "AVAILABLE"),
@@ -248,7 +248,7 @@ func testAccRepository_externalConnection(t *testing.T) {
 				Config: testAccRepositoryConfig_externalConnection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.external_connection_name", "public:npmjs"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.package_format", "npm"),
 					resource.TestCheckResourceAttr(resourceName, "external_connections.0.status", "AVAILABLE"),

@@ -282,7 +282,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 				),
 			},
@@ -323,7 +323,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 				),
 			},

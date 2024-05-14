@@ -67,7 +67,7 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -87,7 +87,7 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 			{
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

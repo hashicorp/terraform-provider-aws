@@ -128,9 +128,9 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByID(rName, string(types.BucketLogsPermissionFullControl)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":      "1",
+						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionFullControl),
 					}),
@@ -147,9 +147,9 @@ func TestAccS3BucketLogging_TargetGrantByID(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByID(rName, string(types.BucketLogsPermissionRead)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":      "1",
+						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.BucketLogsPermissionRead),
 					}),
@@ -188,9 +188,9 @@ func TestAccS3BucketLogging_TargetGrantByEmail(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByEmail(rName, rEmail, string(types.BucketLogsPermissionFullControl)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":               "1",
+						"grantee.#":               acctest.CtOne,
 						"grantee.0.email_address": rEmail,
 						"grantee.0.type":          string(types.TypeAmazonCustomerByEmail),
 						"permission":              string(types.BucketLogsPermissionFullControl),
@@ -206,9 +206,9 @@ func TestAccS3BucketLogging_TargetGrantByEmail(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByEmail(rName, rEmail, string(types.BucketLogsPermissionRead)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":       "1",
+						"grantee.#":       acctest.CtOne,
 						"grantee.0.email": rEmail,
 						"grantee.0.type":  string(types.TypeAmazonCustomerByEmail),
 						"permission":      string(types.BucketLogsPermissionRead),
@@ -246,9 +246,9 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByGroup(rName, string(types.BucketLogsPermissionFullControl)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":      "1",
+						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeGroup),
 						"permission":     string(types.BucketLogsPermissionFullControl),
 					}),
@@ -264,9 +264,9 @@ func TestAccS3BucketLogging_TargetGrantByGroup(t *testing.T) {
 				Config: testAccBucketLoggingConfig_targetGrantByGroup(rName, string(types.BucketLogsPermissionRead)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_grant.*", map[string]string{
-						"grantee.#":      "1",
+						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeGroup),
 						"permission":     string(types.BucketLogsPermissionRead),
 					}),
@@ -305,7 +305,7 @@ func TestAccS3BucketLogging_migrate_loggingNoChange(t *testing.T) {
 				Config: testAccBucketConfig_logging(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
 				),
@@ -339,7 +339,7 @@ func TestAccS3BucketLogging_migrate_loggingWithChange(t *testing.T) {
 				Config: testAccBucketConfig_logging(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "logging.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(bucketResourceName, "logging.0.target_bucket", "aws_s3_bucket.log_bucket", names.AttrID),
 					resource.TestCheckResourceAttr(bucketResourceName, "logging.0.target_prefix", "log/"),
 				),
@@ -404,8 +404,8 @@ func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 				Config: testAccBucketLoggingConfig_withTargetObjectKeyFormatPartitionedPrefix(rName, "EventTime"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.0.partition_date_source", "EventTime"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.simple_prefix.#", "0"),
 				),
@@ -419,8 +419,8 @@ func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 				Config: testAccBucketLoggingConfig_withTargetObjectKeyFormatPartitionedPrefix(rName, "DeliveryTime"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.0.partition_date_source", "DeliveryTime"),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.simple_prefix.#", "0"),
 				),
@@ -436,9 +436,9 @@ func TestAccS3BucketLogging_withTargetObjectKeyFormat(t *testing.T) {
 				Config: testAccBucketLoggingConfig_withTargetObjectKeyFormatSimplePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.partitioned_prefix.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.simple_prefix.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_object_key_format.0.simple_prefix.#", acctest.CtOne),
 				),
 			},
 		},

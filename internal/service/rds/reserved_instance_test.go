@@ -32,7 +32,6 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_reserved_instance.test"
 	dataSourceName := "data.aws_rds_reserved_instance_offering.test"
-	instanceCount := "1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -41,7 +40,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReservedInstanceConfig_basic(rName, instanceCount),
+				Config: testAccReservedInstanceConfig_basic(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`ri:.+`)),
@@ -49,7 +48,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "db_instance_class"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, instanceCount),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "lease_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "offering_id", resourceName, "offering_id"),

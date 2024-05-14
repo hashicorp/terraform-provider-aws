@@ -44,7 +44,7 @@ func TestAccVPCsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", acctest.CtOne),
 				),
 			},
 		},

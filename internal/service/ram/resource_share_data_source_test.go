@@ -84,7 +84,7 @@ func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 				Config: testAccResourceShareDataSourceConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", "1"),
+					resource.TestCheckResourceAttr(datasourceName, "resource_arns.#", acctest.CtOne),
 				),
 			},
 		},

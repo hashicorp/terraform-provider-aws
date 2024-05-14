@@ -91,7 +91,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -113,7 +113,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -136,7 +136,7 @@ func testAccAccessGrant_locationConfiguration(t *testing.T) {
 				Config: testAccAccessGrantConfig_locationConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.0.s3_sub_prefix", "prefix1/prefix2/data.txt"),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix_type", "Object"),
 				),

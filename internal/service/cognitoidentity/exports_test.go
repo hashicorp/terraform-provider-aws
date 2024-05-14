@@ -8,4 +8,13 @@ var (
 	ResourcePool                     = resourcePool
 	ResourcePoolProviderPrincipalTag = resourcePoolProviderPrincipalTag
 	ResourcePoolRolesAttachment      = resourcePoolRolesAttachment
+
+	ValidIdentityPoolName                               = validIdentityPoolName
+	ValidIdentityProvidersClientID                      = validIdentityProvidersClientID
+	ValidIdentityProvidersProviderName                  = validIdentityProvidersProviderName
+	ValidProviderDeveloperName                          = validProviderDeveloperName
+	ValidRoleMappingsAmbiguousRoleResolutionAgainstType = validRoleMappingsAmbiguousRoleResolutionAgainstType
+	ValidRoleMappingsRulesConfiguration                 = validRoleMappingsRulesConfiguration
+	ValidRoles                                          = validRoles
+	ValidSupportedLoginProviders                        = validSupportedLoginProviders
 )

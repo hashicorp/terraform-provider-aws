@@ -93,7 +93,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -150,7 +150,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1),
 				),
 			},
@@ -163,7 +163,7 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 				Config: testAccAssessmentTemplateConfig_eventSubscription(rName, event1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_subscription.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "event_subscription.0.event", event1Updated),
 				),
 			},

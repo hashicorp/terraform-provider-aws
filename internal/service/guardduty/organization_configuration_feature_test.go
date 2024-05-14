@@ -63,7 +63,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "NEW"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),
@@ -74,7 +74,7 @@ func testAccOrganizationConfigurationFeature_additionalConfiguration(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccOrganizationConfigurationFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.auto_enable", "ALL"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "EKS_RUNTIME_MONITORING"),

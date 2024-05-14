@@ -63,7 +63,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
-					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},

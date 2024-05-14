@@ -68,7 +68,7 @@ func TestAccGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 				Config: testAccWorkflowConfig_maxConcurrentRuns(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", acctest.CtOne),
 				),
 			},
 			{
@@ -87,7 +87,7 @@ func TestAccGlueWorkflow_maxConcurrentRuns(t *testing.T) {
 				Config: testAccWorkflowConfig_maxConcurrentRuns(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrent_runs", acctest.CtOne),
 				),
 			},
 		},
@@ -177,7 +177,7 @@ func TestAccGlueWorkflow_tags(t *testing.T) {
 				Config: testAccWorkflowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -199,7 +199,7 @@ func TestAccGlueWorkflow_tags(t *testing.T) {
 				Config: testAccWorkflowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

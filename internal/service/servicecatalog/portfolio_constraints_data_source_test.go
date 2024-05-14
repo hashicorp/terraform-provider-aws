@@ -27,7 +27,7 @@ func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *tes
 				Config: testAccPortfolioConstraintsDataSourceConfig_constraintBasic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "accept_language", resourceName, "accept_language"),
-					resource.TestCheckResourceAttr(dataSourceName, "details.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "details.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.constraint_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.description", resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(dataSourceName, "details.0.owner", resourceName, names.AttrOwner),

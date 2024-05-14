@@ -49,14 +49,14 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rank", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      "1",
+						"equals.#":      acctest.CtOne,
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -85,8 +85,8 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "NOOP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a NOOP"),
-					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rank", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
@@ -115,7 +115,7 @@ func testAccFilter_update(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 				),
 			},
@@ -123,11 +123,11 @@ func testAccFilter_update(t *testing.T) {
 				Config: testAccFilterConfig_update(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"equals.#":      "1",
+						"equals.#":      acctest.CtOne,
 						"equals.0":      acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -172,7 +172,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
 			},

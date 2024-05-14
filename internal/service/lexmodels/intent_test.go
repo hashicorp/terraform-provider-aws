@@ -42,7 +42,7 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					testAccCheckIntentNotExists(ctx, testIntentID, "1"),
+					testAccCheckIntentNotExists(ctx, testIntentID, acctest.CtOne),
 
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
@@ -92,7 +92,7 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					testAccCheckIntentNotExists(ctx, testIntentID, "1"),
+					testAccCheckIntentNotExists(ctx, testIntentID, acctest.CtOne),
 				),
 			},
 			{
@@ -105,8 +105,8 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 				Config: testAccIntentConfig_createVersion(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					testAccCheckIntentExistsWithVersion(ctx, rName, "1", &v),
-					resource.TestCheckResourceAttr(rName, names.AttrVersion, "1"),
+					testAccCheckIntentExistsWithVersion(ctx, rName, acctest.CtOne, &v),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -138,8 +138,8 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 				Config: testAccIntentConfig_conclusionStatement(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "conclusion_statement.#", "1"),
-					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "conclusion_statement.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content_type", "PlainText"),
 					resource.TestCheckNoResourceAttr(rName, "conclusion_statement.0.message.0.group_number"),
@@ -159,10 +159,10 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.#", "2"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content", "Your order for {FlowerType} has been placed and will be ready by {PickupTime} on {PickupDate}"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.content_type", "PlainText"),
-					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.0.group_number", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.1.content", "Your order for {FlowerType} has been placed"),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.1.content_type", "PlainText"),
-					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.1.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.message.1.group_number", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "conclusion_statement.0.response_card", "Your order for {FlowerType} has been placed"),
 				),
 			},
@@ -195,14 +195,14 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 				Config: testAccIntentConfig_confirmationPromptAndRejectionStatement(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "confirmation_prompt.#", "1"),
-					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.max_attempts", "1"),
-					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "confirmation_prompt.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.max_attempts", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.0.content", "Okay, your {FlowerType} will be ready for pickup by {PickupTime} on {PickupDate}. Does this sound okay?"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "confirmation_prompt.0.response_card", "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"Okay, your {FlowerType} will be ready for pickup by {PickupTime} on {PickupDate}. Does this sound okay?\",\"buttons\":[{\"text\":\"Yes\",\"value\":\"yes\"},{\"text\":\"No\",\"value\":\"no\"}]}]}"),
-					resource.TestCheckResourceAttr(rName, "rejection_statement.#", "1"),
-					resource.TestCheckResourceAttr(rName, "rejection_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "rejection_statement.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "rejection_statement.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "rejection_statement.0.message.0.content", "Okay, I will not place your order."),
 					resource.TestCheckResourceAttr(rName, "rejection_statement.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "rejection_statement.0.response_card", "Okay, I will not place your order."),
@@ -265,8 +265,8 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "dialog_code_hook.#", "1"),
-					resource.TestCheckResourceAttr(rName, "dialog_code_hook.0.message_version", "1"),
+					resource.TestCheckResourceAttr(rName, "dialog_code_hook.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "dialog_code_hook.0.message_version", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(rName, "dialog_code_hook.0.uri"),
 				),
 			},
@@ -300,17 +300,17 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
 
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.#", "1"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.#", "1"),
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.max_attempts", "1"),
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.max_attempts", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.0.content", "Would you like to order more flowers?"),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.response_card", "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"Would you like to order more flowers?\",\"buttons\":[{\"text\":\"Yes\",\"value\":\"yes\"},{\"text\":\"No\",\"value\":\"no\"}]}]}"),
 
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.#", "1"),
-					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.0.message.0.content", "Okay, no additional flowers will be ordered."),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.rejection_statement.0.response_card", "Okay, no additional flowers will be ordered."),
@@ -375,9 +375,9 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "fulfillment_activity.#", "1"),
-					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.#", "1"),
-					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.0.message_version", "1"),
+					resource.TestCheckResourceAttr(rName, "fulfillment_activity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.code_hook.0.message_version", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(rName, "fulfillment_activity.0.code_hook.0.uri"),
 					resource.TestCheckResourceAttr(rName, "fulfillment_activity.0.type", "CodeHook"),
 				),
@@ -411,7 +411,7 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 				Config: testAccIntentConfig_sampleUtterances(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(rName, "sample_utterances.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "sample_utterances.0", "I would like to pick up flowers"),
 				),
 			},
@@ -457,17 +457,17 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 				Config: testAccIntentConfig_slots(testIntentID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "slot.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.description", "The date to pick up the flowers"),
 					resource.TestCheckResourceAttr(rName, "slot.0.name", "PickupDate"),
-					resource.TestCheckResourceAttr(rName, "slot.0.priority", "1"),
-					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.0.priority", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.0", "I would like to order {FlowerType}"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_constraint", "Required"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_type", "AMAZON.DATE"),
-					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.#", "1"),
-					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.max_attempts", "1"),
-					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.max_attempts", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.0.content", "What day do you want the {FlowerType} to be picked up?"),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.0.content_type", "PlainText"),
 				),
@@ -517,17 +517,17 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "slot.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.description", "Types of flowers to pick up"),
 					resource.TestCheckResourceAttr(rName, "slot.0.name", "FlowerType"),
-					resource.TestCheckResourceAttr(rName, "slot.0.priority", "1"),
-					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.0.priority", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.sample_utterances.0", "I would like to order {FlowerType}"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_constraint", "Required"),
 					resource.TestCheckResourceAttr(rName, "slot.0.slot_type", testIntentID),
-					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.max_attempts", "2"),
-					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.0.content", "What type of flowers would you like to order?"),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "slot.0.value_elicitation_prompt.0.response_card", "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"What type of flowers?\",\"buttons\":[{\"text\":\"Tulips\",\"value\":\"tulips\"},{\"text\":\"Lilies\",\"value\":\"lilies\"},{\"text\":\"Roses\",\"value\":\"roses\"}]}]}"),
@@ -649,7 +649,6 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 	botResourceName := "aws_lex_bot.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	version := "1"
 	updatedVersion := "2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -667,13 +666,13 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 					testAccBotConfig_createVersion(testIntentID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, version, &v1),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, version),
-					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
+					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, acctest.CtOne, &v1),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would like to pick up flowers"),
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, version, &v2),
-					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, version),
-					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
+					testAccCheckBotExistsWithVersion(ctx, botResourceName, acctest.CtOne, &v2),
+					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", acctest.CtOne),
 				),
 			},
 			{
@@ -684,7 +683,7 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, updatedVersion),
-					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", "1"),
+					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(intentResourceName, "sample_utterances.0", "I would not like to pick up flowers"),
 					testAccCheckBotExistsWithVersion(ctx, botResourceName, updatedVersion, &v2),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, updatedVersion),

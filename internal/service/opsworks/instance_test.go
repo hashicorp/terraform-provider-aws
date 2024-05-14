@@ -40,7 +40,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "stopped"),
-					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "layer_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", "true"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(resourceName, "tenancy", "default"),

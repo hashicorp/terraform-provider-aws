@@ -98,7 +98,7 @@ func TestAccS3ObjectsDataSource_encoded(t *testing.T) {
 				Config: testAccObjectsDataSourceConfig_encoded(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "keys.0", "prefix/a+b"),
 					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
 				),
@@ -189,7 +189,7 @@ func TestAccS3ObjectsDataSource_startAfter(t *testing.T) {
 				Config: testAccObjectsDataSourceConfig_startAfter(rName, 1, "prefix1/sub2/0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "owners.#", "0"),
 				),
 			},
