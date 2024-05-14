@@ -43,7 +43,7 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccShieldProtection_alb(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -166,7 +166,7 @@ func TestAccShieldProtection_elb(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -232,7 +232,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 				),
 			},
@@ -242,12 +242,12 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1updated", "Key2", acctest.CtValue2),
+				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", acctest.CtValue1Updated, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
 				),
 			},
@@ -256,7 +256,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
 				),
 			},
