@@ -348,16 +348,16 @@ func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccLoadBalancerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -365,7 +365,7 @@ func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -389,7 +389,7 @@ func TestAccELBV2LoadBalancer_Tags_EmptyTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -418,7 +418,7 @@ func TestAccELBV2LoadBalancer_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -426,8 +426,8 @@ func TestAccELBV2LoadBalancer_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 			{
@@ -456,7 +456,7 @@ func TestAccELBV2LoadBalancer_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -464,7 +464,7 @@ func TestAccELBV2LoadBalancer_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -1098,8 +1098,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 		},
@@ -1126,8 +1126,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 				Config: testAccLoadBalancerConfig_subnetCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1172,8 +1172,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 		},
@@ -1200,8 +1200,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 				Config: testAccLoadBalancerConfig_subnetMappingCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1856,7 +1856,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&post, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 		},
@@ -1883,7 +1883,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 				Config: testAccLoadBalancerConfig_nlbSubnetCount(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1927,8 +1927,8 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 		},
@@ -1955,8 +1955,8 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtThree),
 				),
 			},
 			{

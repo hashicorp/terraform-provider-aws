@@ -61,7 +61,7 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -236,12 +236,12 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccListenerConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccListenerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -257,7 +257,7 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
