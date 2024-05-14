@@ -28,7 +28,7 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.first", names.AttrValue),
 				),
 			},
@@ -97,7 +97,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Tabac", "Louis Chiron"),
 				),
 			},
