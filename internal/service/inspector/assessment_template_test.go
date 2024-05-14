@@ -41,7 +41,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "rules_package_arns.#", "data.aws_inspector_rules_packages.available", "arns.#"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_inspector_assessment_target.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTargetARN, "aws_inspector_assessment_target.test", names.AttrARN),
 				),
 			},
 			{
