@@ -572,7 +572,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, "key1", "value1"),
+				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
@@ -582,8 +582,8 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 						names.AttrID:           rName,
 						"filter.#":             acctest.CtOne,
 						"filter.0.tag.#":       acctest.CtOne,
-						"filter.0.tag.0.key":   "key1",
-						"filter.0.tag.0.value": "value1",
+						"filter.0.tag.0.key":   acctest.CtKey1,
+						"filter.0.tag.0.value": acctest.CtValue1,
 						names.AttrStatus:       tfs3.LifecycleRuleStatusEnabled,
 					}),
 				),

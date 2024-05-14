@@ -255,19 +255,19 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRuleConfig_scopeTagKey(rName, "key1"),
+				Config: testAccConfigRuleConfig_scopeTagKey(rName, acctest.CtKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", acctest.CtKey1),
 				),
 			},
 			{
-				Config: testAccConfigRuleConfig_scopeTagKey(rName, "key2"),
+				Config: testAccConfigRuleConfig_scopeTagKey(rName, acctest.CtKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "key2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", acctest.CtKey2),
 				),
 			},
 		},
@@ -309,19 +309,19 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRuleConfig_scopeTagValue(rName, "value1"),
+				Config: testAccConfigRuleConfig_scopeTagValue(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccConfigRuleConfig_scopeTagValue(rName, "value2"),
+				Config: testAccConfigRuleConfig_scopeTagValue(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", acctest.CtValue2),
 				),
 			},
 		},
@@ -341,11 +341,11 @@ func testAccConfigRule_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRuleConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -354,20 +354,20 @@ func testAccConfigRule_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConfigRuleConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConfigRuleConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConfigRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

@@ -860,11 +860,11 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -873,22 +873,22 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTaskConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccTaskConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task2),
 					testAccCheckTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccTaskConfig_tags1(rName, "key1", "value1"),
+				Config: testAccTaskConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskExists(ctx, resourceName, &task3),
 					testAccCheckTaskNotRecreated(&task2, &task3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

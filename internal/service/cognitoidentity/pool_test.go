@@ -375,11 +375,11 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPoolConfig_tags1(name, "key1", "value1"),
+				Config: testAccPoolConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -388,22 +388,22 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPoolConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPoolConfig_tags2(name, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v2),
 					testAccCheckPoolNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPoolConfig_tags1(name, "key2", "value2"),
+				Config: testAccPoolConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v3),
 					testAccCheckPoolNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

@@ -1452,15 +1452,15 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 		CheckDestroy:             testAccCheckScheduleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key1", "value1"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							names.AttrName:  "key1",
-							names.AttrValue: "value1",
+							names.AttrName:  acctest.CtKey1,
+							names.AttrValue: acctest.CtValue1,
 						}),
 				),
 			},
@@ -1470,21 +1470,21 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							names.AttrName:  "key1",
+							names.AttrName:  acctest.CtKey1,
 							names.AttrValue: "value1updated",
 						}),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							names.AttrName:  "key2",
-							names.AttrValue: "value2",
+							names.AttrName:  acctest.CtKey2,
+							names.AttrValue: acctest.CtValue2,
 						}),
 				),
 			},
@@ -1494,15 +1494,15 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, "key2", "value2"),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters1(name, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
-							names.AttrName:  "key2",
-							names.AttrValue: "value2",
+							names.AttrName:  acctest.CtKey2,
+							names.AttrValue: acctest.CtValue2,
 						}),
 				),
 			},

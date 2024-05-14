@@ -30,7 +30,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_basic(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),
@@ -63,7 +63,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, "key1", "value1"),
+				Config: testAccQueryLogConfigDataSourceConfig_filter(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDestinationARN, resourceName, names.AttrDestinationARN),

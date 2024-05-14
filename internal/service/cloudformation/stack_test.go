@@ -540,16 +540,16 @@ func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_templateUpdate(rName, "out1", "value1"),
+				Config: testAccStackConfig_templateUpdate(rName, "out1", acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "outputs.out1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out1", acctest.CtValue1),
 					resource.TestCheckOutput("stack_output", "out1:value1"),
 				),
 			},
 			{
-				Config: testAccStackConfig_templateUpdate(rName, "out2", "value2"),
+				Config: testAccStackConfig_templateUpdate(rName, "out2", acctest.CtValue2),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -559,7 +559,7 @@ func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "outputs.out2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.out2", acctest.CtValue2),
 					resource.TestCheckOutput("stack_output", "out2:value2"),
 				),
 			},

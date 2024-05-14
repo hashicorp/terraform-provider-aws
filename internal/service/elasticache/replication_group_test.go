@@ -2045,11 +2045,11 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccReplicationGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key1", "value1"},
+						{acctest.CtKey1, acctest.CtValue1},
 					}),
 				),
 			},
@@ -2060,21 +2060,21 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccReplicationGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key1", "value1updated"},
-						{"key2", "value2"},
+						{acctest.CtKey1, "value1updated"},
+						{acctest.CtKey2, acctest.CtValue2},
 					}),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccReplicationGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key2", "value2"},
+						{acctest.CtKey2, acctest.CtValue2},
 					}),
 				),
 			},
@@ -2100,22 +2100,22 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.4", "key1", "value1"),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.4", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.4"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key1", "value1"},
+						{acctest.CtKey1, acctest.CtValue1},
 					}),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", "key1", "value1updated"),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, "value1updated"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{"key1", "value1updated"},
+						{acctest.CtKey1, "value1updated"},
 					}),
 				),
 			},

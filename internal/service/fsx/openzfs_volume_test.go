@@ -132,11 +132,11 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSVolumeConfig_tags1(rName, "key1", "value1"),
+				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -145,22 +145,22 @@ func TestAccFSxOpenZFSVolume_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccOpenZFSVolumeConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_tags1(rName, "key2", "value2"),
+				Config: testAccOpenZFSVolumeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume3),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume2, &volume3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -180,14 +180,14 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 		CheckDestroy:             testAccCheckOpenZFSVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "true"),
+				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshots", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccOpenZFSVolumeConfig_copyTags(rName, "key1", "value1", "false"),
+				Config: testAccOpenZFSVolumeConfig_copyTags(rName, acctest.CtKey1, acctest.CtValue1, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeRecreated(&volume1, &volume2),
@@ -207,7 +207,7 @@ func TestAccFSxOpenZFSVolume_copyTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "delete_volume_options.0", "DELETE_CHILD_VOLUMES_AND_SNAPSHOTS"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

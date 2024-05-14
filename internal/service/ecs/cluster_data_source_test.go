@@ -78,7 +78,7 @@ func TestAccECSClusterDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_tags(rName, "key1", "value1"),
+				Config: testAccClusterDataSourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", acctest.CtZero),
@@ -87,7 +87,7 @@ func TestAccECSClusterDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "service_connect_defaults.#", resourceName, "service_connect_defaults.#"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

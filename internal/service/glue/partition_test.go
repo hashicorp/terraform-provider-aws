@@ -96,11 +96,11 @@ func TestAccGluePartition_parameters(t *testing.T) {
 		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPartitionConfig_parameters1(rName, parValue, "key1", "value1"),
+				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -109,20 +109,20 @@ func TestAccGluePartition_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPartitionConfig_parameters2(rName, parValue, "key1", "valueUpdated1", "key2", "value2"),
+				Config: testAccPartitionConfig_parameters2(rName, parValue, acctest.CtKey1, "valueUpdated1", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "valueUpdated1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPartitionConfig_parameters1(rName, parValue, "key2", "value2"),
+				Config: testAccPartitionConfig_parameters1(rName, parValue, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.key2", acctest.CtValue2),
 				),
 			},
 		},

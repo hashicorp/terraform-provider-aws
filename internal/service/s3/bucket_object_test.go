@@ -669,16 +669,16 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1", "key2", "value2"),
+				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_metadata(rName, "key1", "value1updated", "key3", "value3"),
+				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, "value1updated", "key3", "value3"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.CtTwo),
@@ -1060,7 +1060,7 @@ func TestAccS3BucketObject_tags_EmptyTag_OnCreate(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
+				Config: testAccBucketObjectConfig_tags1(rName, key, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
@@ -1092,19 +1092,19 @@ func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
+				Config: testAccBucketObjectConfig_tags1(rName, key, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_tags2(rName, key, "key1", "value1", "key2", ""),
+				Config: testAccBucketObjectConfig_tags2(rName, key, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
 			},
@@ -1133,15 +1133,15 @@ func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
+				Config: testAccBucketObjectConfig_tags1(rName, key, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
+				Config: testAccBucketObjectConfig_tags1(rName, key, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),

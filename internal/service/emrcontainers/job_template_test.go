@@ -97,11 +97,11 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckJobTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobTemplateConfig_tags1(rName, "key1", "value1"),
+				Config: testAccJobTemplateConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{

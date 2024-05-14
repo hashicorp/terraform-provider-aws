@@ -127,11 +127,11 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPlaybackKeyPairDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key1", "value1"),
+				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -141,20 +141,20 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 			{
-				Config: testAccPlaybackKeyPairConfig_tags2(rName, publicKeyPEM, "key1", "value1updated", "key2", "value2"),
+				Config: testAccPlaybackKeyPairConfig_tags2(rName, publicKeyPEM, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key2", "value2"),
+				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

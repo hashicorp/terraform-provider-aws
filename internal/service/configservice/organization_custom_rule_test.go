@@ -366,10 +366,10 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key1"),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, acctest.CtKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey1),
 				),
 			},
 			{
@@ -378,10 +378,10 @@ func testAccOrganizationCustomRule_TagKeyScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, "key2"),
+				Config: testAccOrganizationCustomRuleConfig_tagKeyScope(rName, acctest.CtKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key2"),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey2),
 				),
 			},
 		},
@@ -401,10 +401,10 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationCustomRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value1"),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue1),
 				),
 			},
 			{
@@ -413,10 +413,10 @@ func testAccOrganizationCustomRule_TagValueScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, "value2"),
+				Config: testAccOrganizationCustomRuleConfig_tagValueScope(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue2),
 				),
 			},
 		},

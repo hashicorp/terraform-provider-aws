@@ -42,7 +42,7 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "retrieval_role_arn", ""),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "AWS.Freeform"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "validator.*", map[string]string{
 						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",

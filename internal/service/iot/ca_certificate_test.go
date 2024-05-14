@@ -88,28 +88,28 @@ func TestAccIoTCACertificate_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCACertificateConfig_tags1(caCertificate, "key1", "value1"),
+				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccCACertificateConfig_tags2(caCertificate, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCACertificateConfig_tags2(caCertificate, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCACertificateConfig_tags1(caCertificate, "key2", "value2"),
+				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCACertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

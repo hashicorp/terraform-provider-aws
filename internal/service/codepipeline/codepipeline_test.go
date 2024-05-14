@@ -244,11 +244,11 @@ func TestAccCodePipeline_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCodePipelineConfig_tags1(rName, "key1", "value1"),
+				Config: testAccCodePipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -257,12 +257,12 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodePipelineConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCodePipelineConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -271,11 +271,11 @@ func TestAccCodePipeline_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCodePipelineConfig_tags1(rName, "key2", "value2"),
+				Config: testAccCodePipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -829,10 +829,10 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "variable.0.name", "test_var1"),
 					resource.TestCheckResourceAttr(resourceName, "variable.0.description", "This is test pipeline variable 1."),
-					resource.TestCheckResourceAttr(resourceName, "variable.0.default_value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "variable.0.default_value", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.name", "test_var2"),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.description", "This is test pipeline variable 2."),
-					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.provider_type", "CodeStarSourceConnection"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.CtOne),
@@ -904,10 +904,10 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "variable.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "variable.0.name", "test_var1"),
 					resource.TestCheckResourceAttr(resourceName, "variable.0.description", "This is test pipeline variable 1."),
-					resource.TestCheckResourceAttr(resourceName, "variable.0.default_value", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "variable.0.default_value", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.name", "test_var2"),
 					resource.TestCheckResourceAttr(resourceName, "variable.1.description", "This is test pipeline variable 2."),
-					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "variable.1.default_value", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.git_configuration.#", acctest.CtZero),
 				),
 			},

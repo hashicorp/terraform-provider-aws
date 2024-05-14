@@ -1428,11 +1428,11 @@ func testAccVirtualNode_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVirtualNodeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, "key1", "value1"),
+				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1442,20 +1442,20 @@ func testAccVirtualNode_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVirtualNodeConfig_tags2(meshName, vnName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualNodeConfig_tags2(meshName, vnName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, "key2", "value2"),
+				Config: testAccVirtualNodeConfig_tags1(meshName, vnName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

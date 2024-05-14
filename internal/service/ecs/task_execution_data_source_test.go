@@ -69,7 +69,7 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, "key1", "value1"),
+				Config: testAccTaskExecutionDataSourceConfig_overrides(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
@@ -80,8 +80,8 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.key", "key1"),
-					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.value", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.key", acctest.CtKey1),
+					resource.TestCheckResourceAttr(dataSourceName, "overrides.0.container_overrides.0.environment.0.value", acctest.CtValue1),
 				),
 			},
 		},
@@ -108,7 +108,7 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskExecutionDataSourceConfig_tags(rName, "key1", "value1"),
+				Config: testAccTaskExecutionDataSourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, names.AttrARN),
@@ -117,7 +117,7 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "task_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 		},

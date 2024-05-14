@@ -69,11 +69,11 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevEndpointConfig_arguments(rName, "--arg1", "value1"),
+				Config: testAccDevEndpointConfig_arguments(rName, "--arg1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", acctest.CtValue1),
 				),
 			},
 			{
@@ -82,20 +82,20 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", "value1updated", "--arg2", "value2"),
+				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", "value1updated", "--arg2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_arguments(rName, "--arg2", "value2"),
+				Config: testAccDevEndpointConfig_arguments(rName, "--arg2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", acctest.CtValue2),
 				),
 			},
 		},
@@ -479,11 +479,11 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDevEndpointConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDevEndpointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -492,20 +492,20 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDevEndpointConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDevEndpointConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDevEndpointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

@@ -319,16 +319,16 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Config: testAccUserConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			// Start to update the user out-of-band.
 			{
-				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Config: testAccUserConfig_tags(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserUpdateOOB(ctx, &user),
 				),
@@ -336,7 +336,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 			},
 			// Update tags.
 			{
-				Config: testAccUserConfig_tags(rName, "key1", "value1updated"),
+				Config: testAccUserConfig_tags(rName, acctest.CtKey1, "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),

@@ -303,14 +303,14 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key1", "value1"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           acctest.CtOne,
 						"filter.0.tags.%":    acctest.CtOne,
-						"filter.0.tags.key1": "value1",
+						"filter.0.tags.key1": acctest.CtValue1,
 					}),
 				),
 			},
@@ -336,14 +336,14 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 			// 	),
 			// },
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key2", "value2"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"filter.#":           acctest.CtOne,
 						"filter.0.tags.%":    acctest.CtOne,
-						"filter.0.tags.key2": "value2",
+						"filter.0.tags.key2": acctest.CtValue2,
 					}),
 				),
 			},

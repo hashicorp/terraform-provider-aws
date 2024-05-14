@@ -176,11 +176,11 @@ func TestAccTransferConnector_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key1", "value1"),
+				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -189,20 +189,20 @@ func TestAccTransferConnector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConnectorConfig_tags2(rName, "http://www.example.com", "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectorConfig_tags2(rName, "http://www.example.com", acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", "key2", "value2"),
+				Config: testAccConnectorConfig_tags1(rName, "http://www.example.com", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

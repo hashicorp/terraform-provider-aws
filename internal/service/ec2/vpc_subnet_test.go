@@ -77,11 +77,11 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -90,20 +90,20 @@ func TestAccVPCSubnet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCSubnetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCSubnetConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2)),
 			},
 		},
 	})
@@ -153,14 +153,14 @@ func TestAccVPCSubnet_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "value1"),
+					acctest.ConfigDefaultTags_Tags1("providerkey1", acctest.CtValue1),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
 				),
 			},
 		},
@@ -180,25 +180,25 @@ func TestAccVPCSubnet_DefaultTags_updateToProviderOnly(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtKey1, acctest.CtValue1),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -224,24 +224,24 @@ func TestAccVPCSubnet_DefaultTags_updateToResourceOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					acctest.ConfigDefaultTags_Tags1(acctest.CtKey1, acctest.CtValue1),
 					testAccVPCSubnetConfig_basic(rName),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -392,7 +392,7 @@ func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					testAccCheckSubnetUpdateTags(ctx, &subnet, nil, map[string]string{"defaultkey1": "defaultvalue1"}),
@@ -402,14 +402,14 @@ func TestAccVPCSubnet_defaultAndIgnoreTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeyPrefixes1("defaultkey1", "defaultvalue1", "defaultkey"),
-					testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+					testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				),
 				PlanOnly: true,
 			},
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultAndIgnoreTagsKeys1("defaultkey1", "defaultvalue1"),
-					testAccVPCSubnetConfig_tags1(rName, "key1", "value1"),
+					testAccVPCSubnetConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				),
 				PlanOnly: true,
 			},
@@ -434,7 +434,7 @@ func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
 		CheckDestroy:             testAccCheckSubnetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource1("key1", "value1"),
+				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource1(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
@@ -442,7 +442,7 @@ func TestAccVPCSubnet_updateTagsKnownAtApply(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource2("key1", "value1", "key2", "value2"),
+				Config: testAccVPCSubnetConfig_tagsComputedFromDataSource2(acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),

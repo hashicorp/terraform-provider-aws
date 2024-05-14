@@ -170,13 +170,13 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "tag.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key1",
-						names.AttrValue:       "value1",
+						names.AttrKey:         acctest.CtKey1,
+						names.AttrValue:       acctest.CtValue1,
 						"propagate_at_launch": "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key2",
-						names.AttrValue:       "value2",
+						names.AttrKey:         acctest.CtKey2,
+						names.AttrValue:       acctest.CtValue2,
 						"propagate_at_launch": "false",
 					}),
 				),

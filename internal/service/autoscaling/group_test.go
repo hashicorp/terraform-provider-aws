@@ -239,43 +239,43 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_tags1(rName, "key1", "value1", true),
+				Config: testAccGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key1",
-						names.AttrValue:       "value1",
+						names.AttrKey:         acctest.CtKey1,
+						names.AttrValue:       acctest.CtValue1,
 						"propagate_at_launch": "true",
 					}),
 				),
 			},
 			testAccGroupImportStep(resourceName),
 			{
-				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", true, "key2", "value2", false),
+				Config: testAccGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", true, acctest.CtKey2, acctest.CtValue2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key1",
+						names.AttrKey:         acctest.CtKey1,
 						names.AttrValue:       "value1updated",
 						"propagate_at_launch": "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key2",
-						names.AttrValue:       "value2",
+						names.AttrKey:         acctest.CtKey2,
+						names.AttrValue:       acctest.CtValue2,
 						"propagate_at_launch": "false",
 					}),
 				),
 			},
 			{
-				Config: testAccGroupConfig_tags1(rName, "key2", "value2", true),
+				Config: testAccGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
-						names.AttrKey:         "key2",
-						names.AttrValue:       "value2",
+						names.AttrKey:         acctest.CtKey2,
+						names.AttrValue:       acctest.CtValue2,
 						"propagate_at_launch": "true",
 					}),
 				),

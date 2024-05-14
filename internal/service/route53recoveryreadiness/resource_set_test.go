@@ -107,11 +107,11 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceSetConfig_tags1(rName, cwArn, "key1", "value1"),
+				Config: testAccResourceSetConfig_tags1(rName, cwArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -120,20 +120,20 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccResourceSetConfig_tags2(rName, cwArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccResourceSetConfig_tags2(rName, cwArn, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccResourceSetConfig_tags1(rName, cwArn, "key2", "value2"),
+				Config: testAccResourceSetConfig_tags1(rName, cwArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

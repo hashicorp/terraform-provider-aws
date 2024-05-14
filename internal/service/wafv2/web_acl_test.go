@@ -1135,7 +1135,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), "value1"),
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintContainsWord), acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1147,7 +1147,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": acctest.CtOne,
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#": acctest.CtOne,
 						"statement.0.byte_match_statement.0.positional_constraint":                  "CONTAINS_WORD",
-						"statement.0.byte_match_statement.0.search_string":                          "value1",
+						"statement.0.byte_match_statement.0.search_string":                          acctest.CtValue1,
 						"statement.0.byte_match_statement.0.text_transformation.#":                  acctest.CtOne,
 						"statement.0.byte_match_statement.0.text_transformation.0.priority":         acctest.CtZero,
 						"statement.0.byte_match_statement.0.text_transformation.0.type":             "NONE",
@@ -1155,7 +1155,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintExactly), "value2"),
+				Config: testAccWebACLConfig_byteMatchStatement(webACLName, string(awstypes.PositionalConstraintExactly), acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -1167,7 +1167,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.#": acctest.CtOne,
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#": acctest.CtOne,
 						"statement.0.byte_match_statement.0.positional_constraint":                  "EXACTLY",
-						"statement.0.byte_match_statement.0.search_string":                          "value2",
+						"statement.0.byte_match_statement.0.search_string":                          acctest.CtValue2,
 						"statement.0.byte_match_statement.0.text_transformation.#":                  acctest.CtOne,
 						"statement.0.byte_match_statement.0.text_transformation.0.priority":         acctest.CtZero,
 						"statement.0.byte_match_statement.0.text_transformation.0.type":             "NONE",
@@ -2695,11 +2695,11 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_tags1(webACLName, "key1", "value1"),
+				Config: testAccWebACLConfig_tags1(webACLName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -2709,20 +2709,20 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccWebACLConfig_tags2(webACLName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccWebACLConfig_tags2(webACLName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccWebACLConfig_tags1(webACLName, "key2", "value2"),
+				Config: testAccWebACLConfig_tags1(webACLName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

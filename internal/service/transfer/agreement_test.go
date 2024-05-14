@@ -113,11 +113,11 @@ func testAccAgreement_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key1", "value1"),
+				Config: testAccAgreementConfig_tags1(rName, baseDirectory, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -127,20 +127,20 @@ func testAccAgreement_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
-				Config: testAccAgreementConfig_tags2(rName, baseDirectory, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAgreementConfig_tags2(rName, baseDirectory, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key2", "value2"),
+				Config: testAccAgreementConfig_tags1(rName, baseDirectory, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

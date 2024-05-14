@@ -32,13 +32,13 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -46,7 +46,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -61,15 +61,15 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -77,8 +77,8 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -93,13 +93,13 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccBatchJobDefinition_tags(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -162,7 +162,7 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -175,7 +175,7 @@ func TestAccBatchJobDefinition_tags_null(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -226,13 +226,13 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -240,7 +240,7 @@ func TestAccBatchJobDefinition_tags_AddOnUpdate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -271,7 +271,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -285,7 +285,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -340,13 +340,13 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -354,14 +354,14 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
 			},
@@ -370,8 +370,8 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
-						"key2": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+						acctest.CtKey2: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -386,13 +386,13 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -400,7 +400,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -431,13 +431,13 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -445,7 +445,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -459,7 +459,7 @@ func TestAccBatchJobDefinition_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -490,7 +490,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -498,7 +498,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -507,7 +507,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -524,8 +524,8 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -534,7 +534,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -543,8 +543,8 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1updated"),
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -561,7 +561,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -569,7 +569,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
 			{
@@ -578,7 +578,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_providerOnly(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key2": config.StringVariable("value2"),
+						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 					"resource_tags": nil,
 				},
@@ -901,15 +901,15 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -918,7 +918,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -926,7 +926,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -935,7 +935,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToProviderOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -967,7 +967,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": nil,
 				},
@@ -975,7 +975,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -984,15 +984,15 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1001,7 +1001,7 @@ func TestAccBatchJobDefinition_tags_DefaultTags_updateToResourceOnly(t *testing.
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1032,10 +1032,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1052,10 +1052,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable(""),
+						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1086,10 +1086,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1105,10 +1105,10 @@ func TestAccBatchJobDefinition_tags_DefaultTags_nullOverlappingResourceTag(t *te
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("providervalue1"),
+						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": nil,
+						acctest.CtKey1: nil,
 					}),
 				},
 				ResourceName:      resourceName,
@@ -1246,13 +1246,13 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1261,13 +1261,13 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1289,8 +1289,8 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
-					"knownTagKey":   config.StringVariable("key1"),
-					"knownTagValue": config.StringVariable("value1"),
+					"knownTagKey":   config.StringVariable(acctest.CtKey1),
+					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -1320,13 +1320,13 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 					"resource_tags": config.MapVariable(map[string]config.Variable{
-						"key1": config.StringVariable("value1"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -1334,7 +1334,7 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &v),
@@ -1359,7 +1359,7 @@ func TestAccBatchJobDefinition_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/JobDefinition/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					"rName":         config.StringVariable(rName),
-					"unknownTagKey": config.StringVariable("key1"),
+					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,

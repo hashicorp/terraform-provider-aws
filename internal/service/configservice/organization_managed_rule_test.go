@@ -362,10 +362,10 @@ func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, "key1"),
+				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, acctest.CtKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey1),
 				),
 			},
 			{
@@ -374,10 +374,10 @@ func testAccOrganizationManagedRule_TagKeyScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, "key2"),
+				Config: testAccOrganizationManagedRuleConfig_tagKeyScope(rName, acctest.CtKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", "key2"),
+					resource.TestCheckResourceAttr(resourceName, "tag_key_scope", acctest.CtKey2),
 				),
 			},
 		},
@@ -397,10 +397,10 @@ func testAccOrganizationManagedRule_TagValueScope(t *testing.T) {
 		CheckDestroy:             testAccCheckOrganizationManagedRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, "value1"),
+				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue1),
 				),
 			},
 			{
@@ -409,10 +409,10 @@ func testAccOrganizationManagedRule_TagValueScope(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, "value2"),
+				Config: testAccOrganizationManagedRuleConfig_tagValueScope(rName, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tag_value_scope", acctest.CtValue2),
 				),
 			},
 		},
