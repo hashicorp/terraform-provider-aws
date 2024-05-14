@@ -159,7 +159,7 @@ func ResourceJobDefinition() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"resources": {
+												names.AttrResources: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
