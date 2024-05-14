@@ -206,7 +206,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_redirect_location", resourceName, "website_redirect"),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
