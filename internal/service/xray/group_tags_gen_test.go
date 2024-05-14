@@ -31,7 +31,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -45,7 +45,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -57,7 +57,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -73,7 +73,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
@@ -86,7 +86,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -100,7 +100,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -111,8 +111,8 @@ func TestAccXRayGroup_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -122,8 +122,8 @@ func TestAccXRayGroup_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -149,7 +149,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -162,7 +162,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -173,8 +173,8 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -198,8 +198,8 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -210,7 +210,7 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -224,7 +224,7 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -252,7 +252,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -266,7 +266,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -277,8 +277,8 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -288,8 +288,8 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -315,7 +315,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -329,7 +329,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -345,7 +345,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -358,7 +358,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -372,7 +372,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -400,7 +400,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -414,7 +414,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -428,7 +428,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -459,7 +459,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -476,7 +476,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -491,7 +491,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -510,7 +510,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -524,7 +524,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -541,7 +541,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -551,8 +551,8 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -564,8 +564,8 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -594,7 +594,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -615,7 +615,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -631,7 +631,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -655,7 +655,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -668,8 +668,8 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -681,8 +681,8 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":                config.StringVariable(rName),
-					acctest.CtResourceTags: nil,
+					"rName":         config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -711,7 +711,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -731,7 +731,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -748,7 +748,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -772,7 +772,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -789,7 +789,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -809,7 +809,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -837,7 +837,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -857,7 +857,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -874,7 +874,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -903,7 +903,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
@@ -917,7 +917,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -934,7 +934,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -965,7 +965,7 @@ func TestAccXRayGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -985,7 +985,7 @@ func TestAccXRayGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1016,7 +1016,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1035,7 +1035,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1066,7 +1066,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1085,7 +1085,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1164,7 +1164,7 @@ func TestAccXRayGroup_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -1235,7 +1235,7 @@ func TestAccXRayGroup_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
-					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},

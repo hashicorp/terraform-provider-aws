@@ -376,6 +376,16 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
+semconstants: semgrep-validate
+	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
+	@echo "make: applying constants fixes with --autofix"
+	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml
+	@echo "make: fixing imports and formatting..."
+	@goimports -w internal/**/*.go(.)
+	@make fmt	
+
 semgrep-validate: ## Validate semgrep configuration files
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
@@ -530,6 +540,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	sane \
 	sanity \
 	semall \
+	semconstants \
 	semfix \
 	semgrep \
 	semgrep-validate \

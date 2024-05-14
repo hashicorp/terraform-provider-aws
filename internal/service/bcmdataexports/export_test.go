@@ -251,7 +251,7 @@ func TestAccBCMDataExportsExport_curSubset(t *testing.T) {
 		"reservation_unused_quantity",
 		"reservation_unused_recurring_fee",
 		"reservation_upfront_value",
-		acctest.CtResourceTags,
+		names.AttrResourceTags,
 		"savings_plan_amortized_upfront_commitment_for_billing_period",
 		"savings_plan_end_time",
 		"savings_plan_instance_type_family",
