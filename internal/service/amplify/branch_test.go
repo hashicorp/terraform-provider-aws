@@ -109,7 +109,7 @@ func testAccBranch_tags(t *testing.T) {
 				Config: testAccBranchConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -131,7 +131,7 @@ func testAccBranch_tags(t *testing.T) {
 				Config: testAccBranchConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -204,8 +204,8 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.CtOne),
 				),
 			},
 			{
