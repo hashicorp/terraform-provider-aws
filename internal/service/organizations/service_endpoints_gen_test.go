@@ -4,16 +4,17 @@ package organizations_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maps"
-	"net/url"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	organizations_sdkv2 "github.com/aws/aws-sdk-go-v2/service/organizations"
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
@@ -203,33 +204,69 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
+	t.Run("v1", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
 
-		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase, callService)
-		})
-	}
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, region, testcase, callServiceV1)
+			})
+		}
+	})
+
+	t.Run("v2", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
+
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, region, testcase, callServiceV2)
+			})
+		}
+	})
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := organizations_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(organizations_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), organizations_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+	t.Helper()
+
+	var endpoint string
+
+	client := meta.OrganizationsClient(ctx)
+
+	_, err := client.ListAccounts(ctx, &organizations_sdkv2.ListAccountsInput{},
+		func(opts *organizations_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
+
+	return endpoint
+}
+
+func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	client := meta.OrganizationsConn(ctx)

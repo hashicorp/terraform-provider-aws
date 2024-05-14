@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -48,8 +48,8 @@ func TestAccIPAM_byoipIPv6(t *testing.T) {
 
 	resourceName := "aws_vpc.test"
 	assocName := "aws_vpc_ipv6_cidr_block_association.test"
-	var vpc ec2.Vpc
-	var associationIPv6 ec2.VpcIpv6CidrBlockAssociation
+	var vpc awstypes.Vpc
+	var associationIPv6 awstypes.VpcIpv6CidrBlockAssociation
 	netmaskLength := 56
 
 	resource.ParallelTest(t, resource.TestCase{
