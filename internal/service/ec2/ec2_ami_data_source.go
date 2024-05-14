@@ -366,7 +366,7 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 				names.AttrIOPS:                fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
 				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
 				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
-				"snapshot_id":                 aws.StringValue(v.Ebs.SnapshotId),
+				names.AttrSnapshotID:                 aws.StringValue(v.Ebs.SnapshotId),
 				names.AttrVolumeType:          aws.StringValue(v.Ebs.VolumeType),
 			}
 
@@ -442,7 +442,7 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 	if d, ok := m["virtual_name"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
-	if d, ok := m["snapshot_id"]; ok {
+	if d, ok := m[names.AttrSnapshotID]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 	return create.StringHashcode(buf.String())
