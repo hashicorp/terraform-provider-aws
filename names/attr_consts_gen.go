@@ -135,6 +135,7 @@ const (
 	AttrRepositoryName             = "repository_name"
 	AttrResourceARN                = "resource_arn"
 	AttrResourceID                 = "resource_id"
+	AttrResourceTags               = "resource_tags"
 	AttrResourceType               = "resource_type"
 	AttrResources                  = "resources"
 	AttrRetentionPeriod            = "retention_period"
@@ -333,6 +334,7 @@ func ConstOrQuote(constant string) string {
 		"repository_name":               "AttrRepositoryName",
 		"resource_arn":                  "AttrResourceARN",
 		"resource_id":                   "AttrResourceID",
+		"resource_tags":                 "AttrResourceTags",
 		"resource_type":                 "AttrResourceType",
 		"resources":                     "AttrResources",
 		"retention_period":              "AttrRetentionPeriod",

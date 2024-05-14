@@ -117,7 +117,7 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "task_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

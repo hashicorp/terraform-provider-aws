@@ -109,7 +109,7 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 				Config: testAccVoiceConnectorGroupConfig_updated(vcgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("vcg-updated-%s", vcgName)),
-					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connector.0.priority", acctest.CtThree),
 				),
 			},
 			{

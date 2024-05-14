@@ -119,7 +119,7 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -128,12 +128,12 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTableConfig_tags2(rName1, rName2, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTableConfig_tags2(rName1, rName2, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -141,7 +141,7 @@ func TestAccKeyspacesTable_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -389,7 +389,7 @@ func TestAccKeyspacesTable_addColumns(t *testing.T) {
 					testAccCheckTableNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",
@@ -432,7 +432,7 @@ func TestAccKeyspacesTable_delColumns(t *testing.T) {
 					testAccCheckTableExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.clustering_key.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.0.column.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema_definition.0.column.*", map[string]string{
 						names.AttrName: names.AttrMessage,
 						names.AttrType: "ascii",

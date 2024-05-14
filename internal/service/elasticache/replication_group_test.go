@@ -1067,7 +1067,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
@@ -1102,7 +1102,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "6"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "6"),
@@ -1159,7 +1159,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "8"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "8"),
 					testCheckEngineStuffClusterEnabledDefault(ctx, resourceName),
@@ -1214,7 +1214,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "9"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "9"),
@@ -1246,7 +1246,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "9"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "9"),
@@ -1664,8 +1664,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1722,8 +1722,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1785,8 +1785,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", strconv.FormatBool(autoFailoverEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", strconv.FormatBool(multiAZEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1843,8 +1843,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1866,8 +1866,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 		},
@@ -1894,8 +1894,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -1945,8 +1945,8 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 				Config: testAccReplicationGroupConfig_numberCacheClusters(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &replicationGroup),
-					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "3"),
-					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.CtThree),
 				),
 			},
 			{
@@ -2060,11 +2060,11 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
 			},
 			{
-				Config: testAccReplicationGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccReplicationGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{acctest.CtKey1, "value1updated"},
+						{acctest.CtKey1, acctest.CtValue1Updated},
 						{acctest.CtKey2, acctest.CtValue2},
 					}),
 				),
@@ -2110,12 +2110,12 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, "value1updated"),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
-						{acctest.CtKey1, "value1updated"},
+						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
 				),
 			},
@@ -2438,7 +2438,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
 					testAccCheckReplicationGroupParameterGroupExists(ctx, &rg2, &pg2),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.CtThree),
 
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "num_node_groups", acctest.CtTwo),
 					resource.TestCheckResourceAttr(primaryGroupResourceName, "replicas_per_node_group", acctest.CtOne),

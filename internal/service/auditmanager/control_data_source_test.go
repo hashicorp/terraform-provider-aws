@@ -33,7 +33,7 @@ func TestAccAuditManagerControlDataSource_standard(t *testing.T) {
 				Config: testAccControlDataSourceConfig_standard(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, name),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", acctest.CtThree),
 				),
 			},
 		},

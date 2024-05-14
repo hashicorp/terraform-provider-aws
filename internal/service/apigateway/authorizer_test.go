@@ -102,7 +102,7 @@ func TestAccAPIGatewayAuthorizer_cognito(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "COGNITO_USER_POOLS"),
-					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "provider_arns.#", acctest.CtThree),
 				),
 			},
 		},

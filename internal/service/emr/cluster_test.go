@@ -679,7 +679,7 @@ func TestAccEMRCluster_MasterInstanceGroup_instanceCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "master_instance_group.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "master_instance_group.0.instance_count", acctest.CtThree),
 				),
 			},
 			{
@@ -1045,7 +1045,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
@@ -1069,7 +1069,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapAdd(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", acctest.CtTwo),
@@ -1081,7 +1081,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.0", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.1", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.3", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.1.args.6", "6"),
@@ -1110,7 +1110,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 				Config: testAccClusterConfig_bootstrapReorder(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.name", "runif"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.path", "s3://elasticmapreduce/bootstrap-actions/run-if"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.0.args.#", acctest.CtTwo),
@@ -1122,7 +1122,7 @@ func TestAccEMRCluster_Bootstrap_ordering(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.0", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.1", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.2", ""),
-					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", "3"),
+					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.3", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.4", "4"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.5", "5"),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_action.2.args.6", "6"),
@@ -1431,7 +1431,7 @@ func TestAccEMRCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_updatedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.dns_zone", "new_zone"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.name", "name-env"),

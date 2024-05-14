@@ -124,6 +124,7 @@ region,Region
 repository_name,RepositoryName
 resource_arn,ResourceARN
 resource_id,ResourceID
+resource_tags,ResourceTags
 resource_type,ResourceType
 resources,Resources
 retention_period,RetentionPeriod

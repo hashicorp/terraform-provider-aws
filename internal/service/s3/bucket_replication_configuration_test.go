@@ -143,7 +143,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
 						names.AttrPriority:            acctest.CtOne,
@@ -164,7 +164,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule3",
-						names.AttrPriority:            "3",
+						names.AttrPriority:            acctest.CtThree,
 						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    acctest.CtOne,
 						"filter.0.prefix":             "",
@@ -203,7 +203,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketReplicationConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule1",
 						names.AttrPriority:            acctest.CtOne,
@@ -226,7 +226,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:                  "rule3",
-						names.AttrPriority:            "3",
+						names.AttrPriority:            acctest.CtThree,
 						names.AttrStatus:              string(types.ReplicationRuleStatusDisabled),
 						"filter.#":                    acctest.CtOne,
 						"filter.0.and.#":              acctest.CtOne,

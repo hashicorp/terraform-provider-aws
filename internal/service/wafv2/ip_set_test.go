@@ -56,7 +56,7 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtThree),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccWAFV2IPSet_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv6)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "1234:5678:9abc:6811:0000:0000:0000:0000/64"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "2001:0db8:0000:0000:0000:0000:0000:0000/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "addresses.*", "1111:0000:0000:0000:0000:0000:0000:0111/128"),

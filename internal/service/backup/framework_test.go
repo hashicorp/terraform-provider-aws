@@ -180,7 +180,7 @@ func testAccFramework_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Framework"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -326,7 +326,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyUnit",
 						names.AttrValue: "hours",
@@ -360,7 +360,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "control.0.name", "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK"),
-					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "control.0.input_parameter.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.0.input_parameter.*", map[string]string{
 						names.AttrName:  "requiredFrequencyUnit",
 						names.AttrValue: "hours",
@@ -438,7 +438,7 @@ func testAccFramework_updateControls(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
-						"input_parameter.#": "3",
+						"input_parameter.#": acctest.CtThree,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName: "BACKUP_RECOVERY_POINT_ENCRYPTED",

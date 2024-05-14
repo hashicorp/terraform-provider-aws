@@ -126,7 +126,7 @@ func resourcePolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"resource_tags": tftags.TagsSchema(),
+			names.AttrResourceTags: tftags.TagsSchema(),
 			names.AttrResourceType: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -270,7 +270,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrName, policy.PolicyName)
 	d.Set("policy_update_token", policy.PolicyUpdateToken)
 	d.Set("remediation_enabled", policy.RemediationEnabled)
-	if err := d.Set("resource_tags", flattenResourceTags(policy.ResourceTags)); err != nil {
+	if err := d.Set(names.AttrResourceTags, flattenResourceTags(policy.ResourceTags)); err != nil {
 		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
 	d.Set(names.AttrResourceType, policy.ResourceType)
@@ -383,7 +383,7 @@ func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 		apiObject.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && len(v.(map[string]interface{})) > 0 {
 		for k, v := range flex.ExpandStringValueMap(v.(map[string]interface{})) {
 			apiObject.ResourceTags = append(apiObject.ResourceTags, awstypes.ResourceTag{
 				Key:   aws.String(k),

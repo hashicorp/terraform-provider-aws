@@ -124,7 +124,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, resourceName, &version),
 					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
-					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "two"),

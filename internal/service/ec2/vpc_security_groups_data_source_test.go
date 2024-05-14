@@ -26,9 +26,9 @@ func TestAccVPCSecurityGroupsDataSource_tag(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_tag(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtThree),
 				),
 			},
 		},

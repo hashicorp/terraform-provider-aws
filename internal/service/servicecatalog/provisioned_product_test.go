@@ -188,7 +188,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.failure_tolerance_count", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.max_concurrency_count", "4"),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.accounts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "stack_set_provisioning_preferences.0.regions.#", acctest.CtOne),
@@ -309,7 +309,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
 						names.AttrKey:         "VpcID",
@@ -325,7 +325,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.1/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
-					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "outputs.*", map[string]string{
 						names.AttrDescription: "VPC ID",
 						names.AttrKey:         "VpcID",

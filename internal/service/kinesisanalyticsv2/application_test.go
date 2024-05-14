@@ -377,7 +377,7 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtOne),
 				),
 			},
@@ -387,12 +387,12 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtOne),
 				),
 			},
@@ -401,7 +401,7 @@ func TestAccKinesisAnalyticsV2Application_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtOne),
 				),
 			},
@@ -725,7 +725,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id": "PROPERTY-GROUP-ID2",
-						"property_map.%":    "3",
+						"property_map.%":    acctest.CtThree,
 						"property_map.KeyA": "ValueZ",
 						"property_map.KeyB": "ValueY",
 						"property_map.KeyC": "ValueX",
@@ -877,7 +877,7 @@ func TestAccKinesisAnalyticsV2Application_EnvironmentProperties_update(t *testin
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "3"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtThree),
 				),
 			},
 		},
@@ -1045,7 +1045,7 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplicationEnvironmentProperties_
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id": "PROPERTY-GROUP-ID2",
-						"property_map.%":    "3",
+						"property_map.%":    acctest.CtThree,
 						"property_map.KeyA": "ValueZ",
 						"property_map.KeyB": "ValueY",
 						"property_map.KeyC": "ValueX",
@@ -1193,12 +1193,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),
@@ -1257,12 +1257,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),
@@ -1322,12 +1322,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),
@@ -1386,12 +1386,12 @@ func TestAccKinesisAnalyticsV2Application_FlinkApplication_restoreFromSnapshot(t
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),
@@ -2254,7 +2254,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_add(t *t
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "3"), // Add input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtThree), // Add input processing configuration + update input.
 				),
 			},
 			{
@@ -2394,7 +2394,7 @@ func TestAccKinesisAnalyticsV2Application_SQLApplicationInputProcessing_delete(t
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "version_id", "3"), // Delete input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, "version_id", acctest.CtThree), // Delete input processing configuration + update input.
 				),
 			},
 			{
@@ -4118,12 +4118,12 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),
@@ -4181,12 +4181,12 @@ func TestAccKinesisAnalyticsV2Application_RunConfiguration_Update(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.environment_properties.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":                      "ConsumerConfigProperties",
-						"property_map.%":                         "3",
+						"property_map.%":                         acctest.CtThree,
 						"property_map.flink.inputstream.initpos": "LATEST",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "application_configuration.0.environment_properties.0.property_group.*", map[string]string{
 						"property_group_id":               "ProducerConfigProperties",
-						"property_map.%":                  "3",
+						"property_map.%":                  acctest.CtThree,
 						"property_map.AggregationEnabled": "false",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.flink_application_configuration.#", acctest.CtOne),

@@ -30,22 +30,22 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -56,25 +56,25 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -85,22 +85,22 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
 				},
@@ -111,8 +111,8 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
@@ -122,8 +122,8 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -150,8 +150,8 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -163,8 +163,8 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -175,8 +175,8 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
@@ -200,8 +200,8 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
@@ -211,22 +211,22 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -253,22 +253,22 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -279,8 +279,8 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
@@ -290,8 +290,8 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -316,22 +316,22 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -339,15 +339,15 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 						acctest.CtKey2: config.StringVariable(""),
 					}),
@@ -359,22 +359,22 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -401,36 +401,36 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -457,16 +457,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -474,11 +474,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -488,18 +488,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
@@ -507,12 +507,12 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
-						acctest.CtKey1: config.StringVariable("value1updated"),
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1Updated),
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -522,16 +522,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", acctest.CtValue2),
 				),
 			},
@@ -539,11 +539,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey2: config.StringVariable(acctest.CtValue2),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -553,21 +553,21 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -592,11 +592,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -604,7 +604,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
@@ -613,11 +613,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -629,11 +629,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -643,7 +643,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey2", "resourcevalue2"),
@@ -653,11 +653,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1updated"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": config.StringVariable("resourcevalue1updated"),
 						"resourcekey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -670,21 +670,21 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
-					"resource_tags": nil,
+					acctest.CtRName:        config.StringVariable(rName),
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -709,11 +709,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -721,7 +721,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 				),
 			},
@@ -729,11 +729,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 					}),
 				},
@@ -745,12 +745,12 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -760,7 +760,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
@@ -769,12 +769,12 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 						"overlapkey2": config.StringVariable("providervalue2"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue1"),
 						"overlapkey2": config.StringVariable("resourcevalue2"),
 					}),
@@ -787,11 +787,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -799,7 +799,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
 			},
@@ -807,11 +807,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"overlapkey1": config.StringVariable("resourcevalue2"),
 					}),
 				},
@@ -838,16 +838,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -855,16 +855,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -872,11 +872,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -901,16 +901,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": nil,
+					names.AttrResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -918,16 +918,16 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -935,8 +935,8 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
@@ -963,19 +963,19 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 				),
 			},
@@ -983,11 +983,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(""),
 					}),
 				},
@@ -1016,18 +1016,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
 				),
 			},
@@ -1035,11 +1035,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: nil,
 					}),
 				},
@@ -1068,18 +1068,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
@@ -1087,11 +1087,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags_defaults/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"provider_tags": config.MapVariable(map[string]config.Variable{
 						"providerkey1": config.StringVariable("providervalue1"),
 					}),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						"resourcekey1": nil,
 					}),
 				},
@@ -1118,7 +1118,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -1143,7 +1143,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnCreate(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				ResourceName:      resourceName,
@@ -1169,22 +1169,22 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1192,7 +1192,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1212,7 +1212,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed2/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 					"knownTagKey":   config.StringVariable(acctest.CtKey1),
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
@@ -1240,28 +1240,28 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags/"),
 				ConfigVariables: config.Variables{
-					"rName": config.StringVariable(rName),
-					"resource_tags": config.MapVariable(map[string]config.Variable{
+					acctest.CtRName: config.StringVariable(rName),
+					names.AttrResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1280,7 +1280,7 @@ func TestAccBatchJobQueue_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tagsComputed1/"),
 				ConfigVariables: config.Variables{
-					"rName":         config.StringVariable(rName),
+					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				ResourceName:      resourceName,
