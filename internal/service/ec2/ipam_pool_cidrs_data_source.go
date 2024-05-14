@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -53,14 +54,14 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 
 func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.GetIpamPoolCidrsInput{
 		IpamPoolId: aws.String(poolID),
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -80,7 +81,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
+func flattenIPAMPoolCIDRs(c []awstypes.IpamPoolCidr) []interface{} {
 	cidrs := []interface{}{}
 	for _, cidr := range c {
 		cidrs = append(cidrs, flattenIPAMPoolCIDR(cidr))
@@ -88,9 +89,9 @@ func flattenIPAMPoolCIDRs(c []*ec2.IpamPoolCidr) []interface{} {
 	return cidrs
 }
 
-func flattenIPAMPoolCIDR(c *ec2.IpamPoolCidr) map[string]interface{} {
+func flattenIPAMPoolCIDR(c awstypes.IpamPoolCidr) map[string]interface{} {
 	cidr := make(map[string]interface{})
-	cidr["cidr"] = aws.StringValue(c.Cidr)
-	cidr[names.AttrState] = aws.StringValue(c.State)
+	cidr["cidr"] = aws.ToString(c.Cidr)
+	cidr[names.AttrState] = c.State
 	return cidr
 }
