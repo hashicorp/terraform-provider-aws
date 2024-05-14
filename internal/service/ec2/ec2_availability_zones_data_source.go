@@ -49,7 +49,7 @@ func DataSourceAvailabilityZones() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"names": {
+			names.AttrNames: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -142,7 +142,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
-	if err := d.Set("names", names); err != nil {
+	if err := d.Set(names.AttrNames, names); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {
