@@ -141,7 +141,7 @@ func testAccFileCache_copyTagsToDataRepositoryAssociations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_data_repository_associations", "true"),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association.0.tags.%", acctest.CtTwo),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func testAccFileCache_dataRepositoryAssociation_multiple(t *testing.T) {
 				Config: testAccFileCacheConfig_multiple_associations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache),
-					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "data_repository_association_ids.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -361,7 +361,7 @@ func testAccFileCache_tags(t *testing.T) {
 				Config: testAccFileCacheConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -376,7 +376,7 @@ func testAccFileCache_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileCacheExists(ctx, resourceName, &filecache2),
 					testAccCheckFileCacheNotRecreated(&filecache1, &filecache2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

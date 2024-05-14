@@ -39,7 +39,7 @@ func TestAccFSxBackup_basic(t *testing.T) {
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -71,7 +71,7 @@ func TestAccFSxBackup_ontapBasic(t *testing.T) {
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func TestAccFSxBackup_openzfsBasic(t *testing.T) {
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccFSxBackup_windowsBasic(t *testing.T) {
 					testAccCheckBackupExists(ctx, resourceName, &backup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`backup/.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -208,7 +208,7 @@ func TestAccFSxBackup_tags(t *testing.T) {
 				Config: testAccBackupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -221,7 +221,7 @@ func TestAccFSxBackup_tags(t *testing.T) {
 				Config: testAccBackupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -230,7 +230,7 @@ func TestAccFSxBackup_tags(t *testing.T) {
 				Config: testAccBackupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -254,7 +254,7 @@ func TestAccFSxBackup_implicitTags(t *testing.T) {
 				Config: testAccBackupConfig_implicitTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupExists(ctx, resourceName, &backup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
