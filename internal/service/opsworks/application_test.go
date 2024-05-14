@@ -41,7 +41,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "other"),
 					resource.TestCheckResourceAttr(resourceName, "enable_ssl", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_configuration.#", acctest.CtZero),
 					resource.TestCheckNoResourceAttr(resourceName, "domains"),
 					resource.TestCheckResourceAttr(resourceName, "app_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "app_source.0.type", "other"),
