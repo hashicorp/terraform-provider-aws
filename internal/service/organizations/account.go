@@ -6,7 +6,9 @@ package organizations
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -34,7 +36,7 @@ func ResourceAccount() *schema.Resource {
 		UpdateWithoutTimeout: resourceAccountUpdate,
 		DeleteWithoutTimeout: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceAccountImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -259,6 +261,21 @@ func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func resourceAccountImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	if strings.Contains(d.Id(), "_") {
+		parts := strings.Split(d.Id(), "_")
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			return nil, fmt.Errorf("unexpected format of ID (%q), expected <account_id>_<IAM User Access Status> or <account_id>", d.Id())
+		}
+		d.SetId(parts[0])
+		d.Set("iam_user_access_to_billing", parts[1])
+	} else {
+		d.SetId(d.Id())
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func createAccount(ctx context.Context, conn *organizations.Organizations, name, email string, iamUserAccessToBilling, roleName *string, tags []*organizations.Tag, govCloud bool) (*organizations.CreateAccountStatus, error) {
