@@ -41,7 +41,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_scopes", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.authorize_url", "https://accounts.google.com/o/oauth2/v2/auth"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.client_id", "test-url.apps.googleusercontent.com"),
-					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", "client_secret"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.client_secret", names.AttrClientSecret),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url", "https://people.googleapis.com/v1/people/me?personFields="),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.attributes_url_add_attributes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.token_request_method", "POST"),
