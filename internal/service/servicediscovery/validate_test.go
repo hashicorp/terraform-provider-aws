@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -16,7 +17,7 @@ func TestValidNamespaceName(t *testing.T) {
 	validNames := []string{
 		"ValidName",
 		"V_-.dN01e",
-		"0",
+		acctest.CtZero,
 		".",
 		"-",
 		"_",
