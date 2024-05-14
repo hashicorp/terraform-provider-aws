@@ -184,7 +184,7 @@ func TestAccAPIGatewayV2Route_jwtAuthorization(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "api_key_required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authorization_scopes.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "authorization_type", string(awstypes.AuthorizationTypeJwt)),
 					resource.TestCheckResourceAttrPair(resourceName, "authorizer_id", "aws_apigatewayv2_authorizer.another", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
@@ -224,7 +224,7 @@ func TestAccAPIGatewayV2Route_model(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authorizer_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", names.AttrAction),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "request_models.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_models.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "request_models.test", modelResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_key", "$default"),
@@ -265,7 +265,7 @@ func TestAccAPIGatewayV2Route_requestParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_selection_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_models.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "request_parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "request_parameter.*", map[string]string{
 						"request_parameter_key": "route.request.header.authorization",
 						"required":              "true",

@@ -100,7 +100,7 @@ func TestAccAPIGatewayV2IntegrationResponse_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", "$request.body.name"),
 				),
