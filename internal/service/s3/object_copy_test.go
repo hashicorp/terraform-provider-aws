@@ -131,31 +131,31 @@ func TestAccS3ObjectCopy_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1"),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccObjectCopyConfig_tags2(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1updated", "key2", "value2"),
+				Config: testAccObjectCopyConfig_tags2(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key2", "value2"),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -175,7 +175,7 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnCreate(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", ""),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
@@ -199,19 +199,19 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1"),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccObjectCopyConfig_tags2(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1", "key2", ""),
+				Config: testAccObjectCopyConfig_tags2(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
 			},
@@ -232,15 +232,15 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1"),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", ""),
+				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, acctest.CtKey1, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),

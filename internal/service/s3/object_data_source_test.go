@@ -502,7 +502,7 @@ func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_metadata(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
 				),
 			},
@@ -527,8 +527,8 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_metadataBucketOnly(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAddObjectWithMetadata(ctx, bucketResourceName, key, map[string]string{
-						"key1": "value1",
-						"Key2": "Value2",
+						acctest.CtKey1: acctest.CtValue1,
+						"Key2":         "Value2",
 					}),
 				),
 			},
@@ -536,7 +536,7 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 				Config: testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", acctest.CtValue1),
 					// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#HeadObjectOutput
 					// Map keys will be normalized to lower-case.
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
