@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.53.0
+	github.com/aws/aws-sdk-go v1.53.1
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.13
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.13
@@ -86,7 +86,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.19.2
-	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.30.5
+	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.7
@@ -123,7 +123,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.11.1
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.6
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.5
@@ -170,7 +170,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.14.0
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.6
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/waf v1.20.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.48.4
