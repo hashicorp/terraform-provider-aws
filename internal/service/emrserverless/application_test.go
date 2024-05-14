@@ -46,9 +46,9 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccEMRServerlessApplication_network(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -339,7 +339,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -352,7 +352,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -361,7 +361,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
