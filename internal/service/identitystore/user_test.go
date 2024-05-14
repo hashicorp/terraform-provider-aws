@@ -41,10 +41,10 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Acceptance Test"),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "external_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "external_ids.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
 					resource.TestCheckResourceAttr(resourceName, "locale", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.family_name", "Doe"),
@@ -54,7 +54,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name.0.honorific_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, "name.0.middle_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "nickname", ""),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "preferred_language", ""),
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
@@ -181,7 +181,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtZero),
 				),
 			},
 			{
@@ -261,7 +261,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "emails.#", acctest.CtZero),
 				),
 			},
 			{
@@ -710,7 +710,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtZero),
 				),
 			},
 			{
