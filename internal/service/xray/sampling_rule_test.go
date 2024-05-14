@@ -47,7 +47,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.CtZero),
 				),
 			},
 			{ // Update attributes
@@ -106,7 +106,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.CtZero),
 				),
 			},
 			{
