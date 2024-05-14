@@ -383,7 +383,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	output, err := findMaintenanceWindowTaskByTwoPartKey(ctx, conn, d.Id(), d.Get("window_task_id").(string))
+	output, err := findMaintenanceWindowTaskByTwoPartKey(ctx, conn, d.Get("window_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Maintenance Window Task %s not found, removing from state", d.Id())
