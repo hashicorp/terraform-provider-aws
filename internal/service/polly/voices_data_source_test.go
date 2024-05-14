@@ -32,7 +32,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 					// verify a known voice is returned in the results
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
-						"language_code": "en-US",
+						names.AttrLanguageCode: "en-US",
 						names.AttrName:  "Kendra",
 					}),
 				),
@@ -60,7 +60,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 					// verify a known voice is returned in the results
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "voices.*", map[string]string{
 						"gender":        "Female",
-						"language_code": "en-US",
+						names.AttrLanguageCode: "en-US",
 						names.AttrName:  "Kendra",
 					}),
 				),
