@@ -130,7 +130,7 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"instance_count": {
+						names.AttrInstanceCount: {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
