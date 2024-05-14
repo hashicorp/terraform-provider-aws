@@ -40,9 +40,9 @@ func testAccResolver_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
-					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
-					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "max_batch_size", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.CtZero),
 				),
 			},
 			{
@@ -290,7 +290,7 @@ func testAccResolver_multipleResolvers(t *testing.T) {
 				Config: testAccResolverConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName+acctest.CtOne, &resolver),
-					testAccCheckResolverExists(ctx, resourceName+"2", &resolver),
+					testAccCheckResolverExists(ctx, resourceName+acctest.CtTwo, &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"3", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"4", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"5", &resolver),
@@ -350,7 +350,7 @@ func testAccResolver_caching(t *testing.T) {
 				Config: testAccResolverConfig_caching(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver),
-					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.ttl", "60"),
 				),
 			},
