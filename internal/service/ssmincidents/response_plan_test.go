@@ -28,7 +28,6 @@ func testResponsePlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rImpact := acctest.CtThree
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
@@ -325,7 +324,6 @@ func testResponsePlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rTitle := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	impact := acctest.CtThree
 	resourceName := "aws_ssmincidents_response_plan.test"
 
 	resource.Test(t, resource.TestCase{
