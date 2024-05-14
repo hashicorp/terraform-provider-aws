@@ -42,7 +42,7 @@ func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.CtOne),
 				),
 			},
 			{
