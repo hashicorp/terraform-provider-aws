@@ -318,7 +318,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      10,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -368,7 +368,7 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 									Default:      5,
 									ValidateFunc: validation.IntBetween(1, 100),
 								},
-								"instance_count": {
+								names.AttrInstanceCount: {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Default:  1,
@@ -1373,7 +1373,7 @@ func expandAutoScalingThresholds(tfMap map[string]interface{}) *opsworks.AutoSca
 		apiObject.IgnoreMetricsTime = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["instance_count"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrInstanceCount].(int); ok && v != 0 {
 		apiObject.InstanceCount = aws.Int64(int64(v))
 	}
 
@@ -1434,7 +1434,7 @@ func flattenAutoScalingThresholds(apiObject *opsworks.AutoScalingThresholds) map
 	}
 
 	if v := apiObject.InstanceCount; v != nil {
-		tfMap["instance_count"] = aws.Int64Value(v)
+		tfMap[names.AttrInstanceCount] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.LoadThreshold; v != nil {

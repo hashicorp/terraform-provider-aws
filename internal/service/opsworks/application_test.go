@@ -58,7 +58,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Environment variable import is not supported currently.
-				ImportStateVerifyIgnore: []string{"environment"},
+				ImportStateVerifyIgnore: []string{names.AttrEnvironment},
 			},
 			{
 				Config: testAccApplicationConfig_update(rName),
