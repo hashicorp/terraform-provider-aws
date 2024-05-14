@@ -263,7 +263,7 @@ func ResourceDataSource() *schema.Resource {
 				},
 				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
@@ -324,7 +324,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
@@ -386,7 +386,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
 	}
-	d.Set("service_role_arn", dataSource.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, dataSource.ServiceRoleArn)
 	d.Set(names.AttrType, dataSource.Type)
 
 	return diags
@@ -437,7 +437,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	if v, ok := d.GetOk("service_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrServiceRoleARN); ok {
 		input.ServiceRoleArn = aws.String(v.(string))
 	}
 
