@@ -182,7 +182,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_query_timeout",
@@ -230,7 +230,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
