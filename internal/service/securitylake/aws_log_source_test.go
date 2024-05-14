@@ -39,13 +39,13 @@ func testAccAWSLogSource_basic(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "source.0.accounts.#"),
 					acctest.CheckResourceAttrAccountID(resourceName, "source.0.accounts.0"),
 					func(s *terraform.State) error {
 						return resource.TestCheckTypeSetElemAttr(resourceName, "source.0.accounts.*", acctest.AccountID())(s)
 					},
-					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
@@ -87,9 +87,9 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_sourceVersion("1.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "1.0"),
@@ -104,9 +104,9 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_sourceVersion("2.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
@@ -142,8 +142,8 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 				Config: testAccAWSLogSourceConfig_multiRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.AlternateRegion()),
@@ -207,11 +207,11 @@ func testAccAWSLogSource_multiple(t *testing.T) {
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
 					testAccCheckAWSLogSourceExists(ctx, resourceName2, &logSource2),
 
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "2.0"),
 
-					resource.TestCheckResourceAttr(resourceName2, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName2, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName2, "source.0.source_name", "S3_DATA"),
 					resource.TestCheckResourceAttr(resourceName2, "source.0.source_version", "2.0"),
 				),
