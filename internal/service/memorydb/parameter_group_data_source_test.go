@@ -41,7 +41,7 @@ func TestAccMemoryDBParameterGroupDataSource_basic(t *testing.T) {
 						names.AttrName:  "active-defrag-cycle-min",
 						names.AttrValue: "10",
 					}),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),
