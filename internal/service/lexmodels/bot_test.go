@@ -251,7 +251,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.max_attempts", "3"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.max_attempts", acctest.CtThree),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.response_card", "I didn't understand you, what would you like to do?"),
 				),
