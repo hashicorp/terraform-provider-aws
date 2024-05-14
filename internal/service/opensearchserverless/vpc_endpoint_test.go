@@ -90,7 +90,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_securityGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -137,7 +137,7 @@ func TestAccOpenSearchServerlessVPCEndpoint_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &vpcendpoint2),
 					testAccCheckVPCEndpointNotRecreated(&vpcendpoint1, &vpcendpoint2),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
 				),
 			},
