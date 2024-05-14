@@ -36,7 +36,7 @@ func resourceMaintenanceWindowTarget() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
+					return nil, fmt.Errorf("unexpected format of ID (%s), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
 				}
 				d.Set("window_id", idParts[0])
 				d.SetId(idParts[1])
