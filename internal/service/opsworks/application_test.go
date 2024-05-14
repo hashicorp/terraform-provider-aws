@@ -46,8 +46,8 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "app_source.0.type", "other"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
-						names.AttrKey:   "key1",
-						names.AttrValue: "value1",
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 						"secret":        "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "document_root", "foo"),
@@ -79,13 +79,13 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app_source.0.url", "https://github.com/aws/example.git"),
 					resource.TestCheckResourceAttr(resourceName, "app_source.0.username", ""),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
-						names.AttrKey:   "key2",
-						names.AttrValue: "value2",
+						names.AttrKey:   acctest.CtKey2,
+						names.AttrValue: acctest.CtValue2,
 						"secure":        "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
-						names.AttrKey:   "key1",
-						names.AttrValue: "value1",
+						names.AttrKey:   acctest.CtKey1,
+						names.AttrValue: acctest.CtValue1,
 						"secret":        "",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "document_root", "root"),
@@ -151,8 +151,8 @@ func testAccCheckCreateAppAttributes(
 
 		expectedEnv := []*opsworks.EnvironmentVariable{
 			{
-				Key:    aws.String("key1"),
-				Value:  aws.String("value1"),
+				Key:    aws.String(acctest.CtKey1),
+				Value:  aws.String(acctest.CtValue1),
 				Secure: aws.Bool(false),
 			},
 		}
@@ -211,13 +211,13 @@ func testAccCheckUpdateAppAttributes(
 
 		expectedEnv := []*opsworks.EnvironmentVariable{
 			{
-				Key:    aws.String("key2"),
+				Key:    aws.String(acctest.CtKey2),
 				Value:  aws.String("*****FILTERED*****"),
 				Secure: aws.Bool(true),
 			},
 			{
-				Key:    aws.String("key1"),
-				Value:  aws.String("value1"),
+				Key:    aws.String(acctest.CtKey1),
+				Value:  aws.String(acctest.CtValue1),
 				Secure: aws.Bool(false),
 			},
 		}
