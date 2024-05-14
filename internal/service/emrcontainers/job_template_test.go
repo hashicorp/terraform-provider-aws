@@ -44,7 +44,7 @@ func TestAccEMRContainersJobTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.job_driver.0.spark_sql_job_driver.0.entry_point", "default"),
 					resource.TestCheckResourceAttr(resourceName, "job_template_data.0.release_label", "emr-6.10.0-latest"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 				Config: testAccJobTemplateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
