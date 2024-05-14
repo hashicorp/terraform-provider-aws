@@ -45,7 +45,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.next_signing_key_length", "RSA_1024_BIT"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.signing_attributes_origin", "AWS_SES"),
 					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.status", "NOT_STARTED"),
-					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dkim_signing_attributes.0.tokens.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "EMAIL_ADDRESS"),
 					resource.TestCheckResourceAttr(resourceName, "verified_for_sending_status", "false"),
 				),
@@ -249,7 +249,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 				Config: testAccEmailIdentityConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -262,7 +262,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 				Config: testAccEmailIdentityConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -271,7 +271,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 				Config: testAccEmailIdentityConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
