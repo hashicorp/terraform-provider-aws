@@ -288,7 +288,7 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Default:  false,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -446,7 +446,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		inputC.ReplicationSourceIdentifier = aws.String(v)
 	}
 
-	if v, ok := d.GetOk("storage_type"); ok {
+	if v, ok := d.GetOk(names.AttrStorageType); ok {
 		v := v.(string)
 
 		inputC.StorageType = aws.String(v)
@@ -570,7 +570,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
 	}
 	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("storage_type", dbc.StorageType)
+	d.Set(names.AttrStorageType, dbc.StorageType)
 	var securityGroupIDs []string
 	for _, v := range dbc.VpcSecurityGroups {
 		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
@@ -656,8 +656,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
 		}
 
-		if d.HasChange("storage_type") {
-			input.StorageType = aws.String(d.Get("storage_type").(string))
+		if d.HasChange(names.AttrStorageType) {
+			input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 		}
 
 		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
