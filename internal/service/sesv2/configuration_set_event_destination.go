@@ -157,7 +157,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"topic_arn": {
+									names.AttrTopicARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -405,7 +405,7 @@ func flattenSNSDestination(apiObject *types.SnsDestination) map[string]interface
 	m := map[string]interface{}{}
 
 	if v := apiObject.TopicArn; v != nil {
-		m["topic_arn"] = aws.ToString(v)
+		m[names.AttrTopicARN] = aws.ToString(v)
 	}
 
 	return m
@@ -528,7 +528,7 @@ func expandSNSDestination(tfMap map[string]interface{}) *types.SnsDestination {
 
 	a := &types.SnsDestination{}
 
-	if v, ok := tfMap["topic_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTopicARN].(string); ok && v != "" {
 		a.TopicArn = aws.String(v)
 	}
 
