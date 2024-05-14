@@ -43,12 +43,12 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
-					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				Config: testAccScraperConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -133,7 +133,7 @@ func TestAccAMPScraper_tags(t *testing.T) {
 				Config: testAccScraperConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -195,7 +195,7 @@ func TestAccAMPScraper_securityGroups(t *testing.T) {
 				Config: testAccScraperConfig_securityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
-					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.eks.0.security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{

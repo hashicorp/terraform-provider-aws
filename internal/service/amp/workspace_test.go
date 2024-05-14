@@ -122,7 +122,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -224,7 +224,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -237,7 +237,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
