@@ -51,7 +51,7 @@ func TestAccSQSQueueDataSource_tags(t *testing.T) {
 				Config: testAccQueueDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccQueueCheckDataSource(datasourceName, resourceName),
-					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(datasourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Foo", "Bar"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.Empty", ""),
