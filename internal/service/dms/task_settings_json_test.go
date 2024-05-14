@@ -1,12 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package dms
+package dms_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -162,7 +163,7 @@ func TestTaskSettingsEqual(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					t.Parallel()
 
-					if taskSettingsEqual(test.a, test.b) != test.expected {
+					if tfdms.TaskSettingsEqual(test.a, test.b) != test.expected {
 						t.Fatalf("expected %v, got %v", test.expected, !test.expected)
 					}
 				})
