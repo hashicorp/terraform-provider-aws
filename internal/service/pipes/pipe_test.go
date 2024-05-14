@@ -525,7 +525,7 @@ func TestAccPipesPipe_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -534,12 +534,12 @@ func TestAccPipesPipe_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccPipeConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccPipeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -547,7 +547,7 @@ func TestAccPipesPipe_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipeExists(ctx, resourceName, &pipe),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1291,7 +1291,7 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.array_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.array_properties.0.size", "512"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.0", "rm"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.1", "-fr"),
 					resource.TestCheckResourceAttr(resourceName, "target_parameters.0.batch_job_parameters.0.container_overrides.0.command.2", "/"),
