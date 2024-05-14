@@ -122,7 +122,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2a"),
@@ -148,7 +148,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key3", "Value3"),
