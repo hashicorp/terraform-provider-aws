@@ -58,12 +58,12 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"action_plan_title": schema.StringAttribute{
 				Optional: true,
 			},
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -71,7 +71,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 			"testing_information": schema.StringAttribute{
 				Optional: true,
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -98,7 +98,7 @@ func (r *resourceControl) Schema(ctx context.Context, req resource.SchemaRequest
 						"source_set_up_option": schema.StringAttribute{
 							Required: true,
 						},
-						"source_type": schema.StringAttribute{
+						names.AttrSourceType: schema.StringAttribute{
 							Required: true,
 						},
 						"troubleshooting_text": schema.StringAttribute{
@@ -310,7 +310,7 @@ func (r *resourceControl) Delete(ctx context.Context, req resource.DeleteRequest
 }
 
 func (r *resourceControl) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceControl) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -373,7 +373,7 @@ var (
 		"source_keyword":       types.ListType{ElemType: types.ObjectType{AttrTypes: sourceKeywordAttrTypes}},
 		"source_name":          types.StringType,
 		"source_set_up_option": types.StringType,
-		"source_type":          types.StringType,
+		names.AttrSourceType:   types.StringType,
 		"troubleshooting_text": types.StringType,
 	}
 
@@ -527,7 +527,7 @@ func flattenControlMappingSources(ctx context.Context, apiObject []awstypes.Cont
 			"source_keyword":       sk,
 			"source_name":          types.StringValue(aws.ToString(source.SourceName)),
 			"source_set_up_option": types.StringValue(string(source.SourceSetUpOption)),
-			"source_type":          types.StringValue(string(source.SourceType)),
+			names.AttrSourceType:   types.StringValue(string(source.SourceType)),
 			"troubleshooting_text": flex.StringToFramework(ctx, source.TroubleshootingText),
 		}
 		objVal, d := types.ObjectValue(controlMappingSourceAttrTypes, obj)

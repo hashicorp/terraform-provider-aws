@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelastictranscoder "github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +39,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
@@ -59,7 +60,7 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccElasticTranscoderPipeline_kmsKey(t *testing.T) {
 				Config: testAccPipelineConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "aws_kms_key_arn", keyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -88,7 +89,7 @@ func TestAccElasticTranscoderPipeline_notifications(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccElasticTranscoderPipeline_withContent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccElasticTranscoderPipeline_withPermissions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -219,7 +220,7 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticTranscoderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{

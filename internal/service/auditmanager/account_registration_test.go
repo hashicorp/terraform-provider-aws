@@ -41,7 +41,7 @@ func testAccAccountRegistration_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,21 +111,21 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKey),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKey),
 				),
 			},
 		},

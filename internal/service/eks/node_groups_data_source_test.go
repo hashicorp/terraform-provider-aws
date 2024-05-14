@@ -20,7 +20,7 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -31,7 +31,7 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccNodeGroupsDataSourceConfig_names(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "2"),
 				),
 			},

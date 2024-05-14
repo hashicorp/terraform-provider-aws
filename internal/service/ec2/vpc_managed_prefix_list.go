@@ -38,7 +38,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("version", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf(names.AttrVersion, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("entry")
 			}),
 			verify.SetTagsDiff,
@@ -51,7 +51,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(managedPrefixListAddressFamily_Values(), false),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -66,7 +66,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.IsCIDR,
 						},
-						"description": {
+						names.AttrDescription: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 255),
@@ -79,18 +79,18 @@ func ResourceManagedPrefixList() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -103,7 +103,7 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreateManagedPrefixListInput{
 		AddressFamily:     aws.String(d.Get("address_family").(string)),
 		ClientToken:       aws.String(id.UniqueId()),
@@ -155,14 +155,14 @@ func resourceManagedPrefixListRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	d.Set("address_family", pl.AddressFamily)
-	d.Set("arn", pl.PrefixListArn)
+	d.Set(names.AttrARN, pl.PrefixListArn)
 	if err := d.Set("entry", flattenPrefixListEntries(prefixListEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting entry: %s", err)
 	}
 	d.Set("max_entries", pl.MaxEntries)
-	d.Set("name", pl.PrefixListName)
-	d.Set("owner_id", pl.OwnerId)
-	d.Set("version", pl.Version)
+	d.Set(names.AttrName, pl.PrefixListName)
+	d.Set(names.AttrOwnerID, pl.OwnerId)
+	d.Set(names.AttrVersion, pl.Version)
 
 	setTagsOut(ctx, pl.Tags)
 
@@ -194,13 +194,13 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	if d.HasChangesExcept("tags", "tags_all", "max_entries") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "max_entries") {
 		input := &ec2.ModifyManagedPrefixListInput{
 			PrefixListId: aws.String(d.Id()),
 		}
 
-		input.PrefixListName = aws.String(d.Get("name").(string))
-		currentVersion := int64(d.Get("version").(int))
+		input.PrefixListName = aws.String(d.Get(names.AttrName).(string))
+		currentVersion := int64(d.Get(names.AttrVersion).(int))
 		wait := false
 
 		oldAttr, newAttr := d.GetChange("entry")
@@ -355,7 +355,7 @@ func expandAddPrefixListEntry(tfMap map[string]interface{}) *ec2.AddPrefixListEn
 		apiObject.Cidr = aws.String(v)
 	}
 
-	if v, ok := tfMap["description"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
 	}
 
@@ -440,7 +440,7 @@ func flattenPrefixListEntry(apiObject *ec2.PrefixListEntry) map[string]interface
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap[names.AttrDescription] = aws.StringValue(v)
 	}
 
 	return tfMap

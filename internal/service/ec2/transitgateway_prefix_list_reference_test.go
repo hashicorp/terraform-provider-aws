@@ -8,30 +8,32 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
+func testAccTransitGatewayPrefixListReference_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	managedPrefixListResourceName := "aws_ec2_managed_prefix_list.test"
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,9 +42,9 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", managedPrefixListResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", managedPrefixListResourceName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(resourceName, "prefix_list_owner_id"),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_attachment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
 			},
@@ -55,18 +57,19 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
+func testAccTransitGatewayPrefixListReference_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,19 +85,20 @@ func testAccTransitGatewayPrefixListReference_disappears(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T) {
+func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,20 +114,21 @@ func testAccTransitGatewayPrefixListReference_disappears_TransitGateway(t *testi
 	})
 }
 
-func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *testing.T) {
+func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_transit_gateway_prefix_list_reference.test"
 	transitGatewayVpcAttachmentResourceName1 := "aws_ec2_transit_gateway_vpc_attachment.test.0"
 	transitGatewayVpcAttachmentResourceName2 := "aws_ec2_transit_gateway_vpc_attachment.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			testAccPreCheckManagedPrefixList(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,7 +137,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName1, names.AttrID),
 				),
 			},
 			{
@@ -145,7 +150,7 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTransitGatewayAttachmentID, transitGatewayVpcAttachmentResourceName2, names.AttrID),
 				),
 			},
 		},

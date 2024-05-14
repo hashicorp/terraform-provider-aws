@@ -7,36 +7,41 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudfront_realtime_log_config")
-func ResourceRealtimeLogConfig() *schema.Resource {
+// @SDKResource("aws_cloudfront_realtime_log_config", name="Real-time Log Config")
+func resourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
 		ReadWithoutTimeout:   resourceRealtimeLogConfigRead,
 		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
 		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
@@ -50,12 +55,12 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"role_arn": {
+									names.AttrRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"stream_arn": {
+									names.AttrStreamARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -64,9 +69,9 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 							},
 						},
 						"stream_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(StreamType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[streamType](),
 						},
 					},
 				},
@@ -76,7 +81,7 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -92,42 +97,41 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 
 func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
 		Name: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
-		input.Fields = flex.ExpandStringSet(v.(*schema.Set))
+		input.Fields = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("sampling_rate"); ok {
 		input.SamplingRate = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFront Real-time Log Config: %s", input)
-	output, err := conn.CreateRealtimeLogConfigWithContext(ctx, input)
+	output, err := conn.CreateRealtimeLogConfig(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Real-time Log Config (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.RealtimeLogConfig.ARN))
+	d.SetId(aws.ToString(output.RealtimeLogConfig.ARN))
 
 	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
 func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	logConfig, err := FindRealtimeLogConfigByARN(ctx, conn, d.Id())
+	logConfig, err := findRealtimeLogConfigByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
@@ -139,12 +143,12 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", logConfig.ARN)
-	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
+	d.Set(names.AttrARN, logConfig.ARN)
+	if err := d.Set(names.AttrEndpoint, flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
-	d.Set("fields", aws.StringValueSlice(logConfig.Fields))
-	d.Set("name", logConfig.Name)
+	d.Set("fields", logConfig.Fields)
+	d.Set(names.AttrName, logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
 	return diags
@@ -152,7 +156,7 @@ func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateRealtimeLogConfig.html:
@@ -162,20 +166,19 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	}
 
-	if v, ok := d.GetOk("endpoint"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok && len(v.([]interface{})) > 0 {
 		input.EndPoints = expandEndPoints(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("fields"); ok && v.(*schema.Set).Len() > 0 {
-		input.Fields = flex.ExpandStringSet(v.(*schema.Set))
+		input.Fields = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("sampling_rate"); ok {
 		input.SamplingRate = aws.Int64(int64(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Updating CloudFront Real-time Log Config: %s", input)
-	_, err := conn.UpdateRealtimeLogConfigWithContext(ctx, input)
+	_, err := conn.UpdateRealtimeLogConfig(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudFront Real-time Log Config (%s): %s", d.Id(), err)
@@ -186,14 +189,14 @@ func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config (%s)", d.Id())
-	_, err := conn.DeleteRealtimeLogConfigWithContext(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
+	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config: %s", d.Id())
+	_, err := conn.DeleteRealtimeLogConfig(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
 		ARN: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
+	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return diags
 	}
 
@@ -204,12 +207,41 @@ func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandEndPoint(tfMap map[string]interface{}) *cloudfront.EndPoint {
+func findRealtimeLogConfigByARN(ctx context.Context, conn *cloudfront.Client, arn string) (*awstypes.RealtimeLogConfig, error) {
+	input := &cloudfront.GetRealtimeLogConfigInput{
+		ARN: aws.String(arn),
+	}
+
+	return findRealtimeLogConfig(ctx, conn, input)
+}
+
+func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetRealtimeLogConfigInput) (*awstypes.RealtimeLogConfig, error) {
+	output, err := conn.GetRealtimeLogConfig(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RealtimeLogConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RealtimeLogConfig, nil
+}
+
+func expandEndPoint(tfMap map[string]interface{}) *awstypes.EndPoint {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.EndPoint{}
+	apiObject := &awstypes.EndPoint{}
 
 	if v, ok := tfMap["kinesis_stream_config"].([]interface{}); ok && len(v) > 0 {
 		apiObject.KinesisStreamConfig = expandKinesisStreamConfig(v[0].(map[string]interface{}))
@@ -222,12 +254,12 @@ func expandEndPoint(tfMap map[string]interface{}) *cloudfront.EndPoint {
 	return apiObject
 }
 
-func expandEndPoints(tfList []interface{}) []*cloudfront.EndPoint {
+func expandEndPoints(tfList []interface{}) []awstypes.EndPoint {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*cloudfront.EndPoint
+	var apiObjects []awstypes.EndPoint
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -242,31 +274,31 @@ func expandEndPoints(tfList []interface{}) []*cloudfront.EndPoint {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandKinesisStreamConfig(tfMap map[string]interface{}) *cloudfront.KinesisStreamConfig {
+func expandKinesisStreamConfig(tfMap map[string]interface{}) *awstypes.KinesisStreamConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudfront.KinesisStreamConfig{}
+	apiObject := &awstypes.KinesisStreamConfig{}
 
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRoleARN].(string); ok && v != "" {
 		apiObject.RoleARN = aws.String(v)
 	}
 
-	if v, ok := tfMap["stream_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrStreamARN].(string); ok && v != "" {
 		apiObject.StreamARN = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func flattenEndPoint(apiObject *cloudfront.EndPoint) map[string]interface{} {
+func flattenEndPoint(apiObject *awstypes.EndPoint) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -278,13 +310,13 @@ func flattenEndPoint(apiObject *cloudfront.EndPoint) map[string]interface{} {
 	}
 
 	if v := apiObject.StreamType; v != nil {
-		tfMap["stream_type"] = aws.StringValue(v)
+		tfMap["stream_type"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenEndPoints(apiObjects []*cloudfront.EndPoint) []interface{} {
+func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -292,11 +324,7 @@ func flattenEndPoints(apiObjects []*cloudfront.EndPoint) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if v := flattenEndPoint(apiObject); len(v) > 0 {
+		if v := flattenEndPoint(&apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}
@@ -304,7 +332,7 @@ func flattenEndPoints(apiObjects []*cloudfront.EndPoint) []interface{} {
 	return tfList
 }
 
-func flattenKinesisStreamConfig(apiObject *cloudfront.KinesisStreamConfig) map[string]interface{} {
+func flattenKinesisStreamConfig(apiObject *awstypes.KinesisStreamConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -312,11 +340,11 @@ func flattenKinesisStreamConfig(apiObject *cloudfront.KinesisStreamConfig) map[s
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RoleARN; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrRoleARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.StreamARN; v != nil {
-		tfMap["stream_arn"] = aws.StringValue(v)
+		tfMap[names.AttrStreamARN] = aws.ToString(v)
 	}
 
 	return tfMap

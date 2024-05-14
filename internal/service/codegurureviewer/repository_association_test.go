@@ -35,7 +35,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,14 +43,14 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,14 +78,14 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_kms_key(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "CUSTOMER_MANAGED_CMK"),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,15 +113,15 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_s3_repository(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeguru-reviewer", regexache.MustCompile(`association:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.bitbucket.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.codecommit.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.github_enterprise_server.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.bucket_name", "codeguru-reviewer-"+rName),
 					resource.TestCheckResourceAttr(resourceName, "repository.0.s3_bucket.0.name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_details.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_details.0.encryption_option", "AWS_OWNED_CMK"),
 				),
 			},
@@ -141,7 +141,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +149,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -166,7 +166,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 				Config: testAccRepositoryAssociationConfig_tags_1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryAssociationExists(ctx, resourceName, &repositoryassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -185,7 +185,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

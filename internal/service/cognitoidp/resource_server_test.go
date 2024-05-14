@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,8 +40,8 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 				Config: testAccResourceServerConfig_basic(identifier, name1, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, identifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
 				),
@@ -49,8 +50,8 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 				Config: testAccResourceServerConfig_basic(identifier, name2, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "identifier", identifier),
-					resource.TestCheckResourceAttr(resourceName, "name", name2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, identifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
 				),
@@ -74,7 +75,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceServerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,8 +91,8 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 				Config: testAccResourceServerConfig_scopeUpdate(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtOne),
 				),
 			},
 			{

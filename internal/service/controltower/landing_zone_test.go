@@ -29,7 +29,7 @@ func testAccLandingZone_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,10 +37,10 @@ func testAccLandingZone_basic(t *testing.T) {
 				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "drift_status.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "drift_status.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func testAccLandingZone_tags(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func testAccLandingZone_tags(t *testing.T) {
 				Config: testAccLandingZoneConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -120,7 +120,7 @@ func testAccLandingZone_tags(t *testing.T) {
 				Config: testAccLandingZoneConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -1,0 +1,15 @@
+```release-note:enhancement
+data-source/aws_rds_orderable_db_instance: Improve search functionality and options by adding `engine_latest_version` and `supports_clusters` arguments and converting `read_replica_capable`, `supported_engine_modes`, `supported_network_types`, and `supports_multi_az` to arguments for use as search criteria
+```
+
+```release-note:enhancement
+data-source/aws_rds_engine_version: Improve search functionality and options by adding `latest`, `preferred_major_targets`, and `preferred_upgrade_targets`. Add `version_actual` attribute
+```
+
+```release-note:new-data-source
+aws_db_parameter_group
+```
+
+```release-note:enhancement
+data-source/aws_neptune_cluster_instance: Add `skip_final_snapshot` argument
+```

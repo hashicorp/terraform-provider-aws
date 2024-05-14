@@ -8,8 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -57,7 +59,7 @@ func ResourceListenerRule() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,19 +69,19 @@ func ResourceListenerRule() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"priority": {
+			names.AttrPriority: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     false,
 				ValidateFunc: validListenerRulePriority,
 			},
-			"action": {
+			names.AttrAction: {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
@@ -92,15 +94,18 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
+							ValidateFunc:     verify.ValidARN,
 						},
 
 						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc:      diffSuppressMissingForward(names.AttrAction),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -110,12 +115,12 @@ func ResourceListenerRule() *schema.Resource {
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"arn": {
+												names.AttrARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"weight": {
+												names.AttrWeight: {
 													Type:         schema.TypeInt,
 													ValidateFunc: validation.IntBetween(0, 999),
 													Default:      1,
@@ -131,12 +136,12 @@ func ResourceListenerRule() *schema.Resource {
 										MaxItems:         1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"enabled": {
+												names.AttrEnabled: {
 													Type:     schema.TypeBool,
 													Optional: true,
 													Default:  false,
 												},
-												"duration": {
+												names.AttrDuration: {
 													Type:         schema.TypeInt,
 													Required:     true,
 													ValidateFunc: validation.IntBetween(1, 604800),
@@ -149,9 +154,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"redirect": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
@@ -161,20 +167,20 @@ func ResourceListenerRule() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"path": {
+									names.AttrPath: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Default:      "/#{path}",
 										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 
-									"port": {
+									names.AttrPort: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{port}",
 									},
 
-									"protocol": {
+									names.AttrProtocol: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "#{protocol}",
@@ -202,12 +208,13 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"fixed_response": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"content_type": {
+									names.AttrContentType: {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.StringInSlice([]string{
@@ -236,9 +243,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_cognito": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -252,7 +260,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -285,9 +293,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_oidc": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -299,16 +308,16 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_id": {
+									names.AttrClientID: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -318,7 +327,7 @@ func ResourceListenerRule() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "openid",
@@ -347,7 +356,7 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"condition": {
+			names.AttrCondition: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -358,7 +367,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -382,7 +391,7 @@ func ResourceListenerRule() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
 									},
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -400,7 +409,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -418,7 +427,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -436,11 +445,11 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"key": {
+									names.AttrKey: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -453,7 +462,7 @@ func ResourceListenerRule() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"values": {
+									names.AttrValues: {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
@@ -474,8 +483,23 @@ func ResourceListenerRule() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			validateListenerActionsCustomDiff("action"),
+			validateListenerActionsCustomDiff(names.AttrAction),
 		),
+	}
+}
+
+func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		take := 2
+		i := strings.IndexFunc(k, func(r rune) bool {
+			if r == '.' {
+				take -= 1
+				return take == 0
+			}
+			return false
+		})
+		at := k[:i+1] + names.AttrType
+		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
 
@@ -489,14 +513,14 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 	if diags.HasError() {
 		return diags
 	}
 
 	var err error
 
-	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+	input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -572,60 +596,28 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	rule := resp.Rules[0]
 
-	d.Set("arn", rule.RuleArn)
+	d.Set(names.AttrARN, rule.RuleArn)
 
 	// The listener arn isn't in the response but can be derived from the rule arn
 	d.Set("listener_arn", ListenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
 	if aws.ToString(rule.Priority) == "default" {
-		d.Set("priority", listenerRulePriorityDefault)
+		d.Set(names.AttrPriority, listenerRulePriorityDefault)
 	} else {
 		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
 		} else {
-			d.Set("priority", priority)
+			d.Set(names.AttrPriority, priority)
 		}
 	}
 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	actions := make([]interface{}, len(rule.Actions))
-	for i, action := range rule.Actions {
-		actionMap := map[string]interface{}{
-			"type":  string(action.Type),
-			"order": aws.ToInt32(action.Order),
-		}
-
-		switch action.Type {
-		case awstypes.ActionTypeEnumForward:
-			if aws.ToString(action.TargetGroupArn) != "" {
-				actionMap["target_group_arn"] = aws.ToString(action.TargetGroupArn)
-			} else {
-				actionMap["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
-			}
-
-		case awstypes.ActionTypeEnumRedirect:
-			actionMap["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
-
-		case awstypes.ActionTypeEnumFixedResponse:
-			actionMap["fixed_response"] = flattenLbListenerActionFixedResponseConfig(action.FixedResponseConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateCognito:
-			actionMap["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(action.AuthenticateCognitoConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateOidc:
-			// The LB API currently provides no way to read the ClientSecret
-			// Instead we passthrough the configuration value into the state
-			clientSecret := d.Get("action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret").(string)
-
-			actionMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
-		}
-
-		actions[i] = actionMap
+	if err := d.Set(names.AttrAction, flattenLbListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
-	d.Set("action", actions)
 
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
@@ -635,7 +627,7 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		case "host-header":
 			conditionMap["host_header"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
 				},
 			}
 
@@ -643,21 +635,21 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
 					"http_header_name": aws.ToString(condition.HttpHeaderConfig.HttpHeaderName),
-					"values":           flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
+					names.AttrValues:   flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
 				},
 			}
 
 		case "path-pattern":
 			conditionMap["path_pattern"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
 				},
 			}
 
@@ -665,8 +657,8 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 			values := make([]interface{}, len(condition.QueryStringConfig.Values))
 			for k, value := range condition.QueryStringConfig.Values {
 				values[k] = map[string]interface{}{
-					"key":   aws.ToString(value.Key),
-					"value": aws.ToString(value.Value),
+					names.AttrKey:   aws.ToString(value.Key),
+					names.AttrValue: aws.ToString(value.Value),
 				}
 			}
 			conditionMap["query_string"] = values
@@ -674,14 +666,14 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		case "source-ip":
 			conditionMap["source_ip"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
+					names.AttrValues: flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
 				},
 			}
 		}
 
 		conditions[i] = conditionMap
 	}
-	if err := d.Set("condition", conditions); err != nil {
+	if err := d.Set(names.AttrCondition, conditions); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
@@ -692,13 +684,13 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
-		if d.HasChange("priority") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		if d.HasChange(names.AttrPriority) {
 			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
 				RulePriorities: []awstypes.RulePriorityPair{
 					{
 						RuleArn:  aws.String(d.Id()),
-						Priority: aws.Int32(int32(d.Get("priority").(int))),
+						Priority: aws.Int32(int32(d.Get(names.AttrPriority).(int))),
 					},
 				},
 			}
@@ -714,17 +706,17 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleArn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("action") {
-			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+		if d.HasChange(names.AttrAction) {
+			input.Actions = expandLbListenerActions(cty.GetAttrPath(names.AttrAction), d.Get(names.AttrAction).([]any), &diags)
 			if diags.HasError() {
 				return diags
 			}
 			requestUpdate = true
 		}
 
-		if d.HasChange("condition") {
+		if d.HasChange(names.AttrCondition) {
 			var err error
-			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			input.Conditions, err = lbListenerRuleConditions(d.Get(names.AttrCondition).(*schema.Set).List())
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
@@ -761,7 +753,7 @@ func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, met
 
 func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
 	var resp *elasticloadbalancingv2.CreateRuleOutput
-	if v, ok := d.GetOk("priority"); ok {
+	if v, ok := d.GetOk(names.AttrPriority); ok {
 		var err error
 		params.Priority = aws.Int32(int32(v.(int)))
 		resp, err = conn.CreateRule(ctx, params)
@@ -835,7 +827,7 @@ func ListenerARNFromRuleARN(ruleArn string) string {
 }
 
 func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (priority int32, err error) {
-	var priorities []int
+	var priorities []int32
 	var nextMarker *string
 
 	for {
@@ -847,9 +839,9 @@ func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancing
 			return 0, aerr
 		}
 		for _, rule := range out.Rules {
-			if aws.ToString(rule.Priority) != "default" {
-				p, _ := strconv.Atoi(aws.ToString(rule.Priority))
-				priorities = append(priorities, p)
+			if priority := aws.ToString(rule.Priority); priority != "default" {
+				p, _ := strconv.ParseInt(priority, 0, 32)
+				priorities = append(priorities, int32(p))
 			}
 		}
 		if out.NextMarker == nil {
@@ -862,9 +854,9 @@ func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancing
 		return 0, nil
 	}
 
-	sort.IntSlice(priorities).Sort()
+	slices.Sort(priorities)
 
-	return int32(priorities[len(priorities)-1]), nil
+	return priorities[len(priorities)-1], nil
 }
 
 // lbListenerRuleConditions converts data source generated by Terraform into
@@ -880,7 +872,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if hostHeader, ok := conditionMap["host_header"].([]interface{}); ok && len(hostHeader) > 0 {
 			field = "host-header"
 			attrs += 1
-			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
+			values := hostHeader[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -891,7 +883,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 			field = "http-header"
 			attrs += 1
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
-			values := httpHeaderMap["values"].(*schema.Set)
+			values := httpHeaderMap[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
@@ -902,7 +894,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if httpRequestMethod, ok := conditionMap["http_request_method"].([]interface{}); ok && len(httpRequestMethod) > 0 {
 			field = "http-request-method"
 			attrs += 1
-			values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
+			values := httpRequestMethod[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -912,7 +904,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if pathPattern, ok := conditionMap["path_pattern"].([]interface{}); ok && len(pathPattern) > 0 {
 			field = "path-pattern"
 			attrs += 1
-			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
+			values := pathPattern[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
 				Values: flex.ExpandStringValueSet(values),
@@ -930,10 +922,10 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 			for j, p := range values {
 				valuePair := p.(map[string]interface{})
 				elbValuePair := awstypes.QueryStringKeyValuePair{
-					Value: aws.String(valuePair["value"].(string)),
+					Value: aws.String(valuePair[names.AttrValue].(string)),
 				}
-				if valuePair["key"].(string) != "" {
-					elbValuePair.Key = aws.String(valuePair["key"].(string))
+				if valuePair[names.AttrKey].(string) != "" {
+					elbValuePair.Key = aws.String(valuePair[names.AttrKey].(string))
 				}
 				elbConditions[i].QueryStringConfig.Values[j] = elbValuePair
 			}
@@ -942,7 +934,7 @@ func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleConditio
 		if sourceIp, ok := conditionMap["source_ip"].([]interface{}); ok && len(sourceIp) > 0 {
 			field = "source-ip"
 			attrs += 1
-			values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
+			values := sourceIp[0].(map[string]interface{})[names.AttrValues].(*schema.Set)
 
 			elbConditions[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
 				Values: flex.ExpandStringValueSet(values),

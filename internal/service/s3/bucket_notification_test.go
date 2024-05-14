@@ -28,7 +28,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ".png"),
@@ -93,7 +93,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,8 +102,8 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ""),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
@@ -127,7 +127,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,7 +137,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_suffix", ".mp4"),
@@ -161,7 +161,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_suffix", ""),
@@ -195,7 +195,7 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -232,7 +232,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +258,7 @@ func TestAccS3BucketNotification_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{

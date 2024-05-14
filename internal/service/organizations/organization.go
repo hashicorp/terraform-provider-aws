@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_organizations_organization")
@@ -49,30 +50,30 @@ func ResourceOrganization() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,28 +108,32 @@ func ResourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"email": {
+						names.AttrEmail: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -140,15 +145,15 @@ func ResourceOrganization() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -157,11 +162,11 @@ func ResourceOrganization() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"status": {
+									names.AttrStatus: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -256,6 +261,12 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	managementAccountID := aws.StringValue(org.MasterAccountId)
+	managementAccountName := ""
+	for _, v := range accounts {
+		if aws.StringValue(v.Id) == managementAccountID {
+			managementAccountName = aws.StringValue(v.Name)
+		}
+	}
 	nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
 		return aws.StringValue(v.Id) != managementAccountID
 	})
@@ -269,11 +280,12 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
-	d.Set("arn", org.Arn)
+	d.Set(names.AttrARN, org.Arn)
 	d.Set("feature_set", org.FeatureSet)
 	d.Set("master_account_arn", org.MasterAccountArn)
 	d.Set("master_account_email", org.MasterAccountEmail)
 	d.Set("master_account_id", org.MasterAccountId)
+	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}
@@ -387,6 +399,10 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 	_, err := conn.DeleteOrganizationWithContext(ctx, &organizations.DeleteOrganizationInput{})
+
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Organization (%s): %s", d.Id(), err)
@@ -533,11 +549,11 @@ func flattenAccounts(accounts []*organizations.Account) []map[string]interface{}
 	var result []map[string]interface{}
 	for _, account := range accounts {
 		result = append(result, map[string]interface{}{
-			"arn":    aws.StringValue(account.Arn),
-			"email":  aws.StringValue(account.Email),
-			"id":     aws.StringValue(account.Id),
-			"name":   aws.StringValue(account.Name),
-			"status": aws.StringValue(account.Status),
+			names.AttrARN:    aws.StringValue(account.Arn),
+			names.AttrEmail:  aws.StringValue(account.Email),
+			names.AttrID:     aws.StringValue(account.Id),
+			names.AttrName:   aws.StringValue(account.Name),
+			names.AttrStatus: aws.StringValue(account.Status),
 		})
 	}
 	return result
@@ -550,9 +566,9 @@ func flattenRoots(roots []*organizations.Root) []map[string]interface{} {
 	var result []map[string]interface{}
 	for _, r := range roots {
 		result = append(result, map[string]interface{}{
-			"id":           aws.StringValue(r.Id),
-			"name":         aws.StringValue(r.Name),
-			"arn":          aws.StringValue(r.Arn),
+			names.AttrID:   aws.StringValue(r.Id),
+			names.AttrName: aws.StringValue(r.Name),
+			names.AttrARN:  aws.StringValue(r.Arn),
 			"policy_types": flattenRootPolicyTypeSummaries(r.PolicyTypes),
 		})
 	}
@@ -566,8 +582,8 @@ func flattenRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary
 	var result []map[string]interface{}
 	for _, s := range summaries {
 		result = append(result, map[string]interface{}{
-			"status": aws.StringValue(s.Status),
-			"type":   aws.StringValue(s.Type),
+			names.AttrStatus: aws.StringValue(s.Status),
+			names.AttrType:   aws.StringValue(s.Type),
 		})
 	}
 	return result

@@ -23,20 +23,21 @@ import (
 
 func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1 types.DeploymentConfigInfo
+	var config types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
+					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
@@ -59,7 +60,7 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "75"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
@@ -79,7 +80,7 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
 					testAccCheckDeploymentConfigRecreated(&config1, &config2),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "50"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
@@ -103,7 +104,7 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,9 +112,9 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 				Config: testAccDeploymentConfigConfig_hostCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
 				),
@@ -123,7 +124,7 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
 					testAccCheckDeploymentConfigRecreated(&config1, &config2),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "2"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
@@ -147,7 +148,7 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,9 +157,9 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedCanary"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "0"),
@@ -171,9 +172,9 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
 					testAccCheckDeploymentConfigRecreated(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedCanary"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.interval", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "0"),
@@ -197,7 +198,7 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -206,9 +207,9 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedLinear"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.percentage", "50"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "0"),
@@ -221,9 +222,9 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
 					testAccCheckDeploymentConfigRecreated(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.type", "TimeBasedLinear"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.interval", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.percentage", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "0"),

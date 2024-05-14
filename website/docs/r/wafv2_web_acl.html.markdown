@@ -427,9 +427,9 @@ This resource supports the following arguments:
 * `custom_response_body` - (Optional) Defines custom response bodies that can be referenced by `custom_response` actions. See [`custom_response_body`](#custom_response_body-block) below for details.
 * `default_action` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`default_action`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
-* `name` - (Required) Friendly name of the WebACL.
+* `name` - (Required, Forces new resource) Friendly name of the WebACL.
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule-block) below for details.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
+* `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `token_domains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [`visibility_config`](#visibility_config-block) below for details.
@@ -452,7 +452,7 @@ Each `custom_response_body` block supports the following arguments:
 
 The `default_action` block supports the following arguments:
 
-~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `default_action`
+~> **Note** One of `allow` or `block` is required when specifying a `default_action`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.
@@ -664,6 +664,9 @@ The `rate_based_statement` block supports the following arguments:
 
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `CUSTOM_KEYS`, `FORWARDED_IP`, or `IP`. Default: `IP`.
 * `custom_key` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [`custom_key`](#custom_key-block) below for details.
+* `evaluation_window_sec` - (Optional) The amount of time, in seconds, that AWS WAF should include in its request counts, looking back from the current time. Valid values are `60`, `120`, `300`, and `600`. Defaults to `300` (5 minutes).
+
+  **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for details.
 * `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
@@ -769,17 +772,32 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
+* `address_fields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
+* `email_field` (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
+* `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
 * `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `username_field` (Required) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
-* `password_field` (Required) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
+* `phone_number_fields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
+* `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
+
+### `address_fields` Block
+
+* `identifier` - (Required) The name of a single primary address field.
+
+### `email_field` Block
+
+* `identifier` - (Required) The name of the field in the request payload that contains your customer's email.
 
 ### `password_field` Block
 
-* `identifier` - (Optional) The name of the password field.
+* `identifier` - (Required) The name of the password field.
+
+### `phone_number_fields` Block
+
+* `identifier` - (Required) The name of a single primary phone number field.
 
 ### `username_field` Block
 
-* `identifier` - (Optional) The name of the username field.
+* `identifier` - (Required) The name of the username field.
 
 ### `response_inspection` Block
 
@@ -1052,6 +1070,7 @@ The `uri_path` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `application_integration_url` - The URL to use in SDK integrations with managed rule groups.
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.
 * `id` - The ID of the WAF WebACL.

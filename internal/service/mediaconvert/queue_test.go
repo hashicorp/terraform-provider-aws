@@ -28,7 +28,7 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,11 +36,11 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexache.MustCompile(`queues/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -60,7 +60,7 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,10 +141,10 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeAutoRenew)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", acctest.CtOne),
 				),
 			},
 			{
@@ -152,10 +152,10 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeExpire)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", acctest.CtOne),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,14 +183,14 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusPaused)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusPaused)),
 				),
 			},
 			{
 				Config: testAccQueueConfig_status(rName, string(types.QueueStatusActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -212,7 +212,7 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,14 +220,14 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 				Config: testAccQueueConfig_description(rName, description1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 				),
 			},
 			{
 				Config: testAccQueueConfig_description(rName, description2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "description", description2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description2),
 				),
 			},
 		},

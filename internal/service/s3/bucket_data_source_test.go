@@ -24,17 +24,17 @@ func TestAccS3BucketDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "region", region),
-					testAccCheckBucketDomainName(dataSourceName, "bucket_domain_name", rName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, region),
+					testAccCheckBucketDomainName(ctx, dataSourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
-					resource.TestCheckResourceAttr(dataSourceName, "hosted_zone_id", hostedZoneID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrHostedZoneID, hostedZoneID),
 					resource.TestCheckNoResourceAttr(dataSourceName, "website_endpoint"),
 				),
 			},
@@ -51,13 +51,13 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketDataSourceConfig_website(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_domain", websiteConfigurationResourceName, "website_domain"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_endpoint", websiteConfigurationResourceName, "website_endpoint"),
 				),
@@ -74,13 +74,13 @@ func TestAccS3BucketDataSource_accessPointARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketDataSourceConfig_accessPointARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", accessPointResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, accessPointResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -94,13 +94,13 @@ func TestAccS3BucketDataSource_accessPointAlias(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketDataSourceConfig_accessPointAlias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrARN),
 				),
 			},
 		},

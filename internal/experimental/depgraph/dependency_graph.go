@@ -5,11 +5,11 @@ package depgraph
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/stack"
-	"golang.org/x/exp/slices"
 )
 
 // Graph implements a simple dependency graph.

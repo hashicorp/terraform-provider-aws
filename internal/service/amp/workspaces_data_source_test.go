@@ -24,7 +24,7 @@ func TestAccAMPWorkspacesDataSource_basic(t *testing.T) { // nosemgrep:ci.caps0-
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:                acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.AMPServiceID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -54,16 +54,16 @@ func TestAccAMPWorkspacesDataSource_aliasPrefix(t *testing.T) { // nosemgrep:ci.
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:                acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:                acctest.ErrorCheck(t, names.AMPServiceID),
 		PreventPostDestroyRefresh: true,
 		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspacesDataSourceConfig_aliasPrefix(rName, rCount),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "aliases.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "workspace_ids.#", acctest.CtOne),
 				),
 			},
 		},

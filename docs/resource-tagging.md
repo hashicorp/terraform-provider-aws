@@ -144,7 +144,7 @@ imports (
 
 Add the `tags` parameter and `tags_all` attribute to the schema, using constants defined in the `names` package.
 The `tags` parameter contains the tags set directly on the resource.
-The `tags_all` attribute contains union of the tags set directly on the resource and default tags configured on the provider.
+The `tags_all` attribute contains a union of the tags set directly on the resource and default tags configured on the provider.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -201,7 +201,7 @@ Most services can use a facility we call _transparent_ (or _implicit_) _tagging_
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    // @FrameworkResource(name="Example")
+    // @FrameworkResource("aws_service_example", name="Example")
     // @Tags(identifierAttribute="arn")
     func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
         return &resourceExample{}, nil
@@ -280,11 +280,11 @@ In the resource `Read` operation, use the `setTagsOut` function to signal to the
     setTagsOut(ctx, out.Tags)
     ```
 
-If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into Terraform state.
+If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into the Terraform state.
 
 #### Resource Update Operation
 
-In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `updateTags` call.
+In the resource `Update` operation, only non-`tags` updates need to be done as the transparent tagging mechanism makes the `updateTags` call.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -304,7 +304,7 @@ In the resource `Update` operation, only non-`tags` updates need be done as the 
     }
     ```
 
-For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into Terraform state.
+For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into the Terraform state.
 
 === "Terraform Plugin SDK V2"
     ```go
@@ -335,7 +335,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -344,12 +344,12 @@ implement the logic to convert the configuration tags into the service tags, e.g
     }
     ```
 
-If the service API does not allow passing an empty list, the logic can be adjusted similar to:
+If the service API does not allow passing an empty list, the logic can be adjusted similarly to:
 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -367,7 +367,7 @@ implement the logic to convert the configuration tags into the service API call 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     /* ... creation steps ... */
@@ -380,18 +380,18 @@ implement the logic to convert the configuration tags into the service API call 
     ```
 
 Some EC2 resources (e.g., [`aws_ec2_fleet`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_fleet)) have a `TagSpecifications` field in the `InputStruct` instead of a `Tags` field.
-In these cases the `tagSpecificationsFromKeyValueTags()` helper function should be used.
+In these cases the `tagSpecificationsFromKeyValue()` helper function should be used.
 This example shows using `TagSpecifications`:
 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &ec2.CreateFleetInput{
         /* ... other configuration ... */
-        TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
+        TagSpecifications: tagSpecificationsFromKeyValue(tags, ec2.ResourceTypeFleet),
     }
     ```
 
@@ -402,8 +402,8 @@ In the resource `Read` operation, implement the logic to convert the service tag
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
 
@@ -424,8 +424,8 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
 
@@ -493,7 +493,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-    ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckClusterDestroy(ctx),
     Steps: []resource.TestStep{
@@ -578,7 +578,7 @@ Verify all acceptance testing passes for the resource (e.g., `make testacc TESTS
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the arguments reference:
 
 ```markdown
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 ```
 
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the attribute reference:

@@ -38,7 +38,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +72,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -215,7 +215,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -224,26 +224,26 @@ func ResourceEndpointConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validPrefix,
 			},
 			"production_variants": {
@@ -281,7 +281,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 											validation.StringLenBetween(1, 512),
 										),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ForceNew:     true,
@@ -308,7 +308,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -324,6 +324,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -404,7 +419,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 											validation.StringLenBetween(1, 512),
 										),
 									},
-									"kms_key_id": {
+									names.AttrKMSKeyID: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
@@ -431,7 +446,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							ValidateFunc: validation.FloatAtLeast(0),
 							Default:      1,
 						},
-						"instance_type": {
+						names.AttrInstanceType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -447,6 +462,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -503,7 +533,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 
 	createOpts := &sagemaker.CreateEndpointConfigInput{
 		EndpointConfigName: aws.String(name),
@@ -511,7 +541,7 @@ func resourceEndpointConfigurationCreate(ctx context.Context, d *schema.Resource
 		Tags:               getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		createOpts.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -553,10 +583,10 @@ func resourceEndpointConfigurationRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", endpointConfig.EndpointConfigArn)
-	d.Set("name", endpointConfig.EndpointConfigName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
-	d.Set("kms_key_arn", endpointConfig.KmsKeyId)
+	d.Set(names.AttrARN, endpointConfig.EndpointConfigArn)
+	d.Set(names.AttrName, endpointConfig.EndpointConfigName)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.StringValue(endpointConfig.EndpointConfigName)))
+	d.Set(names.AttrKMSKeyARN, endpointConfig.KmsKeyId)
 
 	if err := d.Set("production_variants", flattenProductionVariants(endpointConfig.ProductionVariants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting production_variants for SageMaker Endpoint Configuration (%s): %s", d.Id(), err)
@@ -633,7 +663,7 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.VolumeSizeInGB = aws.Int64(int64(v))
 		}
 
-		if v, ok := data["instance_type"].(string); ok && v != "" {
+		if v, ok := data[names.AttrInstanceType].(string); ok && v != "" {
 			l.InstanceType = aws.String(v)
 		}
 
@@ -649,6 +679,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
 			l.AcceleratorType = aws.String(v)
+		}
+
+		if v, ok := data["routing_config"].([]interface{}); ok && len(v) > 0 {
+			l.RoutingConfig = expandRoutingConfig(v)
 		}
 
 		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
@@ -697,7 +731,11 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 		}
 
 		if i.InstanceType != nil {
-			l["instance_type"] = aws.StringValue(i.InstanceType)
+			l[names.AttrInstanceType] = aws.StringValue(i.InstanceType)
+		}
+
+		if i.RoutingConfig != nil {
+			l["routing_config"] = flattenRoutingConfig(i.RoutingConfig)
 		}
 
 		if i.ServerlessConfig != nil {
@@ -734,7 +772,7 @@ func expandDataCaptureConfig(configured []interface{}) *sagemaker.DataCaptureCon
 		c.EnableCapture = aws.Bool(v.(bool))
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
 	}
 
@@ -761,7 +799,7 @@ func flattenDataCaptureConfig(dataCaptureConfig *sagemaker.DataCaptureConfig) []
 	}
 
 	if dataCaptureConfig.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(dataCaptureConfig.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.StringValue(dataCaptureConfig.KmsKeyId)
 	}
 
 	if dataCaptureConfig.CaptureContentTypeHeader != nil {
@@ -877,7 +915,7 @@ func expandEndpointConfigOutputConfig(configured []interface{}) *sagemaker.Async
 		S3OutputPath: aws.String(m["s3_output_path"].(string)),
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok && v != "" {
 		c.KmsKeyId = aws.String(v)
 	}
 
@@ -911,6 +949,22 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 
 	if v, ok := m["include_inference_response_in"].(*schema.Set); ok && v.Len() > 0 {
 		c.IncludeInferenceResponseIn = flex.ExpandStringSet(v)
+	}
+
+	return c
+}
+
+func expandRoutingConfig(configured []interface{}) *sagemaker.ProductionVariantRoutingConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantRoutingConfig{}
+
+	if v, ok := m["routing_strategy"].(string); ok && v != "" {
+		c.RoutingStrategy = aws.String(v)
 	}
 
 	return c
@@ -953,7 +1007,7 @@ func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariant
 		c.DestinationS3Uri = aws.String(v)
 	}
 
-	if v, ok := m["kms_key_id"].(string); ok {
+	if v, ok := m[names.AttrKMSKeyID].(string); ok {
 		c.KmsKeyId = aws.String(v)
 	}
 
@@ -1002,7 +1056,7 @@ func flattenEndpointConfigOutputConfig(config *sagemaker.AsyncInferenceOutputCon
 	}
 
 	if config.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
 	}
 
 	if config.NotificationConfig != nil {
@@ -1033,6 +1087,20 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 
 	if config.IncludeInferenceResponseIn != nil {
 		cfg["include_inference_response_in"] = flex.FlattenStringSet(config.IncludeInferenceResponseIn)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenRoutingConfig(config *sagemaker.ProductionVariantRoutingConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.RoutingStrategy != nil {
+		cfg["routing_strategy"] = aws.StringValue(config.RoutingStrategy)
 	}
 
 	return []map[string]interface{}{cfg}
@@ -1072,7 +1140,7 @@ func flattenCoreDumpConfig(config *sagemaker.ProductionVariantCoreDumpConfig) []
 	}
 
 	if config.KmsKeyId != nil {
-		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+		cfg[names.AttrKMSKeyID] = aws.StringValue(config.KmsKeyId)
 	}
 
 	return []map[string]interface{}{cfg}

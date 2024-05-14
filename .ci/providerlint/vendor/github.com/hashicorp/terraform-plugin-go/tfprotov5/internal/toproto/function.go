@@ -14,8 +14,8 @@ func CallFunction_Response(in *tfprotov5.CallFunctionResponse) *tfplugin5.CallFu
 	}
 
 	resp := &tfplugin5.CallFunction_Response{
-		Diagnostics: Diagnostics(in.Diagnostics),
-		Result:      DynamicValue(in.Result),
+		Error:  FunctionError(in.Error),
+		Result: DynamicValue(in.Result),
 	}
 
 	return resp

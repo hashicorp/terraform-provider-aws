@@ -28,7 +28,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +36,14 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "hive"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
 					resource.TestCheckResourceAttr(resourceName, "release_label", "emr-6.6.0"),
-					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "0"),
@@ -68,7 +68,7 @@ func TestAccEMRServerlessApplication_arch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,11 +146,11 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 				Config: testAccApplicationConfig_initialCapacity(rName, "2 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.cpu", "2 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.memory", "10 GB"),
 				),
@@ -164,11 +164,11 @@ func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 				Config: testAccApplicationConfig_initialCapacity(rName, "4 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_type", "HiveDriver"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_count", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.cpu", "4 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.0.initial_capacity_config.0.worker_configuration.0.memory", "10 GB"),
 				),
@@ -201,7 +201,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 				Config: firstImageConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", acctest.CtOne),
 					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", firstVersionRegex),
 				),
 			},
@@ -222,7 +222,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 				Config: secondImageConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", acctest.CtOne),
 					resource.TestMatchResourceAttr(resourceName, "image_configuration.0.image_uri", secondVersionRegex),
 				),
 			},
@@ -238,7 +238,7 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -246,7 +246,7 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 				Config: testAccApplicationConfig_maxCapacity(rName, "2 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "2 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB"),
 				),
@@ -260,7 +260,7 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 				Config: testAccApplicationConfig_maxCapacity(rName, "4 vCPU"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.cpu", "4 vCPU"),
 					resource.TestCheckResourceAttr(resourceName, "maximum_capacity.0.memory", "10 GB")),
 			},
@@ -276,7 +276,7 @@ func TestAccEMRServerlessApplication_network(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -284,8 +284,8 @@ func TestAccEMRServerlessApplication_network(t *testing.T) {
 				Config: testAccApplicationConfig_network(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_group_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnet_ids.#", "2"),
 				),
 			},
@@ -306,7 +306,7 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -331,7 +331,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -339,7 +339,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -361,7 +361,7 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

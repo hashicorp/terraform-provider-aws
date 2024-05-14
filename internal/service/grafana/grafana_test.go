@@ -6,13 +6,13 @@ package grafana_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(managedgrafana.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.GrafanaServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -33,11 +33,11 @@ func TestAccGrafana_serial(t *testing.T) {
 			"dataSources":              testAccWorkspace_dataSources,
 			"permissionType":           testAccWorkspace_permissionType,
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
-			"tags":                     testAccWorkspace_tags,
+			names.AttrTags:             testAccWorkspace_tags,
 			"vpc":                      testAccWorkspace_vpc,
-			"configuration":            testAccWorkspace_configuration,
+			names.AttrConfiguration:    testAccWorkspace_configuration,
 			"networkAccess":            testAccWorkspace_networkAccess,
-			"version":                  testAccWorkspace_version,
+			names.AttrVersion:          testAccWorkspace_version,
 		},
 		"ApiKey": {
 			"basic": testAccWorkspaceAPIKey_basic,

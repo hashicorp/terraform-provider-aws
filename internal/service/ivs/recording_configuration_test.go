@@ -36,7 +36,7 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,11 +44,11 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`recording-configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_name(bucketName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName1),
 				),
 			},
@@ -100,7 +100,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckRecordingConfigurationRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName2),
 					resource.TestCheckResourceAttr(resourceName, "recording_reconnect_window_seconds", recordingReconnectWindowSeconds),
 					resource.TestCheckResourceAttr(resourceName, "thumbnail_configuration.0.recording_mode", recordingMode),
@@ -123,7 +123,7 @@ func TestAccIVSRecordingConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccIVSRecordingConfiguration_disappears_S3Bucket(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, ivs.EndpointsID)
 			testAccRecordingConfigurationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRecordingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +188,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -210,7 +210,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

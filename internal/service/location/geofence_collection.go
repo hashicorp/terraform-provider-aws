@@ -54,16 +54,16 @@ func ResourceGeofenceCollection() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -95,11 +95,11 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok && v != "" {
+	if v, ok := d.GetOk(names.AttrDescription); ok && v != "" {
 		in.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok && v != "" {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok && v != "" {
 		in.KmsKeyId = aws.String(v.(string))
 	}
 
@@ -136,9 +136,9 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("collection_arn", out.CollectionArn)
 	d.Set("collection_name", out.CollectionName)
-	d.Set("create_time", aws.TimeValue(out.CreateTime).Format(time.RFC3339))
-	d.Set("description", out.Description)
-	d.Set("kms_key_id", out.KmsKeyId)
+	d.Set(names.AttrCreateTime, aws.TimeValue(out.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
 	return diags
@@ -155,8 +155,8 @@ func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceDat
 		CollectionName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 		update = true
 	}
 

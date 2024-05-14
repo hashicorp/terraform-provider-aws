@@ -62,6 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN for this account.
 * `govcloudId` - ID for a GovCloud account created with the account.
 * `id` - The AWS account id
+* `status` - The status of the account in the organization.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -123,4 +124,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-89da6aca32443c4e344056b6e4e5713d71a00388c00bb09afc4a3dcf0c828f09 -->
+<!-- cache-key: cdktf-0.20.1 input-5a8e610cf1ae7ca0e910e17be09234e364906df616915d2a7f13f50fbf54f672 -->

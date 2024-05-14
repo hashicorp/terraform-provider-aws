@@ -16,19 +16,20 @@ import (
 	"sync"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/hashicorp/terraform-plugin-go/internal/logging"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/fromproto"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tf6serverlogging"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/toproto"
-	"google.golang.org/grpc"
 
 	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
-	testing "github.com/mitchellh/go-testing-interface"
+	"github.com/mitchellh/go-testing-interface"
 )
 
 const (
@@ -961,14 +962,12 @@ func (s *server) CallFunction(ctx context.Context, protoReq *tfplugin6.CallFunct
 	if !ok {
 		logging.ProtocolError(ctx, "ProviderServer does not implement FunctionServer")
 
+		text := "Provider Functions Not Implemented: A provider-defined function call was received by the provider, however the provider does not implement functions. " +
+			"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers."
+
 		protoResp := &tfplugin6.CallFunction_Response{
-			Diagnostics: []*tfplugin6.Diagnostic{
-				{
-					Severity: tfplugin6.Diagnostic_ERROR,
-					Summary:  "Provider Functions Not Implemented",
-					Detail: "A provider-defined function call was received by the provider, however the provider does not implement functions. " +
-						"Either upgrade the provider to a version that implements provider-defined functions or this is a bug in Terraform that should be reported to the Terraform maintainers.",
-				},
+			Error: &tfplugin6.FunctionError{
+				Text: text,
 			},
 		}
 
@@ -992,7 +991,7 @@ func (s *server) CallFunction(ctx context.Context, protoReq *tfplugin6.CallFunct
 		return nil, err
 	}
 
-	tf6serverlogging.DownstreamResponse(ctx, resp.Diagnostics)
+	tf6serverlogging.DownstreamResponseWithError(ctx, resp.Error)
 	logging.ProtocolData(ctx, s.protocolDataDir, rpc, "Response", "Result", resp.Result)
 
 	protoResp := toproto.CallFunction_Response(resp)

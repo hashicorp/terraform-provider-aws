@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStrategyItem {
@@ -18,7 +19,7 @@ func expandCapacityProviderStrategy(cps *schema.Set) []*ecs.CapacityProviderStra
 		if val, ok := cp["base"]; ok {
 			ps.Base = aws.Int64(int64(val.(int)))
 		}
-		if val, ok := cp["weight"]; ok {
+		if val, ok := cp[names.AttrWeight]; ok {
 			ps.Weight = aws.Int64(int64(val.(int)))
 		}
 		if val, ok := cp["capacity_provider"]; ok {
@@ -39,7 +40,7 @@ func flattenCapacityProviderStrategy(cps []*ecs.CapacityProviderStrategyItem) []
 		s := make(map[string]interface{})
 		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
 		if cp.Weight != nil {
-			s["weight"] = aws.Int64Value(cp.Weight)
+			s[names.AttrWeight] = aws.Int64Value(cp.Weight)
 		}
 		if cp.Base != nil {
 			s["base"] = aws.Int64Value(cp.Base)
@@ -174,7 +175,7 @@ func expandServiceRegistries(l []interface{}) []*ecs.ServiceRegistry {
 		if raw, ok := m["container_port"].(int); ok && raw > 0 {
 			sr.ContainerPort = aws.Int64(int64(raw))
 		}
-		if raw, ok := m["port"].(int); ok && raw > 0 {
+		if raw, ok := m[names.AttrPort].(int); ok && raw > 0 {
 			sr.Port = aws.Int64(int64(raw))
 		}
 		result = append(result, sr)
@@ -197,11 +198,11 @@ func expandScale(l []interface{}) *ecs.Scale {
 
 	result := &ecs.Scale{}
 
-	if v, ok := tfMap["unit"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrUnit].(string); ok && v != "" {
 		result.Unit = aws.String(v)
 	}
 
-	if v, ok := tfMap["value"].(float64); ok {
+	if v, ok := tfMap[names.AttrValue].(float64); ok {
 		result.Value = aws.Float64(v)
 	}
 
@@ -215,8 +216,8 @@ func flattenScale(scale *ecs.Scale) []map[string]interface{} {
 	}
 
 	m := make(map[string]interface{})
-	m["unit"] = aws.StringValue(scale.Unit)
-	m["value"] = aws.Float64Value(scale.Value)
+	m[names.AttrUnit] = aws.StringValue(scale.Unit)
+	m[names.AttrValue] = aws.Float64Value(scale.Value)
 
 	return []map[string]interface{}{m}
 }

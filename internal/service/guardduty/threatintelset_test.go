@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccThreatIntelSet_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,8 +43,8 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -58,7 +59,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName2, threatintelsetName2, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, threatintelsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
 					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
@@ -77,7 +78,7 @@ func testAccThreatIntelSet_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDetectorNotExists(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func testAccThreatIntelSet_tags(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -107,7 +108,7 @@ func testAccThreatIntelSet_tags(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

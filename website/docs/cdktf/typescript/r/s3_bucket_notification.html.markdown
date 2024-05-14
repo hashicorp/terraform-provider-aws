@@ -238,12 +238,16 @@ class MyConvertedCode extends TerraformStack {
       bucket: "your-bucket-name",
     });
     const assumeRole = new DataAwsIamPolicyDocument(this, "assume_role", {
-      actions: ["sts:AssumeRole"],
-      effect: "Allow",
-      principals: [
+      statement: [
         {
-          identifiers: ["lambda.amazonaws.com"],
-          type: "Service",
+          actions: ["sts:AssumeRole"],
+          effect: "Allow",
+          principals: [
+            {
+              identifiers: ["lambda.amazonaws.com"],
+              type: "Service",
+            },
+          ],
         },
       ],
     });
@@ -493,4 +497,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-806af2b73f38b1023adb097eb9375961d9c80b720fc588a2e4a83e327c3bfb93 -->
+<!-- cache-key: cdktf-0.20.1 input-5357aa38fd9b204541e907ee176be4b2983ad672823349cbe4ac358b8982320b -->

@@ -26,13 +26,13 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -42,7 +42,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
 				},
 			},
-			"priority": schema.Int64Attribute{
+			names.AttrPriority: schema.Int64Attribute{
 				Required: true,
 			},
 			"scheduling_policy_arn": schema.StringAttribute{
@@ -51,7 +51,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOfCaseInsensitive(batch.JQState_Values()...),
@@ -61,7 +61,7 @@ func jobQueueSchema0(ctx context.Context) schema.Schema {
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -90,16 +90,18 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	ceo := fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrder](ctx)
 
 	jobQueueDataV2 := resourceJobQueueData{
-		ComputeEnvironments: jobQueueDataV0.ComputeEnvironments,
-		ID:                  jobQueueDataV0.ID,
-		Name:                jobQueueDataV0.Name,
-		Priority:            jobQueueDataV0.Priority,
-		State:               jobQueueDataV0.State,
-		Tags:                jobQueueDataV0.Tags,
-		TagsAll:             jobQueueDataV0.TagsAll,
-		Timeouts:            jobQueueDataV0.Timeouts,
+		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
+		ComputeEnvironmentOrder: ceo,
+		ID:                      jobQueueDataV0.ID,
+		JobQueueName:            jobQueueDataV0.Name,
+		Priority:                jobQueueDataV0.Priority,
+		State:                   jobQueueDataV0.State,
+		Tags:                    jobQueueDataV0.Tags,
+		TagsAll:                 jobQueueDataV0.TagsAll,
+		Timeouts:                jobQueueDataV0.Timeouts,
 	}
 
 	if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {

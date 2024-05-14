@@ -6,7 +6,6 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -16,90 +15,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const clientVPNEndpointDefaultLimit = 5
-
-var testAccEc2ClientVpnEndpointSemaphore sync.Semaphore
-
-func init() {
-	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVPNEndpointDefaultLimit)
-}
-
-// This is part of an experimental feature, do not use this as a starting point for tests
-//
-//	"This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
-//	What is here was dangerous and repulsive to us. This message is a warning about danger."
-//	--  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
-func TestAccClientVPNEndpoint_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"Endpoint": {
-			"basic":                        testAccClientVPNEndpoint_basic,
-			"disappears":                   testAccClientVPNEndpoint_disappears,
-			"msADAuth":                     testAccClientVPNEndpoint_msADAuth,
-			"msADAuthAndMutualAuth":        testAccClientVPNEndpoint_msADAuthAndMutualAuth,
-			"federatedAuth":                testAccClientVPNEndpoint_federatedAuth,
-			"federatedAuthWithSelfService": testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider,
-			"withClientConnect":            testAccClientVPNEndpoint_withClientConnectOptions,
-			"withClientLoginBanner":        testAccClientVPNEndpoint_withClientLoginBannerOptions,
-			"withLogGroup":                 testAccClientVPNEndpoint_withConnectionLogOptions,
-			"withDNSServers":               testAccClientVPNEndpoint_withDNSServers,
-			"tags":                         testAccClientVPNEndpoint_tags,
-			"simpleAttributesUpdate":       testAccClientVPNEndpoint_simpleAttributesUpdate,
-			"selfServicePortal":            testAccClientVPNEndpoint_selfServicePortal,
-			"vpcNoSecurityGroups":          testAccClientVPNEndpoint_vpcNoSecurityGroups,
-			"vpcSecurityGroups":            testAccClientVPNEndpoint_vpcSecurityGroups,
-			"basicDataSource":              testAccClientVPNEndpointDataSource_basic,
-		},
-		"AuthorizationRule": {
-			"basic":              testAccClientVPNAuthorizationRule_basic,
-			"groups":             testAccClientVPNAuthorizationRule_groups,
-			"subnets":            testAccClientVPNAuthorizationRule_subnets,
-			"disappears":         testAccClientVPNAuthorizationRule_disappears,
-			"disappearsEndpoint": testAccClientVPNAuthorizationRule_Disappears_endpoint,
-		},
-		"NetworkAssociation": {
-			"basic":           testAccClientVPNNetworkAssociation_basic,
-			"multipleSubnets": testAccClientVPNNetworkAssociation_multipleSubnets,
-			"disappears":      testAccClientVPNNetworkAssociation_disappears,
-		},
-		"Route": {
-			"basic":       testAccClientVPNRoute_basic,
-			"description": testAccClientVPNRoute_description,
-			"disappears":  testAccClientVPNRoute_disappears,
-		},
-	}
-
-	for group, m := range testCases { //nolint:paralleltest
-		m := m
-		for name, tc := range m {
-			tc := tc
-			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
-				t.Cleanup(func() {
-					if os.Getenv(resource.EnvTfAcc) != "" {
-						testAccEc2ClientVpnEndpointSemaphore.Notify()
-					}
-				})
-				tc(t)
-			})
-		}
-	}
-}
-
-func testAccClientVPNEndpoint_basic(t *testing.T) {
+func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,23 +40,23 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "certificate-authentication",
+						names.AttrType: "certificate-authentication",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "dns_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
@@ -131,10 +64,10 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
 					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
 			},
@@ -147,15 +80,18 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_disappears(t *testing.T) {
+func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,14 +107,17 @@ func testAccClientVPNEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_tags(t *testing.T) {
+func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -186,7 +125,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_tags1(t, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -208,7 +147,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_tags1(t, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -216,7 +155,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
+func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -228,8 +167,11 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -237,9 +179,9 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_microsoftAD(t, rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "directory-service-authentication",
+						names.AttrType: "directory-service-authentication",
 					}),
 				),
 			},
@@ -252,7 +194,7 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
+func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -264,8 +206,11 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,10 +220,10 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "directory-service-authentication",
+						names.AttrType: "directory-service-authentication",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "certificate-authentication",
+						names.AttrType: "certificate-authentication",
 					}),
 				),
 			},
@@ -291,7 +236,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
+func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -299,8 +244,11 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -308,9 +256,9 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_federatedAuth(t, rName, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "federated-authentication",
+						names.AttrType: "federated-authentication",
 					}),
 				),
 			},
@@ -323,7 +271,7 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T) {
+func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -331,8 +279,11 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckClientVPNSyncronize(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -340,9 +291,9 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 				Config: testAccClientVPNEndpointConfig_federatedAuthAndSelfServiceSAMLProvider(t, rName, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
-						"type": "federated-authentication",
+						names.AttrType: "federated-authentication",
 					}),
 				),
 			},
@@ -355,7 +306,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 	})
 }
 
-func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
+func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -364,8 +315,11 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 	lambdaFunction2ResourceName := "aws_lambda_function.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -373,9 +327,9 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_clientConnectOptions(t, rName, true, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction1ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction1ResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -387,16 +341,16 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_clientConnectOptions(t, rName, true, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "client_connect_options.0.lambda_function_arn", lambdaFunction2ResourceName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccClientVPNEndpointConfig_clientConnectOptions(t, rName, false, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.lambda_function_arn", ""),
 				),
@@ -405,15 +359,18 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
+func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -421,7 +378,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_clientLoginBannerOptions(t, rName, true, "Options 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 1"),
 				),
@@ -435,7 +392,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_clientLoginBannerOptions(t, rName, true, "Options 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", "Options 2"),
 				),
@@ -444,7 +401,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_clientLoginBannerOptions(t, rName, false, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_login_banner_options.0.banner_text", ""),
 				),
@@ -453,7 +410,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
+func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -463,8 +420,11 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 	logStream2ResourceName := "aws_cloudwatch_log_stream.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -472,8 +432,8 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_connectionLogOptions(t, rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_log_options.0.cloudwatch_log_stream"),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
 				),
@@ -482,9 +442,9 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_connectionLogOptions(t, rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream1ResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream1ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
 				),
 			},
@@ -497,9 +457,9 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_connectionLogOptions(t, rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream2ResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_group", logGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_log_options.0.cloudwatch_log_stream", logStream2ResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "true"),
 				),
 			},
@@ -507,7 +467,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_log_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_group", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.cloudwatch_log_stream", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
@@ -517,15 +477,18 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
+func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -547,7 +510,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_dnsServersUpdated(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.0", "4.4.4.4"),
 				),
 			},
@@ -562,7 +525,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
+func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -571,8 +534,11 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 	serverCertificate2ResourceName := "aws_acm_certificate.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -580,8 +546,8 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_simpleAttributes(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description1"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate1ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description1"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "12"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "true"),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
@@ -597,8 +563,8 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_simpleAttributesUpdated(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description2"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Description2"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_certificate_arn", serverCertificate2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "10"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
@@ -609,7 +575,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
+func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -617,16 +583,19 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNEndpointConfig_selfServicePortal(t, rName, "enabled", idpEntityID),
+				Config: testAccClientVPNEndpointConfig_selfServicePortal(t, rName, names.AttrEnabled, idpEntityID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_portal", names.AttrEnabled),
 					resource.TestCheckResourceAttrSet(resourceName, "self_service_portal_url"),
 				),
 			},
@@ -647,7 +616,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
+func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -656,8 +625,11 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -665,9 +637,9 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_securityGroups(t, rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", defaultSecurityGroupResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", defaultSecurityGroupResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -679,7 +651,7 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T) {
+func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -689,8 +661,11 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -699,9 +674,9 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2ResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 			{
@@ -713,17 +688,13 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_securityGroups(t, rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
 		},
 	})
-}
-
-func testAccPreCheckClientVPNSyncronize(t *testing.T) {
-	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
 }
 
 func testAccCheckClientVPNEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -756,10 +727,6 @@ func testAccCheckClientVPNEndpointExists(ctx context.Context, name string, v *ec
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Client VPN Endpoint ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)

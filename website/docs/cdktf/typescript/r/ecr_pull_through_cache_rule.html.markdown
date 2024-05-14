@@ -30,6 +30,8 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new EcrPullThroughCacheRule(this, "example", {
+      credentialArn:
+        "arn:aws:secretsmanager:us-east-1:123456789:secret:ecr-pullthroughcache/ecrpublic",
       ecrRepositoryPrefix: "ecr-public",
       upstreamRegistryUrl: "public.ecr.aws",
     });
@@ -42,6 +44,7 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `credentialArn` - (Optional) ARN of the Secret which will be used to authenticate against the registry.
 * `ecrRepositoryPrefix` - (Required, Forces new resource) The repository name prefix to use when caching images from the source registry.
 * `upstreamRegistryUrl` - (Required, Forces new resource) The registry URL of the upstream public registry to use as the source.
 
@@ -83,4 +86,4 @@ Using `terraform import`, import a pull-through cache rule using the `ecrReposit
 % terraform import aws_ecr_pull_through_cache_rule.example ecr-public
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f34bbf2ac113908932d429c51221ac1598eaf73e0c126d6199e75b0b3c98d1b -->
+<!-- cache-key: cdktf-0.20.1 input-77d631b6c1d1bb98f7a86171d386d0798201bb4f64ec08a93c7983727ec7dec9 -->

@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,12 +34,12 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
 				),
@@ -53,15 +53,15 @@ func TestAccCognitoIDPRiskConfiguration_exception(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskExceptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckNoResourceAttr(resourceName, "client_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrClientID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.11/32"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.*", "10.10.10.12/32"),
 				),
 			},
@@ -76,7 +76,7 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,12 +84,12 @@ func TestAccCognitoIDPRiskConfiguration_client(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskExceptionClient(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "client_id", "aws_cognito_user_pool_client.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClientID, "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "risk_exception_configuration.0.blocked_ip_range_list.*", "10.10.10.10/32"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.0.skipped_ip_range_list.#", "0"),
 				),
@@ -110,7 +110,7 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,12 +118,12 @@ func TestAccCognitoIDPRiskConfiguration_compromised(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_compromised(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_pool_id", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "account_takeover_risk_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "compromised_credentials_risk_configuration.0.event_filter.*", "SIGN_IN"),
-					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "compromised_credentials_risk_configuration.0.actions.0.event_action", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "risk_exception_configuration.#", "0"),
 				),
@@ -144,7 +144,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +189,7 @@ func TestAccCognitoIDPRiskConfiguration_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,7 +211,7 @@ func TestAccCognitoIDPRiskConfiguration_nullRiskException(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -232,7 +232,7 @@ func TestAccCognitoIDPRiskConfiguration_emptyRiskException(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRiskConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

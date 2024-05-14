@@ -55,8 +55,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the service. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `dnsEntry` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the service.
+* `dnsEntry` - DNS name of the service.
 * `id` - Unique identifier for the service.
 * `status` - Status of the service.
 * `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
@@ -100,4 +100,4 @@ Using `terraform import`, import VPC Lattice Service using the `id`. For example
 % terraform import aws_vpclattice_service.example svc-06728e2357ea55f8a
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-9538031e1f3e91a6025513a51240647cd5ea1ebb1f5f4cc3598ae3498c4720e0 -->
+<!-- cache-key: cdktf-0.20.1 input-f9acfec4249fc51134e9cb5589073b543ce94ac0103b759f9c21d3128e90b21c -->

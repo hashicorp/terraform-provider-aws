@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRInstanceFleet_basic(t *testing.T) {
@@ -25,15 +26,15 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
@@ -55,22 +56,22 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
 			},
 			{
 				Config: testAccInstanceFleetConfig_zeroCount(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
 				),
@@ -93,23 +94,24 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_ebsBasic(rName),
 				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", acctest.CtOne),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type_configs"},
 			},
 		},
 	})
@@ -123,7 +125,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -136,10 +138,11 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccInstanceFleetResourceImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceFleetResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"instance_type_configs"},
 			},
 		},
 	})

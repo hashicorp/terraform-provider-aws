@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPolicyAttachment_Account(t *testing.T) {
@@ -32,7 +33,7 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,7 +41,7 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_account(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
 			},
@@ -48,7 +49,7 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_account(rName, organizations.PolicyTypeTagPolicy, tagPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
 			},
@@ -56,7 +57,7 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -71,7 +72,7 @@ func testAccPolicyAttachment_OrganizationalUnit(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,15 +80,15 @@ func testAccPolicyAttachment_OrganizationalUnit(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, names.AttrID),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -102,7 +103,7 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +111,7 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_root(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
 				),
 			},
@@ -118,7 +119,7 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -135,7 +136,7 @@ func testAccPolicyAttachment_skipDestroy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentNoDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,9 +144,9 @@ func testAccPolicyAttachment_skipDestroy(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_skipDestroy(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -159,7 +160,7 @@ func testAccPolicyAttachment_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

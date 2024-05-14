@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
@@ -23,7 +24,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyProtocolPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,7 +34,7 @@ func TestAccELBProxyProtocolPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_proxy_protocol_policy.smtp", "load_balancer", lbName),
 					resource.TestCheckResourceAttr(
-						"aws_proxy_protocol_policy.smtp", "instance_ports.#", "1"),
+						"aws_proxy_protocol_policy.smtp", "instance_ports.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr("aws_proxy_protocol_policy.smtp", "instance_ports.*", "25"),
 				),
 			},

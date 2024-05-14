@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDirectConnectLag_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,14 +37,14 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				Config: testAccLagConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -53,14 +54,14 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				Config: testAccLagConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -70,7 +71,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -84,7 +85,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,14 +118,14 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 				Config: testAccLagConfig_connectionID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxlag/.+`)),
-					resource.TestCheckResourceAttrPair(resourceName, "connection_id", connectionResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "connection_id", connectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -134,7 +135,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"connection_id", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"connection_id", names.AttrForceDestroy},
 			},
 		},
 	})
@@ -148,7 +149,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,14 +157,14 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 				Config: testAccLagConfig_providerName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxlag/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "has_logical_redundancy"),
 					resource.TestCheckResourceAttrSet(resourceName, "jumbo_frame_capable"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -173,7 +174,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 		},
 	})
@@ -187,7 +188,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -195,8 +196,8 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				Config: testAccLagConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -204,13 +205,13 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
 				Config: testAccLagConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -220,8 +221,8 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 				Config: testAccLagConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLagExists(ctx, resourceName, &lag),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

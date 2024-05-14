@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCEndpointService_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,17 +38,17 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "acceptance_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpc-endpoint-service/vpce-svc-.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "base_endpoint_dns_names.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "manages_vpc_endpoints", "false"),
-					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "service_name"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrServiceName),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -69,7 +70,7 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -123,7 +124,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -139,7 +140,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_networkLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network_load_balancer_arns.#", acctest.CtOne),
 				),
 			},
 			{
@@ -174,7 +175,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -182,7 +183,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_supportedIPAddressTypesIPv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
 				),
 			},
@@ -212,7 +213,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +221,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.CtOne),
 				),
 			},
 			{
@@ -239,7 +240,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_allowedPrincipals(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_principals.#", acctest.CtOne),
 				),
 			},
 		},
@@ -254,7 +255,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,7 +263,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 				Config: testAccVPCEndpointServiceConfig_gatewayLoadBalancerARNs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
-					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_load_balancer_arns.#", acctest.CtOne),
 				),
 			},
 			{
@@ -291,7 +292,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -300,7 +301,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", domainName1),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},
@@ -314,7 +315,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name", domainName2),
-					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_name_configuration.0.type", "TXT"),
 				),
 			},

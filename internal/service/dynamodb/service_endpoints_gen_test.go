@@ -4,16 +4,17 @@ package dynamodb_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/url"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -24,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -322,32 +323,42 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := dynamodb_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(dynamodb_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), dynamodb_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	client := meta.DynamoDBConn(ctx)
+	var endpoint string
 
-	req, _ := client.ListTablesRequest(&dynamodb_sdkv1.ListTablesInput{})
+	client := meta.DynamoDBClient(ctx)
 
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
+	_, err := client.ListTables(ctx, &dynamodb_sdkv2.ListTablesInput{},
+		func(opts *dynamodb_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
 	return endpoint
 }
@@ -357,12 +368,12 @@ func withNoConfig(_ *caseSetup) {
 }
 
 func withPackageNameEndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
@@ -459,17 +470,17 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		"access_key":                  servicemocks.MockStaticAccessKey,
-		"secret_key":                  servicemocks.MockStaticSecretKey,
-		"region":                      region,
-		"skip_credentials_validation": true,
-		"skip_requesting_account_id":  true,
+		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
+		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
+		names.AttrRegion:                    region,
+		names.AttrSkipCredentialsValidation: true,
+		names.AttrSkipRequestingAccountID:   true,
 	}
 
 	maps.Copy(config, setup.config)
 
 	if setup.configFile.baseUrl != "" || setup.configFile.serviceUrl != "" {
-		config["profile"] = "default"
+		config[names.AttrProfile] = "default"
 		tempDir := t.TempDir()
 		writeSharedConfigFile(t, &config, tempDir, generateSharedConfigFile(setup.configFile))
 	}
@@ -612,10 +623,10 @@ func writeSharedConfigFile(t *testing.T, config *map[string]any, tempDir, conten
 		t.Fatalf(" writing shared configuration file: %s", err)
 	}
 
-	if v, ok := (*config)["shared_config_files"]; !ok {
-		(*config)["shared_config_files"] = []any{file.Name()}
+	if v, ok := (*config)[names.AttrSharedConfigFiles]; !ok {
+		(*config)[names.AttrSharedConfigFiles] = []any{file.Name()}
 	} else {
-		(*config)["shared_config_files"] = append(v.([]any), file.Name())
+		(*config)[names.AttrSharedConfigFiles] = append(v.([]any), file.Name())
 	}
 
 	return file.Name()

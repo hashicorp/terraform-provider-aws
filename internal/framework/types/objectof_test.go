@@ -95,11 +95,11 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAValue,
-			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBValue,
-			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
 			wantErr: true,
 		},
 	}
@@ -149,14 +149,14 @@ func TestObjectValueOfEqual(t *testing.T) {
 			other: types.StringValue("test"),
 		},
 		"equal value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectA),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 			want:  true,
 		},
 		"struct not equal value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectA2),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectA2),
 		},
 		"other struct value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectB),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectB),
 		},
 		"null value": {
 			other: fwtypes.NewObjectValueOfNull[ObjectA](ctx),
@@ -171,11 +171,45 @@ func TestObjectValueOfEqual(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := fwtypes.NewObjectValueOf(ctx, &objectA).Equal(testCase.other)
+			got := fwtypes.NewObjectValueOfMust(ctx, &objectA).Equal(testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)
 			}
 		})
+	}
+}
+
+func TestNullOutObjectPtrFields(t *testing.T) {
+	t.Parallel()
+
+	type A struct {
+		F1 types.Bool                        `tfsdk:"f1"`
+		F2 types.String                      `tfsdk:"f2"`
+		F3 fwtypes.ListValueOf[types.String] `tfsdk:"f3"`
+		F4 fwtypes.SetValueOf[types.Int64]   `tfsdk:"f4"`
+	}
+
+	ctx := context.Background()
+	a := new(A)
+	a.F1 = types.BoolValue(true)
+	a.F2 = types.StringValue("test")
+	a.F3 = fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("test")})
+	a.F4 = fwtypes.NewSetValueOfMust[types.Int64](ctx, []attr.Value{types.Int64Value(-1)})
+	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if !a.F1.IsNull() {
+		t.Errorf("expected F1 to be null")
+	}
+	if !a.F2.IsNull() {
+		t.Errorf("expected F2 to be null")
+	}
+	if !a.F3.IsNull() {
+		t.Errorf("expected F3 to be null")
+	}
+	if !a.F4.IsNull() {
+		t.Errorf("expected F4 to be null")
 	}
 }

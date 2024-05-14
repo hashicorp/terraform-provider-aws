@@ -162,6 +162,8 @@ The following arguments are supported inside the `reportOverrides` configuration
 * `transferredOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 * `verifiedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 
+~> **NOTE:** If any `reportOverrides` are set to the same value as `task_report_config.report_level`, they will always be flagged as changed. Only set overrides to a value that differs from `task_report_config.report_level`.
+
 ### Schedule
 
 * `scheduleExpression` - (Required) Specifies the schedule you want your task to use for repeated executions. For more information, see [Schedule Expressions for Rules](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html).
@@ -222,4 +224,4 @@ Using `terraform import`, import `aws_datasync_task` using the DataSync Task Ama
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a9b1e645629a52a15aec012195e559eac62da9c511b83c6c57412c96d99cca4a -->
+<!-- cache-key: cdktf-0.20.1 input-31b892fb93faa525a767449c304854f23fafedbe0997378add704550c2fb2682 -->

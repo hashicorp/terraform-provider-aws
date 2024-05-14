@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -25,107 +26,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
 // @Tags(identifierAttribute="id")
-func ResourceRegisteredDomain() *schema.Resource {
-	contactSchema := &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"address_line_1": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"address_line_2": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"city": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"contact_type": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: enum.Validate[types.ContactType](),
-				},
-				"country_code": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: enum.Validate[types.CountryCode](),
-				},
-				"email": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 254),
-				},
-				"extra_params": {
-					Type:     schema.TypeMap,
-					Optional: true,
-					Computed: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-				},
-				"fax": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 30),
-				},
-				"first_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"last_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"organization_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"phone_number": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 30),
-				},
-				"state": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"zip_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-			},
-		},
-	}
-
+func resourceRegisteredDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegisteredDomainCreate,
 		ReadWithoutTimeout:   resourceRegisteredDomainRead,
@@ -141,109 +46,214 @@ func ResourceRegisteredDomain() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"abuse_contact_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"abuse_contact_phone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"admin_contact": contactSchema,
-			"admin_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"auto_renew": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_server": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 6,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"glue_ips": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 2,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			contactSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_line_1": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"address_line_2": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"city": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"contact_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ContactType](),
+							},
+							"country_code": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.CountryCode](),
+							},
+							names.AttrEmail: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 254),
+							},
+							"extra_params": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"fax": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 30),
+							},
+							"first_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"last_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"organization_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"phone_number": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 30),
+							},
+							names.AttrState: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"zip_code": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
 							},
 						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
-							),
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"abuse_contact_email": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"abuse_contact_phone": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"admin_contact": contactSchema(),
+				"admin_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"auto_renew": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"billing_contact": contactSchema(),
+				"billing_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomainName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name_server": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 6,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"glue_ips": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 2,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPAddress,
+								},
+							},
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 255),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
+								),
+							},
 						},
 					},
 				},
-			},
-			"registrant_contact": contactSchema,
-			"registrant_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"registrar_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registrar_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reseller": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tech_contact":    contactSchema,
-			"tech_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"transfer_lock": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"whois_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"registrant_contact": contactSchema(),
+				"registrant_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"registrar_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"registrar_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"reseller": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tech_contact":    contactSchema(),
+				"tech_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"transfer_lock": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"whois_server": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -254,7 +264,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	domainName := d.Get("domain_name").(string)
+	domainName := d.Get(names.AttrDomainName).(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
@@ -263,11 +273,17 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
 
-	var adminContact, registrantContact, techContact *types.ContactDetail
+	var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
 
 	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
 			adminContact = v
+		}
+	}
+
+	if v, ok := d.GetOk("billing_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.BillingContact) {
+			billingContact = v
 		}
 	}
 
@@ -283,14 +299,14 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if adminContact != nil || registrantContact != nil || techContact != nil {
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if adminContact != nil || billingContact != nil || registrantContact != nil || techContact != nil {
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
-		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || billingPrivacy != aws.ToBool(domainDetail.BillingPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
+		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -364,11 +380,19 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("admin_privacy", domainDetail.AdminPrivacy)
 	d.Set("auto_renew", domainDetail.AutoRenew)
 	if domainDetail.CreationDate != nil {
-		d.Set("creation_date", aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
+		d.Set(names.AttrCreationDate, aws.ToTime(domainDetail.CreationDate).Format(time.RFC3339))
 	} else {
-		d.Set("creation_date", nil)
+		d.Set(names.AttrCreationDate, nil)
 	}
-	d.Set("domain_name", domainDetail.DomainName)
+	if domainDetail.BillingContact != nil {
+		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting billing_contact: %s", err)
+		}
+	} else {
+		d.Set("billing_contact", nil)
+	}
+	d.Set("billing_privacy", domainDetail.BillingPrivacy)
+	d.Set(names.AttrDomainName, domainDetail.DomainName)
 	if domainDetail.ExpirationDate != nil {
 		d.Set("expiration_date", aws.ToTime(domainDetail.ExpirationDate).Format(time.RFC3339))
 	} else {
@@ -413,12 +437,18 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
-		var adminContact, registrantContact, techContact *types.ContactDetail
+	if d.HasChanges("admin_contact", "billing_contact", "registrant_contact", "tech_contact") {
+		var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
 
 		if key := "admin_contact"; d.HasChange(key) {
 			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				adminContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if key := "billing_contact"; d.HasChange(key) {
+			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				billingContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -434,13 +464,13 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
-		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if d.HasChanges("admin_privacy", "billing_contact", "registrant_privacy", "tech_privacy") {
+		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -501,9 +531,10 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 	return nil
 }
 
-func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, registrantContact, techContact *types.ContactDetail, timeout time.Duration) error {
+func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *types.ContactDetail, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactInput{
 		AdminContact:      adminContact,
+		BillingContact:    billingContact,
 		DomainName:        aws.String(domainName),
 		RegistrantContact: registrantContact,
 		TechContact:       techContact,
@@ -522,9 +553,10 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 	return nil
 }
 
-func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client, domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
+func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client, domainName string, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactPrivacyInput{
 		AdminPrivacy:      aws.Bool(adminPrivacy),
+		BillingPrivacy:    aws.Bool(billingPrivacy),
 		DomainName:        aws.String(domainName),
 		RegistrantPrivacy: aws.Bool(registrantPrivacy),
 		TechPrivacy:       aws.Bool(techPrivacy),
@@ -619,7 +651,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	tfMap["country_code"] = apiObject.CountryCode
 
 	if v := apiObject.Email; v != nil {
-		tfMap["email"] = aws.ToString(v)
+		tfMap[names.AttrEmail] = aws.ToString(v)
 	}
 
 	if v := apiObject.ExtraParams; v != nil {
@@ -647,7 +679,7 @@ func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{}
 	}
 
 	if v := apiObject.State; v != nil {
-		tfMap["state"] = aws.ToString(v)
+		tfMap[names.AttrState] = aws.ToString(v)
 	}
 
 	if v := apiObject.ZipCode; v != nil {
@@ -698,7 +730,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.CountryCode = types.CountryCode(v)
 	}
 
-	if v, ok := tfMap["email"].(string); ok {
+	if v, ok := tfMap[names.AttrEmail].(string); ok {
 		apiObject.Email = aws.String(v)
 	}
 
@@ -726,7 +758,7 @@ func expandContactDetail(tfMap map[string]interface{}) *types.ContactDetail {
 		apiObject.PhoneNumber = aws.String(v)
 	}
 
-	if v, ok := tfMap["state"].(string); ok {
+	if v, ok := tfMap[names.AttrState].(string); ok {
 		apiObject.State = aws.String(v)
 	}
 
@@ -772,7 +804,7 @@ func flattenNameserver(apiObject *types.Nameserver) map[string]interface{} {
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.ToString(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -789,7 +821,7 @@ func expandNameserver(tfMap map[string]interface{}) *types.Nameserver {
 		apiObject.GlueIps = aws.ToStringSlice(flex.ExpandStringSet(v))
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 

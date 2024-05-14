@@ -37,7 +37,7 @@ func testContact_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,9 +45,9 @@ func testContact_basic(t *testing.T) {
 				Config: testAccContactConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "PERSONAL"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`contact/+.`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "PERSONAL"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`contact/+.`)),
 				),
 			},
 			{
@@ -82,7 +82,7 @@ func testContact_updateAlias(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(oldAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", oldAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, oldAlias),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func testContact_updateAlias(t *testing.T) {
 				Config: testAccContactConfig_alias(newAlias),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "alias", newAlias),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, newAlias),
 				),
 			},
 			{
@@ -131,7 +131,7 @@ func testContact_updateType(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,7 +139,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, personalType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", personalType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, personalType),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func testContact_updateType(t *testing.T) {
 				Config: testAccContactConfig_type(name, escalationType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "type", escalationType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, escalationType),
 				),
 			},
 			{
@@ -177,7 +177,7 @@ func testContact_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -209,7 +209,7 @@ func testContact_updateDisplayName(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +217,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, oldDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", oldDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, oldDisplayName),
 				),
 			},
 			{
@@ -229,7 +229,7 @@ func testContact_updateDisplayName(t *testing.T) {
 				Config: testAccContactConfig_displayName(rName, newDisplayName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "display_name", newDisplayName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, newDisplayName),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func testContact_updateTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -282,7 +282,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1),
 				),
 			},
@@ -323,7 +323,7 @@ func testContact_updateTags(t *testing.T) {
 				Config: testAccContactConfig_oneTag(rName, rKey1, rVal1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 				),
 			},

@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlAccessGrants_serial(t *testing.T) {
@@ -16,19 +17,19 @@ func TestAccS3ControlAccessGrants_serial(t *testing.T) {
 		"Instance": {
 			"basic":          testAccAccessGrantsInstance_basic,
 			"disappears":     testAccAccessGrantsInstance_disappears,
-			"tags":           testAccAccessGrantsInstance_tags,
+			names.AttrTags:   testAccAccessGrantsInstance_tags,
 			"identityCenter": testAccAccessGrantsInstance_identityCenter,
 		},
 		"Location": {
-			"basic":      testAccAccessGrantsLocation_basic,
-			"disappears": testAccAccessGrantsLocation_disappears,
-			"tags":       testAccAccessGrantsLocation_tags,
-			"update":     testAccAccessGrantsLocation_update,
+			"basic":        testAccAccessGrantsLocation_basic,
+			"disappears":   testAccAccessGrantsLocation_disappears,
+			names.AttrTags: testAccAccessGrantsLocation_tags,
+			"update":       testAccAccessGrantsLocation_update,
 		},
 		"Grant": {
 			"basic":                 testAccAccessGrant_basic,
 			"disappears":            testAccAccessGrant_disappears,
-			"tags":                  testAccAccessGrant_tags,
+			names.AttrTags:          testAccAccessGrant_tags,
 			"locationConfiguration": testAccAccessGrant_locationConfiguration,
 		},
 		"InstanceResourcePolicy": {

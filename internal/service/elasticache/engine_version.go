@@ -5,15 +5,16 @@ package elasticache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -55,9 +56,9 @@ func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-// CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
-	engineVersion, ok := diff.GetOk("engine_version")
+// customizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
+func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	engineVersion, ok := diff.GetOk(names.AttrEngineVersion)
 	if !ok {
 		return nil
 	}
@@ -76,11 +77,9 @@ func validateClusterEngineVersion(engine, engineVersion string) error {
 		validator = validRedisVersionString
 	}
 
-	_, errs := validator(engineVersion, "engine_version")
+	_, errs := validator(engineVersion, names.AttrEngineVersion)
 
-	var err *multierror.Error
-	err = multierror.Append(err, errs...)
-	return err.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // customizeDiffEngineVersionForceNewOnDowngrade causes re-creation of the resource if the version is being downgraded
@@ -94,7 +93,7 @@ type getChangeDiffer interface {
 }
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
-	o, n := diff.GetChange("engine_version")
+	o, n := diff.GetChange(names.AttrEngineVersion)
 	if o == "6.x" {
 		actual := diff.Get("engine_version_actual")
 		aVersion, err := gversion.NewVersion(actual.(string))
@@ -136,7 +135,7 @@ type forceNewDiffer interface {
 }
 
 func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
-	if diff.Id() == "" || !diff.HasChange("engine_version") {
+	if diff.Id() == "" || !diff.HasChange(names.AttrEngineVersion) {
 		return nil
 	}
 
@@ -146,7 +145,7 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 		return nil
 	}
 
-	return diff.ForceNew("engine_version")
+	return diff.ForceNew(names.AttrEngineVersion)
 }
 
 // normalizeEngineVersion returns a github.com/hashicorp/go-version Version from:
@@ -163,7 +162,7 @@ func normalizeEngineVersion(version string) (*gversion.Version, error) {
 }
 
 func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
-	d.Set("engine_version", version)
+	d.Set(names.AttrEngineVersion, version)
 	d.Set("engine_version_actual", version)
 }
 
@@ -173,14 +172,14 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 		return fmt.Errorf("reading engine version: %w", err)
 	}
 	if engineVersion.Segments()[0] < 6 {
-		d.Set("engine_version", engineVersion.String())
+		d.Set(names.AttrEngineVersion, engineVersion.String())
 	} else {
 		// Handle major-only version number
-		configVersion := d.Get("engine_version").(string)
+		configVersion := d.Get(names.AttrEngineVersion).(string)
 		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
-			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
+			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
 		} else {
-			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
+			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
 		}
 	}
 	d.Set("engine_version_actual", engineVersion.String())
@@ -188,11 +187,11 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	return nil
 }
 
-type versionDiff [3]int
+type VersionDiff [3]int
 
 // diffVersion returns a diff of the versions, component by component.
 // Only reports the first diff, since subsequent segments are unimportant for us.
-func diffVersion(n, o *gversion.Version) (result versionDiff) {
+func diffVersion(n, o *gversion.Version) (result VersionDiff) {
 	if n.String() == o.String() {
 		return
 	}

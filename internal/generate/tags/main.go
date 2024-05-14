@@ -54,6 +54,10 @@ var (
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
+	retryTagsListTagsType      = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as TagListMessage")
+	retryTagsErrorCodes        = flag.String("RetryTagsErrorCodes", "", "comma-separated list of error codes to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorMessages")
+	retryTagsErrorMessages     = flag.String("RetryTagsErrorMessages", "", "comma-separated list of error messages to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorCodes")
+	retryTagsTimeout           = flag.Duration("RetryTagsTimeout", 1*time.Minute, "Timeout for retrying tag operations")
 	setTagsOutFunc             = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
 	tagInCustomVal             = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem                = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
@@ -64,6 +68,7 @@ var (
 	tagOp                      = flag.String("TagOp", "TagResource", "tagOp")
 	tagOpBatchSize             = flag.String("TagOpBatchSize", "", "tagOpBatchSize")
 	tagResTypeElem             = flag.String("TagResTypeElem", "", "tagResTypeElem")
+	tagResTypeElemType         = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
 	tagType                    = flag.String("TagType", "Tag", "tagType")
 	tagType2                   = flag.String("TagType2", "", "tagType")
 	tagTypeAddBoolElem         = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
@@ -116,34 +121,34 @@ func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
-			"\n" + v1.GetTagBody,
-			v1.HeaderBody,
-			"\n" + v1.ListTagsBody,
-			"\n" + v1.ServiceTagsMapBody,
-			"\n" + v1.ServiceTagsSliceBody,
-			"\n" + v1.UpdateTagsBody,
-			"\n" + v1.WaitTagsPropagatedBody,
+			getTag:             "\n" + v1.GetTagBody,
+			header:             v1.HeaderBody,
+			listTags:           "\n" + v1.ListTagsBody,
+			serviceTagsMap:     "\n" + v1.ServiceTagsMapBody,
+			serviceTagsSlice:   "\n" + v1.ServiceTagsSliceBody,
+			updateTags:         "\n" + v1.UpdateTagsBody,
+			waitTagsPropagated: "\n" + v1.WaitTagsPropagatedBody,
 		}
 	case sdkV2:
 		if kvtValues {
 			return &TemplateBody{
-				"\n" + v2.GetTagBody,
-				v2.HeaderBody,
-				"\n" + v2.ListTagsBody,
-				"\n" + v2.ServiceTagsValueMapBody,
-				"\n" + v2.ServiceTagsSliceBody,
-				"\n" + v2.UpdateTagsBody,
-				"\n" + v2.WaitTagsPropagatedBody,
+				getTag:             "\n" + v2.GetTagBody,
+				header:             v2.HeaderBody,
+				listTags:           "\n" + v2.ListTagsBody,
+				serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
+				serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
+				updateTags:         "\n" + v2.UpdateTagsBody,
+				waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 			}
 		}
 		return &TemplateBody{
-			"\n" + v2.GetTagBody,
-			v2.HeaderBody,
-			"\n" + v2.ListTagsBody,
-			"\n" + v2.ServiceTagsMapBody,
-			"\n" + v2.ServiceTagsSliceBody,
-			"\n" + v2.UpdateTagsBody,
-			"\n" + v2.WaitTagsPropagatedBody,
+			getTag:             "\n" + v2.GetTagBody,
+			header:             v2.HeaderBody,
+			listTags:           "\n" + v2.ListTagsBody,
+			serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
+			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
+			updateTags:         "\n" + v2.UpdateTagsBody,
+			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 		}
 	default:
 		return nil
@@ -171,7 +176,12 @@ type TemplateData struct {
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
-	RetryCreateOnNotFound      string
+	RetryCreateOnNotFound      string // is this used?
+	RetryTagsListTagsType      string
+	RetryTagsErrorCodes        []string
+	RetryTagsErrorMessages     []string
+	RetryTagsTimeout           string
+	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
 	TagInIDElem                string
@@ -183,6 +193,7 @@ type TemplateData struct {
 	TagOpBatchSize             string
 	TagPackage                 string
 	TagResTypeElem             string
+	TagResTypeElemType         string
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
@@ -219,6 +230,7 @@ type TemplateData struct {
 	SkipTypesImp      bool
 	TfLogPkg          bool
 	TfResourcePkg     bool
+	TfSlicesPkg       bool
 	TimePkg           bool
 
 	IsDefaultListTags   bool
@@ -286,10 +298,12 @@ func main() {
 
 	tagPackage := awsPkg
 
-	if tagPackage == "wafregional" {
-		tagPackage = "waf"
-		if *sdkVersion == sdkV1 {
-			awsPkg = ""
+	var cleanRetryErrorCodes []string
+	for _, c := range strings.Split(*retryTagsErrorCodes, ",") {
+		if strings.HasPrefix(c, fmt.Sprintf("%s.", servicePackage)) || strings.HasPrefix(c, "types.") {
+			cleanRetryErrorCodes = append(cleanRetryErrorCodes, c)
+		} else {
+			cleanRetryErrorCodes = append(cleanRetryErrorCodes, fmt.Sprintf(`"%s"`, c))
 		}
 	}
 
@@ -310,8 +324,9 @@ func main() {
 		SkipServiceImp:    *skipServiceImp,
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
-		TfResourcePkg:     (*getTag || *waitForPropagation),
-		TimePkg:           *waitForPropagation,
+		TfResourcePkg:     *getTag || *waitForPropagation || *retryTagsListTagsType != "",
+		TfSlicesPkg:       *serviceTagsSlice && *tagTypeIDElem != "" && *tagTypeAddBoolElem != "",
+		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
 
 		CreateTagsFunc:             createTagsFunc,
 		GetTagFunc:                 *getTagFunc,
@@ -327,6 +342,11 @@ func main() {
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
+		RetryTagsListTagsType:      *retryTagsListTagsType,
+		RetryTagsErrorCodes:        cleanRetryErrorCodes,
+		RetryTagsErrorMessages:     strings.Split(*retryTagsErrorMessages, ","),
+		RetryTagsTimeout:           formatDuration(*retryTagsTimeout),
+		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,
 		TagInIDElem:                *tagInIDElem,
@@ -338,6 +358,7 @@ func main() {
 		TagOpBatchSize:             *tagOpBatchSize,
 		TagPackage:                 tagPackage,
 		TagResTypeElem:             *tagResTypeElem,
+		TagResTypeElemType:         *tagResTypeElemType,
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,

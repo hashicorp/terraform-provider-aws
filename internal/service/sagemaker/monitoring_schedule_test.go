@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
@@ -25,7 +25,7 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,10 +33,10 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.monitoring_type", "DataQuality"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -57,7 +57,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccSageMakerMonitoringSchedule_tags(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,8 +110,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
 			},
@@ -124,8 +124,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionDaily(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 0 ? * * *)"),
 				),
 			},
@@ -133,8 +133,8 @@ func TestAccSageMakerMonitoringSchedule_scheduleExpression(t *testing.T) {
 				Config: testAccMonitoringScheduleConfig_scheduleExpressionHourly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.schedule_config.0.schedule_expression", "cron(0 * ? * * *)"),
 				),
 			},
@@ -149,7 +149,7 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringScheduleDestroy(ctx),
 		Steps: []resource.TestStep{

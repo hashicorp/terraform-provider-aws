@@ -239,12 +239,21 @@ This resource supports the following arguments:
 Action Blocks (for `action`) support the following:
 
 * `type` - (Required) The type of routing action. Valid values are `forward`, `redirect`, `fixed-response`, `authenticate-cognito` and `authenticate-oidc`.
-* `targetGroupArn` - (Optional) The ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead.
-* `forward` - (Optional) Information for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. If you specify both `forward` block and `targetGroupArn` attribute, you can specify only one target group using `forward` and it must be the same target group specified in `targetGroupArn`.
-* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
-* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
 * `authenticateCognito` - (Optional) Information for creating an authenticate action using Cognito. Required if `type` is `authenticate-cognito`.
 * `authenticateOidc` - (Optional) Information for creating an authenticate action using OIDC. Required if `type` is `authenticate-oidc`.
+* `fixedResponse` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
+  Specify only if `type` is `forward`.
+  Cannot be specified with `targetGroupArn`.
+* `order` - (Optional) Order for the action.
+  The action with the lowest value for order is performed first.
+  Valid values are between `1` and `50000`.
+  Defaults to the position in the list of actions.
+* `redirect` - (Optional) Information for creating a redirect action. Required if `type` is `redirect`.
+* `targetGroupArn` - (Optional) ARN of the Target Group to which to route traffic.
+  Specify only if `type` is `forward` and you want to route to a single target group.
+  To route to one or more target groups, use a `forward` block instead.
+  Cannot be specified with `forward`.
 
 Forward Blocks (for `forward`) support the following:
 
@@ -381,4 +390,4 @@ Using `terraform import`, import rules using their ARN. For example:
 % terraform import aws_lb_listener_rule.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener-rule/app/test/8e4497da625e2d8a/9ab28ade35828f96/67b3d2d36dd7c26b
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-12e9f21426e9efd89a154c6e8445b8894b184d7651322f0592349d28d0132dea -->
+<!-- cache-key: cdktf-0.20.1 input-cbd617f4b3a03ad14c1f71b3912c93fb6d97fddee02da2aaec8e62c4c5648dcf -->

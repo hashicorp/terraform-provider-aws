@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccResolver_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func testAccResolver_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +37,7 @@ func testAccResolver_basic(t *testing.T) {
 				Config: testAccResolverConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
@@ -61,7 +62,7 @@ func testAccResolver_code(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +70,7 @@ func testAccResolver_code(t *testing.T) {
 				Config: testAccResolverConfig_code(rName, "test-fixtures/test-code.js"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.name", "APPSYNC_JS"),
 					resource.TestCheckResourceAttr(resourceName, "runtime.0.runtime_version", "1.0.0"),
 				),
@@ -91,7 +92,7 @@ func testAccResolver_syncConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func testAccResolver_syncConfig(t *testing.T) {
 				Config: testAccResolverConfig_sync(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_detection", "VERSION"),
 					resource.TestCheckResourceAttr(resourceName, "sync_config.0.conflict_handler", "OPTIMISTIC_CONCURRENCY"),
 				),
@@ -123,7 +124,7 @@ func testAccResolver_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +149,7 @@ func testAccResolver_dataSource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,7 +184,7 @@ func testAccResolver_DataSource_lambda(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -211,7 +212,7 @@ func testAccResolver_requestTemplate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -246,7 +247,7 @@ func testAccResolver_responseTemplate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -281,14 +282,14 @@ func testAccResolver_multipleResolvers(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResolverConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResolverExists(ctx, resourceName+"1", &resolver),
+					testAccCheckResolverExists(ctx, resourceName+acctest.CtOne, &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"2", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"3", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"4", &resolver),
@@ -312,7 +313,7 @@ func testAccResolver_pipeline(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -320,7 +321,7 @@ func testAccResolver_pipeline(t *testing.T) {
 				Config: testAccResolverConfig_pipeline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver),
-					resource.TestCheckResourceAttr(resourceName, "pipeline_config.0.functions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "pipeline_config.0.functions.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "pipeline_config.0.functions.0", "aws_appsync_function.test", "function_id"),
 				),
 			},
@@ -341,7 +342,7 @@ func testAccResolver_caching(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
 		Steps: []resource.TestStep{

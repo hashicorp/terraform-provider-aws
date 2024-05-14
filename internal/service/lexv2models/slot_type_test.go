@@ -36,7 +36,7 @@ func TestAccLexV2ModelsSlotType_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccLexV2ModelsSlotType_basic(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, resourceName, &slottype),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -74,7 +74,7 @@ func TestAccLexV2ModelsSlotType_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotTypeDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2PlacementGroup_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,8 +35,8 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("placement-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
 				),
@@ -57,7 +58,7 @@ func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				Config: testAccPlacementGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -111,7 +112,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				Config: testAccPlacementGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
 			},
 		},
@@ -126,7 +127,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 				Config: testAccPlacementGroupConfig_partitionCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 				),
@@ -156,7 +157,7 @@ func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
 				Config: testAccPlacementGroupConfig_defaultSpreadLevel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", "rack"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
 				),
@@ -186,7 +187,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlacementGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +195,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 				Config: testAccPlacementGroupConfig_hostSpreadLevel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", "host"),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "spread"),
 				),

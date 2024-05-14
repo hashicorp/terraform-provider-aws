@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_endpoint_subnet_association")
@@ -32,12 +33,12 @@ func ResourceVPCEndpointSubnetAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"vpc_endpoint_id": {
+			names.AttrVPCEndpointID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,8 +56,8 @@ func resourceVPCEndpointSubnetAssociationCreate(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get("vpc_endpoint_id").(string)
-	subnetID := d.Get("subnet_id").(string)
+	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
@@ -104,8 +105,8 @@ func resourceVPCEndpointSubnetAssociationRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get("vpc_endpoint_id").(string)
-	subnetID := d.Get("subnet_id").(string)
+	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
@@ -128,8 +129,8 @@ func resourceVPCEndpointSubnetAssociationDelete(ctx context.Context, d *schema.R
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	endpointID := d.Get("vpc_endpoint_id").(string)
-	subnetID := d.Get("subnet_id").(string)
+	endpointID := d.Get(names.AttrVPCEndpointID).(string)
+	subnetID := d.Get(names.AttrSubnetID).(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
 	id := fmt.Sprintf("%s/%s", endpointID, subnetID)
 
@@ -169,8 +170,8 @@ func resourceVPCEndpointSubnetAssociationImport(ctx context.Context, d *schema.R
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Subnet (%s) Association", endpointID, subnetID)
 
 	d.SetId(VPCEndpointSubnetAssociationCreateID(endpointID, subnetID))
-	d.Set("vpc_endpoint_id", endpointID)
-	d.Set("subnet_id", subnetID)
+	d.Set(names.AttrVPCEndpointID, endpointID)
+	d.Set(names.AttrSubnetID, subnetID)
 
 	return []*schema.ResourceData{d}, nil
 }

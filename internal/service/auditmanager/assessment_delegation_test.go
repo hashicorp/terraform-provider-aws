@@ -32,7 +32,7 @@ func TestAccAuditManagerAssessmentDelegation_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDelegationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,8 +40,8 @@ func TestAccAuditManagerAssessmentDelegation_basic(t *testing.T) {
 				Config: testAccAssessmentDelegationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_delegation", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
 				),
@@ -67,7 +67,7 @@ func TestAccAuditManagerAssessmentDelegation_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDelegationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccAuditManagerAssessmentDelegation_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDelegationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,25 +102,25 @@ func TestAccAuditManagerAssessmentDelegation_optional(t *testing.T) {
 				Config: testAccAssessmentDelegationConfig_optional(rName, "text"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_delegation", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
-					resource.TestCheckResourceAttr(resourceName, "comment", "text"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "text"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"control_set_id", "role_type", "comment"},
+				ImportStateVerifyIgnore: []string{"control_set_id", "role_type", names.AttrComment},
 			},
 			{
 				Config: testAccAssessmentDelegationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_delegation", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
 				),
@@ -129,11 +129,11 @@ func TestAccAuditManagerAssessmentDelegation_optional(t *testing.T) {
 				Config: testAccAssessmentDelegationConfig_optional(rName, "text-updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_delegation", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
-					resource.TestCheckResourceAttr(resourceName, "comment", "text-updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, "text-updated"),
 				),
 			},
 		},
@@ -153,7 +153,7 @@ func TestAccAuditManagerAssessmentDelegation_multiple(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AuditManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssessmentDelegationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,13 +161,13 @@ func TestAccAuditManagerAssessmentDelegation_multiple(t *testing.T) {
 				Config: testAccAssessmentDelegationConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssessmentDelegationExists(ctx, resourceName, &delegation),
-					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_delegation", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test_delegation", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_type", string(types.RoleTypeResourceOwner)),
 					testAccCheckAssessmentDelegationExists(ctx, resourceName2, &delegation2),
-					resource.TestCheckResourceAttrPair(resourceName2, "assessment_id", "aws_auditmanager_assessment.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName2, "role_arn", "aws_iam_role.test_delegation2", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName2, "assessment_id", "aws_auditmanager_assessment.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrRoleARN, "aws_iam_role.test_delegation2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName2, "control_set_id", rName),
 					resource.TestCheckResourceAttr(resourceName2, "role_type", string(types.RoleTypeResourceOwner)),
 				),

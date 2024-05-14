@@ -68,8 +68,17 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `configuration` - (Optional) A block that specifies the configuration of the analyzer. [Documented below](#configuration-argument-reference)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
+
+### `configuration` Argument Reference
+
+* `unused_access` - A block that specifies the configuration of an unused access analyzer for an AWS organization or account. [Documented below](#unused_access-argument-reference)
+
+### `unused_access` Argument Reference
+
+* `unused_access_age` - The specified access age in days for which to generate findings for unused access.
 
 ## Attribute Reference
 
@@ -104,4 +113,4 @@ Using `terraform import`, import Access Analyzer Analyzers using the `analyzer_n
 % terraform import aws_accessanalyzer_analyzer.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-4062f5c13fefb0112227bba24e101e8cb8dee9426f907b5735a0434c43b3e06c -->
+<!-- cache-key: cdktf-0.20.1 input-777f140794c2e9ccec7c662d017be187cb9666d4b344508d445dc2286f140d41 -->

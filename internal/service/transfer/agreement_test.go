@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAgreement_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func testAccAgreement_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,9 +41,9 @@ func testAccAgreement_basic(t *testing.T) {
 				Config: testAccAgreementConfig_basic(rName, baseDirectory1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory1),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -50,14 +51,14 @@ func testAccAgreement_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccAgreementConfig_basic(rName, baseDirectory2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "base_directory", baseDirectory2),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -78,7 +79,7 @@ func testAccAgreement_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func testAccAgreement_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func testAccAgreement_tags(t *testing.T) {
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -123,7 +124,7 @@ func testAccAgreement_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccAgreementConfig_tags2(rName, baseDirectory, "key1", "value1updated", "key2", "value2"),
@@ -138,7 +139,7 @@ func testAccAgreement_tags(t *testing.T) {
 				Config: testAccAgreementConfig_tags1(rName, baseDirectory, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgreementExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -214,16 +215,16 @@ func testAccAgreementConfig_base(rName string) string {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [{
-	  "Effect": "Allow",
-	  "Principal": {
-		"Service": "transfer.amazonaws.com"
-	  },
-	  "Action": "sts:AssumeRole"
-	}]
-  }
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+ }
 EOF
 }
 
@@ -233,17 +234,15 @@ resource "aws_iam_role_policy" "test" {
 
   policy = <<POLICY
 {
-	 "Version":"2012-10-17",
-	 "Statement":[
-		{
-		   "Sid":"AllowFullAccesstoS3",
-		   "Effect":"Allow",
-		   "Action":[
-			  "s3:*"
-		   ],
-		   "Resource":"*"
-		}
-	 ]
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"AllowFullAccesstoS3",
+    "Effect":"Allow",
+    "Action":[
+      "s3:*"
+    ],
+    "Resource":"*"
+  }]
 }
 POLICY
 }

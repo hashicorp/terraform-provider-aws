@@ -38,7 +38,7 @@ func testPlan_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -47,8 +47,8 @@ func testPlan_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
 					acctest.CheckResourceAttrRegionalARN(
 						planResourceName,
 						"contact_id",
@@ -88,7 +88,7 @@ func testPlan_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,7 +122,7 @@ func testPlan_updateContactId(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +131,7 @@ func testPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactOneResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactOneResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func testPlan_updateContactId(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactTwoResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(planResourceName, "contact_id", contactTwoResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func testPlan_updateStages(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,8 +180,8 @@ func testPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
 				),
 			},
@@ -196,7 +196,7 @@ func testPlan_updateStages(t *testing.T) {
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", "2"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.1.duration_in_minutes", "2"),
 					resource.TestCheckResourceAttr(planResourceName, "stage.1.target.#", "0"),
@@ -212,8 +212,8 @@ func testPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", "1"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
 				),
 			},
@@ -243,7 +243,7 @@ func testPlan_updateDurationInMinutes(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +302,7 @@ func testPlan_updateTargets(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -311,7 +311,7 @@ func testPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -370,7 +370,7 @@ func testPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -410,7 +410,7 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -419,7 +419,7 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -443,7 +443,7 @@ func testPlan_updateContactTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",
@@ -486,7 +486,7 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -499,12 +499,12 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelOneResourceName,
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,
@@ -527,12 +527,12 @@ func testPlan_updateChannelTargetInfo(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "1"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(
 						planResourceName,
 						"stage.0.target.0.channel_target_info.0.contact_channel_id",
 						contactChannelTwoResourceName,
-						"arn",
+						names.AttrARN,
 					),
 					resource.TestCheckResourceAttr(
 						planResourceName,

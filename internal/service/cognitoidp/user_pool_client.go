@@ -39,24 +39,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-func newResourceUserPoolClient(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserPoolClient{}
-	r.SetMigratedFromPluginSDK(true)
+// @FrameworkResource(name="User Pool Client")
+func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userPoolClientResource{}
 
 	return r, nil
 }
 
-type resourceUserPoolClient struct {
+type userPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceUserPoolClient) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_pool_client"
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
@@ -122,7 +121,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_secret": schema.StringAttribute{
+			names.AttrClientSecret: schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 				PlanModifiers: []planmodifier.String{
@@ -170,7 +169,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 					boolplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"id_token_validity": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -192,7 +191,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 					setplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required:   true,
 				Validators: userPoolClientNameValidator,
 			},
@@ -266,7 +265,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 								),
 								stringvalidator.ConflictsWith(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
@@ -275,14 +274,14 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 							Validators: []validator.String{
 								stringvalidator.AlsoRequires(
 									path.MatchRelative().AtParent().AtName("external_id"),
-									path.MatchRelative().AtParent().AtName("role_arn"),
+									path.MatchRelative().AtParent().AtName(names.AttrRoleARN),
 								),
 							},
 						},
 						"external_id": schema.StringAttribute{
 							Optional: true,
 						},
-						"role_arn": schema.StringAttribute{
+						names.AttrRoleARN: schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
 							Computed:   true,
@@ -333,7 +332,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceUserPoolClientData
@@ -395,7 +394,7 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -451,7 +450,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var config resourceUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
@@ -532,7 +531,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -542,7 +541,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 	params := state.deleteInput(ctx)
 
 	tflog.Debug(ctx, "deleting Cognito User Pool Client", map[string]interface{}{
-		"id":           state.ID.ValueString(),
+		names.AttrID:   state.ID.ValueString(),
 		"user_pool_id": state.UserPoolID.ValueString(),
 	})
 
@@ -562,7 +561,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
@@ -570,11 +569,11 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 	}
 	userPoolId := parts[0]
 	clientId := parts[1]
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("id"), clientId)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), clientId)...)
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
-func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourceUserPoolClientAccessTokenValidityValidator{
 			resourceUserPoolClientValidityValidator{
@@ -739,7 +738,7 @@ func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovi
 	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
 	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
 	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
-	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
+	attrs[names.AttrRoleARN] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
 	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
 	val := types.ObjectValueMust(attributeTypes, attrs)

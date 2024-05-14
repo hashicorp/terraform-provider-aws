@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTAuthorizer_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,13 +35,13 @@ func TestAccIoTAuthorizer_basic(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 				),
 			},
@@ -61,7 +62,7 @@ func TestAccIoTAuthorizer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,10 +94,10 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 				Config: testAccAuthorizerConfig_signingDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "0"),
 				),
@@ -118,7 +119,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,13 +127,13 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				Config: testAccAuthorizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-1"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 				),
 			},
@@ -140,11 +141,11 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 				Config: testAccAuthorizerConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("authorizer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("authorizer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "enable_caching_for_http", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-2"),
 					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "2"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),

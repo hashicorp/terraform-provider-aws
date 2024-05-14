@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource
 func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceService{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -38,18 +38,18 @@ func (d *dataSourceService) Metadata(_ context.Context, request datasource.Metad
 func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"dns_name": schema.StringAttribute{
+			names.AttrDNSName: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			"partition": schema.StringAttribute{
 				Computed: true,
 			},
-			"region": schema.StringAttribute{
+			names.AttrRegion: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -126,7 +126,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.ReverseDNSPrefix.IsNull() {
-		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
+		dnsParts := strings.Split(d.Meta().DNSSuffix(ctx), ".")
 		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 

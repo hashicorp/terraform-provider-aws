@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,10 +40,10 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_nlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", "arn"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-target/tmt-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -67,7 +68,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,8 +76,8 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_eni(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestMatchResourceAttr(resourceName, "network_interface_id", regexache.MustCompile("eni-.*")),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestMatchResourceAttr(resourceName, names.AttrNetworkInterfaceID, regexache.MustCompile("eni-.*")),
 				),
 			},
 			{
@@ -100,7 +101,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -130,7 +131,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorTargetConfig_tags1(rName, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorTargetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -150,7 +151,7 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,15 +178,15 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCTrafficMirrorTargetConfig_gwlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_load_balancer_endpoint_id", "aws_vpc_endpoint.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_load_balancer_endpoint_id", "aws_vpc_endpoint.test", names.AttrID),
 				),
 			},
 			{

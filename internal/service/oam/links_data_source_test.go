@@ -30,13 +30,13 @@ func TestAccObservabilityAccessManagerLinksDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinksDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arns.0", "oam", regexache.MustCompile(`link/+.`)),
 				),
 			},

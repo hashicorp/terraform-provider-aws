@@ -31,14 +31,14 @@ func testRotationDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRotationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testRotationDataSourceConfig_basic(rName, startTime),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.number_of_on_calls", dataSourceName, "recurrence.0.number_of_on_calls"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.recurrence_multiplier", dataSourceName, "recurrence.0.recurrence_multiplier"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.#", dataSourceName, "recurrence.0.weekly_settings.#"),
@@ -52,7 +52,7 @@ func testRotationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.hour_of_day"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.#", dataSourceName, "recurrence.0.shift_coverages.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "start_time", dataSourceName, "start_time"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStartTime, dataSourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrPair(resourceName, "time_zone_id", dataSourceName, "time_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.#", dataSourceName, "contact_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.0", dataSourceName, "contact_ids.0"),
@@ -81,7 +81,7 @@ func testRotationDataSource_dailySettings(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func testRotationDataSource_monthlySettings(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRotationDestroy(ctx),
 		Steps: []resource.TestStep{

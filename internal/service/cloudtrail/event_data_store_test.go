@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudtrail "github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,19 +34,19 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
-						"equals.#": "1",
-						"equals.0": "Management",
-						"field":    "eventCategory",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "Management",
+						names.AttrField: "eventCategory",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "Default management events"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "2555"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "2555"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "false"),
 				),
@@ -68,7 +68,7 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,11 +76,11 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 				Config: testAccEventDataStoreConfig_kmsKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,7 +122,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 				Config: testAccEventDataStoreConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -152,7 +152,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 				Config: testAccEventDataStoreConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "365"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "365"),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "true"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "90"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "90"),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", "false"),
 				),
 			},
@@ -207,7 +207,7 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -218,71 +218,71 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "s3Custom"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "4"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
-						"field":    "eventCategory",
-						"equals.#": "1",
-						"equals.0": "Data",
+						names.AttrField: "eventCategory",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
-						"field":    "eventName",
-						"equals.#": "1",
-						"equals.0": "DeleteObject",
+						names.AttrField: "eventName",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "DeleteObject",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
-						"field":    "readOnly",
-						"equals.#": "1",
-						"equals.0": "false",
+						names.AttrField: "readOnly",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
-						"field":    "resources.type",
-						"equals.#": "1",
-						"equals.0": "AWS::S3::Object",
+						names.AttrField: "resources.type",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "AWS::S3::Object",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.1.name", "lambdaLogAllEvents"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.1.field_selector.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.1.field_selector.*", map[string]string{
-						"field":    "eventCategory",
-						"equals.#": "1",
-						"equals.0": "Data",
+						names.AttrField: "eventCategory",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.1.field_selector.*", map[string]string{
-						"field":    "resources.type",
-						"equals.#": "1",
-						"equals.0": "AWS::Lambda::Function",
+						names.AttrField: "resources.type",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "AWS::Lambda::Function",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.2.name", "dynamoDbReadOnlyEvents"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
-						"field":    "readOnly",
-						"equals.#": "1",
-						"equals.0": "true",
+						names.AttrField: "readOnly",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "true",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.2.field_selector.*", map[string]string{
-						"field":    "resources.type",
-						"equals.#": "1",
-						"equals.0": "AWS::DynamoDB::Table",
+						names.AttrField: "resources.type",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "AWS::DynamoDB::Table",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.3.name", "s3OutpostsWriteOnlyEvents"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.3.field_selector.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
-						"field":    "eventCategory",
-						"equals.#": "1",
-						"equals.0": "Data",
+						names.AttrField: "eventCategory",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "Data",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
-						"field":    "readOnly",
-						"equals.#": "1",
-						"equals.0": "false",
+						names.AttrField: "readOnly",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.3.field_selector.*", map[string]string{
-						"field":    "resources.type",
-						"equals.#": "1",
-						"equals.0": "AWS::S3Outposts::Object",
+						names.AttrField: "resources.type",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "AWS::S3Outposts::Object",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.name", "managementEventsSelector"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.field_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.4.field_selector.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.4.field_selector.*", map[string]string{
-						"field":    "eventCategory",
-						"equals.#": "1",
-						"equals.0": "Management",
+						names.AttrField: "eventCategory",
+						"equals.#":      acctest.CtOne,
+						"equals.0":      "Management",
 					}),
 				),
 			},
@@ -302,11 +302,7 @@ func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.Te
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudTrail Event Data Store ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
 
 		_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
 
@@ -316,7 +312,7 @@ func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.Te
 
 func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudtrail_event_data_store" {

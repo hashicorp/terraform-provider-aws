@@ -30,7 +30,7 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,9 +38,9 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -65,7 +65,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +100,7 @@ func TestAccAMPWorkspace_kms(t *testing.T) {
 				Config: testAccWorkspaceConfig_kms(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 				),
 			},
 		},
@@ -114,7 +114,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,7 +122,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccAMPWorkspace_tags(t *testing.T) {
 				Config: testAccWorkspaceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Config: testAccWorkspaceConfig_alias(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 			{
@@ -185,7 +185,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					testAccCheckWorkspaceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName2),
 				),
 			},
 			{
@@ -193,7 +193,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					testAccCheckWorkspaceRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, ""),
 				),
 			},
 			{
@@ -201,7 +201,7 @@ func TestAccAMPWorkspace_alias(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v4),
 					testAccCheckWorkspaceNotRecreated(&v3, &v4),
-					resource.TestCheckResourceAttr(resourceName, "alias", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAlias, rName1),
 				),
 			},
 		},
@@ -216,7 +216,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AMPEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -224,7 +224,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -237,7 +237,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},

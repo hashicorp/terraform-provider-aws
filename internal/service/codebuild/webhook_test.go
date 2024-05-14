@@ -37,7 +37,7 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeBitbucket)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestAccCodeBuildWebhook_bitbucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
 			},
 			{
@@ -74,7 +74,7 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccCodeBuildWebhook_gitHub(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestCheckResourceAttr(resourceName, "secret", ""),
-					resource.TestMatchResourceAttr(resourceName, "url", regexache.MustCompile(`^https://`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURL, regexache.MustCompile(`^https://`)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithubEnterprise)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,7 +123,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
 			},
 			{
@@ -140,7 +140,7 @@ func TestAccCodeBuildWebhook_gitHubEnterprise(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "payload_url", regexache.MustCompile(`^https://`)),
 					resource.TestMatchResourceAttr(resourceName, "secret", regexache.MustCompile(`.+`)),
-					resource.TestCheckResourceAttr(resourceName, "url", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURL, ""),
 				),
 			},
 			{
@@ -165,7 +165,7 @@ func TestAccCodeBuildWebhook_buildType(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +212,7 @@ func TestAccCodeBuildWebhook_branchFilter(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -252,7 +252,7 @@ func TestAccCodeBuildWebhook_filterGroup(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -305,7 +305,7 @@ func TestAccCodeBuildWebhook_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -334,7 +334,7 @@ func TestAccCodeBuildWebhook_Disappears_project(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -11,9 +11,10 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
+func TestAccFSxOpenZFSSnapshotDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_fsx_openzfs_snapshot.test"
 	resourceName := "aws_fsx_openzfs_snapshot.test"
@@ -23,75 +24,50 @@ func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy(ctx),
+		CheckDestroy:             testAccCheckOpenZFSSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_basic(rName),
+				Config: testAccOpenZFSSnapshotDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "creation_time", resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
 			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_tags1(rName, "key1", "value1"),
+				Config: testAccOpenZFSSnapshotDataSourceConfig_filterFileSystemId(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_filterFileSystemId(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "creation_time", resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
 			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_filterVolumeId(rName),
+				Config: testAccOpenZFSSnapshotDataSourceConfig_filterVolumeId(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "creation_time", resourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, resourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 				),
 			},
 			{
-				Config: testAccOpenzfsSnapshotDataSourceConfig_mostRecent(rName, rName2),
+				Config: testAccOpenZFSSnapshotDataSourceConfig_mostRecent(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", mostRecentResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "creation_time", mostRecentResourceName, "creation_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", mostRecentResourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", mostRecentResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, mostRecentResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrCreationTime, mostRecentResourceName, names.AttrCreationTime),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, mostRecentResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, mostRecentResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", mostRecentResourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", mostRecentResourceName, "volume_id"),
 				),
@@ -100,33 +76,8 @@ func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccOpenzfsSnapshotDataSourceBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-}
-
-resource "aws_fsx_openzfs_file_system" "test" {
-  storage_capacity    = 64
-  subnet_ids          = [aws_subnet.test1.id]
-  deployment_type     = "SINGLE_AZ_1"
-  throughput_capacity = 64
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName))
-}
-
-func testAccOpenzfsSnapshotDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
+func testAccOpenZFSSnapshotDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
@@ -138,43 +89,8 @@ data "aws_fsx_openzfs_snapshot" "test" {
 `, rName))
 }
 
-func testAccOpenzfsSnapshotDataSourceConfig_tags1(rName string, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
-resource "aws_fsx_openzfs_snapshot" "test" {
-  name      = %[1]q
-  volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-
-data "aws_fsx_openzfs_snapshot" "test" {
-  snapshot_ids = [aws_fsx_openzfs_snapshot.test.id]
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccOpenzfsSnapshotDataSourceConfig_tags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
-resource "aws_fsx_openzfs_snapshot" "test" {
-  name      = %[1]q
-  volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-
-data "aws_fsx_openzfs_snapshot" "test" {
-  snapshot_ids = [aws_fsx_openzfs_snapshot.test.id]
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccOpenzfsSnapshotDataSourceConfig_filterFileSystemId(rName string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
+func testAccOpenZFSSnapshotDataSourceConfig_filterFileSystemId(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
@@ -189,8 +105,8 @@ data "aws_fsx_openzfs_snapshot" "test" {
 `, rName))
 }
 
-func testAccOpenzfsSnapshotDataSourceConfig_filterVolumeId(rName string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
+func testAccOpenZFSSnapshotDataSourceConfig_filterVolumeId(rName string) string {
+	return acctest.ConfigCompose(testAccOpenZFSSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id
@@ -205,8 +121,8 @@ data "aws_fsx_openzfs_snapshot" "test" {
 `, rName))
 }
 
-func testAccOpenzfsSnapshotDataSourceConfig_mostRecent(rName, rName2 string) string {
-	return acctest.ConfigCompose(testAccOpenzfsSnapshotDataSourceBaseConfig(rName), fmt.Sprintf(`
+func testAccOpenZFSSnapshotDataSourceConfig_mostRecent(rName, rName2 string) string {
+	return acctest.ConfigCompose(testAccOpenZFSSnapshotConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_snapshot" "test" {
   name      = %[1]q
   volume_id = aws_fsx_openzfs_file_system.test.root_volume_id

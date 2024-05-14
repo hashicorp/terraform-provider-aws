@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMPrincipalPolicySimulationDataSource_basic(t *testing.T) {
@@ -20,14 +20,14 @@ func TestAccIAMPrincipalPolicySimulationDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalPolicySimulationDataSourceConfig_main(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "all_allowed", "true"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.action_name", "ec2:AssociateVpcCidrBlock"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.allowed", "true"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.decision", "allowed"),
@@ -41,25 +41,25 @@ func TestAccIAMPrincipalPolicySimulationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_simple", "results.0.matched_statements.0.source_policy_type", "IAM Policy"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "all_allowed", "false"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "results.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "results.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "results.0.action_name", "ec2:AttachClassicLinkVpc"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "results.0.allowed", "false"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_explicit", "results.0.decision", "explicitDeny"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "all_allowed", "false"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "results.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "results.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "results.0.action_name", "ec2:AttachVpnGateway"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "results.0.allowed", "false"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.deny_implicit", "results.0.decision", "implicitDeny"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "all_allowed", "true"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "results.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "results.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "results.0.action_name", "ec2:AttachInternetGateway"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "results.0.allowed", "true"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_context", "results.0.decision", "allowed"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "all_allowed", "false"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.#", "1"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.#", acctest.CtOne),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.0.action_name", "ec2:AttachInternetGateway"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.0.allowed", "false"),
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.0.decision", "implicitDeny"),

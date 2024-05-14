@@ -25,7 +25,7 @@ func testAccAccessGrant_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func testAccAccessGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "0"),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
 					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),
@@ -60,7 +60,7 @@ func testAccAccessGrant_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -113,7 +113,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -128,7 +128,7 @@ func testAccAccessGrant_locationConfiguration(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessGrantDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +136,7 @@ func testAccAccessGrant_locationConfiguration(t *testing.T) {
 				Config: testAccAccessGrantConfig_locationConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.0.s3_sub_prefix", "prefix1/prefix2/data.txt"),
 					resource.TestCheckResourceAttr(resourceName, "s3_prefix_type", "Object"),
 				),
@@ -160,7 +160,7 @@ func testAccCheckAccessGrantDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grant_id"])
+			_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grant_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -186,7 +186,7 @@ func testAccCheckAccessGrantExists(ctx context.Context, n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
-		_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["access_grant_id"])
+		_, err := tfs3control.FindAccessGrantByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAccountID], rs.Primary.Attributes["access_grant_id"])
 
 		return err
 	}

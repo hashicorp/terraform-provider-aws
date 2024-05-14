@@ -5,6 +5,7 @@ package lexmodels_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -18,13 +19,14 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type endpointTestCase struct {
@@ -98,7 +100,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName0EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides alias name 1 config": {
@@ -106,7 +108,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName1EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides alias name 2 config": {
@@ -114,7 +116,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides aws service envvar": {
@@ -163,7 +165,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName0EndpointInConfig,
 				withAliasName1EndpointInConfig,
 			},
-			expected: expectAliasName0ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName0ConfigEndpoint()),
 		},
 
 		"alias name 0 endpoint config overrides alias name 2 config": {
@@ -171,7 +173,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName0EndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectAliasName0ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName0ConfigEndpoint()),
 		},
 
 		"alias name 0 endpoint config overrides aws service envvar": {
@@ -220,7 +222,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName1EndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectAliasName1ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName1ConfigEndpoint()),
 		},
 
 		"alias name 1 endpoint config overrides aws service envvar": {
@@ -426,43 +428,54 @@ func withNoConfig(_ *caseSetup) {
 }
 
 func withPackageNameEndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[packageName] = packageNameConfigEndpoint
 }
 
 func withAliasName0EndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[aliasName0] = aliasName0ConfigEndpoint
 }
 
 func withAliasName1EndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[aliasName1] = aliasName1ConfigEndpoint
 }
 
 func withAliasName2EndpointInConfig(setup *caseSetup) {
-	if _, ok := setup.config["endpoints"]; !ok {
-		setup.config["endpoints"] = []any{
+	if _, ok := setup.config[names.AttrEndpoints]; !ok {
+		setup.config[names.AttrEndpoints] = []any{
 			map[string]any{},
 		}
 	}
-	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
+	endpoints := setup.config[names.AttrEndpoints].([]any)[0].(map[string]any)
 	endpoints[aliasName2] = aliasName2ConfigEndpoint
+}
+
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath(names.AttrEndpoints).IndexInt(0),
+		packageName,
+		aliasName0,
+		aliasName1,
+		aliasName2,
+	))
+	return e
 }
 
 func withAwsEnvVar(setup *caseSetup) {
@@ -550,17 +563,17 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	config := map[string]any{
-		"access_key":                  servicemocks.MockStaticAccessKey,
-		"secret_key":                  servicemocks.MockStaticSecretKey,
-		"region":                      region,
-		"skip_credentials_validation": true,
-		"skip_requesting_account_id":  true,
+		names.AttrAccessKey:                 servicemocks.MockStaticAccessKey,
+		names.AttrSecretKey:                 servicemocks.MockStaticSecretKey,
+		names.AttrRegion:                    region,
+		names.AttrSkipCredentialsValidation: true,
+		names.AttrSkipRequestingAccountID:   true,
 	}
 
 	maps.Copy(config, setup.config)
 
 	if setup.configFile.baseUrl != "" || setup.configFile.serviceUrl != "" {
-		config["profile"] = "default"
+		config[names.AttrProfile] = "default"
 		tempDir := t.TempDir()
 		writeSharedConfigFile(t, &config, tempDir, generateSharedConfigFile(setup.configFile))
 	}
@@ -703,10 +716,10 @@ func writeSharedConfigFile(t *testing.T, config *map[string]any, tempDir, conten
 		t.Fatalf(" writing shared configuration file: %s", err)
 	}
 
-	if v, ok := (*config)["shared_config_files"]; !ok {
-		(*config)["shared_config_files"] = []any{file.Name()}
+	if v, ok := (*config)[names.AttrSharedConfigFiles]; !ok {
+		(*config)[names.AttrSharedConfigFiles] = []any{file.Name()}
 	} else {
-		(*config)["shared_config_files"] = append(v.([]any), file.Name())
+		(*config)[names.AttrSharedConfigFiles] = append(v.([]any), file.Name())
 	}
 
 	return file.Name()

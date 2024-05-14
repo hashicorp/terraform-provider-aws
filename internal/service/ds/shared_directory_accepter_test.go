@@ -30,7 +30,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -40,7 +40,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 					testAccCheckSharedDirectoryAccepterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "method", directoryservice.ShareMethodHandshake),
 					resource.TestCheckResourceAttr(resourceName, "notes", "There were hints and allegations"),
-					resource.TestCheckResourceAttrPair(resourceName, "owner_account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "owner_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_directory_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_directory_id"),
 				),

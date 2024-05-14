@@ -36,7 +36,7 @@ func TestAccLexV2ModelsSlot_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccLexV2ModelsSlot_basic(t *testing.T) {
 				Config: testAccSlotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -74,7 +74,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,12 +82,12 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateMultipleValuesSetting(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", "true"),
 				),
 			},
@@ -95,12 +95,12 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateMultipleValuesSetting(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "multiple_values_setting.0.allow_multiple_values", "false"),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,12 +130,12 @@ func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
 				Config: testAccSlotConfig_updateObfuscationSetting(rName, "DefaultObfuscation"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
-					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.obfuscation_setting_type", "DefaultObfuscation"),
 				),
 			},
@@ -158,7 +158,7 @@ func TestAccLexV2ModelsSlot_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSlotDestroy(ctx),
 		Steps: []resource.TestStep{

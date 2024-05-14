@@ -13,11 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,7 +29,7 @@ import (
 
 // @SDKResource("aws_elasticache_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
-func ResourceSubnetGroup() *schema.Resource {
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,
@@ -38,16 +41,16 @@ func ResourceSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -58,40 +61,35 @@ func ResourceSubnetGroup() *schema.Resource {
 					return strings.ToLower(val.(string))
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
-		CustomizeDiff: resourceSubnetGroupDiff,
+		CustomizeDiff: customdiff.All(
+			resourceSubnetGroupCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
-}
-
-func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging;
-	// thus we must suppress the diff originating from the provider-level default_tags configuration
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get("name").(string) == "default" {
-		return nil
-	}
-
-	return verify.SetTagsDiff(ctx, diff, meta)
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &elasticache.CreateCacheSubnetGroupInput{
-		CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
+		CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		CacheSubnetGroupName:        aws.String(name),
-		SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		Tags:                        getTagsIn(ctx),
 	}
 
@@ -108,7 +106,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Subnet Group (%s): %s", name, err)
 	}
 
-	// Assign the group name as the resource ID
+	// Assign the group name as the resource ID.
 	// ElastiCache always retains the name in lower case, so we have to
 	// mimic that or else we won't be able to refresh a resource whose
 	// name contained uppercase characters.
@@ -135,7 +133,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
+	group, err := findCacheSubnetGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
@@ -147,15 +145,13 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	var subnetIDs []*string
-	for _, subnet := range group.Subnets {
-		subnetIDs = append(subnetIDs, subnet.SubnetIdentifier)
-	}
-
-	d.Set("arn", group.ARN)
-	d.Set("name", group.CacheSubnetGroupName)
-	d.Set("description", group.CacheSubnetGroupDescription)
-	d.Set("subnet_ids", aws.StringValueSlice(subnetIDs))
+	d.Set(names.AttrARN, group.ARN)
+	d.Set(names.AttrDescription, group.CacheSubnetGroupDescription)
+	d.Set(names.AttrName, group.CacheSubnetGroupName)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v *elasticache.Subnet) string {
+		return aws.StringValue(v.SubnetIdentifier)
+	}))
+	d.Set(names.AttrVPCID, group.VpcId)
 
 	return diags
 }
@@ -164,11 +160,11 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	if d.HasChanges("subnet_ids", "description") {
+	if d.HasChanges(names.AttrSubnetIDs, names.AttrDescription) {
 		input := &elasticache.ModifyCacheSubnetGroupInput{
-			CacheSubnetGroupDescription: aws.String(d.Get("description").(string)),
-			CacheSubnetGroupName:        aws.String(d.Get("name").(string)),
-			SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+			CacheSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
+			CacheSubnetGroupName:        aws.String(d.Get(names.AttrName).(string)),
+			SubnetIds:                   flex.ExpandStringSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
 		}
 
 		_, err := conn.ModifyCacheSubnetGroupWithContext(ctx, input)
@@ -201,4 +197,65 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func resourceSubnetGroupCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging,
+	// thus we must suppress the diff originating from the provider-level default_tags configuration.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213.
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	if len(defaultTagsConfig.GetTags()) > 0 && diff.Get(names.AttrName).(string) == "default" {
+		return nil
+	}
+
+	return nil
+}
+
+func findCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
+	input := &elasticache.DescribeCacheSubnetGroupsInput{
+		CacheSubnetGroupName: aws.String(name),
+	}
+
+	return findCacheSubnetGroup(ctx, conn, input, tfslices.PredicateTrue[*elasticache.CacheSubnetGroup]())
+}
+
+func findCacheSubnetGroup(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*elasticache.CacheSubnetGroup]) (*elasticache.CacheSubnetGroup, error) {
+	output, err := findCacheSubnetGroups(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findCacheSubnetGroups(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheSubnetGroupsInput, filter tfslices.Predicate[*elasticache.CacheSubnetGroup]) ([]*elasticache.CacheSubnetGroup, error) {
+	var output []*elasticache.CacheSubnetGroup
+
+	err := conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.CacheSubnetGroups {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

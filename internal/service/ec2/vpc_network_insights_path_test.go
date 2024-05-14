@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,14 +34,14 @@ func TestAccVPCNetworkInsightsPath_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", "aws_network_interface.test.1", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-path/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "destination_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "tcp"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_network_interface.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source_ip", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -62,7 +62,7 @@ func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccVPCNetworkInsightsPath_tags(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -130,7 +130,7 @@ func TestAccVPCNetworkInsightsPath_sourceAndDestinationARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,10 +138,10 @@ func TestAccVPCNetworkInsightsPath_sourceAndDestinationARN(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_sourceAndDestinationARN(rName, "tcp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "destination", "aws_network_interface.test.1", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", "aws_network_interface.test.1", "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "source", "aws_network_interface.test.0", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestination, "aws_network_interface.test.1", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, "aws_network_interface.test.1", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSource, "aws_network_interface.test.0", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "source_arn", "aws_network_interface.test.0", names.AttrARN),
 				),
 			},
 			{
@@ -160,7 +160,7 @@ func TestAccVPCNetworkInsightsPath_sourceIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +194,7 @@ func TestAccVPCNetworkInsightsPath_destinationIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -228,7 +228,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkInsightsPathDestroy(ctx),
 		Steps: []resource.TestStep{

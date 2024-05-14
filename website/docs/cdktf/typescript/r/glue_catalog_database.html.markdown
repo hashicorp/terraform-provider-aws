@@ -26,7 +26,7 @@ import { GlueCatalogDatabase } from "./.gen/providers/aws/glue-catalog-database"
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new GlueCatalogDatabase(this, "aws_glue_catalog_database", {
+    new GlueCatalogDatabase(this, "example", {
       name: "MyCatalogDatabase",
     });
   }
@@ -48,7 +48,7 @@ import { GlueCatalogDatabase } from "./.gen/providers/aws/glue-catalog-database"
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new GlueCatalogDatabase(this, "aws_glue_catalog_database", {
+    new GlueCatalogDatabase(this, "example", {
       createTableDefaultPermission: [
         {
           permissions: ["SELECT"],
@@ -71,11 +71,17 @@ This resource supports the following arguments:
 * `catalogId` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
 * `createTableDefaultPermission` - (Optional) Creates a set of default permissions on the table for principals. See [`createTableDefaultPermission`](#create_table_default_permission) below.
 * `description` - (Optional) Description of the database.
+* `federatedDatabase` - (Optional) Configuration block that references an entity outside the AWS Glue Data Catalog. See [`federatedDatabase`](#federated_database) below.
 * `locationUri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
 * `parameters` - (Optional) List of key-value pairs that define parameters and properties of the database.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `targetDatabase` - (Optional) Configuration block for a target database for resource linking. See [`targetDatabase`](#target_database) below.
+
+### federated_database
+
+* `connectionName` - (Optional) Name of the connection to the external metastore.
+* `identifier` - (Optional) Unique identifier for the federated database.
 
 ### target_database
 
@@ -132,4 +138,4 @@ Using `terraform import`, import Glue Catalog Databases using the `catalog_id:na
 % terraform import aws_glue_catalog_database.database 123456789012:my_database
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-556c19f9f828a7b00dcbf12d311ec9ce93276130015a07072b31615d6edc75d0 -->
+<!-- cache-key: cdktf-0.20.1 input-f6ddbf330fc96789770c14c13d7df90a799c7886bd2a946dc50aba50cacf3d3c -->

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_certificate", name="Certificate)
@@ -31,7 +32,7 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeBool,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,12 +58,12 @@ func ResourceCertificate() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"private_key": {
+			names.AttrPrivateKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -135,8 +136,8 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		d.SetId(aws.StringValue(output.CertificateId))
-		d.Set("private_key", output.KeyPair.PrivateKey)
-		d.Set("public_key", output.KeyPair.PublicKey)
+		d.Set(names.AttrPrivateKey, output.KeyPair.PrivateKey)
+		d.Set(names.AttrPublicKey, output.KeyPair.PublicKey)
 	}
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)
@@ -160,7 +161,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	certificateDescription := output.CertificateDescription
 	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CertificateStatusActive)
-	d.Set("arn", certificateDescription.CertificateArn)
+	d.Set(names.AttrARN, certificateDescription.CertificateArn)
 	d.Set("ca_certificate_id", certificateDescription.CaCertificateId)
 	d.Set("certificate_pem", certificateDescription.CertificatePem)
 

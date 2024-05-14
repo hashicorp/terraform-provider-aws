@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2Fleet_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -39,31 +40,31 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`fleet/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`fleet/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "fulfilled_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "fulfilled_on_demand_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.version"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "terminate"),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
-					resource.TestCheckResourceAttr(resourceName, "type", "maintain"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "maintain"),
 				),
 			},
 			{
@@ -84,7 +85,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -139,7 +140,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -155,7 +156,7 @@ func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +195,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,9 +203,9 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 				Config: testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName1, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
 				),
 			},
@@ -219,9 +220,9 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateID(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName2, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
 				),
 			},
@@ -239,7 +240,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,9 +248,9 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 				Config: testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName1, "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName1, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName1, "latest_version"),
 				),
 			},
@@ -264,9 +265,9 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_launchTemplateNam
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName2, "name"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_name", launchTemplateResourceName2, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName2, "latest_version"),
 				),
 			},
@@ -284,7 +285,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -292,12 +293,12 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 				Config: testAccFleetConfig_launchTemplateVersion(rName, "t3.micro"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, launchTemplateResourceName, &launchTemplate),
-					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.micro"),
-					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(launchTemplateResourceName, names.AttrInstanceType, "t3.micro"),
+					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", acctest.CtOne),
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
 				),
 			},
@@ -311,13 +312,13 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 				Config: testAccFleetConfig_launchTemplateVersion(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, launchTemplateResourceName, &launchTemplate),
-					resource.TestCheckResourceAttr(launchTemplateResourceName, "instance_type", "t3.small"),
+					resource.TestCheckResourceAttr(launchTemplateResourceName, names.AttrInstanceType, "t3.small"),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "2"),
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id", launchTemplateResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.launch_template_specification.0.version", launchTemplateResourceName, "latest_version"),
 				),
 			},
@@ -334,7 +335,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -342,8 +343,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverrideAvailabilityZone(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.availability_zone", availabilityZonesDataSourceName, "names.0"),
 				),
 			},
@@ -358,8 +359,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.availability_zone", availabilityZonesDataSourceName, "names.1"),
 				),
 			},
@@ -377,7 +378,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 
 // 	resource.ParallelTest(t, resource.TestCase{
 // 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 // 		Steps: []resource.TestStep{
@@ -401,7 +402,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -415,14 +416,14 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.min", "500"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", acctest.CtOne),
 				),
 			},
 			{
@@ -443,15 +444,15 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCP
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.min", "500"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_mib.0.max", "24000"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.min", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.vcpu_count.0.max", "8"),
 				),
 			},
@@ -472,7 +473,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -489,12 +490,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.min", acctest.CtOne),
 				),
 			},
 			{
@@ -517,12 +518,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.min", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.max", "4"),
 				),
 			},
@@ -545,11 +546,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.max", "0"),
 				),
 			},
@@ -570,7 +571,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -585,11 +586,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.*", "amd"),
 				),
 			},
@@ -610,10 +611,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorManu
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.#", "4"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.*", "amazon-web-services"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_manufacturers.*", "amd"),
@@ -638,7 +639,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -653,11 +654,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.*", "a100"),
 				),
 			},
@@ -678,10 +679,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorName
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.#", "7"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.*", "a100"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_names.*", "v100"),
@@ -709,7 +710,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -726,11 +727,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.0.min", "1000"),
 				),
 			},
@@ -753,11 +754,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.0.max", "24000"),
 				),
 			},
@@ -781,11 +782,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorTota
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.0.min", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_total_memory_mib.0.max", "24000"),
 				),
@@ -807,7 +808,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -822,11 +823,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.*", "fpga"),
 				),
 			},
@@ -847,10 +848,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorType
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.*", "fpga"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_types.*", "gpu"),
@@ -874,7 +875,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstance
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -889,11 +890,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstance
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m4.large"),
 				),
 			},
@@ -914,10 +915,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_allowedInstance
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m4.large"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.allowed_instance_types.*", "m5.*"),
@@ -941,7 +942,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -956,10 +957,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.bare_metal", "excluded"),
 				),
 			},
@@ -980,10 +981,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.bare_metal", "included"),
 				),
 			},
@@ -1004,10 +1005,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_bareMetal(t *te
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.bare_metal", "required"),
 				),
 			},
@@ -1028,7 +1029,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1045,11 +1046,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.0.min", "10"),
 				),
 			},
@@ -1072,11 +1073,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.0.max", "20000"),
 				),
 			},
@@ -1100,11 +1101,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_baselineEBSBand
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.0.min", "10"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.baseline_ebs_bandwidth_mbps.0.max", "20000"),
 				),
@@ -1126,7 +1127,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1141,10 +1142,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.burstable_performance", "excluded"),
 				),
 			},
@@ -1165,10 +1166,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.burstable_performance", "included"),
 				),
 			},
@@ -1189,10 +1190,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_burstablePerfor
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.burstable_performance", "required"),
 				),
 			},
@@ -1213,7 +1214,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1228,11 +1229,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.*", "amd"),
 				),
 			},
@@ -1253,10 +1254,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_cpuManufacturer
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.*", "amazon-web-services"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.cpu_manufacturers.*", "amd"),
@@ -1280,7 +1281,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1295,11 +1296,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.*", "t2.nano"),
 				),
 			},
@@ -1320,10 +1321,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_excludedInstanc
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.*", "t2.nano"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.excluded_instance_types.*", "t3*"),
@@ -1347,7 +1348,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1362,11 +1363,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.*", "current"),
 				),
 			},
@@ -1387,10 +1388,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.*", "current"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.*", "previous"),
@@ -1413,7 +1414,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1428,10 +1429,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage", "excluded"),
 				),
 			},
@@ -1452,10 +1453,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage", "included"),
 				),
 			},
@@ -1476,10 +1477,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorage(t 
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage", "required"),
 				),
 			},
@@ -1500,7 +1501,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1515,11 +1516,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.*", "hdd"),
 				),
 			},
@@ -1540,10 +1541,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.*", "hdd"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.*", "ssd"),
@@ -1566,7 +1567,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1583,11 +1584,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.0.min", "0.5"),
 				),
 			},
@@ -1610,11 +1611,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.0.max", "9.5"),
 				),
 			},
@@ -1638,11 +1639,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryGiBPerVCP
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.0.min", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.memory_gib_per_vcpu.0.max", "9.5"),
 				),
@@ -1664,7 +1665,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1681,11 +1682,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "1.5"),
 				),
 			},
@@ -1708,11 +1709,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "200"),
 				),
 			},
@@ -1736,11 +1737,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.min", "2.5"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "250"),
 				),
@@ -1762,7 +1763,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1779,12 +1780,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.min", acctest.CtOne),
 				),
 			},
 			{
@@ -1806,11 +1807,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.max", "10"),
 				),
 			},
@@ -1834,12 +1835,12 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkInterfac
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.min", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.min", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_interface_count.0.max", "10"),
 				),
 			},
@@ -1860,7 +1861,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1875,10 +1876,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.on_demand_max_price_percentage_over_lowest_price", "50"),
 				),
 			},
@@ -1899,7 +1900,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1914,10 +1915,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "false"),
 				),
 			},
@@ -1938,10 +1939,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernat
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.require_hibernate_support", "true"),
 				),
 			},
@@ -1962,7 +1963,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_spotMaxPricePer
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1977,10 +1978,10 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_spotMaxPricePer
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.spot_max_price_percentage_over_lowest_price", "75"),
 				),
 			},
@@ -2001,7 +2002,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2018,11 +2019,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.0.min", "0.5"),
 				),
 			},
@@ -2045,11 +2046,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.0.max", "20.5"),
 				),
 			},
@@ -2073,11 +2074,11 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_totalLocalStora
                      }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.0.min", "0.5"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.total_local_storage_gb.0.max", "20.5"),
 				),
@@ -2100,7 +2101,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2108,8 +2109,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverrideInstanceType(rName, "t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_type", "t3.small"),
 				),
 			},
@@ -2124,8 +2125,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_type", "t3.medium"),
 				),
 			},
@@ -2141,7 +2142,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2149,8 +2150,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverrideMaxPrice(rName, "1.01"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.max_price", "1.01"),
 				),
 			},
@@ -2165,8 +2166,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.max_price", "1.02"),
 				),
 			},
@@ -2183,7 +2184,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_maxPrice(t *testing.T) {
 
 // 	resource.ParallelTest(t, resource.TestCase{
 // 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 // 		Steps: []resource.TestStep{
@@ -2209,7 +2210,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2217,9 +2218,9 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverridePriority(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", acctest.CtOne),
 				),
 			},
 			{
@@ -2233,8 +2234,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
 				),
 			},
@@ -2250,7 +2251,7 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2258,9 +2259,9 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverridePriorityMultiple(rName, 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", "2"),
 				),
 			},
@@ -2275,10 +2276,10 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", acctest.CtOne),
 				),
 			},
 		},
@@ -2295,7 +2296,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2303,9 +2304,9 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverrideSubnetID(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName1, names.AttrID),
 				),
 			},
 			{
@@ -2319,9 +2320,9 @@ func TestAccEC2Fleet_LaunchTemplateOverride_subnetID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.subnet_id", subnetResourceName2, names.AttrID),
 				),
 			},
 		},
@@ -2336,7 +2337,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2344,9 +2345,9 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -2360,8 +2361,8 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "2"),
 				),
 			},
@@ -2377,7 +2378,7 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2385,10 +2386,10 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 				Config: testAccFleetConfig_launchTemplateOverrideWeightedCapacityMultiple(rName, 1, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -2402,9 +2403,9 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", "2"),
 				),
 			},
@@ -2420,7 +2421,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2428,7 +2429,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 				Config: testAccFleetConfig_onDemandOptionsAllocationStrategy(rName, "prioritized"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "prioritized"),
 				),
 			},
@@ -2443,7 +2444,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
 				),
 			},
@@ -2460,7 +2461,7 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 
 // 	resource.ParallelTest(t, resource.TestCase{
 // 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 // 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 // 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 // 		Steps: []resource.TestStep{
@@ -2485,7 +2486,7 @@ func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2493,7 +2494,7 @@ func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 				Config: testAccFleetConfig_onDemandOptionsMaxTotalPrice(rName, "1.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.max_total_price", "1.0"),
 				),
 			},
@@ -2509,16 +2510,16 @@ func TestAccEC2Fleet_OnDemandOptions_MinTargetCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_onDemandOptionsMinTargetCapacity(rName, "1"),
+				Config: testAccFleetConfig_onDemandOptionsMinTargetCapacity(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.min_target_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.min_target_capacity", acctest.CtOne),
 				),
 			},
 		},
@@ -2533,7 +2534,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2541,7 +2542,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleAvailabilityZone(t *testing.T) {
 				Config: testAccFleetConfig_onDemandOptionsSingleAvailabilityZone(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_availability_zone", "true"),
 				),
 			},
@@ -2557,7 +2558,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2565,7 +2566,7 @@ func TestAccEC2Fleet_OnDemandOptions_SingleInstanceType(t *testing.T) {
 				Config: testAccFleetConfig_onDemandOptionsSingleInstanceType(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.single_instance_type", "true"),
 				),
 			},
@@ -2581,7 +2582,7 @@ func TestAccEC2Fleet_replaceUnhealthyInstances(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2618,7 +2619,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2626,7 +2627,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 				Config: testAccFleetConfig_spotOptionsAllocationStrategy(rName, "diversified"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "diversified"),
 				),
 			},
@@ -2641,7 +2642,7 @@ func TestAccEC2Fleet_SpotOptions_allocationStrategy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "lowestPrice"),
 				),
 			},
@@ -2661,7 +2662,7 @@ func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2669,7 +2670,7 @@ func TestAccEC2Fleet_SpotOptions_capacityRebalance(t *testing.T) {
 				Config: testAccFleetConfig_spotOptionsCapacityRebalance(rName, allocationStrategy, replacementStrategy, terminationDelay),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", allocationStrategy),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.maintenance_strategies.0.capacity_rebalance.0.replacement_strategy", replacementStrategy),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.maintenance_strategies.0.capacity_rebalance.0.termination_delay", terminationDelay),
@@ -2691,7 +2692,7 @@ func TestAccEC2Fleet_capacityRebalanceInvalidType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2711,7 +2712,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2719,7 +2720,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 				Config: testAccFleetConfig_spotOptionsInstanceInterruptionBehavior(rName, "stop"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "stop"),
 				),
 			},
@@ -2734,7 +2735,7 @@ func TestAccEC2Fleet_SpotOptions_instanceInterruptionBehavior(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "terminate"),
 				),
 			},
@@ -2750,7 +2751,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2758,7 +2759,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 				Config: testAccFleetConfig_spotOptionsInstancePoolsToUseCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", "2"),
 				),
 			},
@@ -2773,7 +2774,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", "3"),
 				),
 			},
@@ -2789,7 +2790,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2797,7 +2798,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "on-demand"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "on-demand"),
 				),
 			},
@@ -2806,7 +2807,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_defaultTargetCapacityType(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
 				),
 			},
@@ -2822,7 +2823,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDema
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2830,7 +2831,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_onDema
 				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "on-demand"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "on-demand"),
 				),
 			},
@@ -2852,7 +2853,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2860,7 +2861,7 @@ func TestAccEC2Fleet_TargetCapacitySpecificationDefaultTargetCapacityType_spot(t
 				Config: testAccFleetConfig_targetCapacitySpecificationDefaultTargetCapacityType(rName, "spot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
 				),
 			},
@@ -2882,7 +2883,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2890,8 +2891,8 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 				Config: testAccFleetConfig_targetCapacitySpecificationTotalTargetCapacity(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -2905,7 +2906,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", "2"),
 				),
 			},
@@ -2922,7 +2923,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2930,7 +2931,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_targetCapacityUnitType(t *testi
 				Config: testAccFleetConfig_targetCapacitySpecificationTargetCapacityUnitType(rName, 1, targetCapacityUnitType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.target_capacity_unit_type", targetCapacityUnitType),
 				),
 			},
@@ -2952,7 +2953,7 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2991,7 +2992,7 @@ func TestAccEC2Fleet_type(t *testing.T) {
 	terminateInstances := false
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2999,7 +3000,7 @@ func TestAccEC2Fleet_type(t *testing.T) {
 				Config: testAccFleetConfig_type(rName, fleetType, excessCapacityTerminationPolicy, terminateInstances),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "type", fleetType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, fleetType),
 				),
 			},
 			{
@@ -3031,7 +3032,7 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 	terminateInstances := true
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3039,8 +3040,8 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 				Config: testAccFleetConfig_type_instant(rName, fleetType, terminateInstances, totalTargetCapacity),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "type", fleetType),
-					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, fleetType),
+					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.0.instance_ids.#", totalTargetCapacity),
 					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_type"),
@@ -3075,7 +3076,7 @@ func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3083,7 +3084,7 @@ func TestAccEC2Fleet_templateMultipleNetworkInterfaces(t *testing.T) {
 				Config: testAccFleetConfig_multipleNetworkInterfaces(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "type", "maintain"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "maintain"),
 					testAccCheckFleetHistory(ctx, resourceName, "The associatePublicIPAddress parameter cannot be specified when launching with multiple network interfaces"),
 				),
 			},
@@ -3099,7 +3100,7 @@ func TestAccEC2Fleet_validFrom(t *testing.T) {
 	validFrom := "1970-01-01T00:00:00Z"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3122,7 +3123,7 @@ func TestAccEC2Fleet_validUntil(t *testing.T) {
 	validUntil := "1970-01-01T00:00:00Z"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{

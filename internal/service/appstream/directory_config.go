@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appstream_directory_config")
@@ -30,7 +31,7 @@ func ResourceDirectoryConfig() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,7 +124,7 @@ func resourceDirectoryConfigRead(ctx context.Context, d *schema.ResourceData, me
 
 	directoryConfig := resp.DirectoryConfigs[0]
 
-	d.Set("created_time", aws.TimeValue(directoryConfig.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.TimeValue(directoryConfig.CreatedTime).Format(time.RFC3339))
 	d.Set("directory_name", directoryConfig.DirectoryName)
 	d.Set("organizational_unit_distinguished_names", flex.FlattenStringSet(directoryConfig.OrganizationalUnitDistinguishedNames))
 

@@ -14,9 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_role_alias")
+// @Tags(identifierAttribute="arn")
 func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleAliasCreate,
@@ -27,16 +31,16 @@ func ResourceRoleAlias() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -46,7 +50,11 @@ func ResourceRoleAlias() *schema.Resource {
 				Default:      3600,
 				ValidateFunc: validation.IntBetween(900, 43200),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -54,14 +62,15 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	roleAlias := d.Get("alias").(string)
-	roleArn := d.Get("role_arn").(string)
+	roleAlias := d.Get(names.AttrAlias).(string)
+	roleArn := d.Get(names.AttrRoleARN).(string)
 	credentialDuration := d.Get("credential_duration").(int)
 
 	_, err := conn.CreateRoleAliasWithContext(ctx, &iot.CreateRoleAliasInput{
 		RoleAlias:                 aws.String(roleAlias),
 		RoleArn:                   aws.String(roleArn),
 		CredentialDurationSeconds: aws.Int64(int64(credentialDuration)),
+		Tags:                      getTagsIn(ctx),
 	})
 
 	if err != nil {
@@ -106,9 +115,9 @@ func resourceRoleAliasRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
-	d.Set("arn", roleAliasDescription.RoleAliasArn)
-	d.Set("alias", roleAliasDescription.RoleAlias)
-	d.Set("role_arn", roleAliasDescription.RoleArn)
+	d.Set(names.AttrARN, roleAliasDescription.RoleAliasArn)
+	d.Set(names.AttrAlias, roleAliasDescription.RoleAlias)
+	d.Set(names.AttrRoleARN, roleAliasDescription.RoleArn)
 	d.Set("credential_duration", roleAliasDescription.CredentialDurationSeconds)
 
 	return diags
@@ -118,7 +127,7 @@ func resourceRoleAliasDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	alias := d.Get("alias").(string)
+	alias := d.Get(names.AttrAlias).(string)
 
 	_, err := conn.DeleteRoleAliasWithContext(ctx, &iot.DeleteRoleAliasInput{
 		RoleAlias: aws.String(d.Id()),
@@ -146,10 +155,10 @@ func resourceRoleAliasUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("role_arn") {
+	if d.HasChange(names.AttrRoleARN) {
 		roleAliasInput := &iot.UpdateRoleAliasInput{
 			RoleAlias: aws.String(d.Id()),
-			RoleArn:   aws.String(d.Get("role_arn").(string)),
+			RoleArn:   aws.String(d.Get(names.AttrRoleARN).(string)),
 		}
 		_, err := conn.UpdateRoleAliasWithContext(ctx, roleAliasInput)
 		if err != nil {

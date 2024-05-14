@@ -32,7 +32,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newDataLakeResource,
 			Name:    "Data Lake",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newSubscriberNotificationResource,
+			Name:    "Subscriber Notification",
+		},
+		{
+			Factory: newSubscriberResource,
+			Name:    "Subscriber",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}
@@ -55,7 +66,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return securitylake_sdkv2.NewFromConfig(cfg, func(o *securitylake_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

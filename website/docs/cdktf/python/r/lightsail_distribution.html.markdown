@@ -166,7 +166,7 @@ class MyConvertedCode(TerraformStack):
         aws_lightsail_instance_test = LightsailInstance(self, "test_2",
             availability_zone=Token.as_string(Fn.lookup_nested(available.names, ["0"])),
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_1_0",
+            bundle_id="nano_3_0",
             name="test-instance"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -309,4 +309,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->
+<!-- cache-key: cdktf-0.20.1 input-d2b71cd407a3a46a175a6c04efcec65b5171112376e1f830fef8bdbe3ce78f5c -->

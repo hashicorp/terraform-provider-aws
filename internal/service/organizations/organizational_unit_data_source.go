@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_organizational_unit", name="Organizational Unit")
@@ -22,11 +23,11 @@ func DataSourceOrganizationalUnit() *schema.Resource {
 		ReadWithoutTimeout: dataSourceOrganizationalUnitRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -43,7 +44,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	parentID := d.Get("parent_id").(string)
 	input := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parentID),
@@ -58,7 +59,7 @@ func dataSourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(aws.StringValue(ou.Id))
-	d.Set("arn", ou.Arn)
+	d.Set(names.AttrARN, ou.Arn)
 
 	return diags
 }

@@ -59,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `useOffPeakWindow` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `clusterConfig` - Cluster configuration of the domain.
     * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -67,6 +68,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicatedMasterEnabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
     * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
+    * `multiAzWithStandbyEnabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
     * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
         * `availabilityZoneCount` - Number of availability zones used.
@@ -118,4 +120,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
+<!-- cache-key: cdktf-0.20.1 input-3ece174b178ec49f160e5c18c9b72c0faf4ab9039bc2b4501cc2e402815d2a3e -->

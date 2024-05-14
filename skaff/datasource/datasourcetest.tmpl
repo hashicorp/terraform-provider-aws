@@ -186,7 +186,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}

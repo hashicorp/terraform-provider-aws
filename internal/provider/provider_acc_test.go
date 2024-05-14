@@ -545,7 +545,7 @@ func testAccCheckDNSSuffix(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerDnsSuffix := (*p).Meta().(*conns.AWSClient).DNSSuffix
+		providerDnsSuffix := (*p).Meta().(*conns.AWSClient).DNSSuffix(ctx)
 
 		if providerDnsSuffix != expectedDnsSuffix {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedDnsSuffix, providerDnsSuffix)
@@ -644,7 +644,7 @@ func testAccCheckReverseDNSPrefix(ctx context.Context, t *testing.T, p **schema.
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
-		providerReverseDnsPrefix := (*p).Meta().(*conns.AWSClient).ReverseDNSPrefix
+		providerReverseDnsPrefix := (*p).Meta().(*conns.AWSClient).ReverseDNSPrefix(ctx)
 
 		if providerReverseDnsPrefix != expectedReverseDnsPrefix {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)

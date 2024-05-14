@@ -13,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -58,7 +58,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexache.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_iam", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_public_sasl_scram", ""),
@@ -77,36 +77,36 @@ func TestAccKafkaCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_vpc_connectivity_sasl_iam", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_vpc_connectivity_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_vpc_connectivity_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.az_distribution", string(types.BrokerAZDistributionDefault)),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.tls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.security_groups.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.security_groups.*", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enhanced_monitoring", string(types.EnhancedMonitoringDefault)),
@@ -139,7 +139,7 @@ func TestAccKafkaCluster_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -163,7 +163,7 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,7 +171,7 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -196,7 +196,7 @@ func TestAccKafkaCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -214,7 +214,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -222,11 +222,11 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 				Config: testAccClusterConfig_brokerNodeGroupInfoStorageInfoVolumeSizeSetAndProvThroughputNotEnabled(rName, original_volume_size, "kafka.m5.4xlarge"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(original_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "false"),
 				),
 			},
@@ -244,11 +244,11 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_storageInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size", strconv.Itoa(updated_volume_size)),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput.0.volume_throughput", "250"),
 				),
@@ -265,7 +265,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -273,7 +273,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 				Config: testAccClusterConfig_brokerNodeGroupInfoInstanceType(rName, "kafka.t3.small"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.t3.small"),
 				),
 			},
@@ -292,7 +292,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_instanceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.instance_type", "kafka.m5.large"),
 				),
 			},
@@ -308,7 +308,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,18 +323,18 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.tls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 				),
 			},
@@ -349,13 +349,13 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "SERVICE_PROVIDED_EIPS"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.tls", "false"),
@@ -372,13 +372,13 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_publicAccessSASLIAM(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_sasl_iam", clusterBoostrapBrokersSASLIAMRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_tls", ""),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.tls", "false"),
@@ -396,7 +396,7 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_vpcConnectivity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -404,18 +404,18 @@ func TestAccKafkaCluster_BrokerNodeGroupInfo_vpcConnectivity(t *testing.T) {
 				Config: testAccClusterConfig_brokerNodeGroupInfoVPCConnectivitySASLIAM(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.public_access.0.type", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.iam", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.connectivity_info.0.vpc_connectivity.0.client_authentication.0.tls", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 				),
 			},
@@ -431,7 +431,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -439,8 +439,8 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				Config: testAccClusterConfig_clientAuthenticationSASLScram(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
@@ -464,8 +464,8 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_scram(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
@@ -496,7 +496,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -504,8 +504,8 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 				Config: testAccClusterConfig_clientAuthenticationSASLIAM(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
@@ -529,8 +529,8 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "0"),
@@ -556,7 +556,7 @@ func TestAccKafkaCluster_ClientAuthenticationSASL_iam(t *testing.T) {
 func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1 types.ClusterInfo
-	var ca acmpca.CertificateAuthority
+	var ca acmpca_types.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -564,7 +564,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -580,16 +580,16 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 				Config: testAccClusterConfig_clientAuthenticationTLSCertificateAuthorityARNs(rName, commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
@@ -617,7 +617,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_certificateAuthorityARNs(t *tes
 func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster1, cluster2 types.ClusterInfo
-	var ca acmpca.CertificateAuthority
+	var ca acmpca_types.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_cluster.test"
 	acmCAResourceName := "aws_acmpca_certificate_authority.test"
@@ -625,7 +625,7 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -642,8 +642,8 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
@@ -661,16 +661,16 @@ func TestAccKafkaCluster_ClientAuthenticationTLS_initiallyNoAuthentication(t *te
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.scram", "false"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "client_authentication.0.tls.0.certificate_authority_arns.*", acmCAResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.unauthenticated", "false"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "TLS"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "true"),
 				),
@@ -697,7 +697,7 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -705,8 +705,8 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 				Config: testAccClusterConfig_configurationInfoRevision1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName, "latest_revision"),
 				),
 			},
@@ -723,8 +723,8 @@ func TestAccKafkaCluster_Info_revision(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName2, "latest_revision"),
 				),
 			},
@@ -740,7 +740,7 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -748,7 +748,7 @@ func TestAccKafkaCluster_EncryptionInfo_encryptionAtRestKMSKeyARN(t *testing.T) 
 				Config: testAccClusterConfig_encryptionInfoEncryptionAtRestKMSKeyARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "encryption_info.0.encryption_at_rest_kms_key_arn", "aws_kms_key.example_key", names.AttrARN),
 				),
 			},
 			{
@@ -771,7 +771,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -779,8 +779,8 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_clientBroker(t *testi
 				Config: testAccClusterConfig_encryptionInfoEncryptionInTransitClientBroker(rName, "PLAINTEXT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.client_broker", "PLAINTEXT"),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers", clusterBoostrapBrokersRegexp),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
@@ -808,7 +808,7 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -816,8 +816,8 @@ func TestAccKafkaCluster_EncryptionInfoEncryptionInTransit_inCluster(t *testing.
 				Config: testAccClusterConfig_encryptionInfoEncryptionInTransitIn(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "encryption_info.0.encryption_in_transit.0.in_cluster", "false"),
 				),
 			},
@@ -841,7 +841,7 @@ func TestAccKafkaCluster_enhancedMonitoring(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -880,7 +880,7 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -891,11 +891,11 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "3"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -916,11 +916,11 @@ func TestAccKafkaCluster_numberOfBrokerNodes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers", ""),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_brokers_sasl_scram", ""),
 					resource.TestMatchResourceAttr(resourceName, "bootstrap_brokers_tls", clusterBoostrapBrokersTLSRegexp),
-					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "broker_node_group_info.0.client_subnets.#", "3"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", "id"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.1", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "broker_node_group_info.0.client_subnets.*", "aws_subnet.test.2", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "number_of_broker_nodes", "6"),
 					testAccCheckResourceAttrIsSortedCSV(resourceName, "bootstrap_brokers_tls"),
 				),
@@ -937,7 +937,7 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -945,11 +945,11 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 				Config: testAccClusterConfig_openMonitoring(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "false"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
 				),
 			},
@@ -966,11 +966,11 @@ func TestAccKafkaCluster_openMonitoring(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.jmx_exporter.0.enabled_in_broker", "true"),
-					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "open_monitoring.0.prometheus.0.node_exporter.0.enabled_in_broker", "false"),
 				),
 			},
@@ -986,7 +986,7 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -994,7 +994,7 @@ func TestAccKafkaCluster_storageMode(t *testing.T) {
 				Config: testAccClusterConfig_storageMode(rName, "TIERED", "2.8.2.tiered"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexache.MustCompile(`cluster/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kafka", regexache.MustCompile(`cluster/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "storage_mode", "TIERED"),
 				),
 			},
@@ -1010,7 +1010,7 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1018,13 +1018,13 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 				Config: testAccClusterConfig_loggingInfo(rName, false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", "false"),
 				),
 			},
@@ -1041,13 +1041,13 @@ func TestAccKafkaCluster_loggingInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_info.0.broker_logs.0.s3.0.enabled", "true"),
 				),
 			},
@@ -1063,7 +1063,7 @@ func TestAccKafkaCluster_kafkaVersionUpgrade(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1102,7 +1102,7 @@ func TestAccKafkaCluster_kafkaVersionDowngrade(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1153,7 +1153,7 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1162,8 +1162,8 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.7.1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName1, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName1, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName1, "latest_revision"),
 				),
 			},
@@ -1181,8 +1181,8 @@ func TestAccKafkaCluster_kafkaVersionUpgradeWithInfo(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "kafka_version", "2.8.0"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_info.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.arn", configurationResourceName2, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_info.0.revision", configurationResourceName2, "latest_revision"),
 				),
 			},

@@ -40,8 +40,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `name` - (Required) Name of the account setting to set. Valid values are `serviceLongArnFormat`, `taskLongArnFormat`, `containerInstanceLongArnFormat`, `awsvpcTrunking` and `containerInsights`.
-* `value` - (Required) State of the setting. Valid values are `enabled` and `disabled`.
+* `name` - (Required) Name of the account setting to set.
+* `value` - (Required) State of the setting.
 
 ## Attribute Reference
 
@@ -75,4 +75,4 @@ Using `terraform import`, import ECS Account Setting defaults using the `name`. 
 % terraform import aws_ecs_account_setting_default.example taskLongArnFormat
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c6b2c30bb370dbc4f2130758dcd1fab12e3335f271b897842de52c4e4af677af -->
+<!-- cache-key: cdktf-0.20.1 input-cc1e1ddfc04dbb892a7b411413f87a6786b320bfd23b483e58987811d60460c6 -->

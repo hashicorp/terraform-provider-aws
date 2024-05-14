@@ -28,7 +28,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,8 +36,8 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexache.MustCompile(`canary:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
@@ -50,11 +50,11 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "0"),
 				),
 			},
@@ -68,8 +68,8 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccCanaryConfig_zipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexache.MustCompile(`canary:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
@@ -82,12 +82,12 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/test/", rName)),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.created"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "status", "READY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					testAccCheckCanaryIsUpdated(&conf1, &conf2),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,8 +111,8 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 				Config: testAccCanaryConfig_artifactEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.0.encryption_mode", "SSE_S3"),
 				),
 			},
@@ -126,10 +126,10 @@ func TestAccSyntheticsCanary_artifactEncryption(t *testing.T) {
 				Config: testAccCanaryConfig_artifactEncryptionKMS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "artifact_config.0.s3_encryption.0.encryption_mode", "SSE_KMS"),
-					resource.TestCheckResourceAttrPair(resourceName, "artifact_config.0.s3_encryption.0.kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "artifact_config.0.s3_encryption.0.kms_key_arn", "aws_kms_key.test", names.AttrARN),
 				),
 			},
 		},
@@ -144,7 +144,7 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +188,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				Config: testAccCanaryConfig_start(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 				),
@@ -211,7 +211,7 @@ func TestAccSyntheticsCanary_startCanary(t *testing.T) {
 				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf3),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckCanaryIsStartedAfter(&conf2, &conf3),
@@ -229,7 +229,7 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -237,8 +237,8 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				Config: testAccCanaryConfig_start(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 				),
 			},
@@ -252,8 +252,8 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 				Config: testAccCanaryConfig_startZipUpdated(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
-					resource.TestCheckResourceAttr(resourceName, "status", "RUNNING"),
-					resource.TestCheckResourceAttr(resourceName, "timeline.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "timeline.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_started"),
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckCanaryIsStartedAfter(&conf1, &conf2),
@@ -271,7 +271,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -279,8 +279,8 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				Config: testAccCanaryConfig_basicS3Code(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexache.MustCompile(`canary:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`canary:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
@@ -294,7 +294,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(0 hour)"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "engine_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`function:cwsyn-%s.+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "source_location_arn", "lambda", regexache.MustCompile(fmt.Sprintf(`layer:cwsyn-%s.+`, rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "execution_role_arn", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrExecutionRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "artifact_s3_location", fmt.Sprintf("%s/", rName)),
 				),
 			},
@@ -302,7 +302,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3_bucket", "s3_key", "s3_version", "start_canary", "delete_lambda"},
+				ImportStateVerifyIgnore: []string{names.AttrS3Bucket, "s3_key", "s3_version", "start_canary", "delete_lambda"},
 			},
 		},
 	})
@@ -316,7 +316,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,7 +324,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				Config: testAccCanaryConfig_run1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
 				),
@@ -363,7 +363,7 @@ func TestAccSyntheticsCanary_runTracing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -406,7 +406,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -414,7 +414,7 @@ func TestAccSyntheticsCanary_runEnvironmentVariables(t *testing.T) {
 				Config: testAccCanaryConfig_runEnvVariables1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.environment_variables.test1", "result1"),
 				),
 			},
@@ -449,7 +449,7 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -457,9 +457,9 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 				Config: testAccCanaryConfig_vpc1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
 			{
@@ -474,16 +474,16 @@ func TestAccSyntheticsCanary_vpc(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
 			{
 				Config: testAccCanaryConfig_vpc3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_config.0.vpc_id", "aws_vpc.test", names.AttrID),
 				),
 			},
 		},
@@ -498,7 +498,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -506,7 +506,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 				Config: testAccCanaryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -529,7 +529,7 @@ func TestAccSyntheticsCanary_tags(t *testing.T) {
 				Config: testAccCanaryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -545,7 +545,7 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -122,6 +122,14 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports no additional attributes.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `3m`)
+- `delete` - (Default `3m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
@@ -154,4 +162,4 @@ Using `terraform import`, import Network Interface Security Group attachments us
 % terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-42a38bfce28cae01d1d650740e7e33388caa9a68bec2272acf8014a3939bb8a8 -->
+<!-- cache-key: cdktf-0.20.1 input-0320c62534ccc3510c781ee7478886cd1645618e9047560ebb40061c84f69576 -->

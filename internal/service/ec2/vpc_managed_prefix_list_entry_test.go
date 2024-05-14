@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,9 +37,9 @@ func TestAccVPCManagedPrefixListEntry_ipv4(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_ipv4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -61,7 +62,7 @@ func TestAccVPCManagedPrefixListEntry_ipv4Multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,9 +98,9 @@ func TestAccVPCManagedPrefixListEntry_ipv6(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "::/0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -118,7 +119,7 @@ func TestAccVPCManagedPrefixListEntry_expectInvalidTypeError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +137,7 @@ func TestAccVPCManagedPrefixListEntry_expectInvalidCIDR(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,7 +162,7 @@ func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,9 +170,9 @@ func TestAccVPCManagedPrefixListEntry_description(t *testing.T) {
 				Config: testAccVPCManagedPrefixListEntryConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPrefixListEntryExists(ctx, resourceName, &entry),
-					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", plResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "cidr", "10.0.0.0/8"),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 				),
 			},
 			{
@@ -192,7 +193,7 @@ func TestAccVPCManagedPrefixListEntry_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckManagedPrefixList(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckManagedPrefixListEntryDestroy(ctx),
 		Steps: []resource.TestStep{

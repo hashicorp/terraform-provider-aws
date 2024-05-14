@@ -147,6 +147,7 @@ The `time_based_linear` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the deployment config.
 * `id` - The deployment group's config name.
 * `deployment_config_id` - The AWS Assigned deployment config id
 
@@ -175,4 +176,4 @@ Using `terraform import`, import CodeDeploy Deployment Configurations using the 
 % terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->
+<!-- cache-key: cdktf-0.20.1 input-e3d82126cb160f0232a109fbcc126dc7c196c217afb48a29a3382f1691a1923e -->

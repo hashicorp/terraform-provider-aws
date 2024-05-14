@@ -171,7 +171,7 @@ class MyConvertedCode(TerraformStack):
         EcsService(self, "example",
             force_new_deployment=True,
             triggers={
-                "redeployment": Token.as_string(Fn.timestamp())
+                "redeployment": Token.as_string(Fn.plantimestamp())
             },
             name=name
         )
@@ -186,7 +186,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
-* `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. See below.
+* `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. See below. Conflicts with `launch_type`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. See below.
 * `deployment_controller` - (Optional) Configuration block for deployment controller configuration. See below.
@@ -198,7 +198,7 @@ The following arguments are optional:
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
-* `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`.
+* `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacity_provider_strategy`.
 * `load_balancer` - (Optional) Configuration block for load balancers. See below.
 * `network_configuration` - (Optional) Network configuration for the service. This parameter is required for task definitions that use the `awsvpc` network mode to receive their own Elastic Network Interface, and it is not supported for other network modes. See below.
 * `ordered_placement_strategy` - (Optional) Service level strategy rules that are taken into consideration during task placement. List from top to bottom in order of precedence. Updates to this configuration will take effect next task deployment unless `force_new_deployment` is enabled. The maximum number of `ordered_placement_strategy` blocks is `5`. See below.
@@ -210,7 +210,7 @@ The following arguments are optional:
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
-* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `timestamp()`. See example above.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### alarms
@@ -323,6 +323,29 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `discovery_name` - (Optional) The name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
 * `ingress_port_override` - (Optional) The port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) The name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
+* `timeout` - (Optional) Configuration timeouts for Service Connect
+* `tls` - (Optional) The configuration for enabling Transport Layer Security (TLS)
+
+### timeout
+
+`timeout` supports the following:
+
+* `idle_timeout_seconds` - (Optional) The amount of time in seconds a connection will stay active while idle. A value of 0 can be set to disable idleTimeout.
+* `per_request_timeout_seconds` - (Optional) The amount of time in seconds for the upstream to respond with a complete response per request. A value of 0 can be set to disable perRequestTimeout. Can only be set when appProtocol isn't TCP.
+
+### tls
+
+`tls` supports the following:
+
+* `issuer_cert_authority` - (Required) The details of the certificate authority which will issue the certificate.
+* `kms_key` - (Optional) The KMS key used to encrypt the private key in Secrets Manager.
+* `role_arn` - (Optional) The ARN of the IAM Role that's associated with the Service Connect TLS.
+
+### issuer_cert_authority
+
+`issuer_cert_authority` supports the following:
+
+* `aws_pca_authority_arn` - (Optional) The ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
 
 ### client_alias
 
@@ -335,11 +358,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cluster` - Amazon Resource Name (ARN) of cluster which the service runs on.
-* `desired_count` - Number of instances of the task definition.
-* `iam_role` - ARN of IAM role used for ELB.
 * `id` - ARN that identifies the service.
-* `name` - Name of the service.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -375,4 +394,4 @@ Using `terraform import`, import ECS services using the `name` together with ecs
 % terraform import aws_ecs_service.imported cluster-name/service-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0c2dba4511f8b41de16532abefaed14f7708fa06b49a3887e0b136935976402d -->
+<!-- cache-key: cdktf-0.20.1 input-dd55535bb7db25f8435815a60aa6eedb4997029ca82aa9cac48b94dd5e317c62 -->

@@ -4,17 +4,18 @@
 package datasync
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func expandProtocol(l []interface{}) *datasync.FsxProtocol {
+func expandProtocol(l []interface{}) *awstypes.FsxProtocol {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
-	protocol := &datasync.FsxProtocol{}
+	protocol := &awstypes.FsxProtocol{}
 
 	if v, ok := m["nfs"].([]interface{}); ok {
 		protocol.NFS = expandNFS(v)
@@ -26,7 +27,7 @@ func expandProtocol(l []interface{}) *datasync.FsxProtocol {
 	return protocol
 }
 
-func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
+func flattenProtocol(protocol *awstypes.FsxProtocol) []interface{} {
 	if protocol == nil {
 		return []interface{}{}
 	}
@@ -43,34 +44,34 @@ func flattenProtocol(protocol *datasync.FsxProtocol) []interface{} {
 	return []interface{}{m}
 }
 
-func expandNFS(l []interface{}) *datasync.FsxProtocolNfs {
+func expandNFS(l []interface{}) *awstypes.FsxProtocolNfs {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	protocol := &datasync.FsxProtocolNfs{
+	protocol := &awstypes.FsxProtocolNfs{
 		MountOptions: expandNFSMountOptions(m["mount_options"].([]interface{})),
 	}
 
 	return protocol
 }
 
-func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
+func expandSMB(l []interface{}) *awstypes.FsxProtocolSmb {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	protocol := &datasync.FsxProtocolSmb{
+	protocol := &awstypes.FsxProtocolSmb{
 		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
 	}
-	if v, ok := m["domain"].(string); ok && v != "" {
+	if v, ok := m[names.AttrDomain].(string); ok && v != "" {
 		protocol.Domain = aws.String(v)
 	}
-	if v, ok := m["password"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPassword].(string); ok && v != "" {
 		protocol.Password = aws.String(v)
 	}
 	if v, ok := m["user"].(string); ok && v != "" {
@@ -81,7 +82,7 @@ func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
 }
 
 // todo: go another level down?
-func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
+func flattenNFS(nfs *awstypes.FsxProtocolNfs) []interface{} {
 	if nfs == nil {
 		return []interface{}{}
 	}
@@ -93,7 +94,7 @@ func flattenNFS(nfs *datasync.FsxProtocolNfs) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenSMB(smb *datasync.FsxProtocolSmb) []interface{} {
+func flattenSMB(smb *awstypes.FsxProtocolSmb) []interface{} {
 	if smb == nil {
 		return []interface{}{}
 	}
@@ -102,13 +103,13 @@ func flattenSMB(smb *datasync.FsxProtocolSmb) []interface{} {
 		"mount_options": flattenSMBMountOptions(smb.MountOptions),
 	}
 	if v := smb.Domain; v != nil {
-		m["domain"] = aws.StringValue(v)
+		m[names.AttrDomain] = aws.ToString(v)
 	}
 	if v := smb.Password; v != nil {
-		m["password"] = aws.StringValue(v)
+		m[names.AttrPassword] = aws.ToString(v)
 	}
 	if v := smb.User; v != nil {
-		m["user"] = aws.StringValue(v)
+		m["user"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}

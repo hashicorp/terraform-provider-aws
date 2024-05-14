@@ -45,8 +45,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceModelInvocationLoggingConfiguration,
+			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
+		},
+		{
+			Factory: newProvisionedModelThroughputResource,
+			Name:    "Provisioned Model Throughput",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "provisioned_model_arn",
+			},
 		},
 	}
 }
@@ -68,7 +75,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	return bedrock_sdkv2.NewFromConfig(cfg, func(o *bedrock_sdkv2.Options) {
-		if endpoint := config["endpoint"].(string); endpoint != "" {
+		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil

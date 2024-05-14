@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPUser_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,13 +37,13 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "sub"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_mfa_setting", ""),
 					resource.TestCheckResourceAttr(resourceName, "mfa_setting_list.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
 			{
@@ -51,7 +52,7 @@ func TestAccCognitoIDPUser_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"temporary_password",
-					"password",
+					names.AttrPassword,
 					"client_metadata",
 					"validation_data",
 					"desired_delivery_mediums",
@@ -70,7 +71,7 @@ func TestAccCognitoIDPUser_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
 					testAccUserTemporaryPassword(ctx, userResourceName, clientResourceName),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
 			{
@@ -116,7 +117,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"temporary_password",
-					"password",
+					names.AttrPassword,
 					"client_metadata",
 					"validation_data",
 					"desired_delivery_mediums",
@@ -128,7 +129,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
 					testAccUserTemporaryPassword(ctx, userResourceName, clientResourceName),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
 			{
@@ -136,7 +137,7 @@ func TestAccCognitoIDPUser_temporaryPassword(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
 					resource.TestCheckResourceAttr(userResourceName, "temporary_password", ""),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeForceChangePassword),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeForceChangePassword),
 				),
 			},
 		},
@@ -155,7 +156,7 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -164,7 +165,7 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
 					testAccUserPassword(ctx, userResourceName, clientResourceName),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeConfirmed),
 				),
 			},
 			{
@@ -173,7 +174,7 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"temporary_password",
-					"password",
+					names.AttrPassword,
 					"client_metadata",
 					"validation_data",
 					"desired_delivery_mediums",
@@ -185,15 +186,15 @@ func TestAccCognitoIDPUser_password(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
 					testAccUserPassword(ctx, userResourceName, clientResourceName),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeConfirmed),
 				),
 			},
 			{
 				Config: testAccUserConfig_noPassword(rUserPoolName, rClientName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, userResourceName),
-					resource.TestCheckResourceAttr(userResourceName, "password", ""),
-					resource.TestCheckResourceAttr(userResourceName, "status", cognitoidentityprovider.UserStatusTypeConfirmed),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrPassword, ""),
+					resource.TestCheckResourceAttr(userResourceName, names.AttrStatus, cognitoidentityprovider.UserStatusTypeConfirmed),
 				),
 			},
 		},
@@ -208,7 +209,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +218,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.one", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
 				),
@@ -228,7 +229,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"temporary_password",
-					"password",
+					names.AttrPassword,
 					"client_metadata",
 					"validation_data",
 					"desired_delivery_mediums",
@@ -257,7 +258,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -265,7 +266,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
@@ -274,7 +275,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"temporary_password",
-					"password",
+					names.AttrPassword,
 					"client_metadata",
 					"validation_data",
 					"desired_delivery_mediums",
@@ -285,7 +286,7 @@ func TestAccCognitoIDPUser_enabled(t *testing.T) {
 				Config: testAccUserConfig_enable(rUserPoolName, rUserName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},
@@ -305,7 +306,7 @@ func testAccCheckUserExists(ctx context.Context, n string) resource.TestCheckFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
-		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
+		_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
 
 		return err
 	}
@@ -320,7 +321,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes["username"])
+			_, err := tfcognitoidp.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.Attributes[names.AttrUsername])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -349,9 +350,9 @@ func testAccUserTemporaryPassword(ctx context.Context, userResName string, clien
 			return fmt.Errorf("Not found: %s", clientResName)
 		}
 
-		userName := userRs.Primary.Attributes["username"]
+		userName := userRs.Primary.Attributes[names.AttrUsername]
 		userPassword := userRs.Primary.Attributes["temporary_password"]
-		clientId := clientRs.Primary.Attributes["id"]
+		clientId := clientRs.Primary.Attributes[names.AttrID]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 
@@ -389,9 +390,9 @@ func testAccUserPassword(ctx context.Context, userResName string, clientResName 
 			return fmt.Errorf("Not found: %s", clientResName)
 		}
 
-		userName := userRs.Primary.Attributes["username"]
-		userPassword := userRs.Primary.Attributes["password"]
-		clientId := clientRs.Primary.Attributes["id"]
+		userName := userRs.Primary.Attributes[names.AttrUsername]
+		userPassword := userRs.Primary.Attributes[names.AttrPassword]
+		clientId := clientRs.Primary.Attributes[names.AttrID]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
 

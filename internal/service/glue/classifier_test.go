@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueClassifier_csvClassifier(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.allow_single_column", "false"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.contains_header", "PRESENT"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.delimiter", "|"),
@@ -44,7 +45,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.header.1", "header_column2"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -52,7 +53,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", ",", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.allow_single_column", "false"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.contains_header", "PRESENT"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.delimiter", ","),
@@ -61,7 +62,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.header.1", "header_column2"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -83,7 +84,7 @@ func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,18 +92,18 @@ func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", "|", false, "None"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.serde", "None"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccClassifierConfig_csvWithSerde(rName, false, "PRESENT", ",", false, "OpenCSVSerDe"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.serde", "OpenCSVSerDe"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -123,7 +124,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +132,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 				Config: testAccClassifierConfig_csvQuoteSymbol(rName, "\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.quote_symbol", "\""),
 				),
 			},
@@ -139,7 +140,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 				Config: testAccClassifierConfig_csvQuoteSymbol(rName, "'"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.quote_symbol", "'"),
 				),
 			},
@@ -161,7 +162,7 @@ func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,7 +170,7 @@ func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
 				Config: testAccClassifierConfig_csvCustom(rName, "BINARY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.0", "BINARY"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.1", "SHORT"),
@@ -179,7 +180,7 @@ func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
 				Config: testAccClassifierConfig_csvCustom(rName, "BOOLEAN"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.0", "BOOLEAN"),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.0.custom_datatypes.1", "SHORT"),
@@ -203,7 +204,7 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,12 +213,12 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification1"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", ""),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern1"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -226,12 +227,12 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification2"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", ""),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern2"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -253,7 +254,7 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,12 +263,12 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", "custompattern1"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -276,12 +277,12 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", "custompattern2"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -303,7 +304,7 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -313,9 +314,9 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.0.json_path", "jsonpath1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -325,9 +326,9 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.0.json_path", "jsonpath2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -349,7 +350,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -358,12 +359,12 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification1"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", ""),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern1"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -373,9 +374,9 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.0.json_path", "jsonpath1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -386,8 +387,8 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.classification", "classification1"),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.row_tag", "rowtag1"),
 				),
@@ -397,12 +398,12 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.classification", "classification1"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.custom_patterns", ""),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.0.grok_pattern", "pattern1"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "0"),
 				),
 			},
@@ -419,7 +420,7 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -430,8 +431,8 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.classification", "classification1"),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.row_tag", "rowtag1"),
 				),
@@ -443,8 +444,8 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "csv_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "grok_classifier.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "json_classifier.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "xml_classifier.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.classification", "classification2"),
 					resource.TestCheckResourceAttr(resourceName, "xml_classifier.0.row_tag", "rowtag2"),
 				),
@@ -467,7 +468,7 @@ func TestAccGlueClassifier_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassifierDestroy(ctx),
 		Steps: []resource.TestStep{

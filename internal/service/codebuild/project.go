@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -43,7 +42,7 @@ func resourceProject() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -71,11 +70,11 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == d.Get("name") && new == "" {
+								if old == d.Get(names.AttrName) && new == "" {
 									return true
 								}
 								return false
@@ -112,11 +111,11 @@ func resourceProject() *schema.Resource {
 							},
 							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
@@ -211,7 +210,7 @@ func resourceProject() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.CacheMode](),
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.CacheTypeNoCache,
@@ -225,7 +224,7 @@ func resourceProject() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntAtLeast(1),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -236,13 +235,13 @@ func resourceProject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"certificate": {
+						names.AttrCertificate: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
@@ -257,17 +256,17 @@ func resourceProject() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										Default:          types.EnvironmentVariableTypePlaintext,
 										ValidateDiagFunc: enum.Validate[types.EnvironmentVariableType](),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -307,7 +306,7 @@ func resourceProject() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.EnvironmentType](),
@@ -320,7 +319,7 @@ func resourceProject() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"identifier": {
+						names.AttrIdentifier: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -336,7 +335,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Default:          types.FileSystemTypeEfs,
@@ -357,11 +356,11 @@ func resourceProject() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"group_name": {
+									names.AttrGroupName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"status": {
+									names.AttrStatus: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										Default:          types.LogsConfigStatusTypeEnabled,
@@ -396,7 +395,7 @@ func resourceProject() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validProjectS3LogsLocation,
 									},
-									"status": {
+									names.AttrStatus: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										Default:          types.LogsConfigStatusTypeDisabled,
@@ -410,7 +409,7 @@ func resourceProject() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -470,7 +469,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -491,11 +490,11 @@ func resourceProject() *schema.Resource {
 							Default:          types.ArtifactPackagingNone,
 							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
 						},
-						"path": {
+						names.AttrPath: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ArtifactsType](),
@@ -564,7 +563,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.SourceType](),
@@ -594,7 +593,7 @@ func resourceProject() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"source": {
+			names.AttrSource: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Required: true,
@@ -647,7 +646,7 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.SourceType](),
@@ -665,25 +664,25 @@ func resourceProject() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"subnets": {
+						names.AttrSubnets: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							MaxItems: 16,
 						},
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							MaxItems: 5,
 						},
-						"vpc_id": {
+						names.AttrVPCID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -718,7 +717,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).CodeBuildClient(ctx)
 
 	var projectSource *types.ProjectSource
-	if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		projectSource = expandProjectSource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -732,7 +731,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &codebuild.CreateProjectInput{
 		LogsConfig: expandProjectLogsConfig(d.Get("logs_config")),
 		Name:       aws.String(name),
@@ -760,7 +759,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ConcurrentBuildLimit = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -768,7 +767,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -804,7 +803,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TimeoutInMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -858,7 +857,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading CodeBuild Project (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", project.Arn)
+	d.Set(names.AttrARN, project.Arn)
 	if project.Artifacts != nil {
 		if err := d.Set("artifacts", []interface{}{flattenProjectArtifacts(project.Artifacts)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting artifacts: %s", err)
@@ -881,9 +880,9 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting cache: %s", err)
 	}
 	d.Set("concurrent_build_limit", project.ConcurrentBuildLimit)
-	d.Set("description", project.Description)
+	d.Set(names.AttrDescription, project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
-	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenProjectEnvironment(project.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
@@ -892,7 +891,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("logs_config", flattenLogsConfig(project.LogsConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting logs_config: %s", err)
 	}
-	d.Set("name", project.Name)
+	d.Set(names.AttrName, project.Name)
 	d.Set("project_visibility", project.ProjectVisibility)
 	d.Set("public_project_alias", project.PublicProjectAlias)
 	d.Set("resource_access_role", project.ResourceAccessRole)
@@ -908,14 +907,14 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("service_role", project.ServiceRole)
 	if project.Source != nil {
-		if err := d.Set("source", []interface{}{flattenProjectSource(project.Source)}); err != nil {
+		if err := d.Set(names.AttrSource, []interface{}{flattenProjectSource(project.Source)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 		}
 	} else {
-		d.Set("source", nil)
+		d.Set(names.AttrSource, nil)
 	}
 	d.Set("source_version", project.SourceVersion)
-	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
+	if err := d.Set(names.AttrVPCConfig, flattenVPCConfig(project.VpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
@@ -947,7 +946,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept("project_visibility", "resource_access_role") {
 		input := &codebuild.UpdateProjectInput{
-			Name: aws.String(d.Get("name").(string)),
+			Name: aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		if d.HasChange("artifacts") {
@@ -982,16 +981,16 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ConcurrentBuildLimit = aws.Int32(int32(d.Get("concurrent_build_limit").(int)))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("encryption_key") {
 			input.EncryptionKey = aws.String(d.Get("encryption_key").(string))
 		}
 
-		if d.HasChange("environment") {
-			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrEnvironment) {
+			if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -1038,8 +1037,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ServiceRole = aws.String(d.Get("service_role").(string))
 		}
 
-		if d.HasChange("source") {
-			if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrSource) {
+			if v, ok := d.GetOk(names.AttrSource); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Source = expandProjectSource(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -1052,8 +1051,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.TimeoutInMinutes = aws.Int32(int32(d.Get("build_timeout").(int)))
 		}
 
-		if d.HasChange("vpc_config") {
-			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrVPCConfig) {
+			if v, ok := d.GetOk(names.AttrVPCConfig); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
 			} else {
 				input.VpcConfig = &types.VpcConfig{}
@@ -1094,7 +1093,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func findProjectByNameOrARN(ctx context.Context, conn *codebuild.Client, nameOrARN string) (*types.Project, error) {
 	input := &codebuild.BatchGetProjectsInput{
-		Names: tfslices.Of(nameOrARN),
+		Names: []string{nameOrARN},
 	}
 
 	return findProject(ctx, conn, input)
@@ -1193,11 +1192,11 @@ func expandProjectFileSystemLocation(tfMap map[string]interface{}) *types.Projec
 	}
 
 	apiObject := &types.ProjectFileSystemLocation{
-		Type: types.FileSystemType(tfMap["type"].(string)),
+		Type: types.FileSystemType(tfMap[names.AttrType].(string)),
 	}
 
-	if tfMap["identifier"].(string) != "" {
-		apiObject.Identifier = aws.String(tfMap["identifier"].(string))
+	if tfMap[names.AttrIdentifier].(string) != "" {
+		apiObject.Identifier = aws.String(tfMap[names.AttrIdentifier].(string))
 	}
 
 	if tfMap["location"].(string) != "" {
@@ -1245,7 +1244,7 @@ func expandProjectArtifacts(tfMap map[string]interface{}) *types.ProjectArtifact
 		return nil
 	}
 
-	artifactType := types.ArtifactsType(tfMap["type"].(string))
+	artifactType := types.ArtifactsType(tfMap[names.AttrType].(string))
 	apiObject := &types.ProjectArtifacts{
 		Type: artifactType,
 	}
@@ -1268,7 +1267,7 @@ func expandProjectArtifacts(tfMap map[string]interface{}) *types.ProjectArtifact
 		apiObject.Location = aws.String(v)
 	}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
 	}
 
@@ -1284,7 +1283,7 @@ func expandProjectArtifacts(tfMap map[string]interface{}) *types.ProjectArtifact
 		apiObject.Packaging = types.ArtifactPackaging(v)
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
@@ -1296,7 +1295,7 @@ func expandProjectCache(tfMap map[string]interface{}) *types.ProjectCache {
 		return nil
 	}
 
-	cacheType := types.CacheType(tfMap["type"].(string))
+	cacheType := types.CacheType(tfMap[names.AttrType].(string))
 	apiObject := &types.ProjectCache{
 		Type: cacheType,
 	}
@@ -1323,7 +1322,7 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 		PrivilegedMode: aws.Bool(tfMap["privileged_mode"].(bool)),
 	}
 
-	if v, ok := tfMap["certificate"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCertificate].(string); ok && v != "" {
 		apiObject.Certificate = aws.String(v)
 	}
 
@@ -1339,7 +1338,7 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 		apiObject.ImagePullCredentialsType = types.ImagePullCredentialsType(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		apiObject.Type = types.EnvironmentType(v)
 	}
 
@@ -1370,15 +1369,15 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 
 			projectEnvironmentVar := types.EnvironmentVariable{}
 
-			if v := tfMap["name"].(string); v != "" {
+			if v := tfMap[names.AttrName].(string); v != "" {
 				projectEnvironmentVar.Name = aws.String(v)
 			}
 
-			if v := tfMap["type"].(string); v != "" {
+			if v := tfMap[names.AttrType].(string); v != "" {
 				projectEnvironmentVar.Type = types.EnvironmentVariableType(v)
 			}
 
-			if v, ok := tfMap["value"].(string); ok {
+			if v, ok := tfMap[names.AttrValue].(string); ok {
 				projectEnvironmentVar.Value = aws.String(v)
 			}
 
@@ -1427,10 +1426,10 @@ func expandCloudWatchLogsConfig(tfMap map[string]interface{}) *types.CloudWatchL
 	}
 
 	apiObject := &types.CloudWatchLogsConfig{
-		Status: types.LogsConfigStatusType(tfMap["status"].(string)),
+		Status: types.LogsConfigStatusType(tfMap[names.AttrStatus].(string)),
 	}
 
-	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrGroupName].(string); ok && v != "" {
 		apiObject.GroupName = aws.String(v)
 	}
 
@@ -1448,7 +1447,7 @@ func expandS3LogsConfig(tfMap map[string]interface{}) *types.S3LogsConfig {
 
 	apiObject := &types.S3LogsConfig{
 		EncryptionDisabled: aws.Bool(tfMap["encryption_disabled"].(bool)),
-		Status:             types.LogsConfigStatusType(tfMap["status"].(string)),
+		Status:             types.LogsConfigStatusType(tfMap[names.AttrStatus].(string)),
 	}
 
 	if v, ok := tfMap["bucket_owner_access"].(string); ok && v != "" {
@@ -1510,9 +1509,9 @@ func expandVPCConfig(tfMap map[string]interface{}) *types.VpcConfig {
 	}
 
 	apiObject := &types.VpcConfig{
-		SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-		Subnets:          flex.ExpandStringValueSet(tfMap["subnets"].(*schema.Set)),
-		VpcId:            aws.String(tfMap["vpc_id"].(string)),
+		SecurityGroupIds: flex.ExpandStringValueSet(tfMap[names.AttrSecurityGroupIDs].(*schema.Set)),
+		Subnets:          flex.ExpandStringValueSet(tfMap[names.AttrSubnets].(*schema.Set)),
+		VpcId:            aws.String(tfMap[names.AttrVPCID].(string)),
 	}
 
 	return apiObject
@@ -1548,7 +1547,7 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		return nil
 	}
 
-	sourceType := types.SourceType(tfMap["type"].(string))
+	sourceType := types.SourceType(tfMap[names.AttrType].(string))
 	apiObject := &types.ProjectSource{
 		Buildspec:     aws.String(tfMap["buildspec"].(string)),
 		GitCloneDepth: aws.Int32(int32(tfMap["git_clone_depth"].(int))),
@@ -1564,14 +1563,14 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		apiObject.SourceIdentifier = aws.String(v)
 	}
 
-	// Only valid for BITBUCKET, GITHUB, and GITHUB_ENTERPRISE source types, e.g.
-	// InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
-	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
+	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE, GITLAB, and GITLAB_SELF_MANAGED source types
+	// e.g., InvalidInputException: Source type NO_SOURCE does not support ReportBuildStatus
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeGitlab || sourceType == types.SourceTypeGitlabSelfManaged {
 		apiObject.ReportBuildStatus = aws.Bool(tfMap["report_build_status"].(bool))
 	}
 
-	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE, BITBUCKET source types.
-	if sourceType == types.SourceTypeCodecommit || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeBitbucket {
+	// Only valid for BITBUCKET, CODECOMMIT, GITHUB, and GITHUB_ENTERPRISE source types
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeCodecommit || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
 		if v, ok := tfMap["git_submodules_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			tfMap := v[0].(map[string]interface{})
 
@@ -1585,8 +1584,8 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 		}
 	}
 
-	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE source types.
-	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise {
+	// Only valid for BITBUCKET, GITHUB, GITHUB_ENTERPRISE, GITLAB, and GITLAB_SELF_MANAGED source types
+	if sourceType == types.SourceTypeBitbucket || sourceType == types.SourceTypeGithub || sourceType == types.SourceTypeGithubEnterprise || sourceType == types.SourceTypeGitlab || sourceType == types.SourceTypeGitlabSelfManaged {
 		if v, ok := tfMap["build_status_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			tfMap := v[0].(map[string]interface{})
 
@@ -1622,11 +1621,11 @@ func flattenProjectFileSystemLocations(apiObjects []types.ProjectFileSystemLocat
 
 func flattenProjectFileSystemLocation(apiObject types.ProjectFileSystemLocation) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"type": apiObject.Type,
+		names.AttrType: apiObject.Type,
 	}
 
 	if v := apiObject.Identifier; v != nil {
-		tfMap["identifier"] = aws.ToString(v)
+		tfMap[names.AttrIdentifier] = aws.ToString(v)
 	}
 
 	if v := apiObject.Location; v != nil {
@@ -1661,10 +1660,10 @@ func flattenCloudWatchLogs(apiObject *types.CloudWatchLogsConfig) []interface{} 
 	tfMap := map[string]interface{}{}
 
 	if apiObject == nil {
-		tfMap["status"] = types.LogsConfigStatusTypeDisabled
+		tfMap[names.AttrStatus] = types.LogsConfigStatusTypeDisabled
 	} else {
-		tfMap["group_name"] = aws.ToString(apiObject.GroupName)
-		tfMap["status"] = apiObject.Status
+		tfMap[names.AttrGroupName] = aws.ToString(apiObject.GroupName)
+		tfMap[names.AttrStatus] = apiObject.Status
 		tfMap["stream_name"] = aws.ToString(apiObject.StreamName)
 	}
 
@@ -1675,12 +1674,12 @@ func flattenS3Logs(apiObject *types.S3LogsConfig) []interface{} {
 	tfMap := map[string]interface{}{}
 
 	if apiObject == nil {
-		tfMap["status"] = types.LogsConfigStatusTypeDisabled
+		tfMap[names.AttrStatus] = types.LogsConfigStatusTypeDisabled
 	} else {
 		tfMap["bucket_owner_access"] = apiObject.BucketOwnerAccess
 		tfMap["encryption_disabled"] = aws.ToBool(apiObject.EncryptionDisabled)
 		tfMap["location"] = aws.ToString(apiObject.Location)
-		tfMap["status"] = apiObject.Status
+		tfMap[names.AttrStatus] = apiObject.Status
 	}
 
 	return []interface{}{tfMap}
@@ -1704,7 +1703,7 @@ func flattenProjectArtifacts(apiObject *types.ProjectArtifacts) map[string]inter
 		"bucket_owner_access": apiObject.BucketOwnerAccess,
 		"namespace_type":      apiObject.NamespaceType,
 		"packaging":           apiObject.Packaging,
-		"type":                apiObject.Type,
+		names.AttrType:        apiObject.Type,
 	}
 
 	if apiObject.ArtifactIdentifier != nil {
@@ -1724,11 +1723,11 @@ func flattenProjectArtifacts(apiObject *types.ProjectArtifacts) map[string]inter
 	}
 
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.ToString(apiObject.Name)
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
 	}
 
 	if apiObject.Path != nil {
-		tfMap["path"] = aws.ToString(apiObject.Path)
+		tfMap[names.AttrPath] = aws.ToString(apiObject.Path)
 	}
 
 	return tfMap
@@ -1766,11 +1765,11 @@ func resourceProjectArtifactsHash(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := tfMap["path"]; ok {
+	if v, ok := tfMap[names.AttrPath]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
-	if v, ok := tfMap["type"]; ok {
+	if v, ok := tfMap[names.AttrType]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 
@@ -1783,9 +1782,9 @@ func flattenProjectCache(apiObject *types.ProjectCache) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"location": aws.ToString(apiObject.Location),
-		"modes":    apiObject.Modes,
-		"type":     apiObject.Type,
+		"location":     aws.ToString(apiObject.Location),
+		"modes":        apiObject.Modes,
+		names.AttrType: apiObject.Type,
 	}
 
 	return []interface{}{tfMap}
@@ -1795,11 +1794,11 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 	tfMap := map[string]interface{}{
 		"compute_type":                apiObject.ComputeType,
 		"image_pull_credentials_type": apiObject.ImagePullCredentialsType,
-		"type":                        apiObject.Type,
+		names.AttrType:                apiObject.Type,
 	}
 
 	tfMap["image"] = aws.ToString(apiObject.Image)
-	tfMap["certificate"] = aws.ToString(apiObject.Certificate)
+	tfMap[names.AttrCertificate] = aws.ToString(apiObject.Certificate)
 	tfMap["privileged_mode"] = aws.ToBool(apiObject.PrivilegedMode)
 	tfMap["registry_credential"] = flattenRegistryCredential(apiObject.RegistryCredential)
 
@@ -1844,7 +1843,7 @@ func flattenProjectSource(apiObject *types.ProjectSource) map[string]interface{}
 		"git_clone_depth":     aws.ToInt32(apiObject.GitCloneDepth),
 		"insecure_ssl":        aws.ToBool(apiObject.InsecureSsl),
 		"report_build_status": aws.ToBool(apiObject.ReportBuildStatus),
-		"type":                apiObject.Type,
+		names.AttrType:        apiObject.Type,
 	}
 
 	tfMap["git_submodules_config"] = flattenProjectGitSubmodulesConfig(apiObject.GitSubmodulesConfig)
@@ -1913,9 +1912,9 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	tfMap["vpc_id"] = aws.ToString(apiObject.VpcId)
-	tfMap["subnets"] = apiObject.Subnets
-	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
+	tfMap[names.AttrVPCID] = aws.ToString(apiObject.VpcId)
+	tfMap[names.AttrSubnets] = apiObject.Subnets
+	tfMap[names.AttrSecurityGroupIDs] = apiObject.SecurityGroupIds
 
 	return []interface{}{tfMap}
 }
@@ -1962,9 +1961,9 @@ func flattenEnvironmentVariables(apiObjects []types.EnvironmentVariable) []inter
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{}
-		tfMap["name"] = aws.ToString(apiObject.Name)
-		tfMap["value"] = aws.ToString(apiObject.Value)
-		tfMap["type"] = apiObject.Type
+		tfMap[names.AttrName] = aws.ToString(apiObject.Name)
+		tfMap[names.AttrValue] = aws.ToString(apiObject.Value)
+		tfMap[names.AttrType] = apiObject.Type
 
 		tfList = append(tfList, tfMap)
 	}

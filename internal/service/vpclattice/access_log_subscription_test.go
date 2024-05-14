@@ -83,7 +83,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,10 +91,10 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_arn", s3BucketResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, s3BucketResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -119,7 +119,7 @@ func TestAccVPCLatticeAccessLogSubscription_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +148,7 @@ func TestAccVPCLatticeAccessLogSubscription_arn(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,8 +156,8 @@ func TestAccVPCLatticeAccessLogSubscription_arn(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceNetworkResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
 				),
 			},
 			{
@@ -181,7 +181,7 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +189,7 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -211,7 +211,7 @@ func TestAccVPCLatticeAccessLogSubscription_tags(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -232,7 +232,7 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -240,15 +240,15 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchNoWildcard(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_cloudwatchNoWildcard(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrWith(resourceName, "destination_arn", func(value string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrDestinationARN, func(value string) error {
 						if !strings.HasSuffix(value, ":*") {
 							return fmt.Errorf("%s is not a wildcard ARN", value)
 						}
 
 						return nil
 					}),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", serviceResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceResourceName, names.AttrID),
 				),
 			},
 		},
@@ -267,7 +267,7 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,7 +275,7 @@ func TestAccVPCLatticeAccessLogSubscription_cloudwatchWildcard(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_cloudwatchWildcard(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					resource.TestCheckResourceAttrWith(resourceName, "destination_arn", func(value string) error {
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrDestinationARN, func(value string) error {
 						if !strings.HasSuffix(value, ":*") {
 							return fmt.Errorf("%s is not a wildcard ARN", value)
 						}

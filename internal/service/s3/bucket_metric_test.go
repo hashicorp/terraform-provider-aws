@@ -30,7 +30,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,9 +38,9 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Config: testAccBucketMetricConfig_noFilter(rName, metricName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", metricName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPoint(bucketName, metricName, accessPoint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
@@ -108,7 +108,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPoint(bucketName, metricName, accessPointUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
@@ -141,7 +141,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +149,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndMultipleTags(bucketName, metricName, accessPoint, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -161,7 +161,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndMultipleTags(bucketName, metricName, accessPointUpdate, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
@@ -195,7 +195,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,10 +203,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndSingleTag(bucketName, metricName, accessPoint, prefix, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -214,10 +214,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndSingleTag(bucketName, metricName, accessPointUpdate, prefixUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -245,7 +245,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,7 +253,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefix(bucketName, metricName, accessPoint, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -263,7 +263,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefix(bucketName, metricName, accessPointUpdate, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
@@ -295,7 +295,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -303,7 +303,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndMultipleTags(bucketName, metricName, accessPoint, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
@@ -314,7 +314,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndMultipleTags(bucketName, metricName, accessPointUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
@@ -345,7 +345,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -353,9 +353,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndSingleTag(bucketName, metricName, accessPoint, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -363,9 +363,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndSingleTag(bucketName, metricName, accessPointUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -390,7 +390,7 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -398,7 +398,7 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
@@ -407,7 +407,7 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
@@ -437,7 +437,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -445,7 +445,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
@@ -456,7 +456,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
@@ -486,7 +486,7 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -494,9 +494,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefix, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -504,9 +504,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefixUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -533,7 +533,7 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -541,7 +541,7 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
@@ -552,7 +552,7 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
@@ -580,7 +580,7 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -588,9 +588,9 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -598,9 +598,9 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -620,7 +620,7 @@ func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{

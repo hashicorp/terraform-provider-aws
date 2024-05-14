@@ -32,7 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 * `access_string` - Access permissions string used for this user.
 * `arn` - ARN of the user.
 * `authentication_mode` - Denotes the user's authentication properties.
-    * `password_count` - The number of passwords belonging to the user.
-    * `type` - Whether the user requires a password to authenticate.
-* `minimum_engine_version` - The minimum engine version supported for the user.
-* `tags` - Map of tags assigned to the subnet group.
+    * `password_count` - Number of passwords belonging to the user if `type` is set to `password`.
+    * `type` - Type of authentication configured.
+* `minimum_engine_version` - Minimum engine version supported for the user.
+* `tags` - Map of tags assigned to the user.

@@ -58,6 +58,7 @@ This resource supports the following arguments:
 * `rootVolumeConfiguration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) below.
 * `routeTableIds` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
+* `skipFinalBackup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `storageType` - (Optional) The filesystem storage type. Only `SSD` is supported.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
@@ -97,6 +98,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - Amazon Resource Name of the file system.
 * `dnsName` - DNS name for the file system, e.g., `fs-12345678.fsx.us-west-2.amazonaws.com`
+* `endpointIpAddress` - IP address of the endpoint that is used to access data or to manage the file system.
 * `id` - Identifier of the file system, e.g., `fs-12345678`
 * `networkInterfaceIds` - Set of Elastic Network Interface identifiers from which the file system is accessible The first network interface returned is the primary network interface.
 * `rootVolumeId` - Identifier of the root volume, e.g., `fsvol-12345678`
@@ -177,4 +179,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-747caeeb6ae73c2beade6eba7cdec24bd727587f1c4cbe894ef193c84d502d2e -->
+<!-- cache-key: cdktf-0.20.1 input-4e0cc4e5a4a2e688dc6d768e513f95dfd4aaaf5fcbbac16ed12f3207f063ad29 -->

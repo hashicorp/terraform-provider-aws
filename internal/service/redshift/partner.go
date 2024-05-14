@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_redshift_partner")
-func ResourcePartner() *schema.Resource {
+// @SDKResource("aws_redshift_partner", name="Partner")
+func resourcePartner() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePartnerCreate,
 		ReadWithoutTimeout:   resourcePartnerRead,
@@ -32,18 +33,18 @@ func ResourcePartner() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"database_name": {
+			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -53,11 +54,11 @@ func ResourcePartner() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,12 +70,12 @@ func resourcePartnerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	account := d.Get("account_id").(string)
-	clusterId := d.Get("cluster_identifier").(string)
+	account := d.Get(names.AttrAccountID).(string)
+	clusterId := d.Get(names.AttrClusterIdentifier).(string)
 	input := redshift.AddPartnerInput{
 		AccountId:         aws.String(account),
 		ClusterIdentifier: aws.String(clusterId),
-		DatabaseName:      aws.String(d.Get("database_name").(string)),
+		DatabaseName:      aws.String(d.Get(names.AttrDatabaseName).(string)),
 		PartnerName:       aws.String(d.Get("partner_name").(string)),
 	}
 
@@ -93,7 +94,8 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	out, err := FindPartnerById(ctx, conn, d.Id())
+	out, err := findPartnerByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Partner (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -104,12 +106,12 @@ func resourcePartnerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Partner (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", d.Get("account_id").(string))
-	d.Set("cluster_identifier", d.Get("cluster_identifier").(string))
+	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID).(string))
+	d.Set(names.AttrClusterIdentifier, d.Get(names.AttrClusterIdentifier).(string))
 	d.Set("partner_name", out.PartnerName)
-	d.Set("database_name", out.DatabaseName)
-	d.Set("status", out.Status)
-	d.Set("status_message", out.StatusMessage)
+	d.Set(names.AttrDatabaseName, out.DatabaseName)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrStatusMessage, out.StatusMessage)
 
 	return diags
 }
@@ -118,27 +120,25 @@ func resourcePartnerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
+	account, clusterID, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	deleteInput := redshift.DeletePartnerInput{
+	log.Printf("[DEBUG] Deleting Partner: %s", d.Id())
+	_, err = conn.DeletePartnerWithContext(ctx, &redshift.DeletePartnerInput{
 		AccountId:         aws.String(account),
-		ClusterIdentifier: aws.String(clusterId),
+		ClusterIdentifier: aws.String(clusterID),
 		DatabaseName:      aws.String(dbName),
 		PartnerName:       aws.String(partnerName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
+		return diags
 	}
 
-	_, err = conn.DeletePartnerWithContext(ctx, &deleteInput)
-
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, redshift.ErrCodePartnerNotFoundFault) {
-			return diags
-		}
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
-		}
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Partner (%s): %s", d.Id(), err)
 	}
 
 	return diags

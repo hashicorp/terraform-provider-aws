@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_codeartifact_domain_permissions_policy", name="Domain Permissions Policy")
@@ -35,7 +36,7 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"domain": {
+			names.AttrDomain: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,7 +63,7 @@ func resourceDomainPermissionsPolicy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -80,7 +81,7 @@ func resourceDomainPermissionsPolicyPut(ctx context.Context, d *schema.ResourceD
 	}
 
 	input := &codeartifact.PutDomainPermissionsPolicyInput{
-		Domain:         aws.String(d.Get("domain").(string)),
+		Domain:         aws.String(d.Get(names.AttrDomain).(string)),
 		PolicyDocument: aws.String(policy),
 	}
 
@@ -126,10 +127,10 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Domain Permissions Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("domain", domainName)
+	d.Set(names.AttrDomain, domainName)
 	d.Set("domain_owner", owner)
 	d.Set("policy_revision", policy.Revision)
-	d.Set("resource_arn", policy.ResourceArn)
+	d.Set(names.AttrResourceARN, policy.ResourceArn)
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.Document))
 	if err != nil {

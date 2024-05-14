@@ -120,7 +120,7 @@ class MyConvertedCode extends TerraformStack {
       httpMethod: myDemoMethod.httpMethod,
       resourceId: myDemoResource.id,
       responseModels: {
-        "application-json": "MyDemoResponseModel",
+        "application/json": "MyDemoResponseModel",
       },
       responseParameters: {
         "method-response-header.X-My-Demo-Header": false,
@@ -189,4 +189,4 @@ Using `terraform import`, import `aws_api_gateway_method_response` using `REST-A
 % terraform import aws_api_gateway_method_response.example 12345abcde/67890fghij/GET/200
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-86d5743f2e96517c05d1933f4136a1de6127513558086369de28144d6fbd9b41 -->
+<!-- cache-key: cdktf-0.20.1 input-149830828fe1f7738d24a10f77bd5873f7f2e0bf0e281fcd48746feef6702d97 -->

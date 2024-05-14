@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 				Config: testAccVPCPeeringConnectionOptionsConfig_sameRegionSameAccount(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "false"),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -44,7 +45,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceName, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accepter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"accepter",
@@ -66,7 +67,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						"1",
+						acctest.CtOne,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -78,7 +79,7 @@ func TestAccVPCPeeringConnectionOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"accepter.#",
-						"1",
+						acctest.CtOne,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"accepter",
@@ -106,7 +107,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +115,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 				Config: testAccVPCPeeringConnectionOptionsConfig_differentRegionSameAccount(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -123,7 +124,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
 						"accepter",
@@ -147,7 +148,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 					resource.TestCheckResourceAttr(
 						resourceName,
 						"requester.#",
-						"1",
+						acctest.CtOne,
 					),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -159,7 +160,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 					resource.TestCheckResourceAttr(
 						resourceNamePeer,
 						"accepter.#",
-						"1",
+						acctest.CtOne,
 					),
 					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
 						"accepter",
@@ -186,7 +187,7 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +195,7 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 				Config: testAccVPCPeeringConnectionOptionsConfig_sameRegionDifferentAccount(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// Requester's view:
-					resource.TestCheckResourceAttr(resourceName, "requester.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "requester.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_remote_vpc_dns_resolution", "true"),
 					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
 						"requester",
@@ -203,7 +204,7 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 						},
 					),
 					// Accepter's view:
-					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", "1"),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_remote_vpc_dns_resolution", "true"),
 				),
 			},

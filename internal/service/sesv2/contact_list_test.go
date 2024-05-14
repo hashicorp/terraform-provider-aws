@@ -28,7 +28,7 @@ func TestAccSESV2ContactList_basic(t *testing.T) {
 	// Only one contact list is allowed per AWS account.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,7 +38,7 @@ func TestAccSESV2ContactList_basic(t *testing.T) {
 					testAccCheckContactListExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_list_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_updated_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
@@ -60,7 +60,7 @@ func TestAccSESV2ContactList_description(t *testing.T) {
 	// Only one contact list is allowed per AWS account.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccSESV2ContactList_description(t *testing.T) {
 				Config: testAccContactListConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func TestAccSESV2ContactList_description(t *testing.T) {
 				Config: testAccContactListConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -95,7 +95,7 @@ func TestAccSESV2ContactList_topic(t *testing.T) {
 	// Only one contact list is allowed per AWS account.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccSESV2ContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_IN"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic1"),
@@ -119,9 +119,9 @@ func TestAccSESV2ContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_OUT"),
-					resource.TestCheckResourceAttr(resourceName, "topic.0.description", "description"),
+					resource.TestCheckResourceAttr(resourceName, "topic.0.description", names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.topic_name", "topic2"),
 				),
@@ -138,7 +138,7 @@ func TestAccSESV2ContactList_tags(t *testing.T) {
 	// Only one contact list is allowed per AWS account.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +146,7 @@ func TestAccSESV2ContactList_tags(t *testing.T) {
 				Config: testAccContactListConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccSESV2ContactList_disappears(t *testing.T) {
 	// Only one contact list is allowed per AWS account.
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactListDestroy(ctx),
 		Steps: []resource.TestStep{

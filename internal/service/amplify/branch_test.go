@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,17 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccBranch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,15 +37,15 @@ func testAccBranch_basic(t *testing.T) {
 				Config: testAccBranchConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexache.MustCompile(`apps/.+/branches/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/branches/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associated_resources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, rName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_basic_auth", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
@@ -54,7 +55,7 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "framework", ""),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_branch", ""),
-					resource.TestCheckResourceAttr(resourceName, "stage", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -70,13 +71,13 @@ func testAccBranch_basic(t *testing.T) {
 
 func testAccBranch_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,13 +95,13 @@ func testAccBranch_disappears(t *testing.T) {
 
 func testAccBranch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +109,7 @@ func testAccBranch_tags(t *testing.T) {
 				Config: testAccBranchConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -130,7 +131,7 @@ func testAccBranch_tags(t *testing.T) {
 				Config: testAccBranchConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -140,7 +141,7 @@ func testAccBranch_tags(t *testing.T) {
 
 func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -149,7 +150,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,13 +190,13 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 func testAccBranch_EnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,8 +204,8 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.CtOne),
 				),
 			},
 			{
@@ -234,7 +235,7 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 
 func testAccBranch_OptionalArguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch types.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
@@ -243,7 +244,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -251,16 +252,16 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 				Config: testAccBranchConfig_optionalArguments(rName, environmentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment1ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname1"),
+					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment1ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "testdisplayname1"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "false"),
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
-					resource.TestCheckResourceAttr(resourceName, "stage", "DEVELOPMENT"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "10"),
 				),
 			},
@@ -273,16 +274,16 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 				Config: testAccBranchConfig_optionalArgumentsUpdated(rName, environmentName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname2"),
+					resource.TestCheckResourceAttrPair(resourceName, "backend_environment_arn", backendEnvironment2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "testdescription2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "testdisplayname2"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "true"),
 					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
-					resource.TestCheckResourceAttr(resourceName, "stage", "EXPERIMENTAL"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "EXPERIMENTAL"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "15"),
 				),
 			},
@@ -290,32 +291,22 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	})
 }
 
-func testAccCheckBranchExists(ctx context.Context, resourceName string, v *amplify.Branch) resource.TestCheckFunc {
+func testAccCheckBranchExists(ctx context.Context, resourceName string, v *types.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Amplify Branch ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
-		appID, branchName, err := tfamplify.BranchParseResourceID(rs.Primary.ID)
+		output, err := tfamplify.FindBranchByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["branch_name"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
-
-		branch, err := tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
-
-		if err != nil {
-			return err
-		}
-
-		*v = *branch
+		*v = *output
 
 		return nil
 	}
@@ -323,20 +314,14 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 
 func testAccCheckBranchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_branch" {
 				continue
 			}
 
-			appID, branchName, err := tfamplify.BranchParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
+			_, err := tfamplify.FindBranchByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["branch_name"])
 
 			if tfresource.NotFound(err) {
 				continue

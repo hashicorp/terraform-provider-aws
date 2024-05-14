@@ -38,7 +38,7 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,8 +46,8 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
-					resource.TestCheckResourceAttrWith(resourceName, "creation_date", func(actual string) error {
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrCreationDate, func(actual string) error {
 						expect := scheduleGroup.CreationDate.Format(time.RFC3339)
 						if actual != expect {
 							return fmt.Errorf("expected value to be a formatted date")
@@ -61,9 +61,9 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 						}
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 				),
 			},
 			{
@@ -87,7 +87,7 @@ func TestAccSchedulerScheduleGroup_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccSchedulerScheduleGroup_nameGenerated(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -122,8 +122,8 @@ func TestAccSchedulerScheduleGroup_nameGenerated(t *testing.T) {
 				Config: testAccScheduleGroupConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", id.UniqueIdPrefix),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccSchedulerScheduleGroup_namePrefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,8 +154,8 @@ func TestAccSchedulerScheduleGroup_namePrefix(t *testing.T) {
 				Config: testAccScheduleGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -179,7 +179,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -187,7 +187,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 				Config: testAccScheduleGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -214,7 +214,7 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 				Config: testAccScheduleGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

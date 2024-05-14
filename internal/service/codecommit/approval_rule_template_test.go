@@ -25,7 +25,7 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,9 +34,9 @@ func TestAccCodeCommitApprovalRuleTemplate_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "approval_rule_template_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_date"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_user"),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_content_sha256"),
@@ -58,7 +58,7 @@ func TestAccCodeCommitApprovalRuleTemplate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 2),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateContentAndDescription(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
 					testAccCheckApprovalRuleTemplateContent(resourceName, 1),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a test description"),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApprovalRuleTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,14 +126,14 @@ func TestAccCodeCommitApprovalRuleTemplate_updateName(t *testing.T) {
 				Config: testAccApprovalRuleTemplateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
 				Config: testAccApprovalRuleTemplateConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 				),
 			},
 			{
@@ -150,7 +150,7 @@ func testAccCheckApprovalRuleTemplateContent(resourceName string, numApprovals i
 		expectedContent := fmt.Sprintf(`{"Version":"2018-11-08","DestinationReferences":["refs/heads/master"],"Statements":[{"Type":"Approvers","NumberOfApprovalsNeeded":%d,"ApprovalPoolMembers":["arn:%s:sts::%s:assumed-role/CodeCommitReview/*"]}]}`,
 			numApprovals, acctest.Partition(), acctest.AccountID(),
 		)
-		return resource.TestCheckResourceAttr(resourceName, "content", expectedContent)(s)
+		return resource.TestCheckResourceAttr(resourceName, names.AttrContent, expectedContent)(s)
 	}
 }
 

@@ -92,7 +92,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `clusterName` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `clusterName` – (Required) Name of the EKS Cluster.
 * `fargateProfileName` – (Required) Name of the EKS Fargate Profile.
 * `podExecutionRoleArn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Fargate Profile.
 * `selector` - (Required) Configuration block(s) for selecting Kubernetes Pods to execute with this EKS Fargate Profile. Detailed below.
@@ -160,4 +160,4 @@ Using `terraform import`, import EKS Fargate Profiles using the `clusterName` an
 % terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->
+<!-- cache-key: cdktf-0.20.1 input-ee13038385940c2fb85c18b1d27b8748e32f0bc1846a8217553b816df651bfa2 -->

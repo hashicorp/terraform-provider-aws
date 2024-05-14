@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSBackupPolicy_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,7 +36,7 @@ func TestAccEFSBackupPolicy_basic(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
 			},
@@ -57,7 +58,7 @@ func TestAccEFSBackupPolicy_Disappears_fs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackupPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
 			},
@@ -102,7 +103,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "ENABLED"),
 				),
 			},
@@ -110,7 +111,7 @@ func TestAccEFSBackupPolicy_update(t *testing.T) {
 				Config: testAccBackupPolicyConfig_basic(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackupPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "backup_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "backup_policy.0.status", "DISABLED"),
 				),
 			},

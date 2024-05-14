@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(licensemanager.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.LicenseManagerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -37,7 +38,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,13 +46,13 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "license_counting_type", "Instance"),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -73,7 +74,7 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +106,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -127,7 +128,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -144,7 +145,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,14 +153,14 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_allAttributes(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "test1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test1"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "10"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "true"),
 					resource.TestCheckResourceAttr(resourceName, "license_counting_type", "Socket"),
-					resource.TestCheckResourceAttr(resourceName, "license_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "license_rules.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.0", "#minimumSockets=3"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -173,14 +174,14 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_allAttributesUpdated(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "99"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),
 					resource.TestCheckResourceAttr(resourceName, "license_counting_type", "Socket"),
-					resource.TestCheckResourceAttr(resourceName, "license_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "license_rules.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.0", "#minimumSockets=3"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

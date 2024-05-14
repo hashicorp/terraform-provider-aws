@@ -45,7 +45,7 @@ func ResourceMedicalVocabulary() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -95,7 +95,7 @@ func resourceMedicalVocabularyCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get("name").(string))
+		return diag.Errorf("creating Amazon Transcribe MedicalVocabulary (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.ToString(out.VocabularyName))
@@ -130,7 +130,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 		Resource:  fmt.Sprintf("medical-vocabulary/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("download_uri", out.DownloadUri)
 	d.Set("vocabulary_name", out.VocabularyName)
 	d.Set("language_code", out.LanguageCode)
@@ -141,7 +141,7 @@ func resourceMedicalVocabularyRead(ctx context.Context, d *schema.ResourceData, 
 func resourceMedicalVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TranscribeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &transcribe.UpdateMedicalVocabularyInput{
 			VocabularyName: aws.String(d.Id()),
 			LanguageCode:   types.LanguageCode(d.Get("language_code").(string)),

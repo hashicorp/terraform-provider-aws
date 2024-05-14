@@ -17,14 +17,14 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFoundationModelDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "customizations_supported.#"),
-					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(datasourceName, "inference_types_supported.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "input_modalities.#"),
 					resource.TestCheckResourceAttrSet(datasourceName, "model_arn"),

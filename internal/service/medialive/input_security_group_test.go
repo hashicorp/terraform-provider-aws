@@ -37,7 +37,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,7 +45,7 @@ func TestAccMediaLiveInputSecurityGroup_basic(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -76,7 +76,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.0.0.8/32"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.0.0.8/32",
 					}),
@@ -94,7 +94,7 @@ func TestAccMediaLiveInputSecurityGroup_updateCIDR(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_basic(rName, "10.2.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "whitelist_rules.*", map[string]string{
 						"cidr": "10.2.0.0/16",
 					}),
@@ -119,7 +119,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccMediaLiveInputSecurityGroup_updateTags(t *testing.T) {
 				Config: testAccInputSecurityGroupConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputSecurityGroupExists(ctx, resourceName, &inputSecurityGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccMediaLiveInputSecurityGroup_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccInputSecurityGroupsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{

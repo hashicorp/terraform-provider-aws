@@ -33,9 +33,14 @@ func main() {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
-		case "codecatalyst", // Bearer auth token needs special handling
-			"s3control",       // Resolver modifies URL
-			"timestreamwrite": // Uses endpoint discovery
+		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
+			"codecatalyst",        // Bearer auth token needs special handling
+			"mwaa",                // Resolver modifies URL
+			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
+			"paymentcryptography", // Resolver modifies URL
+			"route53profiles",     // Resolver modifies URL
+			"s3control",           // Resolver modifies URL
+			"timestreamwrite":     // Uses endpoint discovery
 			continue
 		}
 
@@ -55,10 +60,10 @@ func main() {
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
 			APICallParams:     l.EndpointAPIParams(),
-			AwsEnvVar:         l.AwsServiceEnvVar(),
-			ConfigParameter:   l.AwsConfigParameter(),
+			AwsEnvVar:         l.AWSServiceEnvVar(),
+			ConfigParameter:   l.AWSConfigParameter(),
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
-			TfAwsEnvVar:       l.TfAwsEnvVar(),
+			TFAWSEnvVar:       l.TFAWSEnvVar(),
 			Aliases:           l.Aliases(),
 		}
 		if l.ClientSDKV1() {
@@ -88,7 +93,7 @@ func main() {
 		}
 
 		switch packageName {
-		case "route53domains":
+		case "costoptimizationhub", "cur", "route53domains":
 			td.Region = "us-east-1"
 		}
 
@@ -119,7 +124,7 @@ type TemplateData struct {
 	AwsEnvVar                         string
 	ConfigParameter                   string
 	DeprecatedEnvVar                  string
-	TfAwsEnvVar                       string
+	TFAWSEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	Aliases                           []string

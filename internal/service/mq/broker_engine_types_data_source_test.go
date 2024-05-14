@@ -22,13 +22,13 @@ func TestAccMQBrokerEngineTypesDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBrokerEngineTypesDataSourceConfig_basic("ACTIVEMQ"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "broker_engine_types.0.engine_type", "ACTIVEMQ"),
 				),
 			},

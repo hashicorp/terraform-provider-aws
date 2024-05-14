@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccServerDataSource_basic(t *testing.T) {
@@ -20,15 +20,15 @@ func testAccServerDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "domain", resourceName, "domain"),
-					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDomain, resourceName, names.AttrDomain),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "structured_log_destinations.#", resourceName, "structured_log_destinations.#"),
@@ -46,22 +46,22 @@ func testAccServerDataSource_Service_managed(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerDataSourceConfig_serviceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
-					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
-					resource.TestCheckResourceAttrPair(datasourceName, "endpoint_type", resourceName, "endpoint_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpointType, resourceName, names.AttrEndpointType),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "protocols.#", resourceName, "protocols.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "security_policy_name", resourceName, "security_policy_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "url", resourceName, "url"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrURL, resourceName, names.AttrURL),
 				),
 			},
 		},
@@ -76,18 +76,18 @@ func testAccServerDataSource_apigateway(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerDataSourceConfig_apigateway(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrEndpoint, resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "invocation_role", resourceName, "invocation_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
-					resource.TestCheckResourceAttrPair(datasourceName, "url", resourceName, "url"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrURL, resourceName, names.AttrURL),
 				),
 			},
 		},

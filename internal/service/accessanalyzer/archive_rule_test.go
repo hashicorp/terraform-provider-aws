@@ -30,7 +30,7 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ filter {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ filter {
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filters),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
 				),
@@ -114,7 +114,7 @@ filter {
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersRemoved),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.eq.0", "true"),
 				),
@@ -134,7 +134,7 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.AccessAnalyzerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{

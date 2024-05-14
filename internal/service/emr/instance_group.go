@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -30,8 +31,8 @@ const (
 	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
-// @SDKResource("aws_emr_instance_group")
-func ResourceInstanceGroup() *schema.Resource {
+// @SDKResource("aws_emr_instance_group", name="Instance Group")
+func resourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceGroupCreate,
 		ReadWithoutTimeout:   resourceInstanceGroupRead,
@@ -84,17 +85,17 @@ func ResourceInstanceGroup() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
 						},
-						"size": {
+						names.AttrSize: {
 							Type:     schema.TypeInt,
 							Required: true,
 							ForceNew: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -115,17 +116,17 @@ func ResourceInstanceGroup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -134,7 +135,7 @@ func ResourceInstanceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -150,8 +151,8 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	groupConfig := &emr.InstanceGroupConfig{
 		EbsConfiguration: readEBSConfig(d),
 		InstanceRole:     aws.String(instanceRole),
-		InstanceType:     aws.String(d.Get("instance_type").(string)),
-		Name:             aws.String(d.Get("name").(string)),
+		InstanceType:     aws.String(d.Get(names.AttrInstanceType).(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	if v, ok := d.GetOk("autoscaling_policy"); ok {
@@ -174,7 +175,7 @@ func resourceInstanceGroupCreate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if v, ok := d.GetOk("instance_count"); ok {
+	if v, ok := d.GetOk(names.AttrInstanceCount); ok {
 		groupConfig.InstanceCount = aws.Int64(int64(v.(int)))
 	} else {
 		groupConfig.InstanceCount = aws.Int64(1)
@@ -212,7 +213,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	ig, err := FetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
+	ig, err := fetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
@@ -266,13 +267,13 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "setting ebs_config: %s", err)
 	}
 	d.Set("ebs_optimized", ig.EbsOptimized)
-	d.Set("instance_count", ig.RequestedInstanceCount)
-	d.Set("instance_type", ig.InstanceType)
-	d.Set("name", ig.Name)
+	d.Set(names.AttrInstanceCount, ig.RequestedInstanceCount)
+	d.Set(names.AttrInstanceType, ig.InstanceType)
+	d.Set(names.AttrName, ig.Name)
 	d.Set("running_instance_count", ig.RunningInstanceCount)
 
 	if ig.Status != nil {
-		d.Set("status", ig.Status.State)
+		d.Set(names.AttrStatus, ig.Status.State)
 	}
 
 	return diags
@@ -283,13 +284,13 @@ func resourceInstanceGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	log.Printf("[DEBUG] Modify EMR task group")
-	if d.HasChanges("instance_count", "configurations_json") {
+	if d.HasChanges(names.AttrInstanceCount, "configurations_json") {
 		instanceGroupModifyConfig := emr.InstanceGroupModifyConfig{
 			InstanceGroupId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("instance_count") {
-			instanceCount := d.Get("instance_count").(int)
+		if d.HasChange(names.AttrInstanceCount) {
+			instanceCount := d.Get(names.AttrInstanceCount).(int)
 			instanceGroupModifyConfig.InstanceCount = aws.Int64(int64(instanceCount))
 		}
 		if d.HasChange("configurations_json") {
@@ -363,7 +364,7 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ig, err := FetchInstanceGroup(ctx, conn, clusterID, groupID)
+		ig, err := fetchInstanceGroup(ctx, conn, clusterID, groupID)
 		if err != nil {
 			return nil, "Not Found", err
 		}
@@ -377,7 +378,7 @@ func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, gr
 	}
 }
 
-func FetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
+func fetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{ClusterId: aws.String(clusterID)}
 
 	var groups []*emr.InstanceGroup
@@ -424,10 +425,10 @@ func readEBSConfig(d *schema.ResourceData) *emr.EbsConfiguration {
 			conf := config.(map[string]interface{})
 			ebs := &emr.EbsBlockDeviceConfig{}
 			volumeSpec := &emr.VolumeSpecification{
-				SizeInGB:   aws.Int64(int64(conf["size"].(int))),
-				VolumeType: aws.String(conf["type"].(string)),
+				SizeInGB:   aws.Int64(int64(conf[names.AttrSize].(int))),
+				VolumeType: aws.String(conf[names.AttrType].(string)),
 			}
-			if v, ok := conf["iops"].(int); ok && v != 0 {
+			if v, ok := conf[names.AttrIOPS].(int); ok && v != 0 {
 				volumeSpec.Iops = aws.Int64(int64(v))
 			}
 			if v, ok := conf["volumes_per_instance"].(int); ok && v != 0 {

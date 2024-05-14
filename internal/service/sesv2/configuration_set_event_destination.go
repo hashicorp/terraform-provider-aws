@@ -88,7 +88,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 								},
 							},
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -109,7 +109,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"iam_role_arn": {
+									names.AttrIAMRoleARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -157,7 +157,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"topic_arn": {
+									names.AttrTopicARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -325,7 +325,7 @@ func FindConfigurationSetEventDestinationByID(ctx context.Context, conn *sesv2.C
 
 func flattenEventDestination(apiObject types.EventDestination) map[string]interface{} {
 	m := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	if v := apiObject.CloudWatchDestination; v != nil {
@@ -377,7 +377,7 @@ func flattenKinesisFirehoseDestination(apiObject *types.KinesisFirehoseDestinati
 	}
 
 	if v := apiObject.IamRoleArn; v != nil {
-		m["iam_role_arn"] = aws.ToString(v)
+		m[names.AttrIAMRoleARN] = aws.ToString(v)
 	}
 
 	return m
@@ -405,7 +405,7 @@ func flattenSNSDestination(apiObject *types.SnsDestination) map[string]interface
 	m := map[string]interface{}{}
 
 	if v := apiObject.TopicArn; v != nil {
-		m["topic_arn"] = aws.ToString(v)
+		m[names.AttrTopicARN] = aws.ToString(v)
 	}
 
 	return m
@@ -452,7 +452,7 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.CloudWatchDestination = expandCloudWatchDestination(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		a.Enabled = v
 	}
 
@@ -500,7 +500,7 @@ func expandKinesisFirehoseDestination(tfMap map[string]interface{}) *types.Kines
 		a.DeliveryStreamArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["iam_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIAMRoleARN].(string); ok && v != "" {
 		a.IamRoleArn = aws.String(v)
 	}
 
@@ -528,7 +528,7 @@ func expandSNSDestination(tfMap map[string]interface{}) *types.SnsDestination {
 
 	a := &types.SnsDestination{}
 
-	if v, ok := tfMap["topic_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrTopicARN].(string); ok && v != "" {
 		a.TopicArn = aws.String(v)
 	}
 

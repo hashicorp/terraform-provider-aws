@@ -21,6 +21,8 @@ sweeper:
   - 'sweeper'
 skaff:
   - 'skaff'
+function:
+  - 'provider::aws::'
 #
 # AWS Per-Service Labeling
 #
@@ -89,8 +91,12 @@ service/backupgateway:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_backupgateway_'
 service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
+service/bcmdataexports:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bcmdataexports_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -99,6 +105,8 @@ service/budgets:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_budgets_'
 service/ce:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ce_'
+service/chatbot:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chatbot_'
 service/chime:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_chime_'
 service/chimesdkidentity:
@@ -123,6 +131,8 @@ service/cloudformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudformation_'
 service/cloudfront:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfront_'
+service/cloudfrontkeyvaluestore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfrontkeyvaluestore_'
 service/cloudhsmv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudhsm_v2_'
 service/cloudsearch:
@@ -177,6 +187,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
@@ -189,6 +201,8 @@ service/datapipeline:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datapipeline_'
 service/datasync:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datasync_'
+service/datazone:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_datazone_'
 service/dax:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_dax_'
 service/deploy:
@@ -465,6 +479,8 @@ service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
+service/neptunegraph:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:
@@ -489,6 +505,8 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/paymentcryptography:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
 service/personalize:
@@ -553,6 +571,8 @@ service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53domains_'
+service/route53profiles:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53profiles_'
 service/route53recoverycluster:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53recoverycluster_'
 service/route53recoverycontrolconfig:

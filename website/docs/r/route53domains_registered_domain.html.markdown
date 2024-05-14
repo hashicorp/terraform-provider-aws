@@ -43,6 +43,8 @@ This argument supports the following arguments:
 * `admin_contact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `admin_privacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
+* `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
+* `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
 * `registrant_contact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
@@ -54,7 +56,7 @@ This argument supports the following arguments:
 
 ### Contact Blocks
 
-The `admin_contact`, `registrant_contact` and `tech_contact` blocks support the following:
+The `admin_contact`, `billing_contact`, `registrant_contact` and `tech_contact` blocks support the following:
 
 * `address_line_1` - (Optional) First line of the contact's address.
 * `address_line_2` - (Optional) Second line of contact's address, if any.

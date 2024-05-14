@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_transit_gateway_route_table_propagations")
@@ -26,8 +27,8 @@ func DataSourceTransitGatewayRouteTablePropagations() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
-			"ids": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -51,8 +52,8 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -72,7 +73,7 @@ func dataSourceTransitGatewayRouteTablePropagationsRead(ctx context.Context, d *
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", routeTablePropagationIDs)
+	d.Set(names.AttrIDs, routeTablePropagationIDs)
 
 	return diags
 }

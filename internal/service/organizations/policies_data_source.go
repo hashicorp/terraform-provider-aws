@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_policies")
@@ -20,11 +21,11 @@ func DataSourcePolicies() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePoliciesRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -37,7 +38,7 @@ func dataSourcePoliciesRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	filter := d.Get("filter").(string)
+	filter := d.Get(names.AttrFilter).(string)
 	policies, err := findPolicies(ctx, conn, filter)
 
 	if err != nil {
@@ -51,7 +52,7 @@ func dataSourcePoliciesRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.SetId(filter)
-	d.Set("ids", policyIDs)
+	d.Set(names.AttrIDs, policyIDs)
 
 	return diags
 }

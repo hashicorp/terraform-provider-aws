@@ -16,6 +16,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/internal/logging"
@@ -1318,12 +1319,8 @@ func (s *GRPCProviderServer) CallFunction(ctx context.Context, req *tfprotov5.Ca
 	logging.HelperSchemaTrace(ctx, "Returning error for provider function call")
 
 	resp := &tfprotov5.CallFunctionResponse{
-		Diagnostics: []*tfprotov5.Diagnostic{
-			{
-				Severity: tfprotov5.DiagnosticSeverityError,
-				Summary:  "Function Not Found",
-				Detail:   fmt.Sprintf("No function named %q was found in the provider.", req.Name),
-			},
+		Error: &tfprotov5.FunctionError{
+			Text: fmt.Sprintf("Function Not Found: No function named %q was found in the provider.", req.Name),
 		},
 	}
 

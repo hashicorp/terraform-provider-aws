@@ -35,7 +35,7 @@ func TestAccKafkaVPCConnection_basic(t *testing.T) {
 				Config: testAccVPCConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "authentication", "SASL_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "client_subnets.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
@@ -67,7 +67,7 @@ func TestAccKafkaVPCConnection_tags(t *testing.T) {
 				Config: testAccVPCConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccKafkaVPCConnection_tags(t *testing.T) {
 				Config: testAccVPCConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCConnectionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

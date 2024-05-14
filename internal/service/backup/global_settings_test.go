@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBackupGlobalSettings_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -34,7 +35,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic("true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
 				),
 			},
@@ -47,7 +48,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic("false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "false"),
 				),
 			},
@@ -55,7 +56,7 @@ func TestAccBackupGlobalSettings_basic(t *testing.T) {
 				Config: testAccGlobalSettingsConfig_basic("true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "global_settings.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "global_settings.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "global_settings.isCrossAccountBackupEnabled", "true"),
 				),
 			},

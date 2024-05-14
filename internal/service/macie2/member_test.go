@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -41,7 +42,7 @@ func testAccMember_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -50,10 +51,10 @@ func testAccMember_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "relationship_status", macie2.RelationshipStatusCreated),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -78,7 +79,7 @@ func testAccMember_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
@@ -105,7 +106,7 @@ func testAccMember_invitationDisableEmailNotification(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_inviteInvitationDisableEmailNotification(email, "true", true),
@@ -147,7 +148,7 @@ func testAccMember_invite(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, false),
@@ -157,10 +158,10 @@ func testAccMember_invite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -171,10 +172,10 @@ func testAccMember_invite(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -202,7 +203,7 @@ func testAccMember_inviteRemoved(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invite(email, true),
@@ -212,10 +213,10 @@ func testAccMember_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -226,10 +227,10 @@ func testAccMember_inviteRemoved(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "false"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -257,7 +258,7 @@ func testAccMember_status(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_status(email, macie2.MacieStatusEnabled, true),
@@ -267,10 +268,10 @@ func testAccMember_status(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusEnabled),
 				),
 			},
 			{
@@ -281,10 +282,10 @@ func testAccMember_status(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "invite", "true"),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "status", macie2.MacieStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, macie2.MacieStatusPaused),
 				),
 			},
 			{
@@ -311,7 +312,7 @@ func testAccMember_withTags(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_tags(acctest.DefaultEmailAddress),
@@ -319,13 +320,13 @@ func testAccMember_withTags(t *testing.T) {
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key", "value"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", "value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceAlternate, "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 				),
 			},
 			{

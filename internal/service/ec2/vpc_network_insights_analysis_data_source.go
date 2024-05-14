@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ec2_network_insights_analysis")
@@ -39,12 +40,12 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"explanations": networkInsightsAnalysisExplanationsSchema,
-			"filter":       CustomFiltersSchema(),
+			"explanations":   networkInsightsAnalysisExplanationsSchema,
+			names.AttrFilter: customFiltersSchema(),
 			"filter_in_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -69,15 +70,15 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"warning_message": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,8 +99,8 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 		input.NetworkInsightsAnalysisIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
+	input.Filters = append(input.Filters, newCustomFilterList(
+		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
 	if len(input.Filters) == 0 {
@@ -118,7 +119,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("alternate_path_hints", flattenAlternatePathHints(output.AlternatePathHints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting alternate_path_hints: %s", err)
 	}
-	d.Set("arn", output.NetworkInsightsAnalysisArn)
+	d.Set(names.AttrARN, output.NetworkInsightsAnalysisArn)
 	if err := d.Set("explanations", flattenExplanations(output.Explanations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting explanations: %s", err)
 	}
@@ -133,11 +134,11 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting return_path_components: %s", err)
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
-	d.Set("status", output.Status)
-	d.Set("status_message", output.StatusMessage)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrStatusMessage, output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

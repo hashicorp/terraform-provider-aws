@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSInstancesDataSource_filter(t *testing.T) {
@@ -22,7 +23,7 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -30,10 +31,10 @@ func TestAccRDSInstancesDataSource_filter(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
 		},
@@ -49,7 +50,7 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,10 +58,10 @@ func TestAccRDSInstancesDataSource_tags(t *testing.T) {
 				Config: testAccInstancesDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, "identifier"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_arns.0", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_identifiers.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(dataSourceName, "instance_identifiers.0", resourceName, names.AttrIdentifier),
 				),
 			},
 		},

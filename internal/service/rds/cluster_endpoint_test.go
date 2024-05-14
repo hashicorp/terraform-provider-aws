@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSClusterEndpoint_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,10 +47,10 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 					testAccCheckClusterEndpointAttributes(&customReaderEndpoint),
 					testAccCheckClusterEndpointExists(ctx, defaultResourceName, &customEndpoint),
 					testAccCheckClusterEndpointAttributes(&customEndpoint),
-					acctest.MatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
-					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
-					acctest.MatchResourceAttrRegionalARN(defaultResourceName, "arn", "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
-					resource.TestCheckResourceAttrSet(defaultResourceName, "endpoint"),
+					acctest.MatchResourceAttrRegionalARN(readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					resource.TestCheckResourceAttrSet(readerResourceName, names.AttrEndpoint),
+					acctest.MatchResourceAttrRegionalARN(defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					resource.TestCheckResourceAttrSet(defaultResourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(defaultResourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(readerResourceName, "tags.%", "0"),
 				),
@@ -81,7 +82,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +90,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -111,7 +112,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

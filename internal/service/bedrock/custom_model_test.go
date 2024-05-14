@@ -29,7 +29,7 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,18 +43,18 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_model_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "customization_type", "FINE_TUNING"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "hyperparameters.batchSize", "1"),
-					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.batchSize", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
 					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
 					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
-					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
-					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),
 					resource.TestCheckNoResourceAttr(resourceName, "training_metrics"),
 					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "0"),
@@ -80,7 +80,7 @@ func TestAccBedrockCustomModel_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func TestAccBedrockCustomModel_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccBedrockCustomModel_tags(t *testing.T) {
 				Config: testAccCustomModelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccBedrockCustomModel_tags(t *testing.T) {
 				Config: testAccCustomModelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -151,7 +151,7 @@ func TestAccBedrockCustomModel_kmsKey(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccBedrockCustomModel_validationDataConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,8 +188,8 @@ func TestAccBedrockCustomModel_validationDataConfig(t *testing.T) {
 				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
 				),
 			},
@@ -215,7 +215,7 @@ func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,8 +223,8 @@ func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
 				),
 			},
@@ -241,9 +241,9 @@ func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "job_status", "Completed"),
-					resource.TestCheckResourceAttr(resourceName, "training_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "training_metrics.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "training_metrics.0.training_loss"),
-					resource.TestCheckResourceAttr(resourceName, "validation_metrics.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_metrics.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "validation_metrics.0.validation_loss"),
 				),
 			},
@@ -259,7 +259,7 @@ func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -267,8 +267,8 @@ func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
 				Config: testAccCustomModelConfig_vpcConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
 				),
 			},

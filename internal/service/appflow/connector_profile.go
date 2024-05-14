@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
@@ -37,7 +38,7 @@ func resourceConnectorProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -81,7 +82,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"secret_key": {
+												names.AttrSecretKey: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -135,13 +136,13 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"password": {
+															names.AttrPassword: {
 																Type:         schema.TypeString,
 																Required:     true,
 																Sensitive:    true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"username": {
+															names.AttrUsername: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
@@ -194,7 +195,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_id": {
+															names.AttrClientID: {
 																Type:     schema.TypeString,
 																Optional: true,
 																ValidateFunc: validation.All(
@@ -202,7 +203,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_secret": {
+															names.AttrClientSecret: {
 																Type:      schema.TypeString,
 																Optional:  true,
 																Sensitive: true,
@@ -307,7 +308,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -315,7 +316,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_secret": {
+												names.AttrClientSecret: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -468,7 +469,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -476,7 +477,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_secret": {
+												names.AttrClientSecret: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -519,13 +520,13 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -614,13 +615,13 @@ func resourceConnectorProfile() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"password": {
+															names.AttrPassword: {
 																Type:         schema.TypeString,
 																Required:     true,
 																Sensitive:    true,
 																ValidateFunc: validation.StringLenBetween(0, 512),
 															},
-															"username": {
+															names.AttrUsername: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.All(
@@ -646,7 +647,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_id": {
+															names.AttrClientID: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.All(
@@ -654,7 +655,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 																),
 															},
-															"client_secret": {
+															names.AttrClientSecret: {
 																Type:     schema.TypeString,
 																Required: true,
 																ValidateFunc: validation.All(
@@ -707,13 +708,13 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -756,7 +757,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -764,7 +765,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_secret": {
+												names.AttrClientSecret: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -807,13 +808,13 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -848,13 +849,13 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"password": {
+												names.AttrPassword: {
 													Type:         schema.TypeString,
 													Required:     true,
 													Sensitive:    true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"username": {
+												names.AttrUsername: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -880,7 +881,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_id": {
+												names.AttrClientID: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -888,7 +889,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"client_secret": {
+												names.AttrClientSecret: {
 													Type:      schema.TypeString,
 													Required:  true,
 													Sensitive: true,
@@ -1093,7 +1094,7 @@ func resourceConnectorProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1101,12 +1102,12 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"cluster_identifier": {
+												names.AttrClusterIdentifier: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1115,7 +1116,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"database_name": {
+												names.AttrDatabaseName: {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
@@ -1124,7 +1125,7 @@ func resourceConnectorProfile() *schema.Resource {
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
-												"role_arn": {
+												names.AttrRoleARN: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: verify.ValidARN,
@@ -1299,7 +1300,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_name": {
+												names.AttrBucketName: {
 													Type:     schema.TypeString,
 													Required: true,
 													ValidateFunc: validation.All(
@@ -1307,7 +1308,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"bucket_prefix": {
+												names.AttrBucketPrefix: {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
@@ -1320,7 +1321,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
 													),
 												},
-												"region": {
+												names.AttrRegion: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ValidateFunc: validation.All(
@@ -1328,7 +1329,7 @@ func resourceConnectorProfile() *schema.Resource {
 														validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
 													),
 												},
-												"stage": {
+												names.AttrStage: {
 													Type:     schema.TypeString,
 													Required: true,
 													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -1415,7 +1416,7 @@ func resourceConnectorProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -1433,7 +1434,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appflow.CreateConnectorProfileInput{
 		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
@@ -1487,13 +1488,13 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	// credentials resource -- but it is not documented in the API reference.
 	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
 	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]interface{})
-	d.Set("arn", connectorProfile.ConnectorProfileArn)
+	d.Set(names.AttrARN, connectorProfile.ConnectorProfileArn)
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
 	d.Set("connector_label", connectorProfile.ConnectorLabel)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
-	d.Set("name", connectorProfile.ConnectorProfileName)
+	d.Set(names.AttrName, connectorProfile.ConnectorProfileName)
 
 	return diags
 }
@@ -1503,7 +1504,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appflow.UpdateConnectorProfileInput{
 		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
@@ -1529,7 +1530,7 @@ func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData,
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
 	_, err := conn.DeleteConnectorProfile(ctx, &appflow.DeleteConnectorProfileInput{
-		ConnectorProfileName: aws.String(d.Get("name").(string)),
+		ConnectorProfileName: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -1648,7 +1649,7 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *types.Connecto
 func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *types.AmplitudeConnectorProfileCredentials {
 	credentials := &types.AmplitudeConnectorProfileCredentials{
 		ApiKey:    aws.String(m["api_key"].(string)),
-		SecretKey: aws.String(m["secret_key"].(string)),
+		SecretKey: aws.String(m[names.AttrSecretKey].(string)),
 	}
 
 	return credentials
@@ -1694,8 +1695,8 @@ func expandDynatraceConnectorProfileCredentials(m map[string]interface{}) *types
 
 func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]interface{}) *types.GoogleAnalyticsConnectorProfileCredentials {
 	credentials := &types.GoogleAnalyticsConnectorProfileCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
-		ClientSecret: aws.String(m["client_secret"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
+		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
@@ -1740,8 +1741,8 @@ func expandInforNexusConnectorProfileCredentials(m map[string]interface{}) *type
 
 func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.MarketoConnectorProfileCredentials {
 	credentials := &types.MarketoConnectorProfileCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
-		ClientSecret: aws.String(m["client_secret"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
+		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
@@ -1756,8 +1757,8 @@ func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.M
 
 func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *types.RedshiftConnectorProfileCredentials {
 	credentials := &types.RedshiftConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
-		Username: aws.String(m["username"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1803,8 +1804,8 @@ func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *types.
 
 func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *types.ServiceNowConnectorProfileCredentials {
 	credentials := &types.ServiceNowConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
-		Username: aws.String(m["username"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1821,8 +1822,8 @@ func expandSingularConnectorProfileCredentials(m map[string]interface{}) *types.
 func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.SlackConnectorProfileCredentials {
 	credentials := &types.SlackConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
-		ClientId:     aws.String(m["client_id"].(string)),
-		ClientSecret: aws.String(m["client_secret"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
+		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1834,8 +1835,8 @@ func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.Sla
 
 func expandSnowflakeConnectorProfileCredentials(m map[string]interface{}) *types.SnowflakeConnectorProfileCredentials {
 	credentials := &types.SnowflakeConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
-		Username: aws.String(m["username"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1851,8 +1852,8 @@ func expandTrendmicroConnectorProfileCredentials(m map[string]interface{}) *type
 
 func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.VeevaConnectorProfileCredentials {
 	credentials := &types.VeevaConnectorProfileCredentials{
-		Password: aws.String(m["password"].(string)),
-		Username: aws.String(m["username"].(string)),
+		Password: aws.String(m[names.AttrPassword].(string)),
+		Username: aws.String(m[names.AttrUsername].(string)),
 	}
 
 	return credentials
@@ -1861,8 +1862,8 @@ func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.Vee
 func expandZendeskConnectorProfileCredentials(m map[string]interface{}) *types.ZendeskConnectorProfileCredentials {
 	credentials := &types.ZendeskConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
-		ClientId:     aws.String(m["client_id"].(string)),
-		ClientSecret: aws.String(m["client_secret"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
+		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1903,11 +1904,11 @@ func expandAPIKeyCredentials(m map[string]interface{}) *types.ApiKeyCredentials 
 func expandBasicAuthCredentials(m map[string]interface{}) *types.BasicAuthCredentials {
 	credentials := &types.BasicAuthCredentials{}
 
-	if v, ok := m["password"].(string); ok && v != "" {
+	if v, ok := m[names.AttrPassword].(string); ok && v != "" {
 		credentials.Password = aws.String(v)
 	}
 
-	if v, ok := m["username"].(string); ok && v != "" {
+	if v, ok := m[names.AttrUsername].(string); ok && v != "" {
 		credentials.Username = aws.String(v)
 	}
 
@@ -1930,8 +1931,8 @@ func expandCustomAuthCredentials(m map[string]interface{}) *types.CustomAuthCred
 
 func expandOAuthCredentials(m map[string]interface{}) *types.OAuthCredentials {
 	credentials := &types.OAuthCredentials{
-		ClientId:     aws.String(m["client_id"].(string)),
-		ClientSecret: aws.String(m["client_secret"].(string)),
+		ClientId:     aws.String(m[names.AttrClientID].(string)),
+		ClientSecret: aws.String(m[names.AttrClientSecret].(string)),
 	}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
@@ -1953,10 +1954,10 @@ func expandOAuth2Credentials(m map[string]interface{}) *types.OAuth2Credentials 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
 	}
-	if v, ok := m["client_id"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientID].(string); ok && v != "" {
 		credentials.ClientId = aws.String(v)
 	}
-	if v, ok := m["client_secret"].(string); ok && v != "" {
+	if v, ok := m[names.AttrClientSecret].(string); ok && v != "" {
 		credentials.ClientSecret = aws.String(v)
 	}
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -2064,14 +2065,14 @@ func expandMarketoConnectorProfileProperties(m map[string]interface{}) *types.Ma
 
 func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.RedshiftConnectorProfileProperties {
 	properties := &types.RedshiftConnectorProfileProperties{
-		BucketName:        aws.String(m["bucket_name"].(string)),
-		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
-		RoleArn:           aws.String(m["role_arn"].(string)),
+		BucketName:        aws.String(m[names.AttrBucketName].(string)),
+		ClusterIdentifier: aws.String(m[names.AttrClusterIdentifier].(string)),
+		RoleArn:           aws.String(m[names.AttrRoleARN].(string)),
 		DataApiRoleArn:    aws.String(m["data_api_role_arn"].(string)),
-		DatabaseName:      aws.String(m["database_name"].(string)),
+		DatabaseName:      aws.String(m[names.AttrDatabaseName].(string)),
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2148,8 +2149,8 @@ func expandSlackConnectorProfileProperties(m map[string]interface{}) *types.Slac
 
 func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.SnowflakeConnectorProfileProperties {
 	properties := &types.SnowflakeConnectorProfileProperties{
-		BucketName: aws.String(m["bucket_name"].(string)),
-		Stage:      aws.String(m["stage"].(string)),
+		BucketName: aws.String(m[names.AttrBucketName].(string)),
+		Stage:      aws.String(m[names.AttrStage].(string)),
 		Warehouse:  aws.String(m["warehouse"].(string)),
 	}
 
@@ -2157,7 +2158,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.AccountName = aws.String(v)
 	}
 
-	if v, ok := m["bucket_prefix"].(string); ok && v != "" {
+	if v, ok := m[names.AttrBucketPrefix].(string); ok && v != "" {
 		properties.BucketPrefix = aws.String(v)
 	}
 
@@ -2165,7 +2166,7 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.
 		properties.PrivateLinkServiceName = aws.String(v)
 	}
 
-	if v, ok := m["region"].(string); ok && v != "" {
+	if v, ok := m[names.AttrRegion].(string); ok && v != "" {
 		properties.Region = aws.String(v)
 	}
 
@@ -2293,20 +2294,20 @@ func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []
 func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.DatabaseUrl != nil {
 		m["database_url"] = aws.ToString(properties.DatabaseUrl)
 	}
 
-	m["role_arn"] = aws.ToString(properties.RoleArn)
-	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
+	m[names.AttrRoleARN] = aws.ToString(properties.RoleArn)
+	m[names.AttrClusterIdentifier] = aws.ToString(properties.ClusterIdentifier)
 	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
-	m["database_name"] = aws.ToString(properties.DatabaseName)
+	m[names.AttrDatabaseName] = aws.ToString(properties.DatabaseName)
 
 	return []interface{}{m}
 }
@@ -2365,17 +2366,17 @@ func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConne
 		m["account_name"] = aws.ToString(properties.AccountName)
 	}
 
-	m["bucket_name"] = aws.ToString(properties.BucketName)
+	m[names.AttrBucketName] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
+		m[names.AttrBucketPrefix] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.Region != nil {
-		m["region"] = aws.ToString(properties.Region)
+		m[names.AttrRegion] = aws.ToString(properties.Region)
 	}
 
-	m["stage"] = aws.ToString(properties.Stage)
+	m[names.AttrStage] = aws.ToString(properties.Stage)
 	m["warehouse"] = aws.ToString(properties.Warehouse)
 
 	return []interface{}{m}

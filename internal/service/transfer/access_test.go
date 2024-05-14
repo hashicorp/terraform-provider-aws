@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAccess_s3_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccAccess_s3_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,14 +43,14 @@ func testAccAccess_s3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"role"},
+				ImportStateVerifyIgnore: []string{names.AttrRole},
 			},
 			{
 				Config: testAccAccessConfig_s3Updated(rName),
@@ -77,7 +78,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,14 +89,14 @@ func testAccAccess_efs_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"role"},
+				ImportStateVerifyIgnore: []string{names.AttrRole},
 			},
 			{
 				Config: testAccAccessConfig_efsUpdated(rName),
@@ -104,7 +105,7 @@ func testAccAccess_efs_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_directory"),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
-					resource.TestCheckResourceAttrSet(resourceName, "role"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRole),
 				),
 			},
 		},
@@ -124,7 +125,7 @@ func testAccAccess_disappears(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +154,7 @@ func testAccAccess_s3_policy(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,7 +162,7 @@ func testAccAccess_s3_policy(t *testing.T) {
 				Config: testAccAccessConfig_s3ScopeDownPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 		},

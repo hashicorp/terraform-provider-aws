@@ -27,7 +27,7 @@ func TestAccS3BucketVersioning_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +35,8 @@ func TestAccS3BucketVersioning_basic(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -56,7 +56,7 @@ func TestAccS3BucketVersioning_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccS3BucketVersioning_disappears_bucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccS3BucketVersioning_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -145,7 +145,7 @@ func TestAccS3BucketVersioning_MFADelete(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +153,7 @@ func TestAccS3BucketVersioning_MFADelete(t *testing.T) {
 				Config: testAccBucketVersioningConfig_mfaDelete(rName, string(types.MFADeleteDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
@@ -175,7 +175,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,7 +183,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "false"),
 				),
 			},
@@ -191,7 +191,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledNoChange(t *testing.T) 
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -207,7 +207,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,7 +215,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 				Config: testAccBucketConfig_versioning(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "false"),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccS3BucketVersioning_migrate_versioningDisabledWithChange(t *testing.T
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -239,7 +239,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,7 +247,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 				Config: testAccBucketConfig_versioning(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "true"),
 				),
 			},
@@ -255,7 +255,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledNoChange(t *testing.T) {
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -271,7 +271,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -279,7 +279,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 				Config: testAccBucketConfig_versioning(bucketName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.enabled", "true"),
 				),
 			},
@@ -287,7 +287,7 @@ func TestAccS3BucketVersioning_migrate_versioningEnabledWithChange(t *testing.T)
 				Config: testAccBucketVersioningConfig_migrateEnabled(bucketName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -305,7 +305,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -313,7 +313,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				Config: testAccBucketConfig_versioningMFADelete(bucketName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "versioning.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "versioning.0.mfa_delete", "false"),
 				),
 			},
@@ -321,7 +321,7 @@ func TestAccS3BucketVersioning_migrate_mfaDeleteNoChange(t *testing.T) {
 				Config: testAccBucketVersioningConfig_migrateMFADelete(bucketName, string(types.MFADeleteDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.mfa_delete", string(types.MFADeleteDisabled)),
 				),
 			},
@@ -336,7 +336,7 @@ func TestAccS3BucketVersioning_Status_disabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -344,7 +344,7 @@ func TestAccS3BucketVersioning_Status_disabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -364,7 +364,7 @@ func TestAccS3BucketVersioning_Status_disabledToEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -372,7 +372,7 @@ func TestAccS3BucketVersioning_Status_disabledToEnabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -380,7 +380,7 @@ func TestAccS3BucketVersioning_Status_disabledToEnabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -400,7 +400,7 @@ func TestAccS3BucketVersioning_Status_disabledToSuspended(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -408,7 +408,7 @@ func TestAccS3BucketVersioning_Status_disabledToSuspended(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, tfs3.BucketVersioningStatusDisabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", tfs3.BucketVersioningStatusDisabled),
 				),
 			},
@@ -416,7 +416,7 @@ func TestAccS3BucketVersioning_Status_disabledToSuspended(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -436,7 +436,7 @@ func TestAccS3BucketVersioning_Status_enabledToDisabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -444,7 +444,7 @@ func TestAccS3BucketVersioning_Status_enabledToDisabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusEnabled)),
 				),
 			},
@@ -463,7 +463,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -471,7 +471,7 @@ func TestAccS3BucketVersioning_Status_suspendedToDisabled(t *testing.T) {
 				Config: testAccBucketVersioningConfig_basic(rName, string(types.BucketVersioningStatusSuspended)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketVersioningExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "versioning_configuration.0.status", string(types.BucketVersioningStatusSuspended)),
 				),
 			},
@@ -489,7 +489,7 @@ func TestAccS3BucketVersioning_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketVersioningDestroy(ctx),
 		Steps: []resource.TestStep{

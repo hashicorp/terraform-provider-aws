@@ -12,6 +12,8 @@ description: |-
 
 Provides an Elastic Container Registry Policy.
 
+~> **NOTE on ECR Registry Policies:** While the AWS Management Console interface may suggest the ability to define multiple policies by creating multiple statements, ECR registry policies are effectively managed as singular entities at the regional level by the AWS APIs. Therefore, the `aws_ecr_registry_policy` resource should be configured only once per region with all necessary statements defined in the same policy. Attempting to define multiple `aws_ecr_registry_policy` resources may result in perpetual differences, with one policy overriding another.
+
 ## Example Usage
 
 ```typescript
@@ -112,4 +114,4 @@ Using `terraform import`, import ECR Registry Policy using the registry id. For 
 % terraform import aws_ecr_registry_policy.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-a8b9e1b12da0ab4f7f9e19fe22a9fd339fcf53514637769a293dcb91b039f9b6 -->
+<!-- cache-key: cdktf-0.20.1 input-dccd791b43ed9685939eb25a51810cab91d696a9aee10913a04d5c1bc0ef292c -->
