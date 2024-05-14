@@ -37,12 +37,13 @@ Missing block "body" in template
 resource "null_resource" "test" {}
 
 {{ end -}}
-
+{{ if .WithRName -}}
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
+{{- end }}
 {{ range .AdditionalTfVars }}
 variable "{{ . }}" {
   type     = string

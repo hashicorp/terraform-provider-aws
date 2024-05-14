@@ -122,10 +122,15 @@ func main() {
 			slices.Sort(additionalTfVars)
 			testDirPath := path.Join("testdata", resource.Name)
 
-			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, additionalTfVars)
-			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, additionalTfVars)
-			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, additionalTfVars)
-			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, additionalTfVars)
+			common := commonConfig{
+				AdditionalTfVars: additionalTfVars,
+				WithRName:        (resource.Generator != ""),
+			}
+
+			generateTestConfig(g, testDirPath, "tags", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tags", true, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tagsComputed1", false, configTmplFile, configTmpl, common)
+			generateTestConfig(g, testDirPath, "tagsComputed2", false, configTmplFile, configTmpl, common)
 		}
 	}
 
@@ -171,11 +176,16 @@ type codeBlock struct {
 	Code string
 }
 
-type ConfigDatum struct {
-	Tags             string
-	WithDefaultTags  bool
-	ComputedTag      bool
+type commonConfig struct {
 	AdditionalTfVars []string
+	WithRName        bool
+}
+
+type ConfigDatum struct {
+	Tags            string
+	WithDefaultTags bool
+	ComputedTag     bool
+	commonConfig
 }
 
 //go:embed test.go.gtpl
@@ -246,6 +256,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 	}
 	tagged := false
 	skip := false
+	generatorSeen := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -293,7 +304,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					}
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
+					if attr == "false" {
+						generatorSeen = true
+					} else if funcName, importSpec, err := parseIdentifierSpec(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("%s: %w", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName), err))
 						continue
 					} else {
@@ -301,6 +314,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						if importSpec != nil {
 							d.GoImports = append(d.GoImports, *importSpec)
 						}
+						generatorSeen = true
 					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
@@ -379,6 +393,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		}
 	}
 
+	if !generatorSeen {
+		d.Generator = "sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)"
+		d.GoImports = append(d.GoImports,
+			goImport{
+				Path:  "github.com/hashicorp/terraform-plugin-testing/helper/acctest",
+				Alias: "sdkacctest",
+			},
+			goImport{
+				Path: "github.com/hashicorp/terraform-provider-aws/internal/acctest",
+			},
+		)
+	}
+
 	if tagged && !skip {
 		v.taggedResources = append(v.taggedResources, d)
 	}
@@ -396,7 +423,7 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	return v
 }
 
-func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, additionalTfVars []string) {
+func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults bool, configTmplFile, configTmpl string, common commonConfig) {
 	testName := test
 	if withDefaults {
 		testName += "_defaults"
@@ -420,10 +447,10 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 	}
 
 	configData := ConfigDatum{
-		Tags:             test,
-		WithDefaultTags:  withDefaults,
-		ComputedTag:      (test == "tagsComputed"),
-		AdditionalTfVars: additionalTfVars,
+		Tags:            test,
+		WithDefaultTags: withDefaults,
+		ComputedTag:     (test == "tagsComputed"),
+		commonConfig:    common,
 	}
 	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)

@@ -55,7 +55,7 @@ const (
 
 // @SDKResource("aws_acm_certificate", name="Certificate")
 // @Tags(identifierAttribute="id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail", tlsKey=true, importIgnore="certificate_body;private_key, generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,
