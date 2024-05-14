@@ -37,7 +37,7 @@ func TestAccLocationRouteCalculator_basic(t *testing.T) {
 					testAccCheckRouteCalculatorExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "calculator_arn", "geo", fmt.Sprintf("route-calculator/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "calculator_name", rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),

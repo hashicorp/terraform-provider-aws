@@ -39,7 +39,7 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "collection_arn", "geo", fmt.Sprintf("geofence-collection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "collection_name", rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),

@@ -35,7 +35,7 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaceIndexExists(ctx, resourceName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseSingleUse),
