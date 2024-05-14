@@ -346,7 +346,7 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringInSlice([]string{
@@ -429,7 +429,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		suffix = v.(string)
 	}
 
-	repo := d.Get("repository_name").(string)
+	repo := d.Get(names.AttrRepositoryName).(string)
 
 	id := ""
 	switch repo {

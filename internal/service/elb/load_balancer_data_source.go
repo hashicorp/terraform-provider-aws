@@ -86,7 +86,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Computed: true,
 			},
 
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -325,7 +325,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
+		d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck))
 	}
 
 	return diags

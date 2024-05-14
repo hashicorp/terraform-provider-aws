@@ -52,7 +52,7 @@ func resourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -102,7 +102,7 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	principalARN := d.Get("principal_arn").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
 	input := &eks.CreateAccessEntryInput{
@@ -155,7 +155,7 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("access_entry_arn", output.AccessEntryArn)
-	d.Set("cluster_name", output.ClusterName)
+	d.Set(names.AttrClusterName, output.ClusterName)
 	d.Set(names.AttrCreatedAt, aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
 	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))

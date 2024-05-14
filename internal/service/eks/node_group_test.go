@@ -45,7 +45,7 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
 					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2X8664)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", string(types.CapacityTypesOnDemand)),
 					resource.TestCheckResourceAttr(resourceName, "disk_size", "20"),
 					resource.TestCheckResourceAttr(resourceName, "instance_types.#", "1"),

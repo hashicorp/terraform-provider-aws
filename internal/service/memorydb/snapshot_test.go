@@ -46,7 +46,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.snapshot_window", "aws_memorydb_cluster.test", "snapshot_window"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.subnet_group_name", "aws_memorydb_cluster.test", "subnet_group_name"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.vpc_id", "aws_memorydb_subnet_group.test", names.AttrVPCID),
-					resource.TestCheckResourceAttr(resourceName, "cluster_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSource, "manual"),

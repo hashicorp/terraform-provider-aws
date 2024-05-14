@@ -74,7 +74,7 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,7 +135,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
 	d.Set(names.AttrStatus, output.Status)
-	d.Set("status_message", output.StatusMessage)
+	d.Set(names.AttrStatusMessage, output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

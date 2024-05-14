@@ -166,7 +166,7 @@ func ResourceInstanceStorageConfig() *schema.Resource {
 								},
 							},
 						},
-						"storage_type": {
+						names.AttrStorageType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(connect.StorageType_Values(), false),
@@ -327,7 +327,7 @@ func expandStorageConfig(tfList []interface{}) *connect.InstanceStorageConfig {
 	}
 
 	result := &connect.InstanceStorageConfig{
-		StorageType: aws.String(tfMap["storage_type"].(string)),
+		StorageType: aws.String(tfMap[names.AttrStorageType].(string)),
 	}
 
 	if v, ok := tfMap["kinesis_firehose_config"].([]interface{}); ok && len(v) > 0 {
@@ -448,7 +448,7 @@ func flattenStorageConfig(apiObject *connect.InstanceStorageConfig) []interface{
 	}
 
 	values := map[string]interface{}{
-		"storage_type": aws.StringValue(apiObject.StorageType),
+		names.AttrStorageType: aws.StringValue(apiObject.StorageType),
 	}
 
 	if v := apiObject.KinesisFirehoseConfig; v != nil {

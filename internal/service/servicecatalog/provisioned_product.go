@@ -250,7 +250,7 @@ func ResourceProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_message": {
+			names.AttrStatusMessage: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -433,7 +433,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("product_id", detail.ProductId)
 	d.Set("provisioning_artifact_id", detail.ProvisioningArtifactId)
 	d.Set(names.AttrStatus, detail.Status)
-	d.Set("status_message", detail.StatusMessage)
+	d.Set(names.AttrStatusMessage, detail.StatusMessage)
 	d.Set(names.AttrType, detail.Type)
 
 	// Previously, we waited for the record to only return a target state of 'SUCCEEDED' or 'AVAILABLE'

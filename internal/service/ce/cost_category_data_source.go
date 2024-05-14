@@ -28,7 +28,7 @@ func dataSourceCostCategory() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"default_value": {
+				names.AttrDefaultValue: {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -148,7 +148,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(aws.ToString(costCategory.CostCategoryArn))
-	d.Set("default_value", costCategory.DefaultValue)
+	d.Set(names.AttrDefaultValue, costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set(names.AttrName, costCategory.Name)

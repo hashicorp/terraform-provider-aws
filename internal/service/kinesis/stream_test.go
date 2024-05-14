@@ -43,7 +43,7 @@ func TestAccKinesisStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enforce_consumer_deletion", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "24"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "24"),
 					resource.TestCheckResourceAttr(resourceName, "shard_count", "2"),
 					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stream_mode_details.#", "1"),
@@ -261,7 +261,7 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "24"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "24"),
 				),
 			},
 			{
@@ -275,7 +275,7 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccStreamConfig_updateRetentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "8760"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "8760"),
 				),
 			},
 
@@ -283,7 +283,7 @@ func TestAccKinesisStream_retentionPeriod(t *testing.T) {
 				Config: testAccStreamConfig_decreaseRetentionPeriod(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "28"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "28"),
 				),
 			},
 		},

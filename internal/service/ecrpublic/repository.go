@@ -46,7 +46,7 @@ func ResourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -129,7 +129,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).ECRPublicClient(ctx)
 
 	input := ecrpublic.CreateRepositoryInput{
-		RepositoryName: aws.String(d.Get("repository_name").(string)),
+		RepositoryName: aws.String(d.Get(names.AttrRepositoryName).(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
@@ -198,7 +198,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	repository := out.Repositories[0]
 
-	d.Set("repository_name", d.Id())
+	d.Set(names.AttrRepositoryName, d.Id())
 	d.Set("registry_id", repository.RegistryId)
 	d.Set(names.AttrARN, repository.RepositoryArn)
 	d.Set("repository_uri", repository.RepositoryUri)
@@ -289,7 +289,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Public repository: %s", err)
 	}
 
-	log.Printf("[DEBUG] repository %q deleted.", d.Get("repository_name").(string))
+	log.Printf("[DEBUG] repository %q deleted.", d.Get(names.AttrRepositoryName).(string))
 
 	return diags
 }

@@ -35,7 +35,7 @@ func dataSourceAddonVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
@@ -54,7 +54,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 
 	addonName := d.Get("addon_name").(string)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
-	mostRecent := d.Get("most_recent").(bool)
+	mostRecent := d.Get(names.AttrMostRecent).(bool)
 	versionInfo, err := findAddonVersionByTwoPartKey(ctx, conn, addonName, kubernetesVersion, mostRecent)
 
 	if err != nil {
@@ -64,7 +64,7 @@ func dataSourceAddonVersionRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(addonName)
 	d.Set("addon_name", addonName)
 	d.Set("kubernetes_version", kubernetesVersion)
-	d.Set("most_recent", mostRecent)
+	d.Set(names.AttrMostRecent, mostRecent)
 	d.Set(names.AttrVersion, versionInfo.AddonVersion)
 
 	return diags

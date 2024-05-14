@@ -116,7 +116,7 @@ func DataSourceCluster() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"create_time": {
+									names.AttrCreateTime: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},

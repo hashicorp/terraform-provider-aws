@@ -112,7 +112,7 @@ func DataSourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Computed:  true,
 										Sensitive: true,

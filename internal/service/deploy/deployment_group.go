@@ -281,7 +281,7 @@ func resourceDeploymentGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
@@ -905,7 +905,7 @@ func expandECSServices(l []interface{}) []types.ECSService {
 		m := mRaw.(map[string]interface{})
 
 		ecsService := types.ECSService{
-			ClusterName: aws.String(m["cluster_name"].(string)),
+			ClusterName: aws.String(m[names.AttrClusterName].(string)),
 			ServiceName: aws.String(m[names.AttrServiceName].(string)),
 		}
 
@@ -1202,7 +1202,7 @@ func flattenECSServices(ecsServices []types.ECSService) []interface{} {
 
 	for _, ecsService := range ecsServices {
 		m := map[string]interface{}{
-			"cluster_name":        aws.ToString(ecsService.ClusterName),
+			names.AttrClusterName: aws.ToString(ecsService.ClusterName),
 			names.AttrServiceName: aws.ToString(ecsService.ServiceName),
 		}
 

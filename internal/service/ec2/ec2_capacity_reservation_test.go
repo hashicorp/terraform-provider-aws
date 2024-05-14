@@ -44,7 +44,7 @@ func TestAccEC2CapacityReservation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date_type", "unlimited"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage", "false"),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_match_criteria", "open"),
 					resource.TestCheckResourceAttr(resourceName, "instance_platform", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
@@ -242,7 +242,7 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceCount(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 				),
 			},
 			{
@@ -254,7 +254,7 @@ func TestAccEC2CapacityReservation_instanceCount(t *testing.T) {
 				Config: testAccCapacityReservationConfig_instanceCount(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					resource.TestCheckResourceAttr(resourceName, "instance_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "2"),
 				),
 			},
 		},

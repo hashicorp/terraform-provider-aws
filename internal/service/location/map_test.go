@@ -37,7 +37,7 @@ func TestAccLocationMap_basic(t *testing.T) {
 					testAccCheckMapExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.style", "VectorHereBerlin"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "map_arn", "geo", fmt.Sprintf("map/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "map_name", rName),

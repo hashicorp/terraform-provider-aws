@@ -100,7 +100,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -345,7 +345,7 @@ func resourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -521,7 +521,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
 			input.Environment = &awstypes.Environment{
 				Variables: flex.ExpandStringValueMap(v),
@@ -657,7 +657,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("dead_letter_config", []interface{}{})
 	}
 	d.Set(names.AttrDescription, function.Description)
-	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
@@ -694,7 +694,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	// Support in-place update of non-refreshable attribute.
-	d.Set("skip_destroy", d.Get("skip_destroy"))
+	d.Set(names.AttrSkipDestroy, d.Get(names.AttrSkipDestroy))
 	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
@@ -817,12 +817,12 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChanges("environment", names.AttrKMSKeyARN) {
+		if d.HasChanges(names.AttrEnvironment, names.AttrKMSKeyARN) {
 			input.Environment = &awstypes.Environment{
 				Variables: map[string]string{},
 			}
 
-			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
 					input.Environment = &awstypes.Environment{
 						Variables: flex.ExpandStringValueMap(v),
@@ -1040,7 +1040,7 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Lambda Function: %s", d.Id())
 		return diags
 	}
@@ -1308,7 +1308,7 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
-		d.HasChange("environment") ||
+		d.HasChange(names.AttrEnvironment) ||
 		d.HasChange("ephemeral_storage")
 }
 

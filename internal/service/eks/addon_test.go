@@ -42,7 +42,7 @@ func TestAccEKSAddon_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
 					acctest.MatchResourceAttrRegionalARN(addonResourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
-					resource.TestCheckResourceAttrPair(addonResourceName, "cluster_name", clusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(addonResourceName, names.AttrClusterName, clusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckNoResourceAttr(addonResourceName, "preserve"),
 					resource.TestCheckResourceAttr(addonResourceName, "tags.%", "0"),

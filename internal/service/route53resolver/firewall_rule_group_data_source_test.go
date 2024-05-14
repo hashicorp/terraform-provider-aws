@@ -36,7 +36,7 @@ func TestAccRoute53ResolverFirewallRuleGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "rule_count", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "share_status", resourceName, "share_status"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status_message"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatusMessage),
 				),
 			},
 		},

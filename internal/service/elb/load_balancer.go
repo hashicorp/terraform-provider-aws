@@ -134,7 +134,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"health_check": {
+			names.AttrHealthCheck: {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -421,7 +421,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	// There's only one health check, so save that to state as we
 	// currently can
 	if aws.StringValue(lb.HealthCheck.Target) != "" {
-		if err := d.Set("health_check", FlattenHealthCheck(lb.HealthCheck)); err != nil {
+		if err := d.Set(names.AttrHealthCheck, FlattenHealthCheck(lb.HealthCheck)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 		}
 	}
@@ -614,8 +614,8 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("health_check") {
-		if hc := d.Get("health_check").([]interface{}); len(hc) > 0 {
+	if d.HasChange(names.AttrHealthCheck) {
+		if hc := d.Get(names.AttrHealthCheck).([]interface{}); len(hc) > 0 {
 			check := hc[0].(map[string]interface{})
 			input := &elb.ConfigureHealthCheckInput{
 				HealthCheck: &elb.HealthCheck{

@@ -72,7 +72,7 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -305,7 +305,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
@@ -405,7 +405,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set("cluster_name", nodeGroup.ClusterName)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)

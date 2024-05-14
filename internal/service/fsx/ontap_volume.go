@@ -191,7 +191,7 @@ func resourceONTAPVolume() *schema.Resource {
 							Default:      fsx.PrivilegedDeleteDisabled,
 							ValidateFunc: validation.StringInSlice(fsx.PrivilegedDelete_Values(), false),
 						},
-						"retention_period": {
+						names.AttrRetentionPeriod: {
 							Type:             schema.TypeList,
 							Optional:         true,
 							Computed:         true,
@@ -695,7 +695,7 @@ func expandCreateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Create
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -729,7 +729,7 @@ func expandUpdateSnaplockConfiguration(tfMap map[string]interface{}) *fsx.Update
 		apiObject.PrivilegedDelete = aws.String(v)
 	}
 
-	if v, ok := tfMap["retention_period"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrRetentionPeriod].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.RetentionPeriod = expandSnaplockRetentionPeriod(v[0].(map[string]interface{}))
 	}
 
@@ -818,7 +818,7 @@ func flattenSnaplockConfiguration(apiObject *fsx.SnaplockConfiguration) map[stri
 	}
 
 	if v := apiObject.RetentionPeriod; v != nil {
-		tfMap["retention_period"] = []interface{}{flattenSnaplockRetentionPeriod(v)}
+		tfMap[names.AttrRetentionPeriod] = []interface{}{flattenSnaplockRetentionPeriod(v)}
 	}
 
 	if v := apiObject.SnaplockType; v != nil {

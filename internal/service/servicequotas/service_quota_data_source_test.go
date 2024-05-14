@@ -31,7 +31,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", "VPCs per Region"),
@@ -63,7 +63,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDefaultValue, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
@@ -71,7 +71,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_Unset(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, names.AttrDefaultValue),
 				),
 			},
 		},
@@ -96,7 +96,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_hasUsageMetric(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "500"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", hasUsageMetricQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", hasUsageMetricQuotaName),
@@ -156,7 +156,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", setQuotaQuotaName),
@@ -188,7 +188,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", unsetQuotaServiceCode, unsetQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "default_value", regexache.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrDefaultValue, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", unsetQuotaQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", unsetQuotaQuotaName),
@@ -196,7 +196,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_Unset(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrServiceName, "Amazon Simple Storage Service (Amazon S3)"),
 					resource.TestCheckResourceAttr(dataSourceName, "usage_metric.#", "0"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrValue, regexache.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrValue, dataSourceName, names.AttrDefaultValue),
 				),
 			},
 		},
@@ -221,7 +221,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_hasUsageMetric(t *test
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", "true"),
-					resource.TestCheckResourceAttr(dataSourceName, "default_value", "500"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", hasUsageMetricQuotaCode),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_name", hasUsageMetricQuotaName),

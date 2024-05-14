@@ -55,7 +55,7 @@ func dataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -300,7 +300,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("dead_letter_config", []interface{}{})
 	}
 	d.Set(names.AttrDescription, function.Description)
-	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenEnvironment(function.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {

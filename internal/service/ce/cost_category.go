@@ -51,7 +51,7 @@ func resourceCostCategory() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"default_value": {
+				names.AttrDefaultValue: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(1, 50),
@@ -309,7 +309,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		RuleVersion:  awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 	}
 
-	if v, ok := d.GetOk("default_value"); ok {
+	if v, ok := d.GetOk(names.AttrDefaultValue); ok {
 		input.DefaultValue = aws.String(v.(string))
 	}
 
@@ -352,7 +352,7 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, costCategory.CostCategoryArn)
-	d.Set("default_value", costCategory.DefaultValue)
+	d.Set(names.AttrDefaultValue, costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set(names.AttrName, costCategory.Name)
@@ -379,8 +379,8 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
-		if d.HasChange("default_value") {
-			input.DefaultValue = aws.String(d.Get("default_value").(string))
+		if d.HasChange(names.AttrDefaultValue) {
+			input.DefaultValue = aws.String(d.Get(names.AttrDefaultValue).(string))
 		}
 
 		if d.HasChange("split_charge_rule") {

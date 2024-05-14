@@ -235,7 +235,7 @@ func resourceProject() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"environment": {
+			names.AttrEnvironment: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -767,7 +767,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -882,7 +882,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("concurrent_build_limit", project.ConcurrentBuildLimit)
 	d.Set(names.AttrDescription, project.Description)
 	d.Set("encryption_key", project.EncryptionKey)
-	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
+	if err := d.Set(names.AttrEnvironment, flattenProjectEnvironment(project.Environment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
@@ -989,8 +989,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EncryptionKey = aws.String(d.Get("encryption_key").(string))
 		}
 
-		if d.HasChange("environment") {
-			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if d.HasChange(names.AttrEnvironment) {
+			if v, ok := d.GetOk(names.AttrEnvironment); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Environment = expandProjectEnvironment(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}

@@ -33,7 +33,7 @@ func dataSourceNodeGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.NoZeroValues,
@@ -190,7 +190,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	nodeGroup, err := findNodegroupByTwoPartKey(ctx, conn, clusterName, nodeGroupName)
@@ -203,7 +203,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set("cluster_name", nodeGroup.ClusterName)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)

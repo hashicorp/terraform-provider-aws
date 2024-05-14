@@ -87,7 +87,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
@@ -666,7 +666,7 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -674,7 +674,7 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "iopt1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "iopt1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "iopt1"),
 				),
 			},
 		},

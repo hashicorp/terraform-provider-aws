@@ -634,7 +634,7 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"function_arn": {
+									names.AttrFunctionARN: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
@@ -1002,7 +1002,7 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"function_arn": {
+						names.AttrFunctionARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1798,7 +1798,7 @@ func expandLambdaAction(tfList []interface{}) *iot.LambdaAction {
 	apiObject := &iot.LambdaAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["function_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
 		apiObject.FunctionArn = aws.String(v)
 	}
 
@@ -3013,7 +3013,7 @@ func flattenLambdaAction(apiObject *iot.LambdaAction) []interface{} {
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.FunctionArn; v != nil {
-		tfMap["function_arn"] = aws.StringValue(v)
+		tfMap[names.AttrFunctionARN] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

@@ -68,7 +68,7 @@ func targetParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 											},
 										},
-										"environment": {
+										names.AttrEnvironment: {
 											Type:     schema.TypeList,
 											Optional: true,
 											Elem: &schema.Resource{
@@ -320,7 +320,7 @@ func targetParametersSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
-													"environment": {
+													names.AttrEnvironment: {
 														Type:     schema.TypeList,
 														Optional: true,
 														Elem: &schema.Resource{
@@ -935,7 +935,7 @@ func expandBatchContainerOverrides(tfMap map[string]interface{}) *types.BatchCon
 		apiObject.Command = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEnvironment].([]interface{}); ok && len(v) > 0 {
 		apiObject.Environment = expandBatchEnvironmentVariables(v)
 	}
 
@@ -1323,7 +1323,7 @@ func expandECSContainerOverride(tfMap map[string]interface{}) *types.EcsContaine
 		apiObject.Cpu = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["environment"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrEnvironment].([]interface{}); ok && len(v) > 0 {
 		apiObject.Environment = expandECSEnvironmentVariables(v)
 	}
 
@@ -1980,7 +1980,7 @@ func flattenBatchContainerOverrides(apiObject *types.BatchContainerOverrides) ma
 	}
 
 	if v := apiObject.Environment; v != nil {
-		tfMap["environment"] = flattenBatchEnvironmentVariables(v)
+		tfMap[names.AttrEnvironment] = flattenBatchEnvironmentVariables(v)
 	}
 
 	if v := apiObject.InstanceType; v != nil {
@@ -2258,7 +2258,7 @@ func flattenECSContainerOverride(apiObject types.EcsContainerOverride) map[strin
 	}
 
 	if v := apiObject.Environment; v != nil {
-		tfMap["environment"] = flattenECSEnvironmentVariables(v)
+		tfMap[names.AttrEnvironment] = flattenECSEnvironmentVariables(v)
 	}
 
 	if v := apiObject.EnvironmentFiles; v != nil {

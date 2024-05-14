@@ -34,7 +34,7 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "ami_type", dataSourceResourceName, "ami_type"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "capacity_type", dataSourceResourceName, "capacity_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceResourceName, "cluster_name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, dataSourceResourceName, names.AttrClusterName),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_size", dataSourceResourceName, "disk_size"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_types.#", dataSourceResourceName, "instance_types.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "labels.%", dataSourceResourceName, "labels.%"),

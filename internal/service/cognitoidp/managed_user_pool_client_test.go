@@ -59,7 +59,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "callback_urls.0", regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
-					resource.TestMatchResourceAttr(resourceName, "client_secret", regexache.MustCompile(`\w+`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrClientSecret, regexache.MustCompile(`\w+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", "true"),

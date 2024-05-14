@@ -50,7 +50,7 @@ func dataSourceCertificate() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
 				},
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -115,7 +115,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
-	filterMostRecent := d.Get("most_recent").(bool)
+	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
 	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
 	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {

@@ -49,7 +49,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "maintenance_window_start_time.#", resourceName, "maintenance_window_start_time.#"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrPubliclyAccessible, resourceName, names.AttrPubliclyAccessible),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "security_groups.#", resourceName, "security_groups.#"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "storage_type", resourceName, "storage_type"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrStorageType, resourceName, names.AttrStorageType),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "user.#", resourceName, "user.#"),

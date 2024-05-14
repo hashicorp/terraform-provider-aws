@@ -88,7 +88,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 					},
 				},
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,7 +186,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("owner_name", udf.OwnerName)
 	d.Set("class_name", udf.ClassName)
 	if udf.CreateTime != nil {
-		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
+		d.Set(names.AttrCreateTime, udf.CreateTime.Format(time.RFC3339))
 	}
 	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): setting resource_uris: %s", d.Id(), err)

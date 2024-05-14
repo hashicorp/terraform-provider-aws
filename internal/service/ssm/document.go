@@ -146,7 +146,7 @@ func ResourceDocument() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -693,7 +693,7 @@ func flattenDocumentParameter(apiObject *ssm.DocumentParameter) map[string]inter
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap["default_value"] = aws.StringValue(v)
+		tfMap[names.AttrDefaultValue] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Description; v != nil {

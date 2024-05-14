@@ -101,7 +101,7 @@ func ResourceDevEnvironment() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"repository_name": {
+						names.AttrRepositoryName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -368,7 +368,7 @@ func flattenRepository(apiObject *types.DevEnvironmentRepositorySummary) interfa
 	}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.ToString(v)
+		tfMap[names.AttrRepositoryName] = aws.ToString(v)
 	}
 
 	return tfMap
@@ -446,7 +446,7 @@ func expandRepositoryInput(tfMap map[string]interface{}) types.RepositoryInput {
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
 		apiObject.BranchName = aws.String(v)
 	}
-	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 		apiObject.RepositoryName = aws.String(v)
 	}
 

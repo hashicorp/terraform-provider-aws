@@ -248,7 +248,7 @@ func resourceTrail() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 2000),
@@ -301,7 +301,7 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("s3_key_prefix"); ok {
+	if v, ok := d.GetOk(names.AttrS3KeyPrefix); ok {
 		input.S3KeyPrefix = aws.String(v.(string))
 	}
 
@@ -388,7 +388,7 @@ func resourceTrailRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrKMSKeyID, trail.KmsKeyId)
 	d.Set(names.AttrName, trail.Name)
 	d.Set(names.AttrS3BucketName, trail.S3BucketName)
-	d.Set("s3_key_prefix", trail.S3KeyPrefix)
+	d.Set(names.AttrS3KeyPrefix, trail.S3KeyPrefix)
 	d.Set("sns_topic_name", trail.SnsTopicName)
 
 	if output, err := conn.GetTrailStatus(ctx, &cloudtrail.GetTrailStatusInput{
@@ -477,8 +477,8 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.S3BucketName = aws.String(d.Get(names.AttrS3BucketName).(string))
 		}
 
-		if d.HasChange("s3_key_prefix") {
-			input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
+		if d.HasChange(names.AttrS3KeyPrefix) {
+			input.S3KeyPrefix = aws.String(d.Get(names.AttrS3KeyPrefix).(string))
 		}
 
 		if d.HasChange("sns_topic_name") {
@@ -1081,7 +1081,7 @@ func resourceTrailV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"s3_key_prefix": {
+			names.AttrS3KeyPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},

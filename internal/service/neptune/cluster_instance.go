@@ -174,7 +174,7 @@ func ResourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -290,7 +290,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set(names.AttrPubliclyAccessible, db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
-	d.Set("storage_type", db.StorageType)
+	d.Set(names.AttrStorageType, db.StorageType)
 
 	if db.Endpoint != nil {
 		address := aws.StringValue(db.Endpoint.Address)

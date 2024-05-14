@@ -44,7 +44,7 @@ func TestAccDocDBEventSubscription_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-cluster"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-cluster"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSNSTopicARN, snsTopicResourceName, names.AttrARN),
 				),
 			},

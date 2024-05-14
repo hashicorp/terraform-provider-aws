@@ -37,7 +37,7 @@ func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -53,7 +53,7 @@ func TestAccNeptuneEventSubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_sourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
@@ -212,7 +212,7 @@ func TestAccNeptuneEventSubscription_withSourceIDs(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_updateSourceIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-parameter-group"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-parameter-group"),
 					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "2"),
 				),
 			},
@@ -236,7 +236,7 @@ func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
 				),
 			},
@@ -244,7 +244,7 @@ func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_updateCategories(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "db-instance"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "1"),
 				),
 			},

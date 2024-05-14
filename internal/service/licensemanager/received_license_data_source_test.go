@@ -29,7 +29,7 @@ func TestAccLicenseManagerReceivedLicenseDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckResourceAttrGlobalARN(datasourceName, "beneficiary", "iam", "root"),
 					resource.TestCheckResourceAttr(datasourceName, "consumption_configuration.#", "1"),
-					acctest.CheckResourceAttrRFC3339(datasourceName, "create_time"),
+					acctest.CheckResourceAttrRFC3339(datasourceName, names.AttrCreateTime),
 					resource.TestCheckResourceAttr(datasourceName, "entitlements.#", "1"),
 					resource.TestCheckResourceAttr(datasourceName, "home_region", homeRegion),
 					resource.TestCheckResourceAttr(datasourceName, "issuer.#", "1"),

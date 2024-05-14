@@ -116,7 +116,7 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -222,7 +222,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("snapshot_type", snapshot.SnapshotType)
 	d.Set("source_db_snapshot_identifier", snapshot.SourceDBSnapshotIdentifier)
 	d.Set("source_region", snapshot.SourceRegion)
-	d.Set("storage_type", snapshot.StorageType)
+	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 

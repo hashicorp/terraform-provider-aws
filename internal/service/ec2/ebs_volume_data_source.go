@@ -52,7 +52,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -118,7 +118,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	var volume awstypes.Volume
 
 	if len(output) > 1 {
-		recent := d.Get("most_recent").(bool)
+		recent := d.Get(names.AttrMostRecent).(bool)
 
 		if !recent {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
