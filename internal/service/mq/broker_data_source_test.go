@@ -51,7 +51,7 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "security_groups.#", resourceName, "security_groups.#"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, names.AttrStorageType, resourceName, names.AttrStorageType),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "subnet_ids.#", resourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(dataSourceByIdName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceByIdName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "user.#", resourceName, "user.#"),
 				),
 			},
