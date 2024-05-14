@@ -39,7 +39,7 @@ func ResourceADMChannel() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 			},
-			"client_secret": {
+			names.AttrClientSecret: {
 				Type:      schema.TypeString,
 				Required:  true,
 				Sensitive: true,
@@ -62,7 +62,7 @@ func resourceADMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 	params := &pinpoint.ADMChannelRequest{}
 
 	params.ClientId = aws.String(d.Get(names.AttrClientID).(string))
-	params.ClientSecret = aws.String(d.Get("client_secret").(string))
+	params.ClientSecret = aws.String(d.Get(names.AttrClientSecret).(string))
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 	req := pinpoint.UpdateAdmChannelInput{

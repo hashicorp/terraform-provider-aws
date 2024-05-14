@@ -261,7 +261,7 @@ func ResourceBudget() *schema.Resource {
 							Required:         true,
 							DiffSuppressFunc: suppressEquivalentBudgetLimitAmount,
 						},
-						"start_time": {
+						names.AttrStartTime: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validTimePeriodTimestamp,
@@ -802,7 +802,7 @@ func convertPlannedBudgetLimitsToSet(plannedBudgetLimits map[string]awstypes.Spe
 
 		convertedPlannedBudgetLimit := make(map[string]string)
 		convertedPlannedBudgetLimit["amount"] = aws.ToString(v.Amount)
-		convertedPlannedBudgetLimit["start_time"] = startTime
+		convertedPlannedBudgetLimit[names.AttrStartTime] = startTime
 		convertedPlannedBudgetLimit[names.AttrUnit] = aws.ToString(v.Unit)
 
 		convertedPlannedBudgetLimits[i] = convertedPlannedBudgetLimit
@@ -967,7 +967,7 @@ func expandPlannedBudgetLimitsUnmarshal(plannedBudgetLimitsRaw []interface{}) (m
 	for _, plannedBudgetLimit := range plannedBudgetLimitsRaw {
 		plannedBudgetLimit := plannedBudgetLimit.(map[string]interface{})
 
-		key, err := TimePeriodSecondsFromString(plannedBudgetLimit["start_time"].(string))
+		key, err := TimePeriodSecondsFromString(plannedBudgetLimit[names.AttrStartTime].(string))
 		if err != nil {
 			return nil, err
 		}

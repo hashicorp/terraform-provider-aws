@@ -52,7 +52,7 @@ func resourceIPSet() *schema.Resource {
 				scope := idParts[2]
 				d.SetId(id)
 				d.Set(names.AttrName, name)
-				d.Set("scope", scope)
+				d.Set(names.AttrScope, scope)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -113,7 +113,7 @@ func resourceIPSet() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
 				},
-				"scope": {
+				names.AttrScope: {
 					Type:             schema.TypeString,
 					Required:         true,
 					ForceNew:         true,
@@ -136,7 +136,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Addresses:        []string{},
 		IPAddressVersion: awstypes.IPAddressVersion(d.Get("ip_address_version").(string)),
 		Name:             aws.String(name),
-		Scope:            awstypes.Scope(d.Get("scope").(string)),
+		Scope:            awstypes.Scope(d.Get(names.AttrScope).(string)),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -162,7 +162,7 @@ func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	output, err := findIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get("scope").(string))
+	output, err := findIPSetByThreePartKey(ctx, conn, d.Id(), d.Get(names.AttrName).(string), d.Get(names.AttrScope).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 IPSet (%s) not found, removing from state", d.Id())
@@ -195,7 +195,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			Id:        aws.String(d.Id()),
 			LockToken: aws.String(d.Get("lock_token").(string)),
 			Name:      aws.String(d.Get(names.AttrName).(string)),
-			Scope:     awstypes.Scope(d.Get("scope").(string)),
+			Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
 		}
 
 		if v, ok := d.GetOk("addresses"); ok && v.(*schema.Set).Len() > 0 {
@@ -224,7 +224,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		Id:        aws.String(d.Id()),
 		LockToken: aws.String(d.Get("lock_token").(string)),
 		Name:      aws.String(d.Get(names.AttrName).(string)),
-		Scope:     awstypes.Scope(d.Get("scope").(string)),
+		Scope:     awstypes.Scope(d.Get(names.AttrScope).(string)),
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet: %s", d.Id())

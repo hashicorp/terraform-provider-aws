@@ -30,7 +30,7 @@ func dataSourceProduct() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"field": {
+						names.AttrField: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -66,7 +66,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	for _, v := range filters.([]interface{}) {
 		m := v.(map[string]interface{})
 		input.Filters = append(input.Filters, types.Filter{
-			Field: aws.String(m["field"].(string)),
+			Field: aws.String(m[names.AttrField].(string)),
 			Type:  types.FilterTypeTermMatch,
 			Value: aws.String(m[names.AttrValue].(string)),
 		})

@@ -52,7 +52,7 @@ func resourceMetricFilter() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"default_value": {
+						names.AttrDefaultValue: {
 							Type:         nullable.TypeNullableFloat,
 							Optional:     true,
 							ValidateFunc: nullable.ValidateTypeStringNullableFloat,
@@ -249,7 +249,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTrans
 
 	apiObject := &types.MetricTransformation{}
 
-	if v, ok := tfMap["default_value"].(string); ok {
+	if v, ok := tfMap[names.AttrDefaultValue].(string); ok {
 		if v, null, _ := nullable.Float(v).ValueFloat64(); !null {
 			apiObject.DefaultValue = aws.Float64(v)
 		}
@@ -310,7 +310,7 @@ func flattenMetricTransformation(apiObject types.MetricTransformation) map[strin
 	}
 
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap["default_value"] = strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
+		tfMap[names.AttrDefaultValue] = strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 	}
 
 	if v := apiObject.Dimensions; v != nil {

@@ -72,7 +72,7 @@ func ResourceFramework() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 256),
 						},
-						"scope": {
+						names.AttrScope: {
 							// The control scope can include
 							// one or more resource types,
 							// a combination of a tag key and value,
@@ -275,7 +275,7 @@ func expandFrameworkControls(ctx context.Context, controls []interface{}) []*bac
 
 		frameworkControl := &backup.FrameworkControl{
 			ControlName:  aws.String(tfMap[names.AttrName].(string)),
-			ControlScope: expandControlScope(ctx, tfMap["scope"].([]interface{})),
+			ControlScope: expandControlScope(ctx, tfMap[names.AttrScope].([]interface{})),
 		}
 
 		if v, ok := tfMap["input_parameter"]; ok && v.(*schema.Set).Len() > 0 {
@@ -352,7 +352,7 @@ func flattenFrameworkControls(ctx context.Context, controls []*backup.FrameworkC
 		values := map[string]interface{}{}
 		values["input_parameter"] = flattenInputParameters(control.ControlInputParameters)
 		values[names.AttrName] = aws.StringValue(control.ControlName)
-		values["scope"] = flattenScope(ctx, control.ControlScope)
+		values[names.AttrScope] = flattenScope(ctx, control.ControlScope)
 		frameworkControls = append(frameworkControls, values)
 	}
 	return frameworkControls

@@ -36,7 +36,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, macie2.MacieStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", "macieprefix/"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
@@ -52,7 +52,7 @@ func testAccClassificationExportConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationExportConfigurationExists(ctx, resourceName, &macie2Output),
 					resource.TestCheckResourceAttr(macieAccountResourceName, names.AttrStatus, macie2.MacieStatusEnabled),
-					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_destination.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.bucket_name", s3BucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "s3_destination.0.key_prefix", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_destination.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),

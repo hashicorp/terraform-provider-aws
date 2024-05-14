@@ -49,24 +49,24 @@ func testAccDirectory_basic(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAlias, directoryResourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "directory_type", string(types.WorkspaceDirectoryTypeSimpleAd)),
-					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleDataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-directory-%[1]s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
@@ -75,7 +75,7 @@ func testAccDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_web", "DENY"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_windows", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_zeroclient", "ALLOW"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", "false"),
@@ -149,7 +149,7 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 				Config: testAccDirectoryConfig_subnetIDs(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -182,11 +182,11 @@ func testAccDirectory_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDirectoryConfig_tags1(rName, domain, "key1", "value1"),
+				Config: testAccDirectoryConfig_tags1(rName, domain, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -195,20 +195,20 @@ func testAccDirectory_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDirectoryConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDirectoryConfig_tags2(rName, domain, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDirectoryConfig_tags1(rName, domain, "key2", "value2"),
+				Config: testAccDirectoryConfig_tags1(rName, domain, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -239,7 +239,7 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 				Config: testAccDirectoryConfig_selfServicePermissions(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "true"),
@@ -275,7 +275,7 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 				Config: testAccDirectoryConfig_workspaceAccessProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_ios", "ALLOW"),
@@ -315,7 +315,7 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 				Config: testAccDirectoryConfig_workspaceCreationProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.enable_internet_access", "true"),
@@ -352,7 +352,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
 				),
@@ -361,7 +361,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUPresent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
 				),
@@ -370,7 +370,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.custom_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.default_ou"),
 				),
@@ -399,7 +399,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				Config: testAccDirectoryConfig_ipGroupIdsCreate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_alpha", names.AttrID),
 				),
 			},
@@ -412,7 +412,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 				Config: testAccDirectoryConfig_ipGroupIdsUpdate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_beta", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_gamma", names.AttrID),
 				),

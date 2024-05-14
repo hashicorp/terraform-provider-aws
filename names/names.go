@@ -28,6 +28,7 @@ const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
 	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
+	ApplicationAutoscalingEndpointID     = "application-autoscaling"
 	AppIntegrationsEndpointID            = "app-integrations"
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"
@@ -95,6 +96,8 @@ const (
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
+	WAFEndpointID                        = "waf"
+	WAFRegionalEndpointID                = "waf-regional"
 )
 
 // These should move to aws-sdk-go-base.

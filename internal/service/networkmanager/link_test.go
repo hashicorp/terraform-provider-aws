@@ -34,12 +34,12 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
 				),
 			},
@@ -88,11 +88,11 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLinkConfig_tags1(rName, "key1", "value1"),
+				Config: testAccLinkConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -102,20 +102,20 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccLinkConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccLinkConfig_tags1(rName, "key2", "value2"),
+				Config: testAccLinkConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -137,7 +137,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Config: testAccLinkConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
@@ -155,7 +155,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Config: testAccLinkConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "75"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "20"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),

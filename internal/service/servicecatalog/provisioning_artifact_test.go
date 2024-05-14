@@ -49,7 +49,7 @@ func TestAccServiceCatalogProvisioningArtifact_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "template_url"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -165,7 +165,7 @@ func TestAccServiceCatalogProvisioningArtifact_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "template_physical_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, servicecatalog.ProductTypeCloudFormationTemplate),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{

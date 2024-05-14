@@ -35,7 +35,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -92,7 +92,7 @@ func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)
-	d.Set("ids", securityGroupIDs)
+	d.Set(names.AttrIDs, securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)
 
 	return diags

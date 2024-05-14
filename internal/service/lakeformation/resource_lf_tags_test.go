@@ -179,17 +179,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "woodcote",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "theloop",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "two",
@@ -209,17 +209,17 @@ func testAccResourceLFTags_hierarchy(t *testing.T) {
 					testAccCheckDatabaseLFTagsExists(ctx, databaseResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, tableResourceName),
 					testAccCheckDatabaseLFTagsExists(ctx, columnResourceName),
-					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(databaseResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(databaseResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   rName,
 						names.AttrValue: "stowe",
 					}),
-					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(tableResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(tableResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-2", rName),
 						names.AttrValue: "becketts",
 					}),
-					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", "1"),
+					resource.TestCheckResourceAttr(columnResourceName, "lf_tag.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(columnResourceName, "lf_tag.*", map[string]string{
 						names.AttrKey:   fmt.Sprintf("%s-3", rName),
 						names.AttrValue: "three",

@@ -60,7 +60,7 @@ func resourceDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -78,7 +78,7 @@ func resourceDatabase() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
@@ -121,7 +121,7 @@ func resourceDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var queryString bytes.Buffer
 	queryString.WriteString(createStmt)
 
-	if v, ok := d.GetOk("comment"); ok && v.(string) != "" {
+	if v, ok := d.GetOk(names.AttrComment); ok && v.(string) != "" {
 		commentStmt := fmt.Sprintf(" comment '%s'", strings.Replace(v.(string), "'", "\\'", -1))
 		queryString.WriteString(commentStmt)
 	}
@@ -175,7 +175,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Athena Database (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", db.Description)
+	d.Set(names.AttrComment, db.Description)
 	d.Set(names.AttrName, db.Name)
 	d.Set(names.AttrProperties, db.Parameters)
 
@@ -264,7 +264,7 @@ func expandResultConfigurationEncryptionConfig(config []interface{}) *types.Encr
 		EncryptionOption: types.EncryptionOption(data["encryption_option"].(string)),
 	}
 
-	if v, ok := data["kms_key"].(string); ok && v != "" {
+	if v, ok := data[names.AttrKMSKey].(string); ok && v != "" {
 		encryptionConfig.KmsKey = aws.String(v)
 	}
 

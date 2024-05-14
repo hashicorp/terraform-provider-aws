@@ -112,12 +112,12 @@ func TestAccConnect_serial(t *testing.T) {
 			"dataSource_name":              testAccRoutingProfileDataSource_name,
 		},
 		"SecurityProfile": {
-			"basic":           testAccSecurityProfile_basic,
-			"disappears":      testAccSecurityProfile_disappears,
-			names.AttrTags:    testAccSecurityProfile_updateTags,
-			"permissions":     testAccSecurityProfile_updatePermissions,
-			"dataSource_id":   testAccSecurityProfileDataSource_securityProfileID,
-			"dataSource_name": testAccSecurityProfileDataSource_name,
+			"basic":               testAccSecurityProfile_basic,
+			"disappears":          testAccSecurityProfile_disappears,
+			names.AttrTags:        testAccSecurityProfile_updateTags,
+			names.AttrPermissions: testAccSecurityProfile_updatePermissions,
+			"dataSource_id":       testAccSecurityProfileDataSource_securityProfileID,
+			"dataSource_name":     testAccSecurityProfileDataSource_name,
 		},
 		"User": {
 			"basic":              testAccUser_basic,

@@ -24,9 +24,9 @@ func TestAccDetective_serial(t *testing.T) {
 			"basic": testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccMember_basic,
-			"disappear": testAccMember_disappears,
-			"message":   testAccMember_message,
+			"basic":           testAccMember_basic,
+			"disappear":       testAccMember_disappears,
+			names.AttrMessage: testAccMember_message,
 		},
 		"OrganizationAdminAccount": {
 			"basic":       testAccOrganizationAdminAccount_basic,

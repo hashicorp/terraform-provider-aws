@@ -36,7 +36,7 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Code Signing Config for test account"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
@@ -127,7 +127,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Code Signing Config for test account"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 				),
@@ -136,7 +136,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_updatePublishers(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
 			},

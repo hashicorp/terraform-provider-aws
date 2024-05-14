@@ -51,7 +51,7 @@ func ResourceTrafficPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"comment": {
+			names.AttrComment: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1024),
@@ -89,7 +89,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 		Name:     aws.String(name),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		input.Comment = aws.String(v.(string))
 	}
 
@@ -122,7 +122,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.Errorf("reading Route53 Traffic Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("comment", trafficPolicy.Comment)
+	d.Set(names.AttrComment, trafficPolicy.Comment)
 	d.Set("document", trafficPolicy.Document)
 	d.Set(names.AttrName, trafficPolicy.Name)
 	d.Set(names.AttrType, trafficPolicy.Type)
@@ -139,8 +139,8 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 		Version: aws.Int64(int64(d.Get(names.AttrVersion).(int))),
 	}
 
-	if d.HasChange("comment") {
-		input.Comment = aws.String(d.Get("comment").(string))
+	if d.HasChange(names.AttrComment) {
+		input.Comment = aws.String(d.Get(names.AttrComment).(string))
 	}
 
 	log.Printf("[INFO] Updating Route53 Traffic Policy comment: %s", input)

@@ -39,7 +39,7 @@ func TestAccLightsailInstancePublicPorts_basic(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
 						"from_port":        "80",
@@ -70,7 +70,7 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_multiple(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
 						"from_port":        "80",
@@ -106,12 +106,12 @@ func TestAccLightsailInstancePublicPorts_cidrs(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_cidrs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
 						"from_port":        "125",
 						"to_port":          "125",
-						"cidrs.#":          "2",
+						"cidrs.#":          acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "1.1.1.1/32"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidrs.*", "192.168.1.0/24"),
@@ -140,12 +140,12 @@ func TestAccLightsailInstancePublicPorts_cidrListAliases(t *testing.T) {
 				Config: testAccInstancePublicPortsConfig_cidrListAliases(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstancePublicPortsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "port_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "port_info.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol:    "tcp",
 						"from_port":           "22",
 						"to_port":             "22",
-						"cidr_list_aliases.#": "1",
+						"cidr_list_aliases.#": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "port_info.*.cidr_list_aliases.*", "lightsail-connect"),
 				),

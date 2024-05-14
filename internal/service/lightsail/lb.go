@@ -60,7 +60,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(0, 65535),
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "dualstack",
@@ -154,7 +154,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDNSName, lb.DnsName)
 	d.Set("health_check_path", lb.HealthCheckPath)
 	d.Set("instance_port", lb.InstancePort)
-	d.Set("ip_address_type", lb.IpAddressType)
+	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set(names.AttrProtocol, lb.Protocol)
 	d.Set("public_ports", lb.PublicPorts)
 	d.Set(names.AttrName, lb.Name)

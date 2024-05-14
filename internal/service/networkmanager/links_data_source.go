@@ -26,7 +26,7 @@ func DataSourceLinks() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -90,7 +90,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", linkIDs)
+	d.Set(names.AttrIDs, linkIDs)
 
 	return diags
 }

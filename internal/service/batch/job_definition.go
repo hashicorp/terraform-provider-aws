@@ -159,7 +159,7 @@ func ResourceJobDefinition() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
-												"resources": {
+												names.AttrResources: {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -419,7 +419,7 @@ func ResourceJobDefinition() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 
-			"timeout": {
+			names.AttrTimeout: {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -541,8 +541,8 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		return !reflect.DeepEqual(ors, nrs)
 	}
 
-	if d.HasChange("timeout") {
-		o, n := d.GetChange("timeout")
+	if d.HasChange(names.AttrTimeout) {
+		o, n := d.GetChange(names.AttrTimeout)
 		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
 			return false
 		}
@@ -654,7 +654,7 @@ func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.SchedulingPriority = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -731,11 +731,11 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
 
 	if jobDefinition.Timeout != nil {
-		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
+		if err := d.Set(names.AttrTimeout, []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
 		}
 	} else {
-		d.Set("timeout", nil)
+		d.Set(names.AttrTimeout, nil)
 	}
 
 	d.Set(names.AttrType, jobDefinition.Type)
@@ -810,7 +810,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 		}
 

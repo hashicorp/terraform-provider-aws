@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -26,12 +27,12 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			ID:           "sg-4235098228",
 			Attributes: map[string]string{
 				"self":                     "false",
-				"to_port":                  "0",
+				"to_port":                  acctest.CtZero,
 				"security_group_id":        "sg-13877277",
-				"cidr_blocks.#":            "0",
+				"cidr_blocks.#":            acctest.CtZero,
 				names.AttrType:             "ingress",
 				names.AttrProtocol:         "-1",
-				"from_port":                "0",
+				"from_port":                acctest.CtZero,
 				"source_security_group_id": "sg-11877275",
 			},
 			Expected: "sgrule-2889201120",
@@ -41,8 +42,8 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			ID:           "sg-1021609891",
 			Attributes: map[string]string{
 				"security_group_id": "sg-0981746d",
-				"from_port":         "0",
-				"to_port":           "0",
+				"from_port":         acctest.CtZero,
+				"to_port":           acctest.CtZero,
 				names.AttrType:      "ingress",
 				"self":              "false",
 				names.AttrProtocol:  "-1",

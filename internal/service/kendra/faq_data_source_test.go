@@ -51,7 +51,7 @@ func TestAccKendraFaqDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "s3_path.0.key", resourceName, "s3_path.0.key"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(datasourceName, "updated_at", resourceName, "updated_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1")),
 			},
 		},

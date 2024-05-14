@@ -39,7 +39,7 @@ func resourceFieldLevelEncryptionConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -140,7 +140,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 		CallerReference: aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 
@@ -185,7 +185,7 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 
 	apiObject := output.FieldLevelEncryptionConfig
 	d.Set("caller_reference", apiObject.CallerReference)
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	if apiObject.ContentTypeProfileConfig != nil {
 		if err := d.Set("content_type_profile_config", []interface{}{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting content_type_profile_config: %s", err)
@@ -213,7 +213,7 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
 	}
 
-	if v, ok := d.GetOk("comment"); ok {
+	if v, ok := d.GetOk(names.AttrComment); ok {
 		apiObject.Comment = aws.String(v.(string))
 	}
 

@@ -30,7 +30,7 @@ func DataSourceParameterGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,12 +78,12 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.Description)
-	d.Set("family", group.Family)
+	d.Set(names.AttrFamily, group.Family)
 	d.Set(names.AttrName, group.Name)
 
 	userDefinedParameters := createUserDefinedParameterMap(d)
 
-	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
+	parameters, err := listParameterGroupParameters(ctx, conn, d.Get(names.AttrFamily).(string), d.Id(), userDefinedParameters)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
 	}

@@ -27,7 +27,7 @@ func dataSourceDataProtectionPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -270,7 +270,7 @@ func dataSourceDataProtectionPolicyDocumentRead(_ context.Context, d *schema.Res
 
 	jsonString := string(jsonBytes)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
 	return diags

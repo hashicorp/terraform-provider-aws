@@ -113,7 +113,7 @@ func TestAccBackupSelection_withTags(t *testing.T) {
 				Config: testAccSelectionConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "selection_tag.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -142,11 +142,11 @@ func TestAccBackupSelection_conditionsWithTags(t *testing.T) {
 				Config: testAccSelectionConfig_conditionsTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_equals.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_like.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_equals.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "condition.0.string_not_like.#", acctest.CtOne),
 				),
 			},
 			{
@@ -175,7 +175,7 @@ func TestAccBackupSelection_withResources(t *testing.T) {
 				Config: testAccSelectionConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func TestAccBackupSelection_withNotResources(t *testing.T) {
 				Config: testAccSelectionConfig_notResources(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					resource.TestCheckResourceAttr(resourceName, "not_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "not_resources.#", acctest.CtOne),
 				),
 			},
 			{

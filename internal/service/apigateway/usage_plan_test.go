@@ -40,10 +40,10 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/usageplans/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.%", acctest.CtZero),
 				),
 			},
 			{
@@ -75,12 +75,12 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanConfig_tags1(rName, "key1", "value1"),
+				Config: testAccUsagePlanConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -89,21 +89,21 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUsagePlanConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccUsagePlanConfig_tags1(rName, "key2", "value2"),
+				Config: testAccUsagePlanConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -231,7 +231,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.CtZero),
 				),
 			},
 			{
@@ -244,7 +244,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
 				),
 			},
@@ -262,7 +262,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", acctest.CtZero),
 				),
 			},
 		},
@@ -315,7 +315,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", acctest.CtZero),
 				),
 			},
 			{
@@ -348,7 +348,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.#", acctest.CtZero),
 				),
 			},
 		},
@@ -375,7 +375,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "test",
+						names.AttrStage: "test",
 					}),
 				),
 			},
@@ -390,7 +390,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.CtZero),
 				),
 			},
 			// Handle api stages additions
@@ -400,7 +400,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "test",
+						names.AttrStage: "test",
 					}),
 				),
 			},
@@ -411,10 +411,10 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "foo",
+						names.AttrStage: "foo",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "test",
+						names.AttrStage: "test",
 					}),
 				),
 			},
@@ -424,7 +424,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "foo",
+						names.AttrStage: "foo",
 					}),
 				),
 			},
@@ -433,7 +433,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.CtZero),
 				),
 			},
 		},
@@ -458,10 +458,10 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "foo",
+						names.AttrStage: "foo",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage": "test",
+						names.AttrStage: "test",
 					}),
 				),
 			},
@@ -491,10 +491,10 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage":      "test",
-						"throttle.#": "1",
+						names.AttrStage: "test",
+						"throttle.#":    acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",
@@ -508,14 +508,14 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "api_stages.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage":      "foo",
-						"throttle.#": "1",
+						names.AttrStage: "foo",
+						"throttle.#":    acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
-						"stage":      "test",
-						"throttle.#": "1",
+						names.AttrStage: "test",
+						"throttle.#":    acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",

@@ -37,7 +37,7 @@ func (d *securityGroupRulesDataSource) Schema(ctx context.Context, request datas
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"ids": schema.ListAttribute{
+			names.AttrIDs: schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
 			},

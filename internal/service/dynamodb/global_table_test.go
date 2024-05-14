@@ -52,7 +52,7 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 					testAccCheckGlobalTableExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 				),
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 					testAccCheckGlobalTableExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile("global-table/[0-9a-z-]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 				),
 			},
 			{
@@ -98,14 +98,14 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				Config: testAccGlobalTableConfig_multipleRegions2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 				),
 			},
 			{
 				Config: testAccGlobalTableConfig_multipleRegions1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtOne),
 				),
 			},
 		},

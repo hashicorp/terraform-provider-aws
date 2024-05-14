@@ -39,7 +39,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
 					resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccRedshiftUsageLimit_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
 					resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -76,11 +76,11 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckUsageLimitDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsageLimitConfig_tags1(rName, "key1", "value1"),
+				Config: testAccUsageLimitConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -89,19 +89,19 @@ func TestAccRedshiftUsageLimit_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsageLimitConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUsageLimitConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccUsageLimitConfig_tags1(rName, "key2", "value2"),
+				Config: testAccUsageLimitConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

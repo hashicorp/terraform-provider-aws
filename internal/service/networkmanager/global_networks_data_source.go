@@ -22,7 +22,7 @@ func DataSourceGlobalNetworks() *schema.Resource {
 		ReadWithoutTimeout: dataSourceGlobalNetworksRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -58,7 +58,7 @@ func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", globalNetworkIDs)
+	d.Set(names.AttrIDs, globalNetworkIDs)
 
 	return diags
 }

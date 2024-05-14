@@ -28,7 +28,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -60,7 +60,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -128,7 +128,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 	d.Set(names.AttrDNSName, accelerator.DnsName)
 	d.Set(names.AttrEnabled, accelerator.Enabled)
 	d.Set(names.AttrHostedZoneID, meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID(ctx))
-	d.Set("ip_address_type", accelerator.IpAddressType)
+	d.Set(names.AttrIPAddressType, accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
@@ -140,7 +140,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set(names.AttrAttributes, []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 

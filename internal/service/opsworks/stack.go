@@ -167,7 +167,7 @@ func ResourceStack() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"service_role_arn": {
+			names.AttrServiceRoleARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -220,7 +220,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		HostnameTheme:             aws.String(d.Get("hostname_theme").(string)),
 		Name:                      aws.String(name),
 		Region:                    aws.String(region),
-		ServiceRoleArn:            aws.String(d.Get("service_role_arn").(string)),
+		ServiceRoleArn:            aws.String(d.Get(names.AttrServiceRoleARN).(string)),
 		UseCustomCookbooks:        aws.Bool(d.Get("use_custom_cookbooks").(bool)),
 		UseOpsworksSecurityGroups: aws.Bool(d.Get("use_opsworks_security_groups").(bool)),
 	}
@@ -399,7 +399,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("hostname_theme", stack.HostnameTheme)
 	d.Set(names.AttrName, stack.Name)
 	d.Set(names.AttrRegion, stack.Region)
-	d.Set("service_role_arn", stack.ServiceRoleArn)
+	d.Set(names.AttrServiceRoleARN, stack.ServiceRoleArn)
 	d.Set("use_custom_cookbooks", stack.UseCustomCookbooks)
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
 	d.Set(names.AttrVPCID, stack.VpcId)
@@ -498,8 +498,8 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("service_role_arn") {
-			input.ServiceRoleArn = aws.String(d.Get("service_role_arn").(string))
+		if d.HasChange(names.AttrServiceRoleARN) {
+			input.ServiceRoleArn = aws.String(d.Get(names.AttrServiceRoleARN).(string))
 		}
 
 		if d.HasChange("use_custom_cookbooks") {

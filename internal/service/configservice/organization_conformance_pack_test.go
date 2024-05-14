@@ -43,8 +43,8 @@ func testAccOrganizationConformancePack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtOne),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_excludedAccounts2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -123,7 +123,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtZero),
 				),
 			},
 		},
@@ -159,8 +159,8 @@ func testAccOrganizationConformancePack_updateName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -191,7 +191,7 @@ func testAccOrganizationConformancePack_inputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  pKey,
 						"parameter_value": pValue,
@@ -259,8 +259,8 @@ func testAccOrganizationConformancePack_S3Template(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_updateInputParameter(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey1",
 						"parameter_value": "TestValue1",
@@ -316,7 +316,7 @@ func testAccOrganizationConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtZero),
 				),
 			},
 		},

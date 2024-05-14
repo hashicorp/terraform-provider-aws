@@ -28,7 +28,7 @@ func DataSourceLocalGatewayRouteTables() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrFilter: customFiltersSchema(),
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -69,7 +69,7 @@ func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", routeTableIDs)
+	d.Set(names.AttrIDs, routeTableIDs)
 
 	return diags
 }

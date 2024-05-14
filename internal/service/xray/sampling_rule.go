@@ -45,7 +45,7 @@ func resourceSamplingRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"attributes": {
+			names.AttrAttributes: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -133,7 +133,7 @@ func resourceSamplingRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Version:       aws.Int32(int32(d.Get(names.AttrVersion).(int))),
 	}
 
-	if v, ok := d.GetOk("attributes"); ok && len(v.(map[string]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrAttributes); ok && len(v.(map[string]interface{})) > 0 {
 		samplingRule.Attributes = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
@@ -170,7 +170,7 @@ func resourceSamplingRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, samplingRule.RuleARN)
-	d.Set("attributes", samplingRule.Attributes)
+	d.Set(names.AttrAttributes, samplingRule.Attributes)
 	d.Set("fixed_rate", samplingRule.FixedRate)
 	d.Set("host", samplingRule.Host)
 	d.Set("http_method", samplingRule.HTTPMethod)
@@ -204,8 +204,8 @@ func resourceSamplingRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 			URLPath:       aws.String(d.Get("url_path").(string)),
 		}
 
-		if d.HasChange("attributes") {
-			samplingRuleUpdate.Attributes = flex.ExpandStringValueMap(d.Get("attributes").(map[string]interface{}))
+		if d.HasChange(names.AttrAttributes) {
+			samplingRuleUpdate.Attributes = flex.ExpandStringValueMap(d.Get(names.AttrAttributes).(map[string]interface{}))
 		}
 
 		input := &xray.UpdateSamplingRuleInput{
@@ -262,26 +262,3 @@ func findSamplingRuleByName(ctx context.Context, conn *xray.Client, name string)
 
 	return nil, &retry.NotFoundError{}
 }
-
-/*
-func GetSamplingRule(ctx context.Context, conn *xray.XRay, ruleName string) (*xray.SamplingRule, error) {
-	params := &xray.GetSamplingRulesInput{}
-	for {
-		out, err := conn.GetSamplingRulesWithContext(ctx, params)
-		if err != nil {
-			return nil, err
-		}
-		for _, samplingRuleRecord := range out.SamplingRuleRecords {
-			samplingRule := samplingRuleRecord.SamplingRule
-			if aws.StringValue(samplingRule.RuleName) == ruleName {
-				return samplingRule, nil
-			}
-		}
-		if aws.StringValue(out.NextToken) == "" {
-			break
-		}
-		params.NextToken = out.NextToken
-	}
-	return nil, nil
-}
-*/

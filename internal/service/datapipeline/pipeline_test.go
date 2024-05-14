@@ -133,7 +133,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 				Config: testAccPipelineConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(
@@ -144,7 +144,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 				Config: testAccPipelineConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(
@@ -160,7 +160,7 @@ func TestAccDataPipelinePipeline_tags(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},

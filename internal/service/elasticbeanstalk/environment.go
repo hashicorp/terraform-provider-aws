@@ -199,7 +199,7 @@ func ResourceEnvironment() *schema.Resource {
 				Default:      environmentTierWebServer,
 				ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
 			},
-			"triggers": {
+			names.AttrTriggers: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -376,7 +376,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("solution_stack_name", env.SolutionStackName)
 	d.Set("tier", env.Tier.Name)
-	if err := d.Set("triggers", flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
+	if err := d.Set(names.AttrTriggers, flattenTriggers(resources.EnvironmentResources.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
 	}
 	d.Set("version_label", env.VersionLabel)

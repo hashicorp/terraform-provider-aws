@@ -28,7 +28,7 @@ func TestAccMetaDefaultTagsDataSource_basic(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.first", names.AttrValue),
 				),
 			},
@@ -49,7 +49,7 @@ func TestAccMetaDefaultTagsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccDefaultTagsDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -72,7 +72,7 @@ func TestAccMetaDefaultTagsDataSource_multiple(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.nuera", "hijo"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.escalofrios", "calambres"),
 				),
@@ -97,7 +97,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.Tabac", "Louis Chiron"),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccMetaDefaultTagsDataSource_ignore(t *testing.T) {
 					testAccDefaultTagsDataSourceConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},

@@ -38,11 +38,11 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-acl/acl-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtZero),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
 			},
@@ -71,8 +71,8 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_ipv6(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtZero),
 				),
 			},
 			{
@@ -97,11 +97,11 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDefaultNetworkACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, "key1", "value1"),
+				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -110,20 +110,20 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCDefaultNetworkACLConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVPCDefaultNetworkACLConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, "key2", "value2"),
+				Config: testAccVPCDefaultNetworkACLConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -146,16 +146,16 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_denyIngress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						names.AttrProtocol: "-1",
 						"rule_no":          "100",
-						"from_port":        "0",
-						"to_port":          "0",
+						"from_port":        acctest.CtZero,
+						"to_port":          acctest.CtZero,
 						names.AttrAction:   "allow",
 						"cidr_block":       "0.0.0.0/0",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtZero),
 				),
 			},
 		},
@@ -178,13 +178,13 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_includingIPv6Rule(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "-1",
 						"rule_no":          "101",
-						"from_port":        "0",
-						"to_port":          "0",
+						"from_port":        acctest.CtZero,
+						"to_port":          acctest.CtZero,
 						names.AttrAction:   "allow",
 						"ipv6_cidr_block":  "::/0",
 					}),
@@ -210,7 +210,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", names.AttrID),
 				),
@@ -245,7 +245,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test1", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", names.AttrID),
 				),
@@ -271,7 +271,7 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 				Config: testAccVPCDefaultNetworkACLConfig_subnetsMove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtZero),
 				),
 			},
 			{

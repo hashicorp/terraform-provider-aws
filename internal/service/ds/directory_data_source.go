@@ -27,7 +27,7 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -137,7 +137,7 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"size": {
+			names.AttrSize: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -185,7 +185,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(aws.StringValue(dir.DirectoryId))
 	d.Set("access_url", dir.AccessUrl)
-	d.Set("alias", dir.Alias)
+	d.Set(names.AttrAlias, dir.Alias)
 	if dir.ConnectSettings != nil {
 		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
@@ -219,7 +219,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("security_group_id", nil)
 	}
 	d.Set("short_name", dir.ShortName)
-	d.Set("size", dir.Size)
+	d.Set(names.AttrSize, dir.Size)
 	d.Set(names.AttrType, dir.Type)
 	if dir.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {

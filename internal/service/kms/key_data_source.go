@@ -68,7 +68,7 @@ func dataSourceKey() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"key_id": {
+			names.AttrKeyID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateKeyOrAlias,
@@ -169,7 +169,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
-	keyID := d.Get("key_id").(string)
+	keyID := d.Get(names.AttrKeyID).(string)
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(keyID),
 	}

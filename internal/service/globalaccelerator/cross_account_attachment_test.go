@@ -37,12 +37,12 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "resource.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -78,7 +78,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID1),
 				),
 			},
@@ -91,7 +91,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 				Config: testAccCrossAccountAttachmentConfig_principals(rName, rAccountID2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "principals.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "principals.*", rAccountID2),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_resources(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.CtOne),
 				),
 			},
 			{
@@ -124,7 +124,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 			{
 				Config: testAccCrossAccountAttachmentConfig_resourcesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource.#", acctest.CtOne),
 				),
 			},
 		},
@@ -168,12 +168,12 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAcceleratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrossAccountAttachmentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccCrossAccountAttachmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -182,20 +182,20 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrossAccountAttachmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCrossAccountAttachmentConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCrossAccountAttachmentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccCrossAccountAttachmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrossAccountAttachmentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},

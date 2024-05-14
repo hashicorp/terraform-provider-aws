@@ -37,7 +37,7 @@ func TestAccIoTThing_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),
@@ -107,7 +107,7 @@ func TestAccIoTThing_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, thingName),
-					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "default_client_id"),

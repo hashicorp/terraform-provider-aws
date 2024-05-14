@@ -44,8 +44,8 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 			// Test import.
@@ -53,7 +53,7 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -123,7 +123,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "no_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "should_encrypt"),
 					resource.TestCheckResourceAttrSet(resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, connectionName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -164,14 +164,14 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -199,7 +199,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			// Test import.
@@ -207,7 +207,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -229,7 +229,7 @@ func TestAccDirectConnectConnection_skipDestroy(t *testing.T) {
 				Config: testAccConnectionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -249,12 +249,12 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
+				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			// Test import.
@@ -262,25 +262,25 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"request_macsec", "skip_destroy"},
+				ImportStateVerifyIgnore: []string{"request_macsec", names.AttrSkipDestroy},
 			},
 			{
-				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccConnectionConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
+				Config: testAccConnectionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
@@ -318,7 +318,7 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 				Config:                   testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 		},
@@ -347,7 +347,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 			{

@@ -113,7 +113,7 @@ func ResourceAMI() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
@@ -135,13 +135,13 @@ func ResourceAMI() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_size": {
+						names.AttrVolumeSize: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
 						},
-						"volume_type": {
+						names.AttrVolumeType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -618,7 +618,7 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.DeviceName = aws.String(v)
 	}
 
-	if v, ok := tfMap["iops"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrIOPS].(int); ok && v != 0 {
 		apiObject.Ebs.Iops = aws.Int64(int64(v))
 	}
 
@@ -633,11 +633,11 @@ func expandBlockDeviceMappingForAMIEBSBlockDevice(tfMap map[string]interface{}) 
 		apiObject.Ebs.Throughput = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrVolumeSize].(int); ok && v != 0 {
 		apiObject.Ebs.VolumeSize = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["volume_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVolumeType].(string); ok && v != "" {
 		apiObject.Ebs.VolumeType = aws.String(v)
 	}
 
@@ -698,7 +698,7 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.Iops; v != nil {
-		tfMap["iops"] = aws.Int64Value(v)
+		tfMap[names.AttrIOPS] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.SnapshotId; v != nil {
@@ -710,11 +710,11 @@ func flattenBlockDeviceMappingForAMIEBSBlockDevice(apiObject *ec2.BlockDeviceMap
 	}
 
 	if v := apiObject.Ebs.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
+		tfMap[names.AttrVolumeSize] = aws.Int64Value(v)
 	}
 
 	if v := apiObject.Ebs.VolumeType; v != nil {
-		tfMap["volume_type"] = aws.StringValue(v)
+		tfMap[names.AttrVolumeType] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Ebs.OutpostArn; v != nil {
