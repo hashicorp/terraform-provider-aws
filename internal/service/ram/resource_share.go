@@ -144,14 +144,20 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &ram.ListResourceSharePermissionsInput{
 		ResourceShareArn: aws.String(d.Id()),
 	}
+	var permissions []awstypes.ResourceSharePermissionSummary
 
-	output, err := conn.ListResourceSharePermissions(ctx, input)
+	pages := ram.NewListResourceSharePermissionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) permissions: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) permissions: %s", d.Id(), err)
+		}
+
+		permissions = append(permissions, page.Permissions...)
 	}
 
-	permissionARNs := tfslices.ApplyToAll(output.Permissions, func(r awstypes.ResourceSharePermissionSummary) string {
+	permissionARNs := tfslices.ApplyToAll(permissions, func(r awstypes.ResourceSharePermissionSummary) string {
 		return aws.ToString(r.Arn)
 	})
 	d.Set("permission_arns", permissionARNs)
@@ -236,20 +242,27 @@ func findResourceShare(ctx context.Context, conn *ram.Client, input *ram.GetReso
 }
 
 func findResourceShares(ctx context.Context, conn *ram.Client, input *ram.GetResourceSharesInput) ([]awstypes.ResourceShare, error) {
-	output, err := conn.GetResourceShares(ctx, input)
+	var output []awstypes.ResourceShare
 
-	if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := ram.NewGetResourceSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ResourceShares...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output.ResourceShares, nil
+	return output, nil
 }
 
 func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {

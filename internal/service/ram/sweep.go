@@ -34,27 +34,30 @@ func sweepResourceShares(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	output, err := conn.GetResourceShares(ctx, input)
+	pages := ram.NewGetResourceSharesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	for _, v := range output.ResourceShares {
-		if v.Status == awstypes.ResourceShareStatusDeleted {
-			continue
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping RAM Resource Share sweep for %s: %s", region, err)
+			return nil
 		}
 
-		r := resourceResourceShare()
-		d := r.Data(nil)
-		d.SetId(aws.ToString(v.ResourceShareArn))
+		if err != nil {
+			return fmt.Errorf("error listing RAM Resource Shares (%s): %w", region, err)
+		}
 
-		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
+		for _, v := range page.ResourceShares {
+			if v.Status == awstypes.ResourceShareStatusDeleted {
+				continue
+			}
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping RAM Resource Share sweep for %s: %s", region, err)
-		return nil
-	}
+			r := resourceResourceShare()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ResourceShareArn))
 
-	if err != nil {
-		return fmt.Errorf("error listing RAM Resource Shares (%s): %w", region, err)
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

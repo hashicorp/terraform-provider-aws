@@ -27,7 +27,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceResourceShare,
 			TypeName: "aws_ram_resource_share",
-			Name:     "Resource Shared",
+			Name:     "Resource Share",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}

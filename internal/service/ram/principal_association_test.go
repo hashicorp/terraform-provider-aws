@@ -180,7 +180,7 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 				return err
 			}
 
-			return fmt.Errorf("RAM Resource Association %s still exists", rs.Primary.ID)
+			return fmt.Errorf("RAM Principal Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil

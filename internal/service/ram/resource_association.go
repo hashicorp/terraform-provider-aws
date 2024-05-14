@@ -190,20 +190,27 @@ func findResourceShareAssociation(ctx context.Context, conn *ram.Client, input *
 }
 
 func findResourceShareAssociations(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareAssociationsInput) ([]awstypes.ResourceShareAssociation, error) {
-	output, err := conn.GetResourceShareAssociations(ctx, input)
+	var output []awstypes.ResourceShareAssociation
 
-	if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := ram.NewGetResourceShareAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ResourceShareAssociations...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output.ResourceShareAssociations, nil
+	return output, nil
 }
 
 func statusResourceAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, resourceARN string) retry.StateRefreshFunc {

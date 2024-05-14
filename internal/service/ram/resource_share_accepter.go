@@ -256,13 +256,20 @@ func findResourceShareOwnerOtherAccountsByARN(ctx context.Context, conn *ram.Cli
 }
 
 func findResources(ctx context.Context, conn *ram.Client, input *ram.ListResourcesInput) ([]awstypes.Resource, error) {
-	output, err := conn.ListResources(ctx, input)
+	var output []awstypes.Resource
 
-	if err != nil {
-		return nil, err
+	pages := ram.NewListResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Resources...)
 	}
 
-	return output.Resources, nil
+	return output, nil
 }
 
 func findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context, conn *ram.Client, resourceShareARN, status string) (option.Option[awstypes.ResourceShareInvitation], error) {
@@ -270,7 +277,7 @@ func findMaybeResourceShareInvitationByResourceShareARNAndStatus(ctx context.Con
 		ResourceShareArns: []string{resourceShareARN},
 	}
 
-	return findMaybeResourceShareInvitationRetry(ctx, conn, input, func(v awstypes.ResourceShareInvitation) bool {
+	return findMaybeResourceShareInvitationRetry(ctx, conn, input, func(v *awstypes.ResourceShareInvitation) bool {
 		return string(v.Status) == status
 	})
 }
@@ -280,10 +287,10 @@ func findMaybeResourceShareInvitationByARN(ctx context.Context, conn *ram.Client
 		ResourceShareInvitationArns: []string{arn},
 	}
 
-	return findMaybeResourceShareInvitationRetry(ctx, conn, input, tfslices.PredicateTrue[awstypes.ResourceShareInvitation]())
+	return findMaybeResourceShareInvitationRetry(ctx, conn, input, tfslices.PredicateTrue[*awstypes.ResourceShareInvitation]())
 }
 
-func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
 	// Retry for RAM resource share invitation eventual consistency.
 	errNotFound := errors.New("not found")
 	var output option.Option[awstypes.ResourceShareInvitation]
@@ -313,7 +320,7 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.Client
 	return output, err
 }
 
-func findMaybeResourceShareInvitation(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
+func findMaybeResourceShareInvitation(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) (option.Option[awstypes.ResourceShareInvitation], error) {
 	output, err := findResourceShareInvitations(ctx, conn, input, filter)
 
 	if err != nil {
@@ -323,29 +330,32 @@ func findMaybeResourceShareInvitation(ctx context.Context, conn *ram.Client, inp
 	return tfresource.AssertMaybeSingleValueResult(output)
 }
 
-func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[awstypes.ResourceShareInvitation]) ([]awstypes.ResourceShareInvitation, error) {
-	output, err := conn.GetResourceShareInvitations(ctx, input)
+func findResourceShareInvitations(ctx context.Context, conn *ram.Client, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*awstypes.ResourceShareInvitation]) ([]awstypes.ResourceShareInvitation, error) {
+	var output []awstypes.ResourceShareInvitation
 
-	if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := ram.NewGetResourceShareInvitationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceShareInvitationArnNotFoundException](err) || errs.IsA[*awstypes.UnknownResourceException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ResourceShareInvitations {
+			if filter(&v) {
+				output = append(output, v)
+			}
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	var out []awstypes.ResourceShareInvitation
-	for _, v := range output.ResourceShareInvitations {
-		v := v
-		if v := v; filter(v) {
-			out = append(out, v)
-		}
-	}
-
-	return out, nil
+	return output, nil
 }
 
 func statusResourceShareInvitation(ctx context.Context, conn *ram.Client, arn string) retry.StateRefreshFunc {

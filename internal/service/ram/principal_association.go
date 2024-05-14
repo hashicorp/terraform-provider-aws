@@ -244,8 +244,10 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
-		return v, err
+	if output, ok := outputRaw.(*awstypes.ResourceShareAssociation); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
