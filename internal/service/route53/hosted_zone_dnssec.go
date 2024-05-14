@@ -171,7 +171,7 @@ func resourceHostedZoneDNSSECDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Hosted Zone DNSSEC (%s) disable: %s", d.Id(), err)
 		}
 	}
@@ -191,7 +191,7 @@ func hostedZoneDNSSECDisable(ctx context.Context, conn *route53.Route53, hostedZ
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}
@@ -211,7 +211,7 @@ func hostedZoneDNSSECEnable(ctx context.Context, conn *route53.Route53, hostedZo
 	}
 
 	if output != nil && output.ChangeInfo != nil {
-		if _, err := waitChangeInfoStatusInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
+		if _, err := waitChangeInsync(ctx, conn, aws.StringValue(output.ChangeInfo.Id)); err != nil {
 			return fmt.Errorf("waiting for update: %w", err)
 		}
 	}

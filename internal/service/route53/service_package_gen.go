@@ -64,8 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_route53_hosted_zone_dnssec",
 		},
 		{
-			Factory:  ResourceKeySigningKey,
+			Factory:  resourceKeySigningKey,
 			TypeName: "aws_route53_key_signing_key",
+			Name:     "Key Signing Key",
 		},
 		{
 			Factory:  ResourceQueryLog,

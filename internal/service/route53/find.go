@@ -5,7 +5,6 @@ package route53
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -26,47 +25,6 @@ func FindHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZone
 	}
 
 	return output, nil
-}
-
-func FindKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
-	input := &route53.GetDNSSECInput{
-		HostedZoneId: aws.String(hostedZoneID),
-	}
-
-	var result *route53.KeySigningKey
-
-	output, err := conn.GetDNSSECWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	for _, keySigningKey := range output.KeySigningKeys {
-		if keySigningKey == nil {
-			continue
-		}
-
-		if aws.StringValue(keySigningKey.Name) == name {
-			result = keySigningKey
-			break
-		}
-	}
-
-	return result, err
-}
-
-func FindKeySigningKeyByResourceID(ctx context.Context, conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
-	hostedZoneID, name, err := KeySigningKeyParseResourceID(resourceID)
-
-	if err != nil {
-		return nil, fmt.Errorf("parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
-	}
-
-	return FindKeySigningKey(ctx, conn, hostedZoneID, name)
 }
 
 func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
