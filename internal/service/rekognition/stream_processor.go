@@ -63,7 +63,7 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 	kmsKeyIdRegex := regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_/+=,@.-]$`)
 	nameRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
 	collectionIdRegex := regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesis:([a-z\d-]+):\d{12}:.+$)`)
+	kinesisStreamArnRegex := regexache.MustCompile(`(^arn:([a-z\d-]+):kinesisvideo:([a-z\d-]+):\d{12}:.+$)`)
 	s3bucketRegex := regexache.MustCompile(`[0-9A-Za-z\.\-_]*`)
 	snsArnRegex := regexache.MustCompile(`(^arn:aws:sns:.*:\w{12}:.+$)`)
 	roleArnRegex := regexache.MustCompile(`arn:aws:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`)
@@ -142,13 +142,16 @@ func (r *resourceStreamProcessor) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"notification_channel": schema.SingleNestedBlock{
-				CustomType:  fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
+				CustomType: fwtypes.NewObjectTypeOf[notificationChannelModel](ctx),
+				Validators: []validator.Object{
+					objectvalidator.IsRequired(),
+				},
 				Description: "The Amazon Simple Notification Service topic to which Amazon Rekognition publishes the object detection results and completion status of a video analysis operation.",
 				Attributes: map[string]schema.Attribute{
 					"sns_topic_arn": schema.StringAttribute{
 						Description: "The Amazon Resource Number (ARN) of the Amazon Amazon Simple Notification Service topic to which Amazon Rekognition posts the completion status.",
 						CustomType:  fwtypes.ARNType,
-						Optional:    true,
+						Required:    true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(snsArnRegex, "must conform to: (^arn:aws:sns:.*:\\w{12}:.+$)"),
 						},
@@ -325,6 +328,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 	}
 
 	in := &rekognition.CreateStreamProcessorInput{}
+	in.Tags = getTagsIn(ctx)
 
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
@@ -347,6 +351,7 @@ func (r *resourceStreamProcessor) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	plan.ARN = fwflex.StringToFramework(ctx, out.StreamProcessorArn)
 	plan.ID = plan.ARN
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -478,13 +483,14 @@ func (r *resourceStreamProcessor) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func (r *resourceStreamProcessor) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
 func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target: []string{
-			string(awstypes.StreamProcessorStatusStarting),
-			string(awstypes.StreamProcessorStatusRunning),
-			string(awstypes.StreamProcessorStatusFailed)},
+		Pending:                   []string{},
+		Target:                    []string{string(awstypes.StreamProcessorStatusStopped)},
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -501,12 +507,8 @@ func waitStreamProcessorCreated(ctx context.Context, conn *rekognition.Client, i
 
 func waitStreamProcessorUpdated(ctx context.Context, conn *rekognition.Client, id string, timeout time.Duration) (*rekognition.DescribeStreamProcessorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.StreamProcessorStatusUpdating)},
-		Target: []string{
-			string(awstypes.StreamProcessorStatusStarting),
-			string(awstypes.StreamProcessorStatusRunning),
-			string(awstypes.StreamProcessorStatusFailed),
-		},
+		Pending:                   []string{string(awstypes.StreamProcessorStatusUpdating)},
+		Target:                    []string{string(awstypes.StreamProcessorStatusStopped)},
 		Refresh:                   statusStreamProcessor(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
