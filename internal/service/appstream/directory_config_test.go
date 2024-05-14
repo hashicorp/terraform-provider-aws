@@ -135,7 +135,7 @@ func TestAccAppStreamDirectoryConfig_OrganizationalUnitDistinguishedNames(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "directory_name", domain),
-					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.0", orgUnitDN1),
 					resource.TestCheckResourceAttr(resourceName, "organizational_unit_distinguished_names.1", orgUnitDN2),
 				),
