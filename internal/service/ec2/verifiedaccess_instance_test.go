@@ -43,7 +43,7 @@ func testAccVerifiedAccessInstance_basic(t *testing.T, semaphore tfsync.Semaphor
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
-					resource.TestCheckResourceAttr(resourceName, "verified_access_trust_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "verified_access_trust_providers.#", acctest.CtZero),
 				),
 			},
 			{
@@ -186,7 +186,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 				Config: testAccVerifiedAccessInstanceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -195,7 +195,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v2),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -205,7 +205,7 @@ func testAccVerifiedAccessInstance_tags(t *testing.T, semaphore tfsync.Semaphore
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceExists(ctx, resourceName, &v3),
 					testAccCheckVerifiedAccessInstanceNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

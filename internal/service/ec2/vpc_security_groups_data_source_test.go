@@ -70,9 +70,9 @@ func TestAccVPCSecurityGroupsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "vpc_ids.#", acctest.CtZero),
 				),
 			},
 		},

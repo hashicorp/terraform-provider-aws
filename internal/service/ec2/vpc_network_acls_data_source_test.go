@@ -69,7 +69,7 @@ func TestAccVPCNetworkACLsDataSource_tags(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccVPCNetworkACLsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtZero),
 				),
 			},
 		},

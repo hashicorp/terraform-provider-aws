@@ -266,7 +266,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 				Config: testAccInstanceConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -280,7 +280,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 				Config: testAccInstanceConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -289,7 +289,7 @@ func TestAccEC2Instance_tags(t *testing.T) {
 				Config: testAccInstanceConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -370,8 +370,8 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.CtZero), // This is an instance store AMI
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`instance/i-[0-9a-z]+`)),
 				),
@@ -390,7 +390,7 @@ func TestAccEC2Instance_atLeastOneOtherEBSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtZero),
 				),
 			},
 		},
@@ -860,9 +860,9 @@ func TestAccEC2Instance_rootInstanceStore(t *testing.T) {
 				Config: testAccInstanceConfig_rootStore(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.CtZero),
 				),
 			},
 			{
@@ -921,8 +921,8 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						"no_device":          "true",
@@ -1426,7 +1426,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 				Config: testAccInstanceConfig_networkVPCSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
@@ -1444,7 +1444,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 				Config: testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 				ExpectError: regexache.MustCompile(`VPC-based instances require at least one security group to be attached`),
@@ -1469,7 +1469,7 @@ func TestAccEC2Instance_networkInstanceVPCSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceConfig_networkVPCSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 				),
 			},
@@ -1524,7 +1524,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsVolumeTagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.Name", "acceptance-test-volume-tag"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.Environment", "dev"),
 				),
@@ -1533,7 +1533,7 @@ func TestAccEC2Instance_BlockDeviceTags_volumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsNoVolumeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
 				),
 			},
 		},
@@ -1557,7 +1557,7 @@ func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsAttachedVolumeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "PerAsperaAdAstra"),
 				),
@@ -1567,7 +1567,7 @@ func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsAttachedVolumeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "PerAsperaAdAstra"),
 				),
@@ -1576,7 +1576,7 @@ func TestAccEC2Instance_BlockDeviceTags_attachedVolume(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsAttachedVolumeTagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(ebsVolumeName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(ebsVolumeName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(ebsVolumeName, "tags.Factum", "VincitQuiSeVincit"),
 				),
@@ -1615,17 +1615,17 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsEBSTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccInstanceConfig_blockDeviceTagsEBSAndRootTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Purpose", "test"),
 				),
@@ -1634,7 +1634,7 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsEBSAndRootTagsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.Env", "dev"),
 				),
@@ -1669,13 +1669,13 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
 				),
@@ -1684,7 +1684,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithOneKey1, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
@@ -1694,9 +1694,9 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithTwoKeys, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),
 				),
@@ -1705,19 +1705,19 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
 				),
 			},
 			{ // no tags
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, emptyMap, emptyMap),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtZero),
 				),
 			},
 		},
@@ -1745,13 +1745,13 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, mapWithOneKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.gigi", "kitty"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
 				),
@@ -1760,10 +1760,10 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, mapWithTwoKeys1, mapWithOneKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
@@ -1774,10 +1774,10 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, mapWithTwoKeys2, mapWithOneKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
@@ -1788,11 +1788,11 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, mapWithTwoKeys2, mapWithOneKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "andrew"),
 				),
@@ -2974,8 +2974,8 @@ func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 					testAccCheckENIExists(ctx, eniResourceName, &eni),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
-						"device_index":       "0",
-						"network_card_index": "0",
+						"device_index":       acctest.CtZero,
+						"network_card_index": acctest.CtZero,
 					}),
 				),
 			},
@@ -3010,8 +3010,8 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "network_interface.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "network_interface.*", map[string]string{
-						"device_index":       "0",
-						"network_card_index": "0",
+						"device_index":       acctest.CtZero,
+						"network_card_index": acctest.CtZero,
 					}),
 				),
 			},
@@ -3131,7 +3131,7 @@ func TestAccEC2Instance_addSecurityGroupNetworkInterface(t *testing.T) {
 				Config: testAccInstanceConfig_addSecurityGroupAfter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -3157,7 +3157,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3166,7 +3166,7 @@ func TestAccEC2Instance_NewNetworkInterface_publicIPAndSecondaryPrivateIPs(t *te
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
 					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3198,7 +3198,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3231,7 +3231,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3239,7 +3239,7 @@ func TestAccEC2Instance_NewNetworkInterface_emptyPrivateIPAndSecondaryPrivateIPs
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtZero),
 				),
 			},
 			{
@@ -3280,7 +3280,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPs(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", privateIP),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3314,7 +3314,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "private_ip", privateIP),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -3322,7 +3322,7 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ips.#", acctest.CtZero),
 				),
 			},
 			{
@@ -5296,7 +5296,7 @@ func TestAccEC2Instance_metadataOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_protocol_ipv6", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.instance_metadata_tags", names.AttrEnabled),
 				),
 			},
@@ -5379,7 +5379,7 @@ func TestAccEC2Instance_CapacityReservation_unspecifiedDefaultsToOpen(t *testing
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -5416,7 +5416,7 @@ func TestAccEC2Instance_CapacityReservationPreference_open(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -5447,7 +5447,7 @@ func TestAccEC2Instance_CapacityReservationPreference_none(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -5510,7 +5510,7 @@ func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "open"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 			{Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "open"),
@@ -5525,7 +5525,7 @@ func TestAccEC2Instance_CapacityReservation_modifyPreference(t *testing.T) {
 					testAccCheckInstanceNotRecreated(&original, &updated),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 		},
@@ -5551,7 +5551,7 @@ func TestAccEC2Instance_CapacityReservation_modifyTarget(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_preference", "none"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.0.capacity_reservation_target.#", acctest.CtZero),
 				),
 			},
 			{Config: testAccInstanceConfig_capacityReservationSpecificationPreference(rName, "none"),
@@ -5593,7 +5593,7 @@ func TestAccEC2Instance_basicWithSpot(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "spot_instance_request_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_lifecycle", "spot"),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.market_type", "spot"),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "instance_market_options.0.spot_options.0.%", "4"),

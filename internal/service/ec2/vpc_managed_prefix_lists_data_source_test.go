@@ -59,7 +59,7 @@ func TestAccVPCManagedPrefixListsDataSource_noMatches(t *testing.T) {
 			{
 				Config: testAccVPCManagedPrefixListsDataSourceConfig_noMatches,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ec2_managed_prefix_lists.test", "ids.#", acctest.CtZero),
 				),
 			},
 		},

@@ -24,7 +24,7 @@ func TestInstanceMigrateState(t *testing.T) {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				// EBS
-				"block_device.#": "2",
+				"block_device.#": acctest.CtTwo,
 				"block_device.3851383343.delete_on_termination": "true",
 				"block_device.3851383343.device_name":           "/dev/sdx",
 				"block_device.3851383343.encrypted":             "false",
@@ -71,7 +71,7 @@ func TestInstanceMigrateState(t *testing.T) {
 			StateVersion: 0,
 			Attributes: map[string]string{
 				// EBS
-				"block_device.#": "2",
+				"block_device.#": acctest.CtTwo,
 				"block_device.3851383343.delete_on_termination": "true",
 				"block_device.3851383343.device_name":           "/dev/sdx",
 				"block_device.3851383343.encrypted":             "false",
