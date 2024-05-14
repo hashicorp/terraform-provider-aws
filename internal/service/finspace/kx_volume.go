@@ -141,7 +141,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -240,7 +240,7 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrDescription, out.Description)
 	d.Set(names.AttrType, out.VolumeType)
 	d.Set(names.AttrStatus, out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("az_mode", out.AzMode)
 	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
