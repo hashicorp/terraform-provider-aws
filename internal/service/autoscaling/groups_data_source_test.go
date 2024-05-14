@@ -29,10 +29,10 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "arns.#", "3"),
+					resource.TestCheckResourceAttr(datasource1Name, "names.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(datasource1Name, "arns.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(datasource2Name, "names.#", acctest.CtThree),
+					resource.TestCheckResourceAttr(datasource2Name, "arns.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(datasource3Name, "names.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(datasource3Name, "arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(datasource4Name, "names.#", acctest.CtTwo),
