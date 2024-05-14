@@ -283,7 +283,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.glue_catalog_generation", "false"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
+					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_S3"),

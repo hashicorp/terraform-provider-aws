@@ -59,8 +59,8 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ready"),
 							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.CtOne),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-							resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+							resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 						),
 					},
 					{
