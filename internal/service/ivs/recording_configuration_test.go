@@ -46,8 +46,8 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`recording-configuration/.+`)),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -201,7 +201,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags2(bucketName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -210,7 +210,7 @@ func TestAccIVSRecordingConfiguration_tags(t *testing.T) {
 				Config: testAccRecordingConfigurationConfig_tags1(bucketName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordingConfigurationExists(ctx, resourceName, &recordingConfiguration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
