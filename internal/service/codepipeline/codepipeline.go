@@ -120,7 +120,7 @@ func resourcePipeline() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:     schema.TypeList,
 				MinItems: 2,
 				Required: true,
@@ -517,7 +517,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrName, pipeline.Name)
 	d.Set("pipeline_type", pipeline.PipelineType)
 	d.Set(names.AttrRoleARN, pipeline.RoleArn)
-	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
+	if err := d.Set(names.AttrStage, flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
 	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
@@ -691,7 +691,7 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.RoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("stage"); ok && len(v.([]interface{})) > 0 {
+	if v, ok := d.GetOk(names.AttrStage); ok && len(v.([]interface{})) > 0 {
 		apiObject.Stages = expandStageDeclarations(v.([]interface{}))
 	}
 
