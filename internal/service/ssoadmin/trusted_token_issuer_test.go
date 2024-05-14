@@ -135,7 +135,7 @@ func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 				Config: testAccTrustedTokenIssuerConfigBase_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccSSOAdminTrustedTokenIssuer_tags(t *testing.T) {
 				Config: testAccTrustedTokenIssuerConfigBase_tags(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrustedTokenIssuerExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

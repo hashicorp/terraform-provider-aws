@@ -153,8 +153,8 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL1,
 						"origin":          string(types.SignInOriginApplication),
@@ -171,8 +171,8 @@ func TestAccSSOAdminApplication_portalOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "portal_options.0.sign_in_options.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "portal_options.0.sign_in_options.*", map[string]string{
 						"application_url": applicationURL2,
 						"origin":          string(types.SignInOriginApplication),
@@ -253,7 +253,7 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -277,7 +277,7 @@ func TestAccSSOAdminApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
