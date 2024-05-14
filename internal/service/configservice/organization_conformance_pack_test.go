@@ -97,7 +97,7 @@ func testAccOrganizationConformancePack_excludedAccounts(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtOne),
 				),
 			},
 			{
@@ -191,7 +191,7 @@ func testAccOrganizationConformancePack_inputParameters(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_inputParameter(rName, pKey, pValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  pKey,
 						"parameter_value": pValue,

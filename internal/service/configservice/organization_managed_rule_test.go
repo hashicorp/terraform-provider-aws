@@ -152,7 +152,7 @@ func testAccOrganizationManagedRule_ExcludedAccounts(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_excludedAccounts1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", acctest.CtOne),
 				),
 			},
 			{
@@ -295,7 +295,7 @@ func testAccOrganizationManagedRule_ResourceTypesScope(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_resourceTypesScope1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types_scope.#", acctest.CtOne),
 				),
 			},
 			{
