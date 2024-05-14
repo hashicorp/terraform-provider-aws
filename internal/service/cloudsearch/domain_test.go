@@ -121,7 +121,7 @@ func TestAccCloudSearchDomain_indexFields(t *testing.T) {
 				Config: testAccDomainConfig_indexFieldsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "literal_test",
 						names.AttrType:         "literal",
@@ -163,7 +163,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 				Config: testAccDomainConfig_sourceFields(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "index_field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "index_field.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test",
 						names.AttrType:         "int",
