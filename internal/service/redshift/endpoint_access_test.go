@@ -82,7 +82,7 @@ func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 				Config: testAccEndpointAccessConfig_sgsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtTwo),
 				),
 			},
 		},

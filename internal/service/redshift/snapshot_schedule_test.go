@@ -43,7 +43,7 @@ func TestAccRedshiftSnapshotSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -123,7 +123,7 @@ func TestAccRedshiftSnapshotSchedule_tags(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -209,7 +209,7 @@ func TestAccRedshiftSnapshotSchedule_update(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_multipleDefinitions(rName, "cron(30 12 *)", "cron(15 6 *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "definitions.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "cron(30 12 *)"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "cron(15 6 *)"),
 				),
@@ -234,7 +234,7 @@ func TestAccRedshiftSnapshotSchedule_update(t *testing.T) {
 				Config: testAccSnapshotScheduleConfig_multipleDefinitions(rName, "cron(30 8 *)", "cron(15 10 *)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "definitions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "definitions.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "cron(30 8 *)"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "definitions.*", "cron(15 10 *)"),
 				),

@@ -37,7 +37,7 @@ func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`hsmclientcertificate:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_client_certificate_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "hsm_client_certificate_public_key"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -64,7 +64,7 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -77,7 +77,7 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -85,7 +85,7 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

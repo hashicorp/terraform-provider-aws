@@ -35,7 +35,7 @@ func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy_grant_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccRedshiftSnapshotCopyGrant_tags(t *testing.T) {
 				Config: testAccSnapshotCopyGrantConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -98,7 +98,7 @@ func TestAccRedshiftSnapshotCopyGrant_tags(t *testing.T) {
 				Config: testAccSnapshotCopyGrantConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -107,7 +107,7 @@ func TestAccRedshiftSnapshotCopyGrant_tags(t *testing.T) {
 				Config: testAccSnapshotCopyGrantConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
