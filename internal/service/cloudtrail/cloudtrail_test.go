@@ -92,7 +92,7 @@ func testAccTrail_basic(t *testing.T) {
 				Config: testAccCloudTrailConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", names.AttrPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, names.AttrPrefix),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -307,7 +307,7 @@ func testAccTrail_logValidation(t *testing.T) {
 				Config: testAccCloudTrailConfig_logValidation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, true, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -322,7 +322,7 @@ func testAccTrail_logValidation(t *testing.T) {
 				Config: testAccCloudTrailConfig_logValidationModified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
@@ -350,7 +350,7 @@ func testAccTrail_kmsKey(t *testing.T) {
 				Config: testAccCloudTrailConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsResourceName, names.AttrARN),
