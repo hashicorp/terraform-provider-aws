@@ -57,7 +57,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
@@ -68,7 +68,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "An updated test catalog from terraform"),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
@@ -239,12 +239,12 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:  testAccCatalogDatabaseConfig_tags1(rName, "key1", "value1"),
+				Config:  testAccCatalogDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -253,22 +253,22 @@ func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:  testAccCatalogDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config:  testAccCatalogDatabaseConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config:  testAccCatalogDatabaseConfig_tags1(rName, "key2", "value2"),
+				Config:  testAccCatalogDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Destroy: false,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
