@@ -501,18 +501,26 @@ func FindCarrierGatewayByID(ctx context.Context, conn *ec2.Client, id string) (*
 }
 
 func FindCarrierGateways(ctx context.Context, conn *ec2.Client, input *ec2.DescribeCarrierGatewaysInput) ([]awstypes.CarrierGateway, error) {
-	output, err := conn.DescribeCarrierGateways(ctx, input)
+	var output []awstypes.CarrierGateway
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+	pages := ec2.NewDescribeCarrierGatewaysPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidCarrierGatewayIDNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.CarrierGateways...)
+
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return output.CarrierGateways, nil
+	return output, nil
 }
