@@ -307,7 +307,7 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
+			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -333,7 +333,7 @@ func testAccCheckAccessEntryExists(ctx context.Context, n string, v *types.Acces
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
+		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
 		if err != nil {
 			return err
