@@ -370,6 +370,16 @@ rules:
       - pattern: '"database_name"'
     severity: ERROR
     fix: "names.AttrDatabaseName"
+  - id: literal-default_action-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrDefaultAction` for the string literal "default_action"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"default_action"'
+    severity: ERROR
+    fix: "names.AttrDefaultAction"
   - id: literal-default_value-string-constant
     languages: [go]
     message: Use the constant `names.AttrDefaultValue` for the string literal "default_value"
@@ -580,6 +590,16 @@ rules:
       - pattern: '"expression"'
     severity: ERROR
     fix: "names.AttrExpression"
+  - id: literal-external_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrExternalID` for the string literal "external_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"external_id"'
+    severity: ERROR
+    fix: "names.AttrExternalID"
   - id: literal-family-string-constant
     languages: [go]
     message: Use the constant `names.AttrFamily` for the string literal "family"
@@ -620,6 +640,16 @@ rules:
       - pattern: '"filter"'
     severity: ERROR
     fix: "names.AttrFilter"
+  - id: literal-force_delete-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrForceDelete` for the string literal "force_delete"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"force_delete"'
+    severity: ERROR
+    fix: "names.AttrForceDelete"
   - id: literal-force_destroy-string-constant
     languages: [go]
     message: Use the constant `names.AttrForceDestroy` for the string literal "force_destroy"
@@ -870,6 +900,16 @@ rules:
       - pattern: '"key_id"'
     severity: ERROR
     fix: "names.AttrKeyID"
+  - id: literal-language_code-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLanguageCode` for the string literal "language_code"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"language_code"'
+    severity: ERROR
+    fix: "names.AttrLanguageCode"
   - id: literal-last_updated_date-string-constant
     languages: [go]
     message: Use the constant `names.AttrLastUpdatedDate` for the string literal "last_updated_date"
@@ -920,6 +960,16 @@ rules:
       - pattern: '"max"'
     severity: ERROR
     fix: "names.AttrMax"
+  - id: literal-max_capacity-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrMaxCapacity` for the string literal "max_capacity"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"max_capacity"'
+    severity: ERROR
+    fix: "names.AttrMaxCapacity"
   - id: literal-message-string-constant
     languages: [go]
     message: Use the constant `names.AttrMessage` for the string literal "message"
@@ -1180,6 +1230,16 @@ rules:
       - pattern: '"profile"'
     severity: ERROR
     fix: "names.AttrProfile"
+  - id: literal-propagate_tags-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrPropagateTags` for the string literal "propagate_tags"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"propagate_tags"'
+    severity: ERROR
+    fix: "names.AttrPropagateTags"
   - id: literal-properties-string-constant
     languages: [go]
     message: Use the constant `names.AttrProperties` for the string literal "properties"
@@ -1200,6 +1260,16 @@ rules:
       - pattern: '"protocol"'
     severity: ERROR
     fix: "names.AttrProtocol"
+  - id: literal-provider_name-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrProviderName` for the string literal "provider_name"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"provider_name"'
+    severity: ERROR
+    fix: "names.AttrProviderName"
   - id: literal-public_key-string-constant
     languages: [go]
     message: Use the constant `names.AttrPublicKey` for the string literal "public_key"
@@ -1450,6 +1520,16 @@ rules:
       - pattern: '"service_name"'
     severity: ERROR
     fix: "names.AttrServiceName"
+  - id: literal-service_role-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrServiceRole` for the string literal "service_role"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"service_role"'
+    severity: ERROR
+    fix: "names.AttrServiceRole"
   - id: literal-service_role_arn-string-constant
     languages: [go]
     message: Use the constant `names.AttrServiceRoleARN` for the string literal "service_role_arn"
@@ -1520,6 +1600,16 @@ rules:
       - pattern: '"skip_requesting_account_id"'
     severity: ERROR
     fix: "names.AttrSkipRequestingAccountID"
+  - id: literal-snapshot_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSnapshotID` for the string literal "snapshot_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"snapshot_id"'
+    severity: ERROR
+    fix: "names.AttrSnapshotID"
   - id: literal-source-string-constant
     languages: [go]
     message: Use the constant `names.AttrSource` for the string literal "source"
@@ -1580,6 +1670,16 @@ rules:
       - pattern: '"status"'
     severity: ERROR
     fix: "names.AttrStatus"
+  - id: literal-status_code-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStatusCode` for the string literal "status_code"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"status_code"'
+    severity: ERROR
+    fix: "names.AttrStatusCode"
   - id: literal-status_message-string-constant
     languages: [go]
     message: Use the constant `names.AttrStatusMessage` for the string literal "status_message"
@@ -1590,6 +1690,16 @@ rules:
       - pattern: '"status_message"'
     severity: ERROR
     fix: "names.AttrStatusMessage"
+  - id: literal-status_reason-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrStatusReason` for the string literal "status_reason"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"status_reason"'
+    severity: ERROR
+    fix: "names.AttrStatusReason"
   - id: literal-storage_type-string-constant
     languages: [go]
     message: Use the constant `names.AttrStorageType` for the string literal "storage_type"
