@@ -69,7 +69,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
@@ -90,7 +90,7 @@ func TestAccGlacierVault_notification(t *testing.T) {
 				Config: testAccVaultConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "notification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "notification.0.events.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "notification.0.sns_topic", snsResourceName, names.AttrARN),
 				),
@@ -159,7 +159,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				Config: testAccVaultConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -181,7 +181,7 @@ func TestAccGlacierVault_tags(t *testing.T) {
 				Config: testAccVaultConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
