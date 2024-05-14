@@ -25,7 +25,7 @@ func ConstOrQuote(constant string) string {
     }
 
 	if v, ok := allConstants[constant]; ok {
-		return fmt.Sprintf("names.%s", v)
+		return fmt.Sprintf("acctest.%s", v)
 	}
 	return fmt.Sprintf("%q", constant)
 }

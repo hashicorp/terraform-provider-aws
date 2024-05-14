@@ -10,4 +10,3 @@ rules:
       - pattern: '"1"'
     severity: ERROR
     fix: "acctest.CtOne"
-

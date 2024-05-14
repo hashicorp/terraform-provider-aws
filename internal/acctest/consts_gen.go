@@ -9,9 +9,7 @@ import (
 )
 
 const (
-	CtOne         = "1"
-	CtTagsPercent = "tags.%"
-	CtZero        = "0"
+	CtOne = "1"
 )
 
 // ConstOrQuote returns the constant name for the given attribute if it exists.
@@ -19,13 +17,11 @@ const (
 // generated code and templates.
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
-		"1":      "CtOne",
-		"tags.%": "CtTagsPercent",
-		"0":      "CtZero",
+		"1": "CtOne",
 	}
 
 	if v, ok := allConstants[constant]; ok {
-		return fmt.Sprintf("names.%s", v)
+		return fmt.Sprintf("acctest.%s", v)
 	}
 	return fmt.Sprintf("%q", constant)
 }
