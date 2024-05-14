@@ -215,7 +215,7 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 					testAccCheckPoolExists(ctx, resourceName, &ip),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},
