@@ -182,7 +182,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "aaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.CtTwo),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func TestAccElastiCacheUser_update_password_auth_mode(t *testing.T) {
 				Config: testAccUserConfigWithPasswordAuthMode_twoPasswords(rName, "cccccccccccccccc", "dddddddddddddddd"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", acctest.CtTwo),
 				),
 			},
 			{
@@ -250,7 +250,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal"),
 				),
 			},
@@ -262,7 +262,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.tagKey", "tagVal2"),
 				),
 			},
@@ -274,7 +274,7 @@ func TestAccElastiCacheUser_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "no_password_required", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "username1"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -322,7 +322,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Config: testAccUserConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -339,7 +339,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Config: testAccUserConfig_tags(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 				),
 			},
