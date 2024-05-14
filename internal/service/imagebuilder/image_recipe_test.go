@@ -38,7 +38,7 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("image-recipe/%s/1.0.0", rName))),
-					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "component.#", acctest.CtOne),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -46,7 +46,7 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-2-x86/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
 				),
 			},
@@ -486,7 +486,7 @@ func TestAccImageBuilderImageRecipe_componentParameter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "component.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.name", "Parameter1"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.0.value", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.1.name", "Parameter2"),
@@ -539,7 +539,7 @@ func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 				Config: testAccImageRecipeConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -552,7 +552,7 @@ func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 				Config: testAccImageRecipeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -561,7 +561,7 @@ func TestAccImageBuilderImageRecipe_tags(t *testing.T) {
 				Config: testAccImageRecipeConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

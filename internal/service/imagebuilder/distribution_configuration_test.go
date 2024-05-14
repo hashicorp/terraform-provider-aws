@@ -139,7 +139,7 @@ func TestAccImageBuilderDistributionConfiguration_distribution(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -698,7 +698,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_name", launchTemplateResourceName2, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.launch_template.0.launch_template_version", acctest.CtTwo),
 				),
 			},
 		},
@@ -894,7 +894,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -907,7 +907,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -916,7 +916,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 				Config: testAccDistributionConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
