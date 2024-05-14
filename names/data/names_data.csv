@@ -271,7 +271,7 @@ opensearchserverless,opensearchserverless,opensearchserverless,opensearchserverl
 osis,osis,osis,osis,,osis,,opensearchingestion,OpenSearchIngestion,OSIS,,,2,,aws_osis_,,osis_,OpenSearch Ingestion,Amazon,,,,,,,OSIS,ListPipelines,,
 opsworks,opsworks,opsworks,opsworks,,opsworks,,,OpsWorks,OpsWorks,,1,,,aws_opsworks_,,opsworks_,OpsWorks,AWS,,,,,,,OpsWorks,DescribeApps,,
 opsworks-cm,opsworkscm,opsworkscm,opsworkscm,,opsworkscm,,,OpsWorksCM,OpsWorksCM,,1,,,aws_opsworkscm_,,opsworkscm_,OpsWorks CM,AWS,,x,,,,,OpsWorksCM,,,
-organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,,1,,,aws_organizations_,,organizations_,Organizations,AWS,,,,,,,Organizations,ListAccounts,,
+organizations,organizations,organizations,organizations,,organizations,,,Organizations,Organizations,,,2,,aws_organizations_,,organizations_,Organizations,AWS,,,,,,,Organizations,ListAccounts,,
 outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outposts_,,outposts_,Outposts,AWS,,,,,,,Outposts,ListSites,,
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
