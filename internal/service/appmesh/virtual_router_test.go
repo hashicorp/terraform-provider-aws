@@ -156,11 +156,11 @@ func testAccVirtualRouter_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, "key1", "value1"),
+				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			{
@@ -170,20 +170,20 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVirtualRouterConfig_tags2(meshName, vrName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccVirtualRouterConfig_tags2(meshName, vrName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, "key2", "value2"),
+				Config: testAccVirtualRouterConfig_tags1(meshName, vrName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
