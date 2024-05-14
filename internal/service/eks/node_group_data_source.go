@@ -52,7 +52,7 @@ func dataSourceNodeGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -102,7 +102,7 @@ func dataSourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -207,7 +207,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
@@ -216,7 +216,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
-	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
