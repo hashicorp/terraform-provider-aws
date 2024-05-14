@@ -21,7 +21,7 @@ func testResourceStreamStateDataV0() map[string]interface{} {
 		names.AttrRetentionPeriod: 24,
 		"shard_count":             1,
 		"shard_level_metrics":     []interface{}{},
-		names.AttrTags:            map[string]interface{}{"key1": "value1"},
+		names.AttrTags:            map[string]interface{}{acctest.CtKey1: acctest.CtValue1},
 	}
 }
 
