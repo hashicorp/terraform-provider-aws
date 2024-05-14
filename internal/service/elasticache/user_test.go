@@ -323,7 +323,7 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			// Start to update the user out-of-band.
@@ -336,11 +336,11 @@ func TestAccElastiCacheUser_oobModify(t *testing.T) {
 			},
 			// Update tags.
 			{
-				Config: testAccUserConfig_tags(rName, acctest.CtKey1, "value1updated"),
+				Config: testAccUserConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 				),
 			},
 		},
