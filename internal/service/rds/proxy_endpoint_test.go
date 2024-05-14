@@ -46,14 +46,14 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "db_proxy_name", "aws_db_proxy.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_role", "READ_WRITE"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy-endpoint:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^[\w\-\.]+\.rds\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.CtZero),
 				),
 			},
 			{
@@ -130,7 +130,7 @@ func TestAccRDSProxyEndpoint_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccProxyEndpointConfig_vpcSecurityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test.1", names.AttrID),
 				),
@@ -159,7 +159,7 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 				Config: testAccProxyEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -172,7 +172,7 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 				Config: testAccProxyEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -181,7 +181,7 @@ func TestAccRDSProxyEndpoint_tags(t *testing.T) {
 				Config: testAccProxyEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyEndpointExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

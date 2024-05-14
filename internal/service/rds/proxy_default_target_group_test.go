@@ -48,7 +48,7 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 						"max_connections_percent":      "100",
 						"max_idle_connections_percent": "50",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -88,7 +88,7 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 						"max_connections_percent":      "100",
 						"max_idle_connections_percent": "50",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -277,7 +277,7 @@ func TestAccRDSProxyDefaultTargetGroup_sessionPinningFilters(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.CtZero),
 				),
 			},
 			{

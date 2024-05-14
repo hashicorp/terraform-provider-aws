@@ -51,8 +51,8 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(readerResourceName, names.AttrEndpoint),
 					acctest.MatchResourceAttrRegionalARN(defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, names.AttrEndpoint),
-					resource.TestCheckResourceAttr(defaultResourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(readerResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags2(rInt, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -112,7 +112,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

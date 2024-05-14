@@ -41,8 +41,8 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexache.MustCompile(`snapshot:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -87,7 +87,7 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", acctest.CtZero),
 				),
 			},
 		},
@@ -114,7 +114,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -136,7 +136,7 @@ func TestAccRDSSnapshot_tags(t *testing.T) {
 				Config: testAccSnapshotConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

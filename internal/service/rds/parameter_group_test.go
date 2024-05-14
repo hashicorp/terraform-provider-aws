@@ -157,7 +157,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -170,7 +170,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -179,7 +179,7 @@ func TestAccRDSParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -291,7 +291,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_flush_log_at_trx_commit",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
@@ -303,7 +303,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_thread_concurrency",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_write_io_threads",
@@ -359,7 +359,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_warnings",
-						names.AttrValue: "2",
+						names.AttrValue: acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_output",
@@ -383,7 +383,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "sync_binlog",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tx_isolation",
@@ -470,7 +470,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_flush_log_at_trx_commit",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
@@ -482,7 +482,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_thread_concurrency",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_write_io_threads",
@@ -538,7 +538,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_warnings",
-						names.AttrValue: "2",
+						names.AttrValue: acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_output",
@@ -562,7 +562,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "sync_binlog",
-						names.AttrValue: "0",
+						names.AttrValue: acctest.CtZero,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tx_isolation",
@@ -887,7 +887,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    aws.String("immediate"),
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
+					ParameterValue: aws.String(acctest.CtZero),
 				},
 				{
 					ApplyMethod:    aws.String("immediate"),
@@ -926,7 +926,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    aws.String("immediate"),
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
+					ParameterValue: aws.String(acctest.CtZero),
 				},
 			},
 		},
@@ -957,7 +957,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    aws.String("immediate"),
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
+					ParameterValue: aws.String(acctest.CtZero),
 				},
 				{
 					ApplyMethod:    aws.String("immediate"),
@@ -994,7 +994,7 @@ func TestDBParameterModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    aws.String("immediate"),
 					ParameterName:  aws.String("innodb_flush_log_at_trx_commit"),
-					ParameterValue: aws.String("0"),
+					ParameterValue: aws.String(acctest.CtZero),
 				},
 			},
 			ExpectedRemainder: []*rds.Parameter{
