@@ -14,7 +14,7 @@ func TestValid4ByteASN(t *testing.T) {
 	t.Parallel()
 
 	validAsns := []string{
-		"0",
+		acctest.CtZero,
 		acctest.CtOne,
 		"65534",
 		"65535",
