@@ -227,7 +227,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_MultipleRules(t *testing.T)
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleMultipleRules(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
 						"condition.#":                   acctest.CtOne,
 						"condition.0.key_prefix_equals": "docs/",

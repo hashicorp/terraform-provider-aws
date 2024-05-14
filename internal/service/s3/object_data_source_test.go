@@ -43,11 +43,11 @@ func TestAccS3ObjectDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -197,7 +197,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					// Currently unsupported in aws_s3_object resource
 					resource.TestCheckResourceAttr(dataSourceName, "expires", ""),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
@@ -206,7 +206,7 @@ func TestAccS3ObjectDataSource_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "sse_kms_key_id", ""),
 					// Supported, but difficult to reproduce in short testing time
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_class", resourceName, "storage_class"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version_id", resourceName, "version_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "website_redirect_location", resourceName, "website_redirect"),
 				),
@@ -351,7 +351,7 @@ func TestAccS3ObjectDataSource_multipleSlashes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 
 					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName2, names.AttrContentType),
 				),
 			},
@@ -501,7 +501,7 @@ func TestAccS3ObjectDataSource_metadata(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadata(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key2", "Value2"),
 				),
@@ -535,7 +535,7 @@ func TestAccS3ObjectDataSource_metadataUppercaseKey(t *testing.T) {
 			{
 				Config: testAccObjectDataSourceConfig_metadataBucketAndDS(rName, key),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(dataSourceName, "metadata.key1", "value1"),
 					// https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/s3#HeadObjectOutput
 					// Map keys will be normalized to lower-case.
@@ -571,11 +571,11 @@ func TestAccS3ObjectDataSource_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
-					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "metadata.%", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_legal_hold_status", resourceName, "object_lock_legal_hold_status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_mode", resourceName, "object_lock_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "object_lock_retain_until_date", resourceName, "object_lock_retain_until_date"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},

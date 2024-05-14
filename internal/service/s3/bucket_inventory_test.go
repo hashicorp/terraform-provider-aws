@@ -44,7 +44,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
 
-					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "optional_fields.#", acctest.CtTwo),
 
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.frequency", "Weekly"),
