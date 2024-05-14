@@ -66,7 +66,7 @@ func resourceGatewayResponse() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"status_code": {
+			names.AttrStatusCode: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -91,7 +91,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 		input.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("status_code"); ok {
+	if v, ok := d.GetOk(names.AttrStatusCode); ok {
 		input.StatusCode = aws.String(v.(string))
 	}
 
@@ -127,7 +127,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("response_parameters", gatewayResponse.ResponseParameters)
 	d.Set("response_templates", gatewayResponse.ResponseTemplates)
 	d.Set("response_type", gatewayResponse.ResponseType)
-	d.Set("status_code", gatewayResponse.StatusCode)
+	d.Set(names.AttrStatusCode, gatewayResponse.StatusCode)
 
 	return diags
 }
