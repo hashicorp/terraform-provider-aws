@@ -282,7 +282,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.*", map[string]string{
 						"routable_cidr_space": "100.64.0.0/26",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
 						names.AttrProtocol: "6",
 						"rule_action":      "allow",
@@ -340,7 +340,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -348,7 +348,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -357,7 +357,7 @@ func TestAccFinSpaceKxEnvironment_tags(t *testing.T) {
 				Config: testAccKxEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxEnvironmentExists(ctx, resourceName, &kxenvironment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
