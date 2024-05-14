@@ -108,7 +108,7 @@ func ResourceAssociation() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
-						"s3_key_prefix": {
+						names.AttrS3KeyPrefix: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 500),
@@ -414,7 +414,7 @@ func expandAssociationOutputLocation(config []interface{}) *ssm.InstanceAssociat
 		OutputS3BucketName: aws.String(locationConfig[names.AttrS3BucketName].(string)),
 	}
 
-	if v, ok := locationConfig["s3_key_prefix"]; ok {
+	if v, ok := locationConfig[names.AttrS3KeyPrefix]; ok {
 		S3OutputLocation.OutputS3KeyPrefix = aws.String(v.(string))
 	}
 
@@ -438,7 +438,7 @@ func flattenAssociationOutputLocation(location *ssm.InstanceAssociationOutputLoc
 	item[names.AttrS3BucketName] = aws.StringValue(location.S3Location.OutputS3BucketName)
 
 	if location.S3Location.OutputS3KeyPrefix != nil {
-		item["s3_key_prefix"] = aws.StringValue(location.S3Location.OutputS3KeyPrefix)
+		item[names.AttrS3KeyPrefix] = aws.StringValue(location.S3Location.OutputS3KeyPrefix)
 	}
 
 	if location.S3Location.OutputS3Region != nil {
