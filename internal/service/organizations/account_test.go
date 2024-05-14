@@ -174,29 +174,29 @@ func testAccAccount_Tags(t *testing.T) {
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountConfig_tags1(name, email, "key1", "value1"),
+				Config: testAccAccountConfig_tags1(name, email, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
 				),
 			},
 			testAccAccountImportStep(resourceName),
 			{
-				Config: testAccAccountConfig_tags2(name, email, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAccountConfig_tags2(name, email, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccAccountConfig_tags1(name, email, "key2", "value2"),
+				Config: testAccAccountConfig_tags1(name, email, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
 				),
 			},
 		},
