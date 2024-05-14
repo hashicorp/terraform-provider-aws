@@ -40,7 +40,7 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 					testAccCheckParameterGroupAttributes(&v, rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("pg:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "neptune1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
