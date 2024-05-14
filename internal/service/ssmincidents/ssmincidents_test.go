@@ -16,30 +16,30 @@ func TestAccSSMIncidents_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Replication Set Resource Tests": {
-			acctest.CtBasic:    testReplicationSet_basic,
-			"updateDefaultKey": testReplicationSet_updateRegionsWithoutCMK,
-			"updateCMK":        testReplicationSet_updateRegionsWithCMK,
-			"updateTags":       testReplicationSet_updateTags,
-			"updateEmptyTags":  testReplicationSet_updateEmptyTags,
-			"disappears":       testReplicationSet_disappears,
+			acctest.CtBasic:    testAccReplicationSet_basic,
+			"updateDefaultKey": testAccReplicationSet_updateRegionsWithoutCMK,
+			"updateCMK":        testAccReplicationSet_updateRegionsWithCMK,
+			"updateTags":       testAccReplicationSet_updateTags,
+			"updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
+			"disappears":       testAccReplicationSet_disappears,
 		},
 		"Replication Set Data Source Tests": {
-			acctest.CtBasic: testReplicationSetDataSource_basic,
+			acctest.CtBasic: testAccReplicationSetDataSource_basic,
 		},
 		"Response Plan Resource Tests": {
-			acctest.CtBasic:          testResponsePlan_basic,
-			"update":                 testResponsePlan_updateRequiredFields,
-			"updateTags":             testResponsePlan_updateTags,
-			"updateEmptyTags":        testResponsePlan_updateEmptyTags,
-			"disappears":             testResponsePlan_disappears,
-			"incidentTemplateFields": testResponsePlan_incidentTemplateOptionalFields,
-			"displayName":            testResponsePlan_displayName,
-			"chatChannel":            testResponsePlan_chatChannel,
-			"engagement":             testResponsePlan_engagement,
-			names.AttrAction:         testResponsePlan_action,
+			acctest.CtBasic:          testAccResponsePlan_basic,
+			"update":                 testAccResponsePlan_updateRequiredFields,
+			"updateTags":             testAccResponsePlan_updateTags,
+			"updateEmptyTags":        testAccResponsePlan_updateEmptyTags,
+			"disappears":             testAccResponsePlan_disappears,
+			"incidentTemplateFields": testAccResponsePlan_incidentTemplateOptionalFields,
+			"displayName":            testAccResponsePlan_displayName,
+			"chatChannel":            testAccResponsePlan_chatChannel,
+			"engagement":             testAccResponsePlan_engagement,
+			names.AttrAction:         testAccResponsePlan_action,
 		},
 		"Response Plan Data Source Tests": {
-			acctest.CtBasic: testResponsePlanDataSource_basic,
+			acctest.CtBasic: testAccResponsePlanDataSource_basic,
 		},
 	}
 
