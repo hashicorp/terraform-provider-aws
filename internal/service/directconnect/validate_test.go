@@ -5,6 +5,8 @@ package directconnect
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestValidConnectionBandWidth(t *testing.T) {
@@ -34,7 +36,7 @@ func TestValidConnectionBandWidth(t *testing.T) {
 		"1Tbps",
 		"10GBpS",
 		"42Mbps",
-		"0",
+		acctest.CtZero,
 		"???",
 		"a lot",
 	}

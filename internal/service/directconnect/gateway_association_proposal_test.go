@@ -76,7 +76,7 @@ func TestAccDirectConnectGatewayAssociationProposal_basicTransitGateway(t *testi
 				Config: testAccGatewayAssociationProposalConfig_basicTransit(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/30"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.8/30"),
 					resource.TestCheckResourceAttrPair(resourceName, "associated_gateway_id", resourceNameTgw, names.AttrID),
@@ -225,7 +225,7 @@ func TestAccDirectConnectGatewayAssociationProposal_allowedPrefixes(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal2),
 					testAccCheckGatewayAssociationProposalRecreated(&proposal1, &proposal2),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", acctest.CtTwo),
 				),
 			},
 		},
