@@ -649,8 +649,6 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 	botResourceName := "aws_lex_bot.test"
 	testIntentID := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	updatedVersion := acctest.CtTwo
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)

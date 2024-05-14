@@ -132,7 +132,6 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
-	updatedVersion := acctest.CtTwo
 	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{

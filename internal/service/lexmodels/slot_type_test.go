@@ -335,8 +335,6 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	updatedVersion := acctest.CtTwo
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)

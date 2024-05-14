@@ -566,8 +566,6 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	updatedVersion := acctest.CtTwo
-
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)

@@ -3028,8 +3028,8 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	fleetType := "instant"
-	totalTargetCapacity := acctest.CtTwo
 	terminateInstances := true
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),

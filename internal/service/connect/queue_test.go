@@ -212,14 +212,14 @@ func testAccQueue_updateMaxContacts(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccQueueConfig_maxContacts(rName, rName2, acctest.CtTwo),
+				Config: testAccQueueConfig_maxContacts(rName, rName2, updatedMaxContacts),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "hours_of_operation_id", "data.aws_connect_hours_of_operation.test", "hours_of_operation_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, "max_contacts", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "max_contacts", updatedMaxContacts),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "queue_id"),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_ids.#", acctest.CtZero),

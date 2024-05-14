@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cognitoidp
+package cognitoidp_test
 
 import (
 	"testing"
@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -156,7 +157,7 @@ func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			output := UserPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
+			output := tfcognitoidp.UserPoolSchemaAttributeMatchesStandardAttribute(tc.Input)
 			if output != tc.Expected {
 				t.Fatalf("Expected %t match with standard attribute on input: \n\n%#v\n\n", tc.Expected, tc.Input)
 			}
@@ -259,7 +260,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			got := skipFlatteningStringAttributeContraints(tc.configured, tc.input)
+			got := tfcognitoidp.SkipFlatteningStringAttributeContraints(tc.configured, tc.input)
 			if got != tc.want {
 				t.Fatalf("skipFlatteningStringAttributeContraints() got %t, want %t\n\n%#v\n\n", got, tc.want, tc.input)
 			}

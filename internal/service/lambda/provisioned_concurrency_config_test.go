@@ -218,7 +218,6 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	filename1 := "test-fixtures/lambdapinpoint.zip"
 	filename2 := "test-fixtures/lambdapinpoint_modified.zip"
-	version2 := acctest.CtTwo
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_lambda_provisioned_concurrency_config.test"
 
