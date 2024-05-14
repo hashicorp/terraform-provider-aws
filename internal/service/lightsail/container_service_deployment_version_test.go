@@ -227,7 +227,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_environment(t *
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "container.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "container.0.environment.A", "a"),
@@ -306,7 +306,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_ports(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "container.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "container.0.ports.80", string(types.ContainerServiceProtocolHttp)),
@@ -387,12 +387,12 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.healthy_threshold", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.interval_seconds", "6"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.path", "/."),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.success_codes", "200"),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.timeout_seconds", "3"),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.unhealthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.timeout_seconds", acctest.CtThree),
+					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.unhealthy_threshold", acctest.CtThree),
 				),
 			},
 			{
@@ -400,7 +400,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceDeploymentVersionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.ContainerServiceDeploymentStateActive)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "container.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_name", containerName2),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.container_port", "80"),
