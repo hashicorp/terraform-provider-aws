@@ -37,7 +37,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
 					},
 				},
@@ -583,7 +583,7 @@ func expandColumnConfiguration(tfMap map[string]interface{}) *quicksight.ColumnC
 		column.FormatConfiguration = expandFormatConfiguration(v)
 	}
 
-	if v, ok := tfMap["role"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRole].(string); ok && v != "" {
 		column.Role = aws.String(v)
 	}
 
@@ -1103,7 +1103,7 @@ func flattenColumnConfigurations(apiObject []*quicksight.ColumnConfiguration) []
 			tfMap["format_configuration"] = flattenFormatConfiguration(column.FormatConfiguration)
 		}
 		if column.Role != nil {
-			tfMap["role"] = aws.StringValue(column.Role)
+			tfMap[names.AttrRole] = aws.StringValue(column.Role)
 		}
 		tfList = append(tfList, tfMap)
 	}
