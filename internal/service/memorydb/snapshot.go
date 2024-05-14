@@ -96,7 +96,7 @@ func ResourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"topic_arn": {
+						names.AttrTopicARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -257,7 +257,7 @@ func flattenClusterConfiguration(v *memorydb.ClusterConfiguration) []interface{}
 		"snapshot_retention_limit": aws.Int64Value(v.SnapshotRetentionLimit),
 		"snapshot_window":          aws.StringValue(v.SnapshotWindow),
 		"subnet_group_name":        aws.StringValue(v.SubnetGroupName),
-		"topic_arn":                aws.StringValue(v.TopicArn),
+		names.AttrTopicARN:         aws.StringValue(v.TopicArn),
 		names.AttrVPCID:            aws.StringValue(v.VpcId),
 	}
 
