@@ -510,7 +510,7 @@ func TestAccBatchComputeEnvironment_CreateEC2DesiredVCPUsEC2KeyPairImageID_compu
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.subnets.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "compute_resources.0.subnets.*", subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.tags.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.type", "EC2"),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_cluster_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", serviceRoleResourceName, names.AttrARN),
