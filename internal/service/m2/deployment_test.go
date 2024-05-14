@@ -150,7 +150,7 @@ func TestAccM2Deployment_update(t *testing.T) {
 				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "application_version", acctest.CtTwo),
 				),
 			},
 			{

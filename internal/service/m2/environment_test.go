@@ -50,7 +50,7 @@ func TestAccM2Environment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_arn"),
@@ -58,9 +58,9 @@ func TestAccM2Environment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "security_group_ids.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.CtZero),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "subnet_ids.#", 0),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccM2Environment_tags(t *testing.T) {
 				Config: testAccEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccM2Environment_tags(t *testing.T) {
 				Config: testAccEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -144,7 +144,7 @@ func TestAccM2Environment_tags(t *testing.T) {
 				Config: testAccEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -187,9 +187,9 @@ func TestAccM2Environment_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -225,7 +225,7 @@ func TestAccM2Environment_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "sat:03:35-sat:05:35"),
 				),
@@ -270,7 +270,7 @@ func TestAccM2Environment_efs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.efs.0.file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.0.mount_point", "/m2/mount/efsexample"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.#", acctest.CtZero),
 				),
 			},
 			{
@@ -305,7 +305,7 @@ func TestAccM2Environment_fsx(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.fsx.0.file_system_id"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.0.mount_point", "/m2/mount/fsxexample"),
 				),
