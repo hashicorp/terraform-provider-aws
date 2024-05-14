@@ -47,7 +47,7 @@ func testAccVocabulary_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrContent, content),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "language_code", languageCode),
+					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, languageCode),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
