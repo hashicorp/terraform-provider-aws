@@ -50,7 +50,7 @@ func ResourceCollaboration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -220,7 +220,7 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrName, collaboration.Name)
 	d.Set(names.AttrDescription, collaboration.Description)
 	d.Set("creator_display_name", collaboration.CreatorDisplayName)
-	d.Set("create_time", collaboration.CreateTime.String())
+	d.Set(names.AttrCreateTime, collaboration.CreateTime.String())
 	d.Set("update_time", collaboration.UpdateTime.String())
 	d.Set("query_log_status", collaboration.QueryLogStatus)
 	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {

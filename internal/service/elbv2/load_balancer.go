@@ -219,7 +219,7 @@ func ResourceLoadBalancer() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -370,7 +370,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Scheme = aws.String(elbv2.LoadBalancerSchemeEnumInternal)
 	}
 
-	if v, ok := d.GetOk("ip_address_type"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddressType); ok {
 		input.IpAddressType = aws.String(v.(string))
 	}
 
@@ -504,7 +504,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
 	d.Set("internal", aws.StringValue(lb.Scheme) == elbv2.LoadBalancerSchemeEnumInternal)
-	d.Set("ip_address_type", lb.IpAddressType)
+	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	lbType := aws.StringValue(lb.Type)
 	d.Set("load_balancer_type", lbType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
@@ -619,9 +619,9 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("ip_address_type") {
+	if d.HasChange(names.AttrIPAddressType) {
 		input := &elbv2.SetIpAddressTypeInput{
-			IpAddressType:   aws.String(d.Get("ip_address_type").(string)),
+			IpAddressType:   aws.String(d.Get(names.AttrIPAddressType).(string)),
 			LoadBalancerArn: aws.String(d.Id()),
 		}
 

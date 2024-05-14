@@ -135,7 +135,7 @@ func TestAccS3ObjectCopy_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccS3ObjectCopy_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tagging_directive", "REPLACE"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -178,7 +178,7 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnCreate(t *testing.T) {
 				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -235,7 +235,7 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -243,7 +243,7 @@ func TestAccS3ObjectCopy_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectCopyConfig_tags1(rName1, names.AttrSource, rName2, names.AttrTarget, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -268,7 +268,7 @@ func TestAccS3ObjectCopy_metadata(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "metadata_directive", "REPLACE"),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "metadata.mk1", "mv1"),
 				),
 			},
@@ -292,11 +292,11 @@ func TestAccS3ObjectCopy_grant(t *testing.T) {
 				Config: testAccObjectCopyConfig_grant(rName1, names.AttrSource, rName2, names.AttrTarget),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "grant.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "1",
+						"permissions.#": acctest.CtOne,
 						names.AttrType:  "Group",
-						"uri":           "http://acs.amazonaws.com/groups/global/AllUsers",
+						names.AttrURI:   "http://acs.amazonaws.com/groups/global/AllUsers",
 					}),
 				),
 			},

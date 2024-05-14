@@ -43,7 +43,7 @@ func ResourceUser() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(appstream.AuthenticationType_Values(), false),
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -156,7 +156,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.Set(names.AttrARN, user.Arn)
 	d.Set("authentication_type", user.AuthenticationType)
-	d.Set("created_time", aws.TimeValue(user.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.TimeValue(user.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrEnabled, user.Enabled)
 	d.Set("first_name", user.FirstName)
 

@@ -142,7 +142,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"ip_address_type": {
+			names.AttrIPAddressType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -271,7 +271,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
-	d.Set("ip_address_type", lb.IpAddressType)
+	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set(names.AttrName, lb.LoadBalancerName)
 	d.Set("internal", aws.StringValue(lb.Scheme) == "internal")
 	d.Set("load_balancer_type", lb.Type)

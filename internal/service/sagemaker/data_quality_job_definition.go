@@ -50,7 +50,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"environment": {
+						names.AttrEnvironment: {
 							Type:         schema.TypeMap,
 							Optional:     true,
 							ForceNew:     true,
@@ -169,7 +169,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"header": {
+															names.AttrHeader: {
 																Type:     schema.TypeBool,
 																Optional: true,
 																ForceNew: true,
@@ -177,7 +177,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 														},
 													},
 												},
-												"json": {
+												names.AttrJSON: {
 													Type:     schema.TypeList,
 													MaxItems: 1,
 													Optional: true,
@@ -341,7 +341,7 @@ func ResourceDataQualityJobDefinition() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"instance_count": {
+									names.AttrInstanceCount: {
 										Type:         schema.TypeInt,
 										Required:     true,
 										ForceNew:     true,
@@ -620,7 +620,7 @@ func flattenDataQualityAppSpecification(config *sagemaker.DataQualityAppSpecific
 	}
 
 	if config.Environment != nil {
-		m["environment"] = aws.StringValueMap(config.Environment)
+		m[names.AttrEnvironment] = aws.StringValueMap(config.Environment)
 	}
 
 	if config.PostAnalyticsProcessorSourceUri != nil {
@@ -740,7 +740,7 @@ func flattenMonitoringDatasetFormat(config *sagemaker.MonitoringDatasetFormat) [
 	}
 
 	if config.Json != nil {
-		m["json"] = flattenMonitoringJSONDatasetFormat(config.Json)
+		m[names.AttrJSON] = flattenMonitoringJSONDatasetFormat(config.Json)
 	}
 
 	return []map[string]interface{}{m}
@@ -754,7 +754,7 @@ func flattenMonitoringCSVDatasetFormat(config *sagemaker.MonitoringCsvDatasetFor
 	m := map[string]interface{}{}
 
 	if config.Header != nil {
-		m["header"] = aws.BoolValue(config.Header)
+		m[names.AttrHeader] = aws.BoolValue(config.Header)
 	}
 
 	return []map[string]interface{}{m}
@@ -874,7 +874,7 @@ func flattenMonitoringClusterConfig(config *sagemaker.MonitoringClusterConfig) [
 	m := map[string]interface{}{}
 
 	if config.InstanceCount != nil {
-		m["instance_count"] = aws.Int64Value(config.InstanceCount)
+		m[names.AttrInstanceCount] = aws.Int64Value(config.InstanceCount)
 	}
 
 	if config.InstanceType != nil {
@@ -959,7 +959,7 @@ func expandDataQualityAppSpecification(configured []interface{}) *sagemaker.Data
 		c.ImageUri = aws.String(v)
 	}
 
-	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrEnvironment].(map[string]interface{}); ok && len(v) > 0 {
 		c.Environment = flex.ExpandStringMap(v)
 	}
 
@@ -1119,7 +1119,7 @@ func expandMonitoringDatasetFormat(configured []interface{}) *sagemaker.Monitori
 		c.Csv = expandMonitoringCSVDatasetFormat(v)
 	}
 
-	if v, ok := m["json"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m[names.AttrJSON].([]interface{}); ok && len(v) > 0 {
 		c.Json = expandMonitoringJSONDatasetFormat(v)
 	}
 
@@ -1157,7 +1157,7 @@ func expandMonitoringCSVDatasetFormat(configured []interface{}) *sagemaker.Monit
 	}
 
 	m := configured[0].(map[string]interface{})
-	if v, ok := m["header"]; ok {
+	if v, ok := m[names.AttrHeader]; ok {
 		c.Header = aws.Bool(v.(bool))
 	}
 
@@ -1248,7 +1248,7 @@ func expandMonitoringClusterConfig(configured []interface{}) *sagemaker.Monitori
 
 	c := &sagemaker.MonitoringClusterConfig{}
 
-	if v, ok := m["instance_count"].(int); ok && v > 0 {
+	if v, ok := m[names.AttrInstanceCount].(int); ok && v > 0 {
 		c.InstanceCount = aws.Int64(int64(v))
 	}
 

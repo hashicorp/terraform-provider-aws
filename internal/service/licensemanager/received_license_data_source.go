@@ -76,7 +76,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 					},
 				},
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
@@ -112,7 +112,7 @@ func DataSourceReceivedLicense() *schema.Resource {
 				Computed: true,
 				Type:     schema.TypeString,
 			},
-			"issuer": {
+			names.AttrIssuer: {
 				Computed: true,
 				Type:     schema.TypeList,
 				Elem: &schema.Resource{
@@ -237,7 +237,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("consumption_configuration", []interface{}{flattenConsumptionConfiguration(out.ConsumptionConfiguration)})
 	d.Set("entitlements", flattenEntitlements(out.Entitlements))
 	d.Set("home_region", out.HomeRegion)
-	d.Set("issuer", []interface{}{flattenIssuer(out.Issuer)})
+	d.Set(names.AttrIssuer, []interface{}{flattenIssuer(out.Issuer)})
 	d.Set("license_arn", out.LicenseArn)
 	d.Set("license_metadata", flattenMetadatas(out.LicenseMetadata))
 	d.Set("license_name", out.LicenseName)
@@ -253,7 +253,7 @@ func dataSourceReceivedLicenseRead(ctx context.Context, d *schema.ResourceData, 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading License Manager Received License (%s): %s", arn, err)
 		}
-		d.Set("create_time", time.Unix(seconds, 0).UTC().Format(time.RFC3339))
+		d.Set(names.AttrCreateTime, time.Unix(seconds, 0).UTC().Format(time.RFC3339))
 	}
 
 	return diags

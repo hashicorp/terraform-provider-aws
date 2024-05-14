@@ -37,14 +37,14 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mount_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "mount_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^nfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^nfs://.+/`)),
 				),
 			},
 			{
@@ -131,7 +131,7 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 				Config: testAccLocationNFSConfig_agentARNsMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "2"),
 				),
 			},
@@ -195,7 +195,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -217,7 +217,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

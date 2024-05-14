@@ -22,7 +22,7 @@ func DataSourceResourceTags() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -35,7 +35,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	resource_id := d.Get("resource_id").(string)
+	resource_id := d.Get(names.AttrResourceID).(string)
 
 	params := &organizations.ListTagsForResourceInput{
 		ResourceId: aws.String(resource_id),

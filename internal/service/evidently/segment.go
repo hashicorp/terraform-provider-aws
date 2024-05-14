@@ -43,7 +43,7 @@ func ResourceSegment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -141,7 +141,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set(names.AttrARN, segment.Arn)
-	d.Set("created_time", aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrCreatedTime, aws.ToTime(segment.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, segment.Description)
 	d.Set("experiment_count", segment.ExperimentCount)
 	d.Set("last_updated_time", aws.ToTime(segment.LastUpdatedTime).Format(time.RFC3339))

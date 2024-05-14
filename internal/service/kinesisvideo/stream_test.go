@@ -84,7 +84,7 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesisvideo", regexache.MustCompile(fmt.Sprintf("stream/terraform-kinesis-video-stream-test-%d/.+", rInt))),
-					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", "1"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention_in_hours", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h264"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, fmt.Sprintf("kinesis-video-device-name-%s", rName1)),
 					resource.TestCheckResourceAttrPair(
@@ -126,7 +126,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 				Config: testAccStreamConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -148,7 +148,7 @@ func TestAccKinesisVideoStream_tags(t *testing.T) {
 				Config: testAccStreamConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

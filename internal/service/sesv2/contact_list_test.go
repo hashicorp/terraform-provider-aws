@@ -103,7 +103,7 @@ func TestAccSESV2ContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_IN"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic1"),
@@ -119,7 +119,7 @@ func TestAccSESV2ContactList_topic(t *testing.T) {
 				Config: testAccContactListConfig_topic2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.default_subscription_status", "OPT_OUT"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.description", names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.display_name", "topic2"),
@@ -146,7 +146,7 @@ func TestAccSESV2ContactList_tags(t *testing.T) {
 				Config: testAccContactListConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactListExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

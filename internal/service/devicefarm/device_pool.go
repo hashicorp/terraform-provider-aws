@@ -61,7 +61,7 @@ func ResourceDevicePool() *schema.Resource {
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -102,7 +102,7 @@ func resourceDevicePoolCreate(ctx context.Context, d *schema.ResourceData, meta 
 	input := &devicefarm.CreateDevicePoolInput{
 		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
-		Rules:      expandDevicePoolRules(d.Get("rule").(*schema.Set)),
+		Rules:      expandDevicePoolRules(d.Get(names.AttrRule).(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -157,7 +157,7 @@ func resourceDevicePoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("project_arn", projectArn)
 
-	if err := d.Set("rule", flattenDevicePoolRules(devicePool.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenDevicePoolRules(devicePool.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -181,8 +181,8 @@ func resourceDevicePoolUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("rule") {
-			input.Rules = expandDevicePoolRules(d.Get("rule").(*schema.Set))
+		if d.HasChange(names.AttrRule) {
+			input.Rules = expandDevicePoolRules(d.Get(names.AttrRule).(*schema.Set))
 		}
 
 		if d.HasChange("max_devices") {

@@ -92,7 +92,7 @@ func ResourceListener() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -143,12 +143,12 @@ func ResourceListener() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"client_secret": {
+									names.AttrClientSecret: {
 										Type:      schema.TypeString,
 										Required:  true,
 										Sensitive: true,
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -158,7 +158,7 @@ func ResourceListener() *schema.Resource {
 										Computed:         true,
 										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
-									"scope": {
+									names.AttrScope: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
@@ -769,7 +769,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.Authen
 		config.OnUnauthenticatedRequest = awstypes.AuthenticateCognitoActionConditionalBehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 
@@ -799,8 +799,8 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap[names.AttrClientID].(string)),
-		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
-		Issuer:                           aws.String(tfMap["issuer"].(string)),
+		ClientSecret:                     aws.String(tfMap[names.AttrClientSecret].(string)),
+		Issuer:                           aws.String(tfMap[names.AttrIssuer].(string)),
 		TokenEndpoint:                    aws.String(tfMap["token_endpoint"].(string)),
 		UserInfoEndpoint:                 aws.String(tfMap["user_info_endpoint"].(string)),
 	}
@@ -809,7 +809,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcAct
 		config.OnUnauthenticatedRequest = awstypes.AuthenticateOidcActionConditionalBehaviorEnum(v)
 	}
 
-	if v, ok := tfMap["scope"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScope].(string); ok && v != "" {
 		config.Scope = aws.String(v)
 	}
 
@@ -1080,10 +1080,10 @@ func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcAction
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
 		names.AttrClientID:                    aws.ToString(config.ClientId),
-		"client_secret":                       clientSecret,
-		"issuer":                              aws.ToString(config.Issuer),
+		names.AttrClientSecret:                clientSecret,
+		names.AttrIssuer:                      aws.ToString(config.Issuer),
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		"scope":                               aws.ToString(config.Scope),
+		names.AttrScope:                       aws.ToString(config.Scope),
 		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
 		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
 		"token_endpoint":                      aws.ToString(config.TokenEndpoint),
@@ -1101,7 +1101,7 @@ func flattenLbListenerActionAuthenticateCognitoConfig(config *awstypes.Authentic
 	m := map[string]interface{}{
 		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
 		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
-		"scope":                               aws.ToString(config.Scope),
+		names.AttrScope:                       aws.ToString(config.Scope),
 		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
 		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
 		"user_pool_arn":                       aws.ToString(config.UserPoolArn),

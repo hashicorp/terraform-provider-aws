@@ -31,7 +31,7 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "control.#", resourceName, "control.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
-						"input_parameter.#":       "1",
+						"input_parameter.#":       acctest.CtOne,
 						"input_parameter.0.name":  "requiredRetentionDays",
 						"input_parameter.0.value": "35",
 					}),
@@ -44,9 +44,9 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:                        "BACKUP_RESOURCES_PROTECTED_BY_BACKUP_PLAN",
-						"scope.#":                             "1",
-						"scope.0.compliance_resource_ids.#":   "1",
-						"scope.0.compliance_resource_types.#": "1",
+						"scope.#":                             acctest.CtOne,
+						"scope.0.compliance_resource_ids.#":   acctest.CtOne,
+						"scope.0.compliance_resource_types.#": acctest.CtOne,
 						"scope.0.compliance_resource_types.0": "EBS",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{

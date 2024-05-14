@@ -336,7 +336,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 100),
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 65),
@@ -927,7 +927,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.GroupAttributeField = aws.String(v)
 	}
 
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		result.Issuer = aws.String(v)
 	}
 
@@ -1134,7 +1134,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.Issuer; v != nil {
-		values["issuer"] = aws.ToString(v)
+		values[names.AttrIssuer] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.SecretManagerArn; v != nil {

@@ -254,12 +254,12 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "1"),
+				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -370,7 +370,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 					testAccCheckGameServerGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", acctest.CtOne),
 				),
 			},
 			{
@@ -435,10 +435,10 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_maxSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_maxSize(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", acctest.CtOne),
 				),
 			},
 			{
@@ -478,10 +478,10 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_minSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_minSize(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", acctest.CtOne),
 				),
 			},
 			{

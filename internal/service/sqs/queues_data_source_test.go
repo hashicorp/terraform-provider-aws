@@ -30,7 +30,7 @@ func TestAccSQSQueuesDataSource_queueNamePrefix(t *testing.T) {
 				Config: testAccQueuesDataSourceConfig_queueNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "queue_urls.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "queue_urls.0", resourceName, names.AttrURL),
 				),
 			},

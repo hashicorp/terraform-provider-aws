@@ -29,4 +29,15 @@ var (
 	ParameterHash                        = parameterHash
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
+
+	DiffVersion                               = diffVersion
+	EngineMemcached                           = engineMemcached
+	EngineRedis                               = engineRedis
+	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
+	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
+	NormalizeEngineVersion                    = normalizeEngineVersion
+	ParamGroupNameRequiresMajorVersionUpgrade = paramGroupNameRequiresMajorVersionUpgrade
+	ValidateClusterEngineVersion              = validateClusterEngineVersion
+	ValidMemcachedVersionString               = validMemcachedVersionString
+	ValidRedisVersionString                   = validRedisVersionString
 )

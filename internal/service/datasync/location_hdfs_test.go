@@ -36,7 +36,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
@@ -46,7 +46,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_krb5_conf_base64"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
 						names.AttrPort: "80",
 					}),
@@ -55,7 +55,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "simple_user", rName),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccDataSyncLocationHDFS_tags(t *testing.T) {
 				Config: testAccLocationHDFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 				Config: testAccLocationHDFSConfig_kerberos(rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "KERBEROS"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
@@ -164,15 +164,15 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_krb5_conf_base64"),
 					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", principal),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
-					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
 						names.AttrPort: "80",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^hdfs://.+/`)),
 				),
 			},
 			{

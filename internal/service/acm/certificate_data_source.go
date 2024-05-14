@@ -34,7 +34,7 @@ func dataSourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,7 +50,7 @@ func dataSourceCertificate() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
 				},
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -115,7 +115,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
-	filterMostRecent := d.Get("most_recent").(bool)
+	filterMostRecent := d.Get(names.AttrMostRecent).(bool)
 	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
 	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
@@ -208,10 +208,10 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if output != nil {
 		d.Set(names.AttrCertificate, output.Certificate)
-		d.Set("certificate_chain", output.CertificateChain)
+		d.Set(names.AttrCertificateChain, output.CertificateChain)
 	} else {
 		d.Set(names.AttrCertificate, nil)
-		d.Set("certificate_chain", nil)
+		d.Set(names.AttrCertificateChain, nil)
 	}
 
 	d.SetId(aws.ToString(matchedCertificate.CertificateArn))

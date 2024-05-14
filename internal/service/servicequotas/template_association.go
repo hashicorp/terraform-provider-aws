@@ -39,7 +39,7 @@ func (r *resourceTemplateAssociation) Schema(ctx context.Context, req resource.S
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"skip_destroy": schema.BoolAttribute{
+			names.AttrSkipDestroy: schema.BoolAttribute{
 				Optional: true,
 			},
 			names.AttrStatus: schema.StringAttribute{

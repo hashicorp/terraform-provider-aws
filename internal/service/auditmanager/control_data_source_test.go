@@ -57,7 +57,7 @@ func TestAccAuditManagerControlDataSource_custom(t *testing.T) {
 				Config: testAccControlDataSourceConfig_custom(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_set_up_option", string(types.SourceSetUpOptionProceduralControlsMapping)),
 					resource.TestCheckResourceAttr(dataSourceName, "control_mapping_sources.0.source_type", string(types.SourceTypeManual)),

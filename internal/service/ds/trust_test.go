@@ -420,7 +420,7 @@ func TestAccDSTrust_ConditionalForwarderIPs(t *testing.T) {
 				Config: testAccTrustConfig_ConditionalForwarderIPs(rName, domainName, domainNameOther),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrustExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conditional_forwarder_ip_addrs.#", acctest.CtOne),
 				),
 			},
 			{

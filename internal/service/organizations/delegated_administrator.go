@@ -49,7 +49,7 @@ func ResourceDelegatedAdministrator() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -127,7 +127,7 @@ func resourceDelegatedAdministratorRead(ctx context.Context, d *schema.ResourceD
 	d.Set(names.AttrAccountID, accountID)
 	d.Set(names.AttrARN, delegatedAccount.Arn)
 	d.Set("delegation_enabled_date", aws.TimeValue(delegatedAccount.DelegationEnabledDate).Format(time.RFC3339))
-	d.Set("email", delegatedAccount.Email)
+	d.Set(names.AttrEmail, delegatedAccount.Email)
 	d.Set("joined_method", delegatedAccount.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(delegatedAccount.JoinedTimestamp).Format(time.RFC3339))
 	d.Set(names.AttrName, delegatedAccount.Name)

@@ -150,7 +150,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 				Config: testAccKxUserConfig_tags1(rName, userName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccFinSpaceKxUser_tags(t *testing.T) {
 				Config: testAccKxUserConfig_tags1(rName, userName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxUserExists(ctx, resourceName, &kxuser),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

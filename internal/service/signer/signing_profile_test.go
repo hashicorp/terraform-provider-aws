@@ -46,7 +46,7 @@ func TestAccSignerSigningProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "platform_display_name"),
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "revocation_record.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.CtOne),
 					resource.TestCheckNoResourceAttr(resourceName, "signing_material"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Active"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -172,7 +172,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				Config: testAccSigningProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -194,7 +194,7 @@ func TestAccSignerSigningProfile_tags(t *testing.T) {
 				Config: testAccSigningProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -221,7 +221,7 @@ func TestAccSignerSigningProfile_signatureValidityPeriod(t *testing.T) {
 				Config: testAccSigningProfileConfig_svp(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.type", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "signature_validity_period.0.value", "10"),
 				),

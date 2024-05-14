@@ -52,7 +52,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					testAccCheckBotNotExists(ctx, testBotID, "1"),
+					testAccCheckBotNotExists(ctx, testBotID, acctest.CtOne),
 
 					resource.TestCheckNoResourceAttr(rName, "abort_statement"),
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
@@ -122,7 +122,7 @@ func testAccBot_createVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v1),
-					testAccCheckBotNotExists(ctx, testBotID, "1"),
+					testAccCheckBotNotExists(ctx, testBotID, acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
 				),
@@ -138,8 +138,8 @@ func testAccBot_createVersion(t *testing.T) {
 					testAccBotConfig_createVersion(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExistsWithVersion(ctx, rName, "1", &v2),
-					resource.TestCheckResourceAttr(rName, names.AttrVersion, "1"),
+					testAccCheckBotExistsWithVersion(ctx, rName, acctest.CtOne, &v2),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
 				),
 			},
@@ -169,8 +169,8 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "abort_statement.#", "1"),
-					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content_type", "PlainText"),
 					resource.TestCheckNoResourceAttr(rName, "abort_statement.0.message.0.group_number"),
@@ -192,10 +192,10 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.#", "2"),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content", "Sorry, I'm not able to assist at this time"),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.content_type", "PlainText"),
-					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.0.group_number", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.content", "Sorry, I'm not able to assist at this time. Good bye."),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.content_type", "PlainText"),
-					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.group_number", "1"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.0.message.1.group_number", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "abort_statement.0.response_card", "Sorry, I'm not able to assist at this time"),
 				),
 			},
@@ -230,10 +230,10 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "clarification_prompt.#", "1"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.max_attempts", "2"),
-					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", "1"),
-					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", "1"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.0.content", "I didn't understand you, what would you like to do?"),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.message.0.content_type", "PlainText"),
 					resource.TestCheckResourceAttr(rName, "clarification_prompt.0.response_card", ""),
@@ -566,7 +566,6 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 
 	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	version := "1"
 	updatedVersion := "2"
 
 	resource.Test(t, resource.TestCase{
@@ -585,13 +584,13 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 					testAccBotAliasConfig_basic(testBotID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBotExistsWithVersion(ctx, botResourceName, version, &v1),
-					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, version),
-					resource.TestCheckResourceAttr(botResourceName, "intent.#", "1"),
-					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
+					testAccCheckBotExistsWithVersion(ctx, botResourceName, acctest.CtOne, &v1),
+					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(botResourceName, "intent.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", acctest.CtOne),
 					testAccCheckBotAliasExists(ctx, botAliasResourceName, &v2),
-					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", version),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, version),
+					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", acctest.CtOne),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -604,10 +603,10 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 					testAccCheckBotExistsWithVersion(ctx, botResourceName, updatedVersion, &v1),
 					resource.TestCheckResourceAttr(botResourceName, names.AttrVersion, updatedVersion),
 					resource.TestCheckResourceAttr(botResourceName, "intent.#", "2"),
-					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", version),
+					resource.TestCheckResourceAttr(botResourceName, "intent.0.intent_version", acctest.CtOne),
 					resource.TestCheckResourceAttr(botResourceName, "intent.1.intent_version", updatedVersion),
 					resource.TestCheckResourceAttr(botAliasResourceName, "bot_version", updatedVersion),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, version),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.CtOne),
 					resource.TestCheckResourceAttr(intentResourceName2, names.AttrVersion, updatedVersion),
 				),
 			},

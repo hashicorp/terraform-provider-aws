@@ -186,7 +186,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -209,7 +209,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -240,7 +240,7 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"associate_public_ip_address": "true",
 					}),
@@ -280,7 +280,7 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 				),
 			},
 			{
@@ -348,7 +348,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*", map[string]string{
 						"overrides.#": "2",
 					}),
@@ -360,7 +360,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*.overrides.*", map[string]string{
 						"instance_requirements.#": "0",
 						names.AttrInstanceType:    "m3.medium",
-						names.AttrPriority:        "1",
+						names.AttrPriority:        acctest.CtOne,
 						"spot_price":              "0.26",
 					}),
 				),
@@ -399,19 +399,19 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*", map[string]string{
-						"overrides.#": "1",
+						"overrides.#": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_template_config.*.overrides.*", map[string]string{
-						"instance_requirements.#":                        "1",
-						"instance_requirements.0.instance_generations.#": "1",
-						"instance_requirements.0.memory_mib.#":           "1",
+						"instance_requirements.#":                        acctest.CtOne,
+						"instance_requirements.0.instance_generations.#": acctest.CtOne,
+						"instance_requirements.0.memory_mib.#":           acctest.CtOne,
 						"instance_requirements.0.memory_mib.0.max":       "50000",
 						"instance_requirements.0.memory_mib.0.min":       "500",
-						"instance_requirements.0.vcpu_count.#":           "1",
+						"instance_requirements.0.vcpu_count.#":           acctest.CtOne,
 						"instance_requirements.0.vcpu_count.0.max":       "8",
-						"instance_requirements.0.vcpu_count.0.min":       "1",
+						"instance_requirements.0.vcpu_count.0.min":       acctest.CtOne,
 						names.AttrInstanceType:                           "",
 					}),
 				),
@@ -450,7 +450,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 				),
 			},
 			{
@@ -465,7 +465,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 					testAccCheckSpotFleetRequestRecreatedConfig(t, &before, &after),
 				),
 			},
@@ -497,7 +497,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 				),
 			},
 			{
@@ -506,7 +506,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					testAccCheckSpotFleetRequestRecreatedConfig(t, &before, &after),
 				),
 			},
@@ -549,7 +549,7 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, validUntil, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -765,7 +765,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 				),
 			},
 			{
@@ -779,7 +779,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					testAccCheckSpotFleetRequestRecreatedConfig(t, &before, &after),
 				),
@@ -905,7 +905,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 				),
 			},
 			{
@@ -1411,10 +1411,10 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/xvdcz",
-						"iops":               "4000",
+						names.AttrIOPS:       "4000",
 						"throughput":         "500",
-						"volume_size":        "15",
-						"volume_type":        "gp3",
+						names.AttrVolumeSize: "15",
+						names.AttrVolumeType: "gp3",
 					}),
 				),
 			},
@@ -1450,10 +1450,10 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
-						"iops":        "4000",
-						"throughput":  "500",
-						"volume_size": "15",
-						"volume_type": "gp3",
+						names.AttrIOPS:       "4000",
+						"throughput":         "500",
+						names.AttrVolumeSize: "15",
+						names.AttrVolumeType: "gp3",
 					}),
 				),
 			},
@@ -1566,8 +1566,8 @@ func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", acctest.CtOne),
 				),
 			},
 			{
@@ -1603,8 +1603,8 @@ func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", acctest.CtOne),
 				),
 			},
 			{
@@ -1723,7 +1723,7 @@ func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_optimized", "false"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.root_block_device.#", "0"),

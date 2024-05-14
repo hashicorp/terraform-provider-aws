@@ -38,7 +38,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
@@ -78,7 +78,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
@@ -118,7 +118,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "adjustable", dataSourceName, "adjustable"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "default_value", dataSourceName, "default_value"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDefaultValue, dataSourceName, names.AttrDefaultValue),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_code", dataSourceName, "quota_code"),
 					resource.TestCheckResourceAttrPair(resourceName, "quota_name", dataSourceName, "quota_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_code", dataSourceName, "service_code"),
@@ -126,7 +126,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrValue, dataSourceName, names.AttrValue),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric", dataSourceName, "usage_metric"),
 					resource.TestCheckResourceAttrPair(resourceName, "usage_metric.0.metric_name", dataSourceName, "usage_metric.0.metric_name"),
-					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "usage_metric.0.metric_dimensions.#", acctest.CtOne),
 					resource.TestCheckNoResourceAttr(resourceName, "request_id"),
 				),
 			},

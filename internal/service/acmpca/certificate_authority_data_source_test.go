@@ -34,7 +34,7 @@ func TestAccACMPCACertificateAuthorityDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_storage_security_standard", resourceName, "key_storage_security_standard"),
 					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
@@ -73,7 +73,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(datasourceName, "certificate_chain", resourceName, "certificate_chain"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate_signing_request", resourceName, "certificate_signing_request"),
 					resource.TestCheckResourceAttrPair(datasourceName, "key_storage_security_standard", resourceName, "key_storage_security_standard"),
 					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),

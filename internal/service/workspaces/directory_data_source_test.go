@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDirectoryDataSource_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDirectoryDataSourceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "alias", resourceName, "alias"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAlias, resourceName, names.AttrAlias),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_id", resourceName, "directory_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_name", resourceName, "directory_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "directory_type", resourceName, "directory_type"),

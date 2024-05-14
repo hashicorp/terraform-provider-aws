@@ -44,7 +44,7 @@ func TestAccDataSyncAgent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_endpoint_id", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVPCEndpointID, ""),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				Config: testAccAgentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccDataSyncAgent_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent3),
 					testAccCheckAgentNotRecreated(&agent2, &agent3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -186,11 +186,11 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 				Config: testAccAgentConfig_vpcEndpointID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &agent),
-					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_arns.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_arns.*", securityGroupResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_arns.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_arns.*", subnetResourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_id", vpcEndpointResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCEndpointID, vpcEndpointResourceName, names.AttrID),
 				),
 			},
 			{

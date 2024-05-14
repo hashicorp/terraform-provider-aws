@@ -73,7 +73,7 @@ func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_type", "engine-log"),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.destination_type", "kinesis-firehose"),
-					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", "json"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.1.log_type", "slow-log"),
 				),
 			},

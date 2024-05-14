@@ -38,7 +38,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -64,7 +64,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -83,7 +83,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de/updated"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de/updated"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -102,7 +102,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -117,7 +117,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -151,7 +151,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -170,7 +170,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_BINARY"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -188,7 +188,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -228,7 +228,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -236,7 +236,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Foo", "'Bar'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.param", "method.request.path.param"),
-					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.param"),
 					resource.TestCheckResourceAttr(resourceName, "cache_namespace", "foobar"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
@@ -272,7 +272,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -280,7 +280,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Authorization", "'static'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.X-Foo", "'Bar'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.param", "method.request.path.param"),
-					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_key_parameters.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cache_key_parameters.*", "method.request.path.param"),
 					resource.TestCheckResourceAttr(resourceName, "cache_namespace", "foobar"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", "2"),
@@ -294,7 +294,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
 					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
@@ -383,7 +383,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
 				),
 			},
@@ -397,7 +397,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "false"),
 				),
 			},
@@ -438,7 +438,7 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *apigateway.
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+		output, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 		if err != nil {
 			return err
@@ -459,7 +459,7 @@ func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
+			_, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["rest_api_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -483,7 +483,7 @@ func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["http_method"]), nil
+		return fmt.Sprintf("%s/%s/%s", rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes[names.AttrResourceID], rs.Primary.Attributes["http_method"]), nil
 	}
 }
 

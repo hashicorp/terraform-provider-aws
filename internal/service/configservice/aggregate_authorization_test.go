@@ -89,7 +89,7 @@ func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_tags1(accountID, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 				Config: testAccAggregateAuthorizationConfig_tags1(accountID, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAggregateAuthorizationExists(ctx, resourceName, &aa),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

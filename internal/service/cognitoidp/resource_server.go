@@ -46,7 +46,7 @@ func resourceResourceServer() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"scope": {
+			names.AttrScope: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 100,
@@ -94,7 +94,7 @@ func resourceResourceServerCreate(ctx context.Context, d *schema.ResourceData, m
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	if v, ok := d.GetOk("scope"); ok {
+	if v, ok := d.GetOk(names.AttrScope); ok {
 		configs := v.(*schema.Set).List()
 		params.Scopes = expandServerScope(configs)
 	}
@@ -155,7 +155,7 @@ func resourceResourceServerRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("user_pool_id", resp.ResourceServer.UserPoolId)
 
 	scopes := flattenServerScope(resp.ResourceServer.Scopes)
-	if err := d.Set("scope", scopes); err != nil {
+	if err := d.Set(names.AttrScope, scopes); err != nil {
 		return sdkdiag.AppendErrorf(diags, "Failed setting schema: %s", err)
 	}
 
@@ -182,7 +182,7 @@ func resourceResourceServerUpdate(ctx context.Context, d *schema.ResourceData, m
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
 		Identifier: aws.String(identifier),
 		Name:       aws.String(d.Get(names.AttrName).(string)),
-		Scopes:     expandServerScope(d.Get("scope").(*schema.Set).List()),
+		Scopes:     expandServerScope(d.Get(names.AttrScope).(*schema.Set).List()),
 		UserPoolId: aws.String(userPoolID),
 	}
 

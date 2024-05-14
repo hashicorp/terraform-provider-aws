@@ -138,7 +138,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 				Config: testAccConfiguredTableConfig_allowedColumns("[\"my_column_1\"]", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfiguredTableRecreated(resourceName, &configuredTable),
-					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allowed_columns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "allowed_columns.0", "my_column_1"),
 				),
 			},

@@ -37,7 +37,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("thinggroup/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.parent_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.root_to_parent_thing_groups.#", "0"),
@@ -45,7 +45,7 @@ func TestAccIoTThingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parent_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "properties.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -97,7 +97,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 				Config: testAccThingGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -119,7 +119,7 @@ func TestAccIoTThingGroup_tags(t *testing.T) {
 				Config: testAccThingGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccIoTThingGroup_parentGroup(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_group_name", parentResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.parent_group_name", parentResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metadata.0.root_to_parent_groups.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "metadata.0.root_to_parent_groups.0.group_arn", grandparentResourceName, names.AttrARN),
@@ -180,12 +180,12 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 				Config: testAccThingGroupConfig_properties(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 1"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -197,8 +197,8 @@ func TestAccIoTThingGroup_properties(t *testing.T) {
 				Config: testAccThingGroupConfig_propertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.attribute_payload.0.attributes.Key3", "Value3"),

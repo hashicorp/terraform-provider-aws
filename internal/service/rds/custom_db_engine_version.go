@@ -53,7 +53,7 @@ func ResourceCustomDBEngineVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -241,7 +241,7 @@ func resourceCustomDBEngineVersionRead(ctx context.Context, d *schema.ResourceDa
 
 	d.Set(names.AttrARN, out.DBEngineVersionArn)
 	if out.CreateTime != nil {
-		d.Set("create_time", out.CreateTime.Format(time.RFC3339))
+		d.Set(names.AttrCreateTime, out.CreateTime.Format(time.RFC3339))
 	}
 	d.Set("database_installation_files_s3_bucket_name", out.DatabaseInstallationFilesS3BucketName)
 	d.Set("database_installation_files_s3_prefix", out.DatabaseInstallationFilesS3Prefix)

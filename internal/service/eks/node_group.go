@@ -72,7 +72,7 @@ func resourceNodeGroup() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[types.CapacityTypes](),
 			},
-			"cluster_name": {
+			names.AttrClusterName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -100,7 +100,7 @@ func resourceNodeGroup() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"launch_template": {
+			names.AttrLaunchTemplate: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -178,7 +178,7 @@ func resourceNodeGroup() *schema.Resource {
 					},
 				},
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -305,7 +305,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName := d.Get("cluster_name").(string)
+	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
 	groupID := NodeGroupCreateResourceID(clusterName, nodeGroupName)
 	input := &eks.CreateNodegroupInput{
@@ -337,7 +337,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Labels = flex.ExpandStringValueMap(v)
 	}
 
-	if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
+	if v := d.Get(names.AttrLaunchTemplate).([]interface{}); len(v) > 0 {
 		input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 	}
 
@@ -405,11 +405,11 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("ami_type", nodeGroup.AmiType)
 	d.Set(names.AttrARN, nodeGroup.NodegroupArn)
 	d.Set("capacity_type", nodeGroup.CapacityType)
-	d.Set("cluster_name", nodeGroup.ClusterName)
+	d.Set(names.AttrClusterName, nodeGroup.ClusterName)
 	d.Set("disk_size", nodeGroup.DiskSize)
 	d.Set("instance_types", nodeGroup.InstanceTypes)
 	d.Set("labels", nodeGroup.Labels)
-	if err := d.Set("launch_template", flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
+	if err := d.Set(names.AttrLaunchTemplate, flattenLaunchTemplateSpecification(nodeGroup.LaunchTemplate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting launch_template: %s", err)
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
@@ -419,7 +419,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting remote_access: %s", err)
 	}
-	if err := d.Set("resources", flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
+	if err := d.Set(names.AttrResources, flattenNodeGroupResources(nodeGroup.Resources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 	}
 	if nodeGroup.ScalingConfig != nil {
@@ -459,7 +459,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	// Do any version update first.
-	if d.HasChanges("launch_template", "release_version", names.AttrVersion) {
+	if d.HasChanges(names.AttrLaunchTemplate, "release_version", names.AttrVersion) {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(id.UniqueId()),
 			ClusterName:        aws.String(clusterName),
@@ -467,7 +467,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
-		if v := d.Get("launch_template").([]interface{}); len(v) > 0 {
+		if v := d.Get(names.AttrLaunchTemplate).([]interface{}); len(v) > 0 {
 			input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 
 			// When returning Launch Template information, the API returns all

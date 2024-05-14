@@ -129,7 +129,7 @@ func DataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -284,7 +284,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if len(filteredImages) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
@@ -363,11 +363,11 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 			ebs := map[string]interface{}{
 				names.AttrDeleteOnTermination: fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
 				names.AttrEncrypted:           fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
-				"iops":                        fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				names.AttrIOPS:                fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
 				"throughput":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
-				"volume_size":                 fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				names.AttrVolumeSize:          fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
 				"snapshot_id":                 aws.StringValue(v.Ebs.SnapshotId),
-				"volume_type":                 aws.StringValue(v.Ebs.VolumeType),
+				names.AttrVolumeType:          aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
@@ -413,10 +413,10 @@ func flattenAMIStateReason(m *ec2.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
 	if m != nil {
 		s["code"] = aws.StringValue(m.Code)
-		s["message"] = aws.StringValue(m.Message)
+		s[names.AttrMessage] = aws.StringValue(m.Message)
 	} else {
 		s["code"] = "UNSET"
-		s["message"] = "UNSET"
+		s[names.AttrMessage] = "UNSET"
 	}
 	return s
 }
@@ -431,9 +431,9 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 			e := d.(map[string]interface{})
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrDeleteOnTermination].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrEncrypted].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["iops"].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
-			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrIOPS].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeSize].(string)))
+			buf.WriteString(fmt.Sprintf("%s-", e[names.AttrVolumeType].(string)))
 		}
 	}
 	if d, ok := m["no_device"]; ok {

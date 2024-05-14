@@ -124,7 +124,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -311,7 +311,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 		}
 		if r.GatewayId != nil {
 			if strings.HasPrefix(*r.GatewayId, "vpce-") {
-				m["vpc_endpoint_id"] = aws.StringValue(r.GatewayId)
+				m[names.AttrVPCEndpointID] = aws.StringValue(r.GatewayId)
 			} else {
 				m["gateway_id"] = aws.StringValue(r.GatewayId)
 			}

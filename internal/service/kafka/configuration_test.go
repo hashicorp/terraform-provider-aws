@@ -39,7 +39,7 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kafka", regexache.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "latest_revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(`auto.create.topics.enable = true`)),
 				),

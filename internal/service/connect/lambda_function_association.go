@@ -29,7 +29,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"function_arn": {
+			names.AttrFunctionARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -50,7 +50,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get(names.AttrInstanceID).(string)
-	functionArn := d.Get("function_arn").(string)
+	functionArn := d.Get(names.AttrFunctionARN).(string)
 
 	input := &connect.AssociateLambdaFunctionInput{
 		InstanceId:  aws.String(instanceId),
@@ -90,7 +90,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "finding Connect Lambda Function Association by Function ARN (%s): %s", functionArn, err)
 	}
 
-	d.Set("function_arn", lfaArn)
+	d.Set(names.AttrFunctionARN, lfaArn)
 	d.Set(names.AttrInstanceID, instanceID)
 
 	return diags

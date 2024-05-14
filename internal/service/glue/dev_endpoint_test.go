@@ -72,7 +72,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 				Config: testAccDevEndpointConfig_arguments(rName, "--arg1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1"),
 				),
 			},
@@ -94,7 +94,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 				Config: testAccDevEndpointConfig_arguments(rName, "--arg2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "arguments.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckDevEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDevEndpointConfig_version(rName, "1"),
+				Config:      testAccDevEndpointConfig_version(rName, acctest.CtOne),
 				ExpectError: regexache.MustCompile(`must match version pattern X.X`),
 			},
 			{
@@ -324,14 +324,14 @@ func TestAccGlueDevEndpoint_publicKey(t *testing.T) {
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey1),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKey(rName, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_key", publicKey2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPublicKey, publicKey2),
 				),
 			},
 			{
@@ -450,7 +450,7 @@ func TestAccGlueDevEndpoint_SubnetID_securityGroupIDs(t *testing.T) {
 				Config: testAccDevEndpointConfig_subnetIDSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, "aws_subnet.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "aws_subnet.test", names.AttrAvailabilityZone),
@@ -482,7 +482,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Config: testAccDevEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -504,7 +504,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Config: testAccDevEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

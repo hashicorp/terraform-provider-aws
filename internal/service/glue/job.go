@@ -164,7 +164,7 @@ func ResourceJob() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"timeout": {
+			names.AttrTimeout: {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
@@ -247,7 +247,7 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.SecurityConfiguration = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("timeout"); ok {
+	if v, ok := d.GetOk(names.AttrTimeout); ok {
 		input.Timeout = aws.Int64(int64(v.(int)))
 	}
 
@@ -313,7 +313,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set(names.AttrRoleARN, job.Role)
 	d.Set("security_configuration", job.SecurityConfiguration)
-	d.Set("timeout", job.Timeout)
+	d.Set(names.AttrTimeout, job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
 	return diags
@@ -379,7 +379,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("timeout"); ok {
+		if v, ok := d.GetOk(names.AttrTimeout); ok {
 			jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 		}
 

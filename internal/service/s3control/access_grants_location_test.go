@@ -87,7 +87,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -109,7 +109,7 @@ func testAccAccessGrantsLocation_tags(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -132,7 +132,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},
@@ -145,7 +145,7 @@ func testAccAccessGrantsLocation_update(t *testing.T) {
 				Config: testAccAccessGrantsLocationConfig_customLocationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", "aws_iam_role.test2", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrIAMRoleARN, "aws_iam_role.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "location_scope", fmt.Sprintf("s3://%s/prefixA*", rName)),
 				),
 			},

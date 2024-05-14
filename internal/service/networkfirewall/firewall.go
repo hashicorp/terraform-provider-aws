@@ -127,7 +127,7 @@ func ResourceFirewall() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -530,7 +530,7 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 		mapping := &networkfirewall.SubnetMapping{
 			SubnetId: aws.String(tfMap[names.AttrSubnetID].(string)),
 		}
-		if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 			mapping.IPAddressType = aws.String(v)
 		}
 		mappings = append(mappings, mapping)
@@ -600,8 +600,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			names.AttrSubnetID: aws.StringValue(s.SubnetId),
-			"ip_address_type":  aws.StringValue(s.IPAddressType),
+			names.AttrSubnetID:      aws.StringValue(s.SubnetId),
+			names.AttrIPAddressType: aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -619,7 +619,7 @@ func subnetMappingsHash(v interface{}) int {
 	if id, ok := tfMap[names.AttrSubnetID].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
-	if id, ok := tfMap["ip_address_type"].(string); ok {
+	if id, ok := tfMap[names.AttrIPAddressType].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
 

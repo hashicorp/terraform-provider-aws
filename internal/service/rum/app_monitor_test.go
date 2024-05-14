@@ -36,14 +36,14 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", acctest.CtOne),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "app_monitor_configuration.0.session_sample_rate", "0.1"),
 					resource.TestCheckResourceAttrSet(resourceName, "app_monitor_id"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rum", fmt.Sprintf("appmonitor/%s", rName)),
@@ -64,7 +64,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", acctest.CtOne),
 				),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
 			},
@@ -100,7 +100,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 				Config: testAccAppMonitorConfig_customEvents(rName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "DISABLED"),
 				),
 			},
@@ -108,7 +108,7 @@ func TestAccRUMAppMonitor_customEvents(t *testing.T) {
 				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 				Config: testAccAppMonitorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccRUMAppMonitor_tags(t *testing.T) {
 				Config: testAccAppMonitorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

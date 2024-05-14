@@ -167,7 +167,7 @@ func resourceBucket() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"permissions": {
+						names.AttrPermissions: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Set:      schema.HashString,
@@ -185,7 +185,7 @@ func resourceBucket() *schema.Resource {
 								types.TypeGroup,
 							), false),
 						},
-						"uri": {
+						names.AttrURI: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -338,7 +338,7 @@ func resourceBucket() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 							Deprecated:       "Use the top-level parameter object_lock_enabled instead",
 						},
-						"rule": {
+						names.AttrRule: {
 							Type:       schema.TypeList,
 							Optional:   true,
 							Deprecated: "Use the aws_s3_bucket_object_lock_configuration resource instead",
@@ -408,7 +408,7 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "Use the aws_s3_bucket_replication_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role": {
+						names.AttrRole: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -436,7 +436,7 @@ func resourceBucket() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"owner": {
+															names.AttrOwner: {
 																Type:             schema.TypeString,
 																Required:         true,
 																ValidateDiagFunc: enum.Validate[types.OwnerOverride](),
@@ -588,7 +588,7 @@ func resourceBucket() *schema.Resource {
 				Deprecated: "Use the aws_s3_bucket_server_side_encryption_configuration resource instead",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"rule": {
+						names.AttrRule: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
@@ -1988,7 +1988,7 @@ func expandBucketGrants(l []interface{}) []types.Grant {
 			continue
 		}
 
-		if v, ok := tfMap["permissions"].(*schema.Set); ok {
+		if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok {
 			for _, rawPermission := range v.List() {
 				permission, ok := rawPermission.(string)
 				if !ok {
@@ -2005,7 +2005,7 @@ func expandBucketGrants(l []interface{}) []types.Grant {
 					grantee.Type = types.Type(v)
 				}
 
-				if v, ok := tfMap["uri"].(string); ok && v != "" {
+				if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 					grantee.URI = aws.String(v)
 				}
 
@@ -2030,7 +2030,7 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 	getGrant := func(grants []interface{}, grantee map[string]interface{}) (interface{}, bool) {
 		for _, grant := range grants {
 			tfMap := grant.(map[string]interface{})
-			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap["uri"] == grantee["uri"] && tfMap["permissions"].(*schema.Set).Len() > 0 {
+			if tfMap[names.AttrType] == grantee[names.AttrType] && tfMap[names.AttrID] == grantee[names.AttrID] && tfMap[names.AttrURI] == grantee[names.AttrURI] && tfMap[names.AttrPermissions].(*schema.Set).Len() > 0 {
 				return grant, true
 			}
 		}
@@ -2051,13 +2051,13 @@ func flattenBucketGrants(apiObject *s3.GetBucketAclOutput) []interface{} {
 		}
 
 		if grantee.URI != nil {
-			m["uri"] = aws.ToString(grantee.URI)
+			m[names.AttrURI] = aws.ToString(grantee.URI)
 		}
 
 		if v, ok := getGrant(results, m); ok {
-			v.(map[string]interface{})["permissions"].(*schema.Set).Add(string(apiObject.Permission))
+			v.(map[string]interface{})[names.AttrPermissions].(*schema.Set).Add(string(apiObject.Permission))
 		} else {
-			m["permissions"] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
+			m[names.AttrPermissions] = schema.NewSet(schema.HashString, []interface{}{string(apiObject.Permission)})
 			results = append(results, m)
 		}
 	}
@@ -2427,7 +2427,7 @@ func expandBucketReplicationConfiguration(ctx context.Context, l []interface{}) 
 
 	apiObject := &types.ReplicationConfiguration{}
 
-	if v, ok := tfMap["role"].(string); ok {
+	if v, ok := tfMap[names.AttrRole].(string); ok {
 		apiObject.Role = aws.String(v)
 	}
 
@@ -2544,7 +2544,7 @@ func expandBucketDestination(l []interface{}) *types.Destination {
 		tfMap := v[0].(map[string]interface{})
 
 		apiObject.AccessControlTranslation = &types.AccessControlTranslation{
-			Owner: types.OwnerOverride(tfMap["owner"].(string)),
+			Owner: types.OwnerOverride(tfMap[names.AttrOwner].(string)),
 		}
 	}
 
@@ -2609,7 +2609,7 @@ func flattenBucketReplicationConfiguration(ctx context.Context, apiObject *types
 	m := make(map[string]interface{})
 
 	if apiObject.Role != nil {
-		m["role"] = aws.ToString(apiObject.Role)
+		m[names.AttrRole] = aws.ToString(apiObject.Role)
 	}
 
 	if len(apiObject.Rules) > 0 {
@@ -2678,7 +2678,7 @@ func flattenBucketDestination(dest *types.Destination) []interface{} {
 
 	if apiObject := dest.AccessControlTranslation; apiObject != nil {
 		tfMap := map[string]interface{}{
-			"owner": apiObject.Owner,
+			names.AttrOwner: apiObject.Owner,
 		}
 
 		m["access_control_translation"] = []interface{}{tfMap}
@@ -2788,7 +2788,7 @@ func expandBucketServerSideEncryptionRules(l []interface{}) []types.ServerSideEn
 
 	var rules []types.ServerSideEncryptionRule
 
-	if l, ok := tfMap["rule"].([]interface{}); ok && len(l) > 0 {
+	if l, ok := tfMap[names.AttrRule].([]interface{}); ok && len(l) > 0 {
 		for _, tfMapRaw := range l {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
@@ -2841,7 +2841,7 @@ func flattenBucketServerSideEncryptionConfiguration(apiObject *types.ServerSideE
 	}
 
 	m := map[string]interface{}{
-		"rule": flattenBucketServerSideEncryptionRules(apiObject.Rules),
+		names.AttrRule: flattenBucketServerSideEncryptionRules(apiObject.Rules),
 	}
 
 	return []interface{}{m}
@@ -2892,7 +2892,7 @@ func expandBucketObjectLockConfiguration(l []interface{}) *types.ObjectLockConfi
 		apiObject.ObjectLockEnabled = types.ObjectLockEnabled(v)
 	}
 
-	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrRule].([]interface{}); ok && len(v) > 0 {
 		tfMap := v[0].(map[string]interface{})
 
 		if v, ok := tfMap["default_retention"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -2938,7 +2938,7 @@ func flattenObjectLockConfiguration(apiObject *types.ObjectLockConfiguration) []
 			},
 		}
 
-		m["rule"] = []interface{}{tfMap}
+		m[names.AttrRule] = []interface{}{tfMap}
 	}
 
 	return []interface{}{m}

@@ -71,7 +71,7 @@ func ResourcePlan() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -194,7 +194,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		BackupPlan: &backup.PlanInput{
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			BackupPlanName:         aws.String(name),
-			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 		},
 		BackupPlanTags: getTagsIn(ctx),
 	}
@@ -233,7 +233,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set(names.AttrARN, output.BackupPlanArn)
 	d.Set(names.AttrName, output.BackupPlan.BackupPlanName)
-	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+	if err := d.Set(names.AttrRule, flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set(names.AttrVersion, output.VersionId)
@@ -245,13 +245,13 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.HasChanges("rule", "advanced_backup_setting") {
+	if d.HasChanges(names.AttrRule, "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 				BackupPlanName:         aws.String(d.Get(names.AttrName).(string)),
-				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
+				Rules:                  expandPlanRules(ctx, d.Get(names.AttrRule).(*schema.Set)),
 			},
 		}
 

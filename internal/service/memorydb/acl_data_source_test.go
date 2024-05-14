@@ -35,7 +35,7 @@ func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "user_names.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "user_names.*", resourceName, "user_names.0"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "user_names.*", resourceName, "user_names.1"),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 				),
 			},

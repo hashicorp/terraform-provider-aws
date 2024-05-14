@@ -103,7 +103,7 @@ func resourceServer() *schema.Resource {
 							Elem:          &schema.Schema{Type: schema.TypeString},
 							ConflictsWith: []string{"endpoint_details.0.vpc_endpoint_id"},
 						},
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:          schema.TypeString,
 							Optional:      true,
 							Computed:      true,
@@ -867,7 +867,7 @@ func expandEndpointDetails(tfMap map[string]interface{}) *transfer.EndpointDetai
 		apiObject.SubnetIds = flex.ExpandStringSet(v)
 	}
 
-	if v, ok := tfMap["vpc_endpoint_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrVPCEndpointID].(string); ok && v != "" {
 		apiObject.VpcEndpointId = aws.String(v)
 	}
 
@@ -900,7 +900,7 @@ func flattenEndpointDetails(apiObject *transfer.EndpointDetails, securityGroupID
 	}
 
 	if v := apiObject.VpcEndpointId; v != nil {
-		tfMap["vpc_endpoint_id"] = aws.StringValue(v)
+		tfMap[names.AttrVPCEndpointID] = aws.StringValue(v)
 	}
 
 	if v := apiObject.VpcId; v != nil {

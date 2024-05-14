@@ -48,7 +48,7 @@ func TestAccVPCNetworkACLsDataSource_filter(t *testing.T) {
 			{
 				Config: testAccVPCNetworkACLsDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
 				),
 			},
 		},

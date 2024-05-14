@@ -60,7 +60,7 @@ func resourceRepository() *schema.Resource {
 							Default:          types.EncryptionTypeAes256,
 							ValidateDiagFunc: enum.Validate[types.EncryptionType](),
 						},
-						"kms_key": {
+						names.AttrKMSKey: {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -325,7 +325,7 @@ func expandRepositoryEncryptionConfiguration(data []interface{}) *types.Encrypti
 	config := &types.EncryptionConfiguration{
 		EncryptionType: types.EncryptionType((ec["encryption_type"].(string))),
 	}
-	if v, ok := ec["kms_key"]; ok {
+	if v, ok := ec[names.AttrKMSKey]; ok {
 		if s := v.(string); s != "" {
 			config.KmsKey = aws.String(v.(string))
 		}
@@ -340,7 +340,7 @@ func flattenRepositoryEncryptionConfiguration(ec *types.EncryptionConfiguration)
 
 	config := map[string]interface{}{
 		"encryption_type": ec.EncryptionType,
-		"kms_key":         aws.ToString(ec.KmsKey),
+		names.AttrKMSKey:  aws.ToString(ec.KmsKey),
 	}
 
 	return []map[string]interface{}{

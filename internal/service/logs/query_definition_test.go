@@ -152,7 +152,7 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, queryName),
-					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_names.0", "aws_cloudwatch_log_group.test.0", names.AttrName),
 				),
 			},

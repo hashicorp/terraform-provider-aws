@@ -87,7 +87,7 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 				Config: testAccCoreNetworkConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 				Config: testAccCoreNetworkConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
 						"shared_segments.#": "0",
@@ -215,7 +215,7 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *test
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.AlternateRegion(),
 						names.AttrName:      "segment",
 						"shared_segments.#": "0",
@@ -355,7 +355,7 @@ func TestAccNetworkManagerCoreNetwork_withoutPolicyDocumentUpdateToCreateBasePol
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
-						"edge_locations.#":  "1",
+						"edge_locations.#":  acctest.CtOne,
 						"edge_locations.0":  acctest.Region(),
 						names.AttrName:      "segment",
 						"shared_segments.#": "0",

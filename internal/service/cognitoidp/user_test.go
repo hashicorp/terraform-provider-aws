@@ -218,7 +218,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.one", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", "2"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
 				),

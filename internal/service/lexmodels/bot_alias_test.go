@@ -107,7 +107,7 @@ func testAccBotAlias_botVersion(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "bot_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", acctest.CtOne),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						names.AttrDestination: "CLOUDWATCH_LOGS",
 						"log_type":            "TEXT",
@@ -200,7 +200,7 @@ func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 					testAccCheckBotAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bot_version", tflexmodels.BotVersionLatest),
 					resource.TestCheckResourceAttrPair(resourceName, "conversation_logs.0.iam_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "conversation_logs.0.log_settings.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "conversation_logs.0.log_settings.*", map[string]string{
 						names.AttrDestination: "S3",
 						"log_type":            "AUDIO",

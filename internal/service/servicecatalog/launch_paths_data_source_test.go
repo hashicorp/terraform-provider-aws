@@ -32,7 +32,7 @@ func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "accept_language", "en"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "product_id", resourceNameProduct, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "summaries.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "summaries.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "summaries.0.name", resourceNamePortfolio, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "summaries.0.path_id"),
 				),

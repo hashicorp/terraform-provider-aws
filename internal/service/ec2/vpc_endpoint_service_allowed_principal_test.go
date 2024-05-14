@@ -63,7 +63,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_multiple(t *testing.T) {
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_endpoint_service_id", "aws_vpc_endpoint_service.test", names.AttrID),
-					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", "1"),
+					resource.TestCheckResourceAttr(serviceResourceName, "allowed_principals.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
 			},
@@ -88,7 +88,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_tags(t *testing.T) {
 				Config: testAccVPCEndpointServiceAllowedPrincipalConfig_tag(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(tagResourceName, names.AttrResourceID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),
@@ -160,7 +160,7 @@ func TestAccVPCEndpointServiceAllowedPrincipal_migrateAndTag(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointServiceAllowedPrincipalExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^vpce-svc-perm-\w{17}$`)),
-					resource.TestCheckResourceAttrPair(tagResourceName, "resource_id", resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(tagResourceName, names.AttrResourceID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrKey, "Name"),
 					resource.TestCheckResourceAttr(tagResourceName, names.AttrValue, rName),
 				),

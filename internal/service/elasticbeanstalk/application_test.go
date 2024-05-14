@@ -91,7 +91,7 @@ func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccElasticBeanstalkApplication_tags(t *testing.T) {
 				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 				Config: testAccApplicationConfig_maxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "0"),
@@ -196,7 +196,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 				Config: testAccApplicationConfig_maxCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "10"),
@@ -214,7 +214,7 @@ func TestAccElasticBeanstalkApplication_appVersionLifecycle(t *testing.T) {
 				Config: testAccApplicationConfig_maxAge(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "appversion_lifecycle.0.service_role", "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_age_in_days", "90"),
 					resource.TestCheckResourceAttr(resourceName, "appversion_lifecycle.0.max_count", "0"),

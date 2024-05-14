@@ -99,7 +99,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"iops": {
+						names.AttrIOPS: {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
@@ -268,7 +268,7 @@ func resourceOpenZFSFileSystem() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(64, 512*1024),
 			},
-			"storage_type": {
+			names.AttrStorageType: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -338,7 +338,7 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 		if len(diskConfiguration.([]interface{})) > 0 {
 			m := diskConfiguration.([]interface{})[0].(map[string]interface{})
 
-			if v, ok := m["iops"].(int); ok {
+			if v, ok := m[names.AttrIOPS].(int); ok {
 				if deploymentType == fsx.OpenZFSDeploymentTypeSingleAz1 {
 					if v < 0 || v > 160000 {
 						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 160000) when deployment_type (%s), got %d", fsx.OpenZFSDeploymentTypeSingleAz1, v)
@@ -367,7 +367,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
-		StorageType:     aws.String(d.Get("storage_type").(string)),
+		StorageType:     aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:       flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
@@ -377,7 +377,7 @@ func resourceOpenZFSFileSystemCreate(ctx context.Context, d *schema.ResourceData
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 		},
-		StorageType: aws.String(d.Get("storage_type").(string)),
+		StorageType: aws.String(d.Get(names.AttrStorageType).(string)),
 		SubnetIds:   flex.ExpandStringList(d.Get(names.AttrSubnetIDs).([]interface{})),
 		Tags:        getTagsIn(ctx),
 	}
@@ -508,7 +508,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("root_volume_id", rootVolumeID)
 	d.Set("route_table_ids", aws.StringValueSlice(openZFSConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
-	d.Set("storage_type", filesystem.StorageType)
+	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(filesystem.SubnetIds))
 	d.Set("throughput_capacity", openZFSConfig.ThroughputCapacity)
 	d.Set(names.AttrVPCID, filesystem.VpcId)
@@ -669,7 +669,7 @@ func expandDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {
 		out.Mode = aws.String(v)
 	}
 
-	if v, ok := conf["iops"].(int); ok {
+	if v, ok := conf[names.AttrIOPS].(int); ok {
 		out.Iops = aws.Int64(int64(v))
 	}
 
@@ -754,7 +754,7 @@ func flattenDiskIopsConfiguration(rs *fsx.DiskIopsConfiguration) []interface{} {
 		m[names.AttrMode] = aws.StringValue(rs.Mode)
 	}
 	if rs.Iops != nil {
-		m["iops"] = aws.Int64Value(rs.Iops)
+		m[names.AttrIOPS] = aws.Int64Value(rs.Iops)
 	}
 
 	return []interface{}{m}

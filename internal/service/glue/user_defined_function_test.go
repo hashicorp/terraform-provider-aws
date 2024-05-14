@@ -77,7 +77,7 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtOne),
 				),
 			},
 			{
@@ -96,7 +96,7 @@ func TestAccGlueUserDefinedFunction_Resource_uri(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_resourceURI1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", acctest.CtOne),
 				),
 			},
 		},

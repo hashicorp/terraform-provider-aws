@@ -28,8 +28,8 @@ func TestAccImageBuilderImagePipelinesDataSource_filter(t *testing.T) {
 			{
 				Config: testAccImagePipelinesDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arns.0", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "names.0", resourceName, names.AttrName),
 				),

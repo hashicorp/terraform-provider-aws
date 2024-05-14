@@ -69,7 +69,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName1),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccRoute53ResolverFirewallDomainList_domains(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "domains.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domains.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "domains.*", domainName2),
 				),
 			},
@@ -140,7 +140,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccRoute53ResolverFirewallDomainList_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDomainListExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

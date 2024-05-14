@@ -39,10 +39,10 @@ func TestAccLexModelsSlotType_basic(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, "1"),
+					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, "create_version", "false"),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "lilies",
 					}),
@@ -85,7 +85,7 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, "1"),
+					testAccCheckSlotTypeNotExists(ctx, testSlotTypeID, acctest.CtOne),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.SlotTypeVersionLatest),
 				),
 			},
@@ -99,8 +99,8 @@ func TestAccLexModelsSlotType_createVersion(t *testing.T) {
 				Config: testAccSlotTypeConfig_withVersion(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					testAccCheckSlotTypeExistsWithVersion(ctx, rName, "1", &v),
-					resource.TestCheckResourceAttr(rName, names.AttrVersion, "1"),
+					testAccCheckSlotTypeExistsWithVersion(ctx, rName, acctest.CtOne, &v),
+					resource.TestCheckResourceAttr(rName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -177,7 +177,7 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.CtOne),
 				),
 			},
 			{
@@ -335,7 +335,6 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	version := "1"
 	updatedVersion := "2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -353,11 +352,11 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 					testAccIntentConfig_slotsWithVersion(testSlotTypeID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, version, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, version),
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, version, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, version),
-					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", version),
+					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, acctest.CtOne, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, acctest.CtOne),
+					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, acctest.CtOne, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.CtOne),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", acctest.CtOne),
 				),
 			},
 			{

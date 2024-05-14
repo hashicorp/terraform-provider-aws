@@ -51,7 +51,7 @@ func testAccRemediationConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -162,7 +162,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),
@@ -178,7 +178,7 @@ func testAccRemediationConfiguration_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", uAutomatic),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(uAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(uSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(uExecPct),
 						"error_percentage":                     strconv.Itoa(uErrorPct),
@@ -217,7 +217,7 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "automatic", automatic),
 					resource.TestCheckResourceAttr(resourceName, "maximum_automatic_attempts", strconv.Itoa(rAttempts)),
 					resource.TestCheckResourceAttr(resourceName, "retry_attempt_seconds", strconv.Itoa(rSeconds)),
-					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_controls.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "execution_controls.*.ssm_controls.*", map[string]string{
 						"concurrent_execution_rate_percentage": strconv.Itoa(rExecPct),
 						"error_percentage":                     strconv.Itoa(rErrorPct),

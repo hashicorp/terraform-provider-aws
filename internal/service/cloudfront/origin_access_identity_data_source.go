@@ -28,7 +28,7 @@ func dataSourceOriginAccessIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"comment": {
+			names.AttrComment: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,7 +67,7 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.ToString(output.CloudFrontOriginAccessIdentity.Id))
 	d.Set("caller_reference", apiObject.CallerReference)
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
-	d.Set("comment", apiObject.Comment)
+	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
 	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)

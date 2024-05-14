@@ -151,7 +151,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_parameterOverrides1(rName, "overridevalue1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance1),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1"),
 				),
 			},
@@ -179,7 +179,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceExists(ctx, resourceName, &stackInstance3),
 					testAccCheckStackSetInstanceNotRecreated(&stackInstance2, &stackInstance3),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.Parameter1", "overridevalue1updated"),
 				),
 			},
@@ -217,8 +217,8 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -262,8 +262,8 @@ func TestAccCloudFormationStackSetInstance_DeploymentTargets_emptyOU(t *testing.
 				Config: testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -307,8 +307,8 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 				Config: testAccStackSetInstanceConfig_operationPreferences(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "10"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
@@ -352,8 +352,8 @@ func TestAccCloudFormationStackSetInstance_delegatedAdministrator(t *testing.T) 
 				Config: testAccStackSetInstanceConfig_delegatedAdministrator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, resourceName, stackInstanceSummaries),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", acctest.CtOne),
 				),
 			},
 			{

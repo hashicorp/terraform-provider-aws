@@ -43,7 +43,7 @@ func TestAccImageBuilderWorkflow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, imagebuilder.WorkflowTypeTest),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0.0"),
@@ -178,7 +178,7 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 				Config: testAccWorkflowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccImageBuilderWorkflow_tags(t *testing.T) {
 				Config: testAccWorkflowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -224,14 +224,14 @@ func TestAccImageBuilderWorkflow_uri(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "data"),
-					resource.TestCheckResourceAttrSet(resourceName, "uri"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrURI),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"uri"},
+				ImportStateVerifyIgnore: []string{names.AttrURI},
 			},
 		},
 	})

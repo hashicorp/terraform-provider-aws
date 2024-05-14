@@ -40,7 +40,7 @@ func TestAccWorkLinkFleet_basic(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "optimize_for_end_user_location", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "company_code"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -162,20 +162,20 @@ func TestAccWorkLinkFleet_network(t *testing.T) {
 				Config: testAccFleetConfig_network(rName, "192.168.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccFleetConfig_network(rName, "10.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "network.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "network.0.vpc_id", "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "network.0.subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "network.0.security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func TestAccWorkLinkFleet_identityProvider(t *testing.T) {
 				Config: testAccFleetConfig_identityProvider(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider.0.type", "SAML"),
 				),
 			},

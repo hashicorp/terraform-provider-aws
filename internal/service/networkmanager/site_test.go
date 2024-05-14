@@ -87,7 +87,7 @@ func TestAccNetworkManagerSite_tags(t *testing.T) {
 				Config: testAccSiteConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -110,7 +110,7 @@ func TestAccNetworkManagerSite_tags(t *testing.T) {
 				Config: testAccSiteConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 				Config: testAccSiteConfig_location(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Stuart, FL"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "27.198"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "-80.253"),
@@ -184,7 +184,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 				Config: testAccSiteConfig_locationUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "location.0.address", "Brisbane, QLD"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.latitude", "-27.470"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.longitude", "153.026"),

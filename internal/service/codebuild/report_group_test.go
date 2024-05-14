@@ -37,7 +37,7 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "NO_EXPORT"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("report-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -70,9 +70,9 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some"),
@@ -91,9 +91,9 @@ func TestAccCodeBuildReportGroup_Export_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some2"),
@@ -120,7 +120,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 				Config: testAccReportGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -143,7 +143,7 @@ func TestAccCodeBuildReportGroup_tags(t *testing.T) {
 				Config: testAccReportGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportGroupExists(ctx, resourceName, &reportGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
