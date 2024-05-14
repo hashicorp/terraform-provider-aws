@@ -39,7 +39,7 @@ func TestAccDocDBClusterParameterGroup_basic(t *testing.T) {
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "family", "docdb3.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "docdb3.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
