@@ -35,7 +35,7 @@ func setContactChannelResourceData(d *schema.ResourceData, out *ssmcontacts.GetC
 
 func setPlanResourceData(d *schema.ResourceData, getContactOutput *ssmcontacts.GetContactOutput) error {
 	d.Set("contact_id", getContactOutput.ContactArn)
-	if err := d.Set("stage", flattenStages(getContactOutput.Plan.Stages)); err != nil {
+	if err := d.Set(names.AttrStage, flattenStages(getContactOutput.Plan.Stages)); err != nil {
 		return fmt.Errorf("setting stage: %w", err)
 	}
 
