@@ -55,7 +55,7 @@ func sweepGroups(region string) error {
 			r := resourceGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.AutoScalingGroupName))
-			d.Set("force_delete", true)
+			d.Set(names.AttrForceDelete, true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
