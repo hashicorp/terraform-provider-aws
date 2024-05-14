@@ -160,7 +160,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"repository_name": {
+												names.AttrRepositoryName: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -597,7 +597,7 @@ func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder
 
 	apiObject := &imagebuilder.TargetContainerRepository{}
 
-	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrRepositoryName].(string); ok && v != "" {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
@@ -882,7 +882,7 @@ func flattenTargetContainerRepository(apiObject *imagebuilder.TargetContainerRep
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.StringValue(v)
+		tfMap[names.AttrRepositoryName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.Service; v != nil {

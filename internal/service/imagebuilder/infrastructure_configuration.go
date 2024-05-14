@@ -106,7 +106,7 @@ func ResourceInfrastructureConfiguration() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
 									},
-									"s3_key_prefix": {
+									names.AttrS3KeyPrefix: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -453,7 +453,7 @@ func expandS3Logs(tfMap map[string]interface{}) *imagebuilder.S3Logs {
 		apiObject.S3BucketName = aws.String(v)
 	}
 
-	if v, ok := tfMap["s3_key_prefix"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrS3KeyPrefix].(string); ok && v != "" {
 		apiObject.S3KeyPrefix = aws.String(v)
 	}
 
@@ -504,7 +504,7 @@ func flattenS3Logs(apiObject *imagebuilder.S3Logs) map[string]interface{} {
 	}
 
 	if v := apiObject.S3KeyPrefix; v != nil {
-		tfMap["s3_key_prefix"] = aws.StringValue(v)
+		tfMap[names.AttrS3KeyPrefix] = aws.StringValue(v)
 	}
 
 	return tfMap
