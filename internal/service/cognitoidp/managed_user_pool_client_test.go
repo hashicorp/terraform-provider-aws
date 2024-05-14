@@ -56,7 +56,7 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.2", "phone"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.3", names.AttrProfile),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.CtOne),
 					resource.TestMatchResourceAttr(resourceName, "callback_urls.0", regexache.MustCompile(fmt.Sprintf(`https://search-%s-\w+.%s.es.amazonaws.com/_dashboards/app/home`, rName, acctest.Region()))),
 					resource.TestMatchResourceAttr(resourceName, names.AttrClientSecret, regexache.MustCompile(`\w+`)),
@@ -612,7 +612,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
@@ -673,7 +673,7 @@ func TestAccCognitoIDPManagedUserPoolClient_allFieldsUpdatingOneField(t *testing
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
