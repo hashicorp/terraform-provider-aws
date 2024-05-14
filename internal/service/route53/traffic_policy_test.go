@@ -35,10 +35,10 @@ func TestAccRoute53TrafficPolicy_basic(t *testing.T) {
 				Config: testAccTrafficPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", "A"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
 			{
@@ -80,7 +80,6 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 	var v route53.TrafficPolicy
 	resourceName := "aws_route53_traffic_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	comment := `comment`
 	commentUpdated := `comment updated`
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,17 +89,17 @@ func TestAccRoute53TrafficPolicy_update(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTrafficPolicyConfig_complete(rName, comment),
+				Config: testAccTrafficPolicyConfig_complete(rName, names.AttrComment),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "comment", comment),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, names.AttrComment),
 				),
 			},
 			{
 				Config: testAccTrafficPolicyConfig_complete(rName, commentUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "comment", commentUpdated),
+					resource.TestCheckResourceAttr(resourceName, names.AttrComment, commentUpdated),
 				),
 			},
 			{
@@ -170,7 +169,7 @@ func testAccTrafficPolicyImportStateIdFunc(resourceName string) resource.ImportS
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["id"], rs.Primary.Attributes["version"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes[names.AttrID], rs.Primary.Attributes[names.AttrVersion]), nil
 	}
 }
 

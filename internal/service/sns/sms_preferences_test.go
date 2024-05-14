@@ -71,7 +71,7 @@ func testAccSMSPreferences_almostAll(t *testing.T) {
 				Config: testAccSMSPreferencesConfig_almostAll,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "default_sms_type", "Transactional"),
-					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monthly_spend_limit", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "usage_report_s3_bucket", "some-bucket"),
 				),
 			},
@@ -94,7 +94,7 @@ func testAccSMSPreferences_deliveryRole(t *testing.T) {
 			{
 				Config: testAccSMSPreferencesConfig_deliveryRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "delivery_status_iam_role_arn", iamRoleName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "delivery_status_success_sampling_rate", "75"),
 				),
 			},

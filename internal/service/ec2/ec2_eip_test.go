@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccEC2EIP_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,9 +36,11 @@ func TestAccEC2EIP_basic(t *testing.T) {
 				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
+					resource.TestCheckResourceAttr(resourceName, "ptr_record", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -52,7 +54,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 
 func TestAccEC2EIP_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +77,7 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 
 func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -93,9 +95,9 @@ func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 				Config: testAccEIPConfig_vpc,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -109,7 +111,7 @@ func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 
 func TestAccEC2EIP_noVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -122,9 +124,9 @@ func TestAccEC2EIP_noVPC(t *testing.T) {
 				Config: testAccEIPConfig_noVPC,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomain, "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -138,7 +140,7 @@ func TestAccEC2EIP_noVPC(t *testing.T) {
 
 func TestAccEC2EIP_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +153,7 @@ func TestAccEC2EIP_tags(t *testing.T) {
 				Config: testAccEIPConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -173,7 +175,7 @@ func TestAccEC2EIP_tags(t *testing.T) {
 				Config: testAccEIPConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -183,7 +185,7 @@ func TestAccEC2EIP_tags(t *testing.T) {
 
 func TestAccEC2EIP_instance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -198,7 +200,7 @@ func TestAccEC2EIP_instance(t *testing.T) {
 				Config: testAccEIPConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -215,7 +217,7 @@ func TestAccEC2EIP_instance(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/42)
 func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -230,14 +232,14 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccEIPConfig_instanceReassociate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 				),
 				Taint: []string{resourceName},
 			},
@@ -249,7 +251,7 @@ func TestAccEC2EIP_Instance_reassociate(t *testing.T) {
 // associated Private EIPs of two instances
 func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	instance1ResourceName := "aws_instance.test.1"
 	instance2ResourceName := "aws_instance.test.0"
 	resourceName := "aws_eip.test"
@@ -266,7 +268,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instance1ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance1ResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -281,7 +283,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instance2ResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instance2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -291,7 +293,7 @@ func TestAccEC2EIP_Instance_associatedUserPrivateIP(t *testing.T) {
 
 func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	instanceResourceName := "aws_instance.test"
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -321,7 +323,7 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -331,7 +333,7 @@ func TestAccEC2EIP_Instance_notAssociated(t *testing.T) {
 
 func TestAccEC2EIP_networkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -345,7 +347,7 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 				Config: testAccEIPConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					testAccCheckEIPPrivateDNS(resourceName),
+					testAccCheckEIPPrivateDNS(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
@@ -362,7 +364,7 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 
 func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 	ctx := acctest.Context(t)
-	var one, two ec2.Address
+	var one, two types.Address
 	resource1Name := "aws_eip.test.0"
 	resource2Name := "aws_eip.test.1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -391,7 +393,7 @@ func TestAccEC2EIP_NetworkInterface_twoEIPsOneInterface(t *testing.T) {
 
 func TestAccEC2EIP_association(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	instanceResourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
 	resourceName := "aws_eip.test"
@@ -419,7 +421,7 @@ func TestAccEC2EIP_association(t *testing.T) {
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "network_interface", eniResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface", eniResourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
 			},
@@ -428,7 +430,7 @@ func TestAccEC2EIP_association(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
 				),
@@ -439,7 +441,7 @@ func TestAccEC2EIP_association(t *testing.T) {
 
 func TestAccEC2EIP_PublicIPv4Pool_default(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -474,7 +476,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -503,7 +505,7 @@ func TestAccEC2EIP_PublicIPv4Pool_custom(t *testing.T) {
 
 func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -532,7 +534,7 @@ func TestAccEC2EIP_customerOwnedIPv4Pool(t *testing.T) {
 
 func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -562,7 +564,7 @@ func TestAccEC2EIP_networkBorderGroup(t *testing.T) {
 
 func TestAccEC2EIP_carrierIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -592,7 +594,7 @@ func TestAccEC2EIP_carrierIP(t *testing.T) {
 
 func TestAccEC2EIP_BYOIPAddress_default(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -621,7 +623,7 @@ func TestAccEC2EIP_BYOIPAddress_custom(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -656,7 +658,7 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var conf ec2.Address
+	var conf types.Address
 	resourceName := "aws_eip.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -678,18 +680,14 @@ func TestAccEC2EIP_BYOIPAddress_customWithPublicIPv4Pool(t *testing.T) {
 	})
 }
 
-func testAccCheckEIPExists(ctx context.Context, n string, v *ec2.Address) resource.TestCheckFunc {
+func testAccCheckEIPExists(ctx context.Context, n string, v *types.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 EIP ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindEIPByAllocationID(ctx, conn, rs.Primary.ID)
 
@@ -705,7 +703,7 @@ func testAccCheckEIPExists(ctx context.Context, n string, v *ec2.Address) resour
 
 func testAccCheckEIPDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip" {
@@ -729,7 +727,7 @@ func testAccCheckEIPDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
+func testAccCheckEIPPrivateDNS(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -737,11 +735,7 @@ func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 		}
 
 		privateDNS := rs.Primary.Attributes["private_dns"]
-		expectedPrivateDNS := fmt.Sprintf(
-			"ip-%s.%s",
-			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["private_ip"]),
-			tfec2.RegionalPrivateDNSSuffix(acctest.Region()),
-		)
+		expectedPrivateDNS := acctest.Provider.Meta().(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, rs.Primary.Attributes["private_ip"])
 
 		if privateDNS != expectedPrivateDNS {
 			return fmt.Errorf("expected private_dns value (%s), received: %s", expectedPrivateDNS, privateDNS)
@@ -751,7 +745,7 @@ func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
+func testAccCheckEIPPublicDNS(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -759,12 +753,7 @@ func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 		}
 
 		publicDNS := rs.Primary.Attributes["public_dns"]
-		expectedPublicDNS := fmt.Sprintf(
-			"ec2-%s.%s.%s",
-			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["public_ip"]),
-			tfec2.RegionalPublicDNSSuffix(acctest.Region()),
-			acctest.PartitionDNSSuffix(),
-		)
+		expectedPublicDNS := acctest.Provider.Meta().(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, rs.Primary.Attributes["public_ip"])
 
 		if publicDNS != expectedPublicDNS {
 			return fmt.Errorf("expected public_dns value (%s), received: %s", expectedPublicDNS, publicDNS)

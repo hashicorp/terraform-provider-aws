@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_appstream_user_stack_association")
@@ -49,7 +50,7 @@ func ResourceUserStackAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,14 +67,14 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 	input := awstypes.UserStackAssociation{
 		AuthenticationType: awstypes.AuthenticationType(d.Get("authentication_type").(string)),
 		StackName:          aws.String(d.Get("stack_name").(string)),
-		UserName:           aws.String(d.Get("user_name").(string)),
+		UserName:           aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	if v, ok := d.GetOk("send_email_notification"); ok {
 		input.SendEmailNotification = aws.Bool(v.(bool))
 	}
 
-	id := EncodeUserStackAssociationID(d.Get("user_name").(string), d.Get("authentication_type").(string), d.Get("stack_name").(string))
+	id := EncodeUserStackAssociationID(d.Get(names.AttrUserName).(string), d.Get("authentication_type").(string), d.Get("stack_name").(string))
 
 	output, err := conn.BatchAssociateUserStack(ctx, &appstream.BatchAssociateUserStackInput{
 		UserStackAssociations: []awstypes.UserStackAssociation{input},
@@ -137,7 +138,7 @@ func resourceUserStackAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("authentication_type", association.AuthenticationType)
 	d.Set("stack_name", association.StackName)
-	d.Set("user_name", association.UserName)
+	d.Set(names.AttrUserName, association.UserName)
 
 	return diags
 }

@@ -48,7 +48,7 @@ func ResourceFleet() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +64,17 @@ func ResourceFleet() *schema.Resource {
 						},
 						"desired_instances": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"compute_capacity.0.desired_sessions",
+							},
+						},
+						"desired_sessions": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ExactlyOneOf: []string{
+								"compute_capacity.0.desired_instances",
+							},
 						},
 						"in_use": {
 							Type:     schema.TypeInt,
@@ -77,11 +87,11 @@ func ResourceFleet() *schema.Resource {
 					},
 				},
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -93,7 +103,7 @@ func ResourceFleet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(60, 360000),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -131,7 +141,7 @@ func ResourceFleet() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FleetType](),
 			},
-			"iam_role_arn": {
+			names.AttrIAMRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -153,9 +163,13 @@ func ResourceFleet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"instance_type": {
+			names.AttrInstanceType: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"max_sessions_per_instance": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"max_user_duration_in_seconds": {
 				Type:         schema.TypeInt,
@@ -163,7 +177,7 @@ func ResourceFleet() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(600, 432000),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -174,24 +188,24 @@ func ResourceFleet() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.StreamView](),
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"vpc_config": {
+			names.AttrVPCConfig: {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
@@ -211,13 +225,13 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 	input := &appstream.CreateFleetInput{
-		Name:            aws.String(d.Get("name").(string)),
-		InstanceType:    aws.String(d.Get("instance_type").(string)),
+		Name:            aws.String(d.Get(names.AttrName).(string)),
+		InstanceType:    aws.String(d.Get(names.AttrInstanceType).(string)),
 		ComputeCapacity: expandComputeCapacity(d.Get("compute_capacity").([]interface{})),
 		Tags:            getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -229,7 +243,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -253,8 +267,12 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("iam_role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrIAMRoleARN); ok {
 		input.IamRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_sessions_per_instance"); ok {
+		input.MaxSessionsPerInstance = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("max_user_duration_in_seconds"); ok {
@@ -265,7 +283,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.StreamView = awstypes.StreamView(v.(string))
 	}
 
-	if v, ok := d.GetOk("vpc_config"); ok {
+	if v, ok := d.GetOk(names.AttrVPCConfig); ok {
 		input.VpcConfig = expandVPCConfig(v.([]interface{}))
 	}
 
@@ -293,7 +311,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		output, err = conn.CreateFleet(ctx, input)
 	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Appstream Fleet (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Appstream Fleet (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.ToString(output.Fleet.Name))
@@ -340,7 +358,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	fleet := resp.Fleets[0]
 
-	d.Set("arn", fleet.Arn)
+	d.Set(names.AttrARN, fleet.Arn)
 
 	if fleet.ComputeCapacityStatus != nil {
 		if err = d.Set("compute_capacity", []interface{}{flattenComputeCapacity(fleet.ComputeCapacityStatus)}); err != nil {
@@ -350,9 +368,9 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("compute_capacity", nil)
 	}
 
-	d.Set("created_time", aws.ToTime(fleet.CreatedTime).Format(time.RFC3339))
-	d.Set("description", fleet.Description)
-	d.Set("display_name", fleet.DisplayName)
+	d.Set(names.AttrCreatedTime, aws.ToTime(fleet.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, fleet.Description)
+	d.Set(names.AttrDisplayName, fleet.DisplayName)
 	d.Set("disconnect_timeout_in_seconds", fleet.DisconnectTimeoutInSeconds)
 
 	if fleet.DomainJoinInfo != nil {
@@ -366,21 +384,22 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("idle_disconnect_timeout_in_seconds", fleet.IdleDisconnectTimeoutInSeconds)
 	d.Set("enable_default_internet_access", fleet.EnableDefaultInternetAccess)
 	d.Set("fleet_type", fleet.FleetType)
-	d.Set("iam_role_arn", fleet.IamRoleArn)
+	d.Set(names.AttrIAMRoleARN, fleet.IamRoleArn)
 	d.Set("image_name", fleet.ImageName)
 	d.Set("image_arn", fleet.ImageArn)
-	d.Set("instance_type", fleet.InstanceType)
+	d.Set(names.AttrInstanceType, fleet.InstanceType)
+	d.Set("max_sessions_per_instance", fleet.MaxSessionsPerInstance)
 	d.Set("max_user_duration_in_seconds", fleet.MaxUserDurationInSeconds)
-	d.Set("name", fleet.Name)
-	d.Set("state", fleet.State)
+	d.Set(names.AttrName, fleet.Name)
+	d.Set(names.AttrState, fleet.State)
 	d.Set("stream_view", fleet.StreamView)
 
 	if fleet.VpcConfig != nil {
-		if err = d.Set("vpc_config", []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
-			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), "vpc_config", err)
+		if err = d.Set(names.AttrVPCConfig, []interface{}{flattenVPCConfig(fleet.VpcConfig)}); err != nil {
+			return create.AppendDiagSettingError(diags, names.AppStream, "Fleet", d.Id(), names.AttrVPCConfig, err)
 		}
 	} else {
-		d.Set("vpc_config", nil)
+		d.Set(names.AttrVPCConfig, nil)
 	}
 
 	return diags
@@ -395,7 +414,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	shouldStop := false
 
-	if d.HasChanges("description", "domain_join_info", "enable_default_internet_access", "iam_role_arn", "instance_type", "max_user_duration_in_seconds", "stream_view", "vpc_config") {
+	if d.HasChanges(names.AttrDescription, "domain_join_info", "enable_default_internet_access", names.AttrIAMRoleARN, names.AttrInstanceType, "max_user_duration_in_seconds", "stream_view", names.AttrVPCConfig) {
 		shouldStop = true
 	}
 
@@ -416,8 +435,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ComputeCapacity = expandComputeCapacity(d.Get("compute_capacity").([]interface{}))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		input.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	if d.HasChange("domain_join_info") {
@@ -436,8 +455,8 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.IdleDisconnectTimeoutInSeconds = aws.Int32(int32(d.Get("idle_disconnect_timeout_in_seconds").(int)))
 	}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
+	if d.HasChange(names.AttrDisplayName) {
+		input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 	}
 
 	if d.HasChange("image_name") {
@@ -448,24 +467,28 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageArn = aws.String(d.Get("image_arn").(string))
 	}
 
-	if d.HasChange("iam_role_arn") {
-		input.IamRoleArn = aws.String(d.Get("iam_role_arn").(string))
+	if d.HasChange(names.AttrIAMRoleARN) {
+		input.IamRoleArn = aws.String(d.Get(names.AttrIAMRoleARN).(string))
 	}
 
 	if d.HasChange("stream_view") {
 		input.StreamView = awstypes.StreamView(d.Get("stream_view").(string))
 	}
 
-	if d.HasChange("instance_type") {
-		input.InstanceType = aws.String(d.Get("instance_type").(string))
+	if d.HasChange(names.AttrInstanceType) {
+		input.InstanceType = aws.String(d.Get(names.AttrInstanceType).(string))
+	}
+
+	if d.HasChange("max_sessions_per_instance") {
+		input.MaxSessionsPerInstance = aws.Int32(int32(d.Get("max_sessions_per_instance").(int)))
 	}
 
 	if d.HasChange("max_user_duration_in_seconds") {
 		input.MaxUserDurationInSeconds = aws.Int32(int32(d.Get("max_user_duration_in_seconds").(int)))
 	}
 
-	if d.HasChange("vpc_config") {
-		input.VpcConfig = expandVPCConfig(d.Get("vpc_config").([]interface{}))
+	if d.HasChange(names.AttrVPCConfig) {
+		input.VpcConfig = expandVPCConfig(d.Get(names.AttrVPCConfig).([]interface{}))
 	}
 
 	_, err := conn.UpdateFleet(ctx, input)
@@ -500,6 +523,11 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.StopFleet(ctx, &appstream.StopFleetInput{
 		Name: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
 	}
@@ -543,8 +571,12 @@ func expandComputeCapacity(tfList []interface{}) *awstypes.ComputeCapacity {
 	apiObject := &awstypes.ComputeCapacity{}
 
 	attr := tfList[0].(map[string]interface{})
-	if v, ok := attr["desired_instances"]; ok {
+	if v, ok := attr["desired_instances"]; ok && v != 0 {
 		apiObject.DesiredInstances = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := attr["desired_sessions"]; ok && v != 0 {
+		apiObject.DesiredSessions = aws.Int32(int32(v.(int)))
 	}
 
 	if reflect.DeepEqual(&awstypes.ComputeCapacity{}, apiObject) {
@@ -561,7 +593,12 @@ func flattenComputeCapacity(apiObject *awstypes.ComputeCapacityStatus) map[strin
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Desired; v != nil {
+	if v := apiObject.DesiredUserSessions; v != nil {
+		tfMap["desired_sessions"] = aws.ToInt32(v)
+	}
+
+	// desiredInstances is always returned by the API but cannot be used in conjunction with desiredSessions
+	if v := apiObject.Desired; v != nil && tfMap["desired_sessions"] == nil {
 		tfMap["desired_instances"] = aws.ToInt32(v)
 	}
 
@@ -642,11 +679,11 @@ func expandVPCConfig(tfList []interface{}) *awstypes.VpcConfig {
 	apiObject := &awstypes.VpcConfig{}
 
 	tfMap := tfList[0].(map[string]interface{})
-	if v, ok := tfMap["security_group_ids"]; ok {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs]; ok {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
-	if v, ok := tfMap["subnet_ids"]; ok {
+	if v, ok := tfMap[names.AttrSubnetIDs]; ok {
 		apiObject.SubnetIds = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
@@ -665,11 +702,11 @@ func flattenVPCConfig(apiObject *awstypes.VpcConfig) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = v
+		tfMap[names.AttrSecurityGroupIDs] = v
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = v
+		tfMap[names.AttrSubnetIDs] = v
 	}
 
 	if reflect.DeepEqual(map[string]interface{}{}, tfMap) {

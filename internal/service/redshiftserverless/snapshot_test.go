@@ -33,9 +33,9 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "-1"),
 					resource.TestCheckResourceAttr(resourceName, "admin_username", "admin"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", "0"),
@@ -51,9 +51,9 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 				Config: testAccSnapshotConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "retention_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "10"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 				),
 			},

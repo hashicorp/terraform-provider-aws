@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_route_table")
@@ -30,7 +31,7 @@ func DataSourceRouteTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -45,13 +46,13 @@ func DataSourceRouteTable() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"filter": customFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrTags:   tftags.TagsSchemaComputed(),
 			"routes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -98,7 +99,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"instance_id": {
+						names.AttrInstanceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -113,17 +114,17 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"network_interface_id": {
+						names.AttrNetworkInterfaceID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						"transit_gateway_id": {
+						names.AttrTransitGatewayID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 
-						"vpc_endpoint_id": {
+						names.AttrVPCEndpointID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -151,7 +152,7 @@ func DataSourceRouteTable() *schema.Resource {
 							Computed: true,
 						},
 
-						"subnet_id": {
+						names.AttrSubnetID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -169,12 +170,12 @@ func DataSourceRouteTable() *schema.Resource {
 				},
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -188,12 +189,12 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
-	vpcId, vpcIdOk := d.GetOk("vpc_id")
-	subnetId, subnetIdOk := d.GetOk("subnet_id")
+	vpcId, vpcIdOk := d.GetOk(names.AttrVPCID)
+	subnetId, subnetIdOk := d.GetOk(names.AttrSubnetID)
 	gatewayId, gatewayIdOk := d.GetOk("gateway_id")
 	rtbId, rtbOk := d.GetOk("route_table_id")
-	tags, tagsOk := d.GetOk("tags")
-	filter, filterOk := d.GetOk("filter")
+	tags, tagsOk := d.GetOk(names.AttrTags)
+	filter, filterOk := d.GetOk(names.AttrFilter)
 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
 		return sdkdiag.AppendErrorf(diags, "one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
@@ -236,14 +237,14 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("route-table/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	d.Set("owner_id", ownerID)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrOwnerID, ownerID)
 
 	d.Set("route_table_id", rt.RouteTableId)
-	d.Set("vpc_id", rt.VpcId)
+	d.Set(names.AttrVPCID, rt.VpcId)
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	if err := d.Set("tags", KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, rt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"})).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
@@ -310,7 +311,7 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 		}
 		if r.GatewayId != nil {
 			if strings.HasPrefix(*r.GatewayId, "vpce-") {
-				m["vpc_endpoint_id"] = aws.StringValue(r.GatewayId)
+				m[names.AttrVPCEndpointID] = aws.StringValue(r.GatewayId)
 			} else {
 				m["gateway_id"] = aws.StringValue(r.GatewayId)
 			}
@@ -322,16 +323,16 @@ func dataSourceRoutesRead(ctx context.Context, conn *ec2.EC2, ec2Routes []*ec2.R
 			m["local_gateway_id"] = aws.StringValue(r.LocalGatewayId)
 		}
 		if r.InstanceId != nil {
-			m["instance_id"] = aws.StringValue(r.InstanceId)
+			m[names.AttrInstanceID] = aws.StringValue(r.InstanceId)
 		}
 		if r.TransitGatewayId != nil {
-			m["transit_gateway_id"] = aws.StringValue(r.TransitGatewayId)
+			m[names.AttrTransitGatewayID] = aws.StringValue(r.TransitGatewayId)
 		}
 		if r.VpcPeeringConnectionId != nil {
 			m["vpc_peering_connection_id"] = aws.StringValue(r.VpcPeeringConnectionId)
 		}
 		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = aws.StringValue(r.NetworkInterfaceId)
+			m[names.AttrNetworkInterfaceID] = aws.StringValue(r.NetworkInterfaceId)
 		}
 
 		routes = append(routes, m)
@@ -348,7 +349,7 @@ func dataSourceAssociationsRead(ec2Assocations []*ec2.RouteTableAssociation) []m
 		m["route_table_association_id"] = aws.StringValue(a.RouteTableAssociationId)
 		// GH[11134]
 		if a.SubnetId != nil {
-			m["subnet_id"] = aws.StringValue(a.SubnetId)
+			m[names.AttrSubnetID] = aws.StringValue(a.SubnetId)
 		}
 		if a.GatewayId != nil {
 			m["gateway_id"] = aws.StringValue(a.GatewayId)

@@ -43,7 +43,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 				),
 			},
@@ -139,10 +139,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtOne),
 				),
 			},
 			{
@@ -174,7 +174,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -196,7 +196,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &service3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

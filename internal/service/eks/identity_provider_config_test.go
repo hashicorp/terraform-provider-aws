@@ -41,9 +41,9 @@ func TestAccEKSIdentityProviderConfig_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("identityproviderconfig/%[1]s/oidc/%[1]s/.+", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", ""),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", ""),
@@ -104,7 +104,7 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_allOIDCOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "oidc.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.client_id", "example.net"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_claim", "groups"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.groups_prefix", "oidc:"),
@@ -113,7 +113,7 @@ func TestAccEKSIdentityProviderConfig_allOIDCOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyOne", "valueOne"),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.required_claims.keyTwo", "valueTwo"),
-					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", "email"),
+					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_claim", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "oidc.0.username_prefix", "-"),
 				),
 			},
@@ -142,7 +142,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -164,7 +164,7 @@ func TestAccEKSIdentityProviderConfig_tags(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

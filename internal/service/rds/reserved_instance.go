@@ -43,7 +43,7 @@ func ResourceReservedInstance() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -55,7 +55,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"duration": {
+			names.AttrDuration: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -63,7 +63,7 @@ func ResourceReservedInstance() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
-			"instance_count": {
+			names.AttrInstanceCount: {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
@@ -111,11 +111,11 @@ func ResourceReservedInstance() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"start_time": {
+			names.AttrStartTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,8 +139,8 @@ func resourceReservedInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:                          getTagsIn(ctx),
 	}
 
-	if v, ok := d.Get("instance_count").(int); ok && v > 0 {
-		input.DBInstanceCount = aws.Int64(int64(d.Get("instance_count").(int)))
+	if v, ok := d.Get(names.AttrInstanceCount).(int); ok && v > 0 {
+		input.DBInstanceCount = aws.Int64(int64(d.Get(names.AttrInstanceCount).(int)))
 	}
 
 	if v, ok := d.Get("reservation_id").(string); ok && v != "" {
@@ -176,12 +176,12 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		return create.DiagError(names.RDS, create.ErrActionReading, ResNameReservedInstance, d.Id(), err)
 	}
 
-	d.Set("arn", reservation.ReservedDBInstanceArn)
+	d.Set(names.AttrARN, reservation.ReservedDBInstanceArn)
 	d.Set("currency_code", reservation.CurrencyCode)
 	d.Set("db_instance_class", reservation.DBInstanceClass)
-	d.Set("duration", reservation.Duration)
+	d.Set(names.AttrDuration, reservation.Duration)
 	d.Set("fixed_price", reservation.FixedPrice)
-	d.Set("instance_count", reservation.DBInstanceCount)
+	d.Set(names.AttrInstanceCount, reservation.DBInstanceCount)
 	d.Set("lease_id", reservation.LeaseId)
 	d.Set("multi_az", reservation.MultiAZ)
 	d.Set("offering_id", reservation.ReservedDBInstancesOfferingId)
@@ -189,8 +189,8 @@ func resourceReservedInstanceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("product_description", reservation.ProductDescription)
 	d.Set("recurring_charges", flattenRecurringCharges(reservation.RecurringCharges))
 	d.Set("reservation_id", reservation.ReservedDBInstanceId)
-	d.Set("start_time", (reservation.StartTime).Format(time.RFC3339))
-	d.Set("state", reservation.State)
+	d.Set(names.AttrStartTime, (reservation.StartTime).Format(time.RFC3339))
+	d.Set(names.AttrState, reservation.State)
 	d.Set("usage_price", reservation.UsagePrice)
 
 	return nil

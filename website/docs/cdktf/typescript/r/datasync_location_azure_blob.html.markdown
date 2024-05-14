@@ -31,7 +31,7 @@ class MyConvertedCode extends TerraformStack {
     new DatasyncLocationAzureBlob(this, "example", {
       agentArns: [Token.asString(awsDatasyncAgentExample.arn)],
       authenticationType: "SAS",
-      containerUrl: "https://example.com/path",
+      containerUrl: "https://myaccount.blob.core.windows.net/mycontainer",
       sasConfiguration: {
         token:
           "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%2FXTI9E%2F%2Fmq171%2BZU178wcwqU%3D",
@@ -98,4 +98,4 @@ Using `terraform import`, import `aws_datasync_location_azure_blob` using the Am
 % terraform import aws_datasync_location_azure_blob.example arn:aws:datasync:us-east-1:123456789012:location/loc-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-edba47394ea99b575175b683fe5ef747a098ab29d4224c1d53d79c12b0a9eadd -->
+<!-- cache-key: cdktf-0.20.1 input-0637d96370b64fc2d6d591d7b71f5801506815f36db9cd6ddafc9ca36bcc9181 -->

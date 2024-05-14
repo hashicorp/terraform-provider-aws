@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,32 +27,30 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.AmplifyConn(ctx)
+	input := &amplify.ListAppsInput{}
+	conn := client.AmplifyClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &amplify.ListAppsInput{}
-	err = listAppsPages(ctx, conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := amplify.NewListAppsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Amplify App sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, app := range page.Apps {
-			r := ResourceApp()
+		if err != nil {
+			return fmt.Errorf("error listing Amplify Apps: %w", err)
+		}
+
+		for _, v := range page.Apps {
+			r := resourceApp()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(app.AppId))
+			d.SetId(aws.ToString(v.AppId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Amplify App sweep for %s: %s", region, err)
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error listing Amplify Apps: %w", err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

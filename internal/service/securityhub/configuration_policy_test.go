@@ -46,9 +46,9 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "TestPolicy"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a disabled policy"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is a disabled policy"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "0"),
@@ -63,13 +63,13 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_baseEnabled("TestPolicy", "This is an enabled policy", exampleStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "TestPolicy"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is an enabled policy"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "TestPolicy"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "This is an enabled policy"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.0", exampleStandardsARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.CtOne),
 				),
 			},
 		},
@@ -140,31 +140,31 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersMulti(foundationalStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "APIGateway.1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":         "loggingLevel",
+						names.AttrName: "loggingLevel",
 						"value_type":   "CUSTOM",
 						"enum.0.value": "INFO",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.security_control_id", "IAM.7"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
-						"name":         "RequireLowercaseCharacters",
+						names.AttrName: "RequireLowercaseCharacters",
 						"value_type":   "CUSTOM",
 						"bool.0.value": "false",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
-						"name":       "RequireUppercaseCharacters",
-						"value_type": "DEFAULT",
+						names.AttrName: "RequireUppercaseCharacters",
+						"value_type":   "DEFAULT",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
-						"name":        "MaxPasswordAge",
-						"value_type":  "CUSTOM",
-						"int.0.value": "60",
+						names.AttrName: "MaxPasswordAge",
+						"value_type":   "CUSTOM",
+						"int.0.value":  "60",
 					}),
 				),
 			},
@@ -180,7 +180,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "CloudWatch.15"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":         "insufficientDataActionRequired",
+						names.AttrName: "insufficientDataActionRequired",
 						"value_type":   "CUSTOM",
 						"bool.0.value": "true",
 					}),
@@ -193,7 +193,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "RDS.14"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":           "BacktrackWindowInHours",
+						names.AttrName:   "BacktrackWindowInHours",
 						"value_type":     "CUSTOM",
 						"double.0.value": "20.25",
 					}),
@@ -206,7 +206,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "APIGateway.1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":         "loggingLevel",
+						names.AttrName: "loggingLevel",
 						"value_type":   "CUSTOM",
 						"enum.0.value": "ERROR",
 					}),
@@ -219,7 +219,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "S3.11"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":                "eventTypes",
+						names.AttrName:        "eventTypes",
 						"value_type":          "CUSTOM",
 						"enum_list.0.value.#": "2",
 						"enum_list.0.value.0": "s3:IntelligentTiering",
@@ -234,9 +234,9 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "DocumentDB.2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":        "minimumBackupRetentionPeriod",
-						"value_type":  "CUSTOM",
-						"int.0.value": "20",
+						names.AttrName: "minimumBackupRetentionPeriod",
+						"value_type":   "CUSTOM",
+						"int.0.value":  "20",
 					}),
 				),
 			},
@@ -247,7 +247,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "EC2.18"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
-						"name":               "authorizedTcpPorts",
+						names.AttrName:       "authorizedTcpPorts",
 						"value_type":         "CUSTOM",
 						"int_list.0.value.#": "2",
 						"int_list.0.value.0": "443",
@@ -288,8 +288,8 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsARN, "IAM.7", "APIGateway.1", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.*", "IAM.7"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.*", "APIGateway.1"),
@@ -305,8 +305,8 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsARN, "APIGateway.1", "IAM.7", true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.*", "APIGateway.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.*", "IAM.7"),
@@ -369,8 +369,7 @@ resource "aws_securityhub_configuration_policy" "test" {
   description = %[2]q
 
   configuration_policy {
-    service_enabled       = false
-    enabled_standard_arns = []
+    service_enabled = false
   }
 
   depends_on = [aws_securityhub_organization_configuration.test]

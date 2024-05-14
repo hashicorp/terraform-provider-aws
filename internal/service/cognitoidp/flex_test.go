@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestUserPoolSchemaAttributeMatchesStandardAttribute(t *testing.T) {
@@ -178,7 +179,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 					DeveloperOnlyAttribute: aws.Bool(false),
 					Mutable:                aws.Bool(false),
-					Name:                   aws.String("email"),
+					Name:                   aws.String(names.AttrEmail),
 					Required:               aws.Bool(true),
 				},
 			},
@@ -186,7 +187,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 				DeveloperOnlyAttribute: aws.Bool(false),
 				Mutable:                aws.Bool(false),
-				Name:                   aws.String("email"),
+				Name:                   aws.String(names.AttrEmail),
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
@@ -202,7 +203,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 					DeveloperOnlyAttribute: aws.Bool(false),
 					Mutable:                aws.Bool(false),
-					Name:                   aws.String("email"),
+					Name:                   aws.String(names.AttrEmail),
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 						MaxLength: aws.String("2048"),
@@ -214,7 +215,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 				DeveloperOnlyAttribute: aws.Bool(false),
 				Mutable:                aws.Bool(false),
-				Name:                   aws.String("email"),
+				Name:                   aws.String(names.AttrEmail),
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),
@@ -230,7 +231,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 					DeveloperOnlyAttribute: aws.Bool(false),
 					Mutable:                aws.Bool(false),
-					Name:                   aws.String("email"),
+					Name:                   aws.String(names.AttrEmail),
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 						MaxLength: aws.String("1024"),
@@ -242,7 +243,7 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 				AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
 				DeveloperOnlyAttribute: aws.Bool(false),
 				Mutable:                aws.Bool(false),
-				Name:                   aws.String("email"),
+				Name:                   aws.String(names.AttrEmail),
 				Required:               aws.Bool(true),
 				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
 					MaxLength: aws.String("2048"),

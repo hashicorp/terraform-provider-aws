@@ -29,11 +29,11 @@ func TestAccCloudFrontOriginAccessIdentitiesDataSource_comments(t *testing.T) {
 			{
 				Config: testAccOriginAccessIdentitiesDataSourceConfig_comments(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "iam_arns.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "iam_arns.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "s3_canonical_user_ids.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "iam_arns.*", resourceName, "iam_arn"),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", resourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", resourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "s3_canonical_user_ids.*", resourceName, "s3_canonical_user_id"),
 				),
 			},

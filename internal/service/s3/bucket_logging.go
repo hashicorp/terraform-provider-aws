@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3_bucket_logging", name="Bucket Logging")
@@ -35,7 +36,7 @@ func resourceBucketLogging() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -62,7 +63,7 @@ func resourceBucketLogging() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"display_name": {
+									names.AttrDisplayName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -70,16 +71,16 @@ func resourceBucketLogging() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"id": {
+									names.AttrID: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.Type](),
 									},
-									"uri": {
+									names.AttrURI: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -139,7 +140,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
 	input := &s3.PutBucketLoggingInput{
 		Bucket: aws.String(bucket),
@@ -208,7 +209,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Logging (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", bucket)
+	d.Set(names.AttrBucket, bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
@@ -362,7 +363,7 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 
 	grantee := &types.Grantee{}
 
-	if v, ok := tfMap["display_name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDisplayName].(string); ok && v != "" {
 		grantee.DisplayName = aws.String(v)
 	}
 
@@ -370,15 +371,15 @@ func expandLoggingGrantee(l []interface{}) *types.Grantee {
 		grantee.EmailAddress = aws.String(v)
 	}
 
-	if v, ok := tfMap["id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
 		grantee.ID = aws.String(v)
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		grantee.Type = types.Type(v)
 	}
 
-	if v, ok := tfMap["uri"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURI].(string); ok && v != "" {
 		grantee.URI = aws.String(v)
 	}
 
@@ -409,11 +410,11 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"type": g.Type,
+		names.AttrType: g.Type,
 	}
 
 	if g.DisplayName != nil {
-		m["display_name"] = aws.ToString(g.DisplayName)
+		m[names.AttrDisplayName] = aws.ToString(g.DisplayName)
 	}
 
 	if g.EmailAddress != nil {
@@ -421,11 +422,11 @@ func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	}
 
 	if g.ID != nil {
-		m["id"] = aws.ToString(g.ID)
+		m[names.AttrID] = aws.ToString(g.ID)
 	}
 
 	if g.URI != nil {
-		m["uri"] = aws.ToString(g.URI)
+		m[names.AttrURI] = aws.ToString(g.URI)
 	}
 
 	return []interface{}{m}

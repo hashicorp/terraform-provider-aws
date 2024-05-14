@@ -34,8 +34,8 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 				Config: testAccProfileConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "role_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "role_arns.#", acctest.CtOne),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
 					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
 				),
@@ -65,7 +65,7 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 				Config: testAccProfileConfig_tags1(rName, roleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -87,7 +87,7 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 				Config: testAccProfileConfig_tags1(rName, roleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
 				Config: testAccProfileConfig_enabled(rName, roleName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 			{
@@ -147,14 +147,14 @@ func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
 				Config: testAccProfileConfig_enabled(rName, roleName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
 				),
 			},
 			{
 				Config: testAccProfileConfig_enabled(rName, roleName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 				),
 			},
 		},

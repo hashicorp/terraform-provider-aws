@@ -37,16 +37,16 @@ func TestAccGlueJob_basic(t *testing.T) {
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "execution_class", ""),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2880"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2880"),
 				),
 			},
 			{
@@ -99,16 +99,16 @@ func TestAccGlueJob_basicStreaming(t *testing.T) {
 				Config: testAccJobConfig_requiredStreaming(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("job/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("job/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "gluestreaming"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "default_arguments.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "non_overridable_arguments.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "0"),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccGlueJob_command(t *testing.T) {
 				Config: testAccJobConfig_command(rName, "testscriptlocation1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation1"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccGlueJob_command(t *testing.T) {
 				Config: testAccJobConfig_command(rName, "testscriptlocation2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation2"),
 				),
 			},
@@ -251,14 +251,14 @@ func TestAccGlueJob_description(t *testing.T) {
 				Config: testAccJobConfig_description(rName, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccJobConfig_description(rName, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
@@ -367,15 +367,15 @@ func TestAccGlueJob_executionProperty(t *testing.T) {
 				Config: testAccJobConfig_executionProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "execution_property.0.max_concurrent_runs", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_property.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "execution_property.0.max_concurrent_runs", acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccJobConfig_executionProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "execution_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_property.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "execution_property.0.max_concurrent_runs", "2"),
 				),
 			},
@@ -447,15 +447,15 @@ func TestAccGlueJob_notificationProperty(t *testing.T) {
 				Config: testAccJobConfig_notificationProperty(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccJobConfig_notificationProperty(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "notification_property.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "notification_property.0.notify_delay_after", "2"),
 				),
 			},
@@ -484,7 +484,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 				Config: testAccJobConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -506,7 +506,7 @@ func TestAccGlueJob_tags(t *testing.T) {
 				Config: testAccJobConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -530,14 +530,14 @@ func TestAccGlueJob_streamingTimeout(t *testing.T) {
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{
@@ -565,14 +565,14 @@ func TestAccGlueJob_timeout(t *testing.T) {
 				Config: testAccJobConfig_timeout(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, acctest.CtOne),
 				),
 			},
 			{
 				Config: testAccJobConfig_timeout(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "timeout", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTimeout, "2"),
 				),
 			},
 			{
@@ -653,6 +653,20 @@ func TestAccGlueJob_workerType(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccJobConfig_workerType(rName, "G.4X"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.4X"),
+				),
+			},
+			{
+				Config: testAccJobConfig_workerType(rName, "G.8X"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.8X"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -678,7 +692,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0.0625"),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
 				),
@@ -692,7 +706,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				Config: testAccJobConfig_pythonShellVersion(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
@@ -707,7 +721,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				Config: testAccJobConfig_pythonShellVersion(rName, "3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
@@ -717,7 +731,7 @@ func TestAccGlueJob_pythonShell(t *testing.T) {
 				Config: testAccJobConfig_pythonShellVersion(rName, "3.9"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "pythonshell"),
@@ -743,7 +757,7 @@ func TestAccGlueJob_rayJob(t *testing.T) {
 				Config: testAccJobConfig_rayJob(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueray"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.python_version", "3.9"),
@@ -772,7 +786,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "10"),
-					resource.TestCheckResourceAttr(resourceName, "command.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "command.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "command.0.script_location", "testscriptlocation"),
 					resource.TestCheckResourceAttr(resourceName, "command.0.name", "glueetl"),
 				),

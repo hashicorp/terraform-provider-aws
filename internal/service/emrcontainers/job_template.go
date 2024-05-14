@@ -44,7 +44,7 @@ func ResourceJobTemplate() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,7 +86,7 @@ func ResourceJobTemplate() *schema.Resource {
 																Optional: true,
 																ForceNew: true,
 															},
-															"properties": {
+															names.AttrProperties: {
 																Type:     schema.TypeMap,
 																Optional: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func ResourceJobTemplate() *schema.Resource {
 														},
 													},
 												},
-												"properties": {
+												names.AttrProperties: {
 													Type:     schema.TypeMap,
 													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
@@ -116,7 +116,7 @@ func ResourceJobTemplate() *schema.Resource {
 													ForceNew: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"log_group_name": {
+															names.AttrLogGroupName: {
 																Type:     schema.TypeString,
 																Required: true,
 																ForceNew: true,
@@ -156,7 +156,7 @@ func ResourceJobTemplate() *schema.Resource {
 								},
 							},
 						},
-						"execution_role_arn": {
+						names.AttrExecutionRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -234,13 +234,13 @@ func ResourceJobTemplate() *schema.Resource {
 					},
 				},
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -262,7 +262,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateJobTemplateInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
@@ -273,7 +273,7 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.JobTemplateData = expandJobTemplateData(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		input.KmsKeyArn = aws.String(v.(string))
 	}
 
@@ -305,7 +305,7 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vc.Arn)
+	d.Set(names.AttrARN, vc.Arn)
 	if vc.JobTemplateData != nil {
 		if err := d.Set("job_template_data", []interface{}{flattenJobTemplateData(vc.JobTemplateData)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting job_template_data: %s", err)
@@ -313,8 +313,8 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		d.Set("job_template_data", nil)
 	}
-	d.Set("name", vc.Name)
-	d.Set("kms_key_arn", vc.KmsKeyArn)
+	d.Set(names.AttrName, vc.Name)
+	d.Set(names.AttrKMSKeyARN, vc.KmsKeyArn)
 
 	setTagsOut(ctx, vc.Tags)
 
@@ -362,7 +362,7 @@ func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTempl
 		apiObject.ConfigurationOverrides = expandConfigurationOverrides(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["execution_role_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrExecutionRoleARN].(string); ok && v != "" {
 		apiObject.ExecutionRoleArn = aws.String(v)
 	}
 
@@ -439,7 +439,7 @@ func expandConfiguration(tfMap map[string]interface{}) *emrcontainers.Configurat
 		apiObject.Configurations = expandConfigurations(v)
 	}
 
-	if v, ok := tfMap["properties"].(map[string]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrProperties].(map[string]interface{}); ok && len(v) > 0 {
 		apiObject.Properties = flex.ExpandStringMap(v)
 	}
 
@@ -570,7 +570,7 @@ func flattenJobTemplateData(apiObject *emrcontainers.JobTemplateData) map[string
 	}
 
 	if v := apiObject.ExecutionRoleArn; v != nil {
-		tfMap["execution_role_arn"] = aws.StringValue(v)
+		tfMap[names.AttrExecutionRoleARN] = aws.StringValue(v)
 	}
 
 	if v := apiObject.JobDriver; v != nil {
@@ -636,7 +636,7 @@ func flattenConfiguration(apiObject *emrcontainers.Configuration) map[string]int
 	}
 
 	if v := apiObject.Properties; v != nil {
-		tfMap["properties"] = aws.StringValueMap(v)
+		tfMap[names.AttrProperties] = aws.StringValueMap(v)
 	}
 
 	return tfMap
@@ -672,7 +672,7 @@ func flattenCloudWatchMonitoringConfiguration(apiObject *emrcontainers.Parametri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap[names.AttrLogGroupName] = aws.StringValue(v)
 	}
 
 	if v := apiObject.LogStreamNamePrefix; v != nil {

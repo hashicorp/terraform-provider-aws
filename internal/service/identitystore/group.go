@@ -38,12 +38,12 @@ func ResourceGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -54,11 +54,11 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"issuer": {
+						names.AttrIssuer: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -93,11 +93,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		IdentityStoreId: aws.String(identityStoreId),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -137,8 +137,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	d.Set("description", out.Description)
-	d.Set("display_name", out.DisplayName)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrDisplayName, out.DisplayName)
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
 		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
 	}
@@ -159,17 +159,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		Operations:      nil,
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		in.Operations = append(in.Operations, types.AttributeOperation{
-			AttributePath:  aws.String("description"),
-			AttributeValue: document.NewLazyDocument(d.Get("description").(string)),
+			AttributePath:  aws.String(names.AttrDescription),
+			AttributeValue: document.NewLazyDocument(d.Get(names.AttrDescription).(string)),
 		})
 	}
 
-	if d.HasChange("display_name") {
+	if d.HasChange(names.AttrDisplayName) {
 		in.Operations = append(in.Operations, types.AttributeOperation{
 			AttributePath:  aws.String("displayName"),
-			AttributeValue: document.NewLazyDocument(d.Get("display_name").(string)),
+			AttributeValue: document.NewLazyDocument(d.Get(names.AttrDisplayName).(string)),
 		})
 	}
 

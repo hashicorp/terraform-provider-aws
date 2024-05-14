@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -35,8 +33,8 @@ func TestAccLambdaLayerVersionPermission_basic_byARN(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_basicARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttrPair(resourceName, "layer_name", "aws_lambda_layer_version.test", "layer_arn"),
 				),
@@ -45,7 +43,7 @@ func TestAccLambdaLayerVersionPermission_basic_byARN(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -66,8 +64,8 @@ func TestAccLambdaLayerVersionPermission_basic_byName(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_basicName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttrPair(resourceName, "layer_name", "aws_lambda_layer_version.test", "layer_name"),
 				),
@@ -76,7 +74,7 @@ func TestAccLambdaLayerVersionPermission_basic_byName(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -97,8 +95,8 @@ func TestAccLambdaLayerVersionPermission_org(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_org(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
-					resource.TestCheckResourceAttr(resourceName, "principal", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "*"),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttr(resourceName, "organization_id", "o-0123456789"),
 					resource.TestCheckResourceAttrPair(resourceName, "layer_name", "aws_lambda_layer_version.test", "layer_arn"),
@@ -108,7 +106,7 @@ func TestAccLambdaLayerVersionPermission_org(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -129,8 +127,8 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "lambda:GetLayerVersion"),
-					resource.TestCheckResourceAttrPair(resourceName, "principal", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "lambda:GetLayerVersion"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, "data.aws_caller_identity.current", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", "xaccount"),
 					resource.TestCheckResourceAttrPair(resourceName, "layer_name", "aws_lambda_layer_version.test", "layer_arn"),
 				),
@@ -139,7 +137,7 @@ func TestAccLambdaLayerVersionPermission_account(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy},
 			},
 		},
 	})
@@ -184,14 +182,14 @@ func TestAccLambdaLayerVersionPermission_skipDestroy(t *testing.T) {
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 			{
 				Config: testAccLayerVersionPermissionConfig_skipDestroy(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
 				),
 			},
 		},
@@ -296,21 +294,14 @@ func testAccCheckLayerVersionPermissionExists(ctx context.Context, n string) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Lambda Layer version policy ID not set")
-		}
-
-		layerName, versionNumber, err := tflambda.ResourceLayerVersionPermissionParseId(rs.Primary.ID)
+		layerName, versionNumber, err := tflambda.LayerVersionPermissionParseResourceID(rs.Primary.ID)
 		if err != nil {
-			return fmt.Errorf("error parsing lambda layer ID: %w", err)
+			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
-		_, err = conn.GetLayerVersionPolicyWithContext(ctx, &lambda.GetLayerVersionPolicyInput{
-			LayerName:     aws.String(layerName),
-			VersionNumber: aws.Int64(versionNumber),
-		})
+		_, err = tflambda.FindLayerVersionPolicyByTwoPartKey(ctx, conn, layerName, versionNumber)
 
 		return err
 	}
@@ -318,30 +309,29 @@ func testAccCheckLayerVersionPermissionExists(ctx context.Context, n string) res
 
 func testAccCheckLayerVersionPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lambda_layer_version_permission" {
 				continue
 			}
 
-			layerName, versionNumber, err := tflambda.ResourceLayerVersionPermissionParseId(rs.Primary.ID)
+			layerName, versionNumber, err := tflambda.LayerVersionPermissionParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
 			}
 
-			_, err = conn.GetLayerVersionPolicyWithContext(ctx, &lambda.GetLayerVersionPolicyInput{
-				LayerName:     aws.String(layerName),
-				VersionNumber: aws.Int64(versionNumber),
-			})
+			_, err = tflambda.FindLayerVersionPolicyByTwoPartKey(ctx, conn, layerName, versionNumber)
 
-			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Lambda Layer Version Permission %s still exists", rs.Primary.ID)
 		}
 		return nil
 	}

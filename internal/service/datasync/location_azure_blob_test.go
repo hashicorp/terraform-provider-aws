@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,16 +37,16 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.CtOne),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
-					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 				Config: testAccLocationAzureBlobConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 				Config: testAccLocationAzureBlobConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -147,16 +147,16 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "HOT"),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.CtOne),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
-					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 			{
@@ -164,16 +164,16 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationAzureBlobExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_tier", "COOL"),
-					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", acctest.CtOne),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
 					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
-					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^azure-blob://.+/`)),
 				),
 			},
 		},
@@ -182,7 +182,7 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 
 func testAccCheckLocationAzureBlobDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_azure_blob" {
@@ -213,7 +213,7 @@ func testAccCheckLocationAzureBlobExists(ctx context.Context, n string, v *datas
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationAzureBlobByARN(ctx, conn, rs.Primary.ID)
 

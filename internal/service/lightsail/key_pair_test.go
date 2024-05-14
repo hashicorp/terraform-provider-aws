@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLightsailKeyPair_basic(t *testing.T) {
@@ -40,12 +41,12 @@ func TestAccLightsailKeyPair_basic(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "private_key"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPrivateKey),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 				),
 			},
 		},
@@ -77,12 +78,12 @@ func TestAccLightsailKeyPair_publicKey(t *testing.T) {
 				Config: testAccKeyPairConfig_imported(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_fingerprint"),
 					resource.TestCheckNoResourceAttr(resourceName, "encrypted_private_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
 				),
 			},
 		},
@@ -109,12 +110,12 @@ func TestAccLightsailKeyPair_encrypted(t *testing.T) {
 				Config: testAccKeyPairConfig_encrypted(rName, testKeyPairPubKey1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_fingerprint"),
 					resource.TestCheckResourceAttrSet(resourceName, "encrypted_private_key"),
-					resource.TestCheckResourceAttrSet(resourceName, "public_key"),
-					resource.TestCheckNoResourceAttr(resourceName, "private_key"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPublicKey),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrPrivateKey),
 				),
 			},
 		},
@@ -138,8 +139,8 @@ func TestAccLightsailKeyPair_namePrefix(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_omit"),
 					testAccCheckKeyPairExists(ctx, "aws_lightsail_key_pair.lightsail_key_pair_test_prefixed"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_omit", "name"),
-					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_prefixed", "name"),
+					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_omit", names.AttrName),
+					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test_prefixed", names.AttrName),
 				),
 			},
 		},
@@ -166,7 +167,7 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 				Config: testAccKeyPairConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -183,7 +184,7 @@ func TestAccLightsailKeyPair_tags(t *testing.T) {
 				Config: testAccKeyPairConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -233,7 +234,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 		respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
-			KeyPairName: aws.String(rs.Primary.Attributes["name"]),
+			KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),
 		})
 
 		if err != nil {
@@ -241,7 +242,7 @@ func testAccCheckKeyPairExists(ctx context.Context, n string) resource.TestCheck
 		}
 
 		if respKeyPair == nil || respKeyPair.KeyPair == nil {
-			return fmt.Errorf("KeyPair (%s) not found", rs.Primary.Attributes["name"])
+			return fmt.Errorf("KeyPair (%s) not found", rs.Primary.Attributes[names.AttrName])
 		}
 		return nil
 	}
@@ -257,7 +258,7 @@ func testAccCheckKeyPairDestroy(ctx context.Context) resource.TestCheckFunc {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailClient(ctx)
 
 			respKeyPair, err := conn.GetKeyPair(ctx, &lightsail.GetKeyPairInput{
-				KeyPairName: aws.String(rs.Primary.Attributes["name"]),
+				KeyPairName: aws.String(rs.Primary.Attributes[names.AttrName]),
 			})
 
 			if tflightsail.IsANotFoundError(err) {

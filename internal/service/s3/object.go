@@ -30,7 +30,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -56,7 +57,7 @@ func resourceObject() *schema.Resource {
 			resourceObjectCustomizeDiff,
 			func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
 				if ignoreProviderDefaultTags(ctx, d) {
-					return d.SetNew("tags_all", d.Get("tags"))
+					return d.SetNew(names.AttrTagsAll, d.Get(names.AttrTags))
 				}
 				return verify.SetTagsDiff(ctx, d, meta)
 			},
@@ -69,11 +70,11 @@ func resourceObject() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -109,15 +110,15 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
+			names.AttrContent: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content_base64"},
+				ConflictsWith: []string{names.AttrSource, "content_base64"},
 			},
 			"content_base64": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"source", "content"},
+				ConflictsWith: []string{names.AttrSource, names.AttrContent},
 			},
 			"content_disposition": {
 				Type:     schema.TypeString,
@@ -131,7 +132,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -143,20 +144,20 @@ func resourceObject() *schema.Resource {
 				// See http://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"kms_key_id"},
+				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
-			"force_destroy": {
+			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -202,11 +203,11 @@ func resourceObject() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"tags": {
+									names.AttrTags: {
 										Type:             schema.TypeMap,
 										Optional:         true,
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: verify.MapLenBetween(0, 0),
+										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
 									},
 								},
 							},
@@ -220,10 +221,10 @@ func resourceObject() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ServerSideEncryption](),
 			},
-			"source": {
+			names.AttrSource: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"content", "content_base64"},
+				ConflictsWith: []string{names.AttrContent, "content_base64"},
 			},
 			"source_hash": {
 				Type:     schema.TypeString,
@@ -259,7 +260,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -267,7 +268,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -284,7 +285,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
@@ -295,7 +296,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
-	d.Set("content_type", output.ContentType)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
 	d.Set("metadata", output.Metadata)
@@ -328,7 +329,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -336,7 +337,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 
 	if d.HasChange("acl") {
 		input := &s3.PutObjectAclInput{
@@ -403,7 +404,7 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -411,11 +412,11 @@ func resourceObjectDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get(names.AttrForceDestroy).(bool), false, optFns...)
 	} else {
 		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
@@ -440,8 +441,8 @@ func resourceObjectImport(ctx context.Context, d *schema.ResourceData, meta inte
 	key := strings.Join(parts[1:], "/")
 
 	d.SetId(key)
-	d.Set("bucket", bucket)
-	d.Set("key", key)
+	d.Set(names.AttrBucket, bucket)
+	d.Set(names.AttrKey, key)
 
 	return []*schema.ResourceData{d}, nil
 }
@@ -451,7 +452,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
 
-	bucket := d.Get("bucket").(string)
+	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
@@ -462,7 +463,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var body io.ReadSeeker
 
-	if v, ok := d.GetOk("source"); ok {
+	if v, ok := d.GetOk(names.AttrSource); ok {
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
@@ -480,7 +481,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 				log.Printf("[WARN] Error closing S3 object source (%s): %s", path, err)
 			}
 		}()
-	} else if v, ok := d.GetOk("content"); ok {
+	} else if v, ok := d.GetOk(names.AttrContent); ok {
 		body = strings.NewReader(v.(string))
 	} else if v, ok := d.GetOk("content_base64"); ok {
 		// We can't do streaming decoding here (with base64.NewDecoder) because
@@ -497,7 +498,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &s3.PutObjectInput{
 		Body:   body,
 		Bucket: aws.String(bucket),
-		Key:    aws.String(sdkv1CompatibleCleanKey(d.Get("key").(string))),
+		Key:    aws.String(sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))),
 	}
 
 	if v, ok := d.GetOk("acl"); ok {
@@ -528,11 +529,11 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ContentLanguage = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("content_type"); ok {
+	if v, ok := d.GetOk(names.AttrContentType); ok {
 		input.ContentType = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.SSEKMSKeyId = aws.String(v.(string))
 		input.ServerSideEncryption = types.ServerSideEncryptionAwsKms
 	}
@@ -591,7 +592,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.IsNewResource() {
-		d.SetId(d.Get("key").(string))
+		d.SetId(d.Get(names.AttrKey).(string))
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
@@ -601,7 +602,7 @@ func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.Resource
 	// Only set non-default KMS key ID (one that doesn't match default).
 	if sseKMSKeyID != "" {
 		// Read S3 KMS default master key.
-		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), defaultKMSKeyAlias)
+		keyMetadata, err := tfkms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSClient(ctx), defaultKMSKeyAlias)
 
 		if err != nil {
 			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
@@ -609,7 +610,7 @@ func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.Resource
 
 		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {
 			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS key: %s", sseKMSKeyID)
-			d.Set("kms_key_id", sseKMSKeyID)
+			d.Set(names.AttrKMSKeyID, sseKMSKeyID)
 		}
 	}
 
@@ -641,7 +642,7 @@ func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta
 	return nil
 }
 
-func hasObjectContentChanges(d verify.ResourceDiffer) bool {
+func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 	for _, key := range []string{
 		"bucket_key_enabled",
 		"cache_control",
@@ -650,13 +651,13 @@ func hasObjectContentChanges(d verify.ResourceDiffer) bool {
 		"content_disposition",
 		"content_encoding",
 		"content_language",
-		"content_type",
-		"content",
+		names.AttrContentType,
+		names.AttrContent,
 		"etag",
-		"kms_key_id",
+		names.AttrKMSKeyID,
 		"metadata",
 		"server_side_encryption",
-		"source",
+		names.AttrSource,
 		"source_hash",
 		"storage_class",
 		"website_redirect",
@@ -735,7 +736,7 @@ func sdkv1CompatibleCleanKey(key string) string {
 	return key
 }
 
-func ignoreProviderDefaultTags(ctx context.Context, d verify.ResourceDiffer) bool {
+func ignoreProviderDefaultTags(ctx context.Context, d sdkv2.ResourceDiffer) bool {
 	if v, ok := d.GetOk("override_provider"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if data := expandOverrideProviderModel(ctx, v.([]interface{})[0].(map[string]interface{})); data != nil && data.DefaultTagsConfig != nil {
 			return len(data.DefaultTagsConfig.Tags) == 0
@@ -775,7 +776,7 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 
 	data := &tftags.DefaultConfig{}
 
-	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
+	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok {
 		data.Tags = tftags.New(ctx, v)
 	}
 

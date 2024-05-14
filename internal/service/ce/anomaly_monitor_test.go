@@ -5,18 +5,16 @@ package ce_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +22,7 @@ import (
 
 func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -38,8 +36,8 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ce", regexache.MustCompile(`anomalymonitor/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),
@@ -55,7 +53,7 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +77,7 @@ func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,7 +92,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -106,7 +104,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -115,7 +113,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -129,7 +127,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -151,7 +149,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -164,7 +162,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 // following test in a serial test
 func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -178,7 +176,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 				Config: testAccAnomalyMonitorConfig_dimensional(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "DIMENSIONAL"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_dimension", "SERVICE"),
 				),
@@ -192,30 +190,22 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMonitor *costexplorer.AnomalyMonitor) resource.TestCheckFunc {
+func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, v *awstypes.AnomalyMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cost Explorer Anomaly Monitor is set")
-		}
-
-		resp, err := tfce.FindAnomalyMonitorByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfce.FindAnomalyMonitorByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("Cost Explorer %q does not exist", rs.Primary.ID)
-		}
-
-		*anomalyMonitor = *resp
+		*v = *output
 
 		return nil
 	}
@@ -223,7 +213,7 @@ func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMoni
 
 func testAccCheckAnomalyMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_monitor" {
@@ -240,7 +230,7 @@ func testAccCheckAnomalyMonitorDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+			return fmt.Errorf("Cost Explorer Anomaly Monitor %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -261,7 +251,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
@@ -287,7 +277,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
@@ -317,7 +307,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"

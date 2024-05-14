@@ -34,12 +34,12 @@ func ResourceDiscoverer() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -69,7 +69,7 @@ func resourceDiscovererCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:      getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -101,8 +101,8 @@ func resourceDiscovererRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Discoverer (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.DiscovererArn)
-	d.Set("description", output.Description)
+	d.Set(names.AttrARN, output.DiscovererArn)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("source_arn", output.SourceArn)
 
 	return diags
@@ -112,10 +112,10 @@ func resourceDiscovererUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &schemas.UpdateDiscovererInput{
 			DiscovererId: aws.String(d.Id()),
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Schemas Discoverer: %s", input)

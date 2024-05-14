@@ -27,12 +27,12 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 			{
 				Config: testAccStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.CtOne),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "6"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -114,12 +114,12 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 			{
 				Config: testAccStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.CtOne),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "6"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),

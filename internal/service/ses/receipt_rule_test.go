@@ -41,9 +41,9 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", fmt.Sprintf("receipt-rule-set/%s:receipt-rule/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "add_header_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "bounce_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "0"),
@@ -51,9 +51,9 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workmail_action.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "recipients.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recipients.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "recipients.*", acctest.DefaultEmailAddress),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
 					resource.TestCheckResourceAttr(resourceName, "scan_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tls_policy", "Require"),
 				),
@@ -87,11 +87,11 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 				Config: testAccReceiptRuleConfig_s3Action(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "s3_action.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "s3_action.*.bucket_name", "aws_s3_bucket.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "s3_action.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "s3_action.*.bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "s3_action.*", map[string]string{
-						"position": "1",
+						"position": acctest.CtOne,
 					}),
 				),
 			},
@@ -124,11 +124,11 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 				Config: testAccReceiptRuleConfig_snsAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sns_action.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
 						"encoding": "UTF-8",
-						"position": "1",
+						"position": acctest.CtOne,
 					}),
 				),
 			},
@@ -161,11 +161,11 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 				Config: testAccReceiptRuleConfig_snsActionEncoding(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "sns_action.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "sns_action.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "sns_action.*.topic_arn", "aws_sns_topic.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sns_action.*", map[string]string{
 						"encoding": "Base64",
-						"position": "1",
+						"position": acctest.CtOne,
 					}),
 				),
 			},
@@ -198,11 +198,11 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 				Config: testAccReceiptRuleConfig_lambdaAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", "1"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "lambda_action.*.function_arn", "aws_lambda_function.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_action.#", acctest.CtOne),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "lambda_action.*.function_arn", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lambda_action.*", map[string]string{
 						"invocation_type": "Event",
-						"position":        "1",
+						"position":        acctest.CtOne,
 					}),
 				),
 			},
@@ -235,11 +235,11 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 				Config: testAccReceiptRuleConfig_stopAction(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "stop_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stop_action.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "stop_action.*", map[string]string{
-						"scope": "RuleSet",
+						names.AttrScope: "RuleSet",
 					}),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "stop_action.*.topic_arn", "aws_sns_topic.test", "arn"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "stop_action.*.topic_arn", "aws_sns_topic.test", names.AttrARN),
 				),
 			},
 			{
@@ -271,8 +271,8 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 				Config: testAccReceiptRuleConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "name", "second"),
-					resource.TestCheckResourceAttrPair(resourceName, "after", "aws_ses_receipt_rule.test1", "name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, "second"),
+					resource.TestCheckResourceAttrPair(resourceName, "after", "aws_ses_receipt_rule.test1", names.AttrName),
 				),
 			},
 			{
@@ -312,7 +312,7 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_header_action.*", map[string]string{
 						"header_name":  "Another-Header",
 						"header_value": "First",
-						"position":     "1",
+						"position":     acctest.CtOne,
 					}),
 				),
 			},
@@ -420,7 +420,7 @@ func testAccReceiptRuleImportStateIdFunc(resourceName string) resource.ImportSta
 			return "", fmt.Errorf("Not Found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["rule_set_name"], rs.Primary.Attributes["name"]), nil
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["rule_set_name"], rs.Primary.Attributes[names.AttrName]), nil
 	}
 }
 

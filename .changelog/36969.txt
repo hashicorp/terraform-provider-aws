@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lb: Add `client_keep_alive` argument
+```
+
+```release-note:enhancement
+resource/aws_alb: Add `client_keep_alive` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `client_keep_alive` argument
+```
+
+```release-note:enhancement
+data-source/aws_alb: Add `client_keep_alive` argument
+```

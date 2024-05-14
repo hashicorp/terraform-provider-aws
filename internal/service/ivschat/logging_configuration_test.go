@@ -42,10 +42,10 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_cloudwatch(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -81,10 +81,10 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -116,10 +116,10 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
-					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v2),
 					testAccCheckLoggingConfigurationNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -190,7 +190,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -214,7 +214,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &v3),
 					testAccCheckLoggingConfigurationNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

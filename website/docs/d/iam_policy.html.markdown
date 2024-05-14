@@ -44,6 +44,7 @@ data "aws_iam_policy" "example" {
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the policy.
+* `attachment_count` - Number of entities (users, groups, and roles) that the policy is attached to.
 * `path` - Path to the policy.
 * `description` - Description of the policy.
 * `policy` - Policy document of the policy.

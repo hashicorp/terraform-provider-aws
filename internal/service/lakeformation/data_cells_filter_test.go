@@ -47,7 +47,7 @@ func testAccDataCellsFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
-					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", acctest.CtOne),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
-					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_wildcard.0.excluded_column_names.0", "my_column_12"),
 				),
 			},
@@ -116,6 +116,57 @@ func testAccDataCellsFilter_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataCellsFilter, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccDataCellsFilter_rowFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var datacellsfilter awstypes.DataCellsFilter
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_data_cells_filter.test"
+
+	filterExpression := `
+  filter_expression = "my_column_23='testing'"
+`
+	allRowsildcard := `
+  all_rows_wildcard {}
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
+			testAccDataCellsFilterPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataCellsFilterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataCellsFilterConfig_rowFilter(rName, filterExpression),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.row_filter.0.filter_expression", "my_column_23='testing'"),
+				),
+			},
+			{
+				Config: testAccDataCellsFilterConfig_rowFilter(rName, allRowsildcard),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.row_filter.0.all_rows_wildcard.#", acctest.CtOne),
+				),
 			},
 		},
 	})
@@ -291,4 +342,27 @@ resource "aws_lakeformation_data_cells_filter" "test" {
   depends_on = [aws_lakeformation_data_lake_settings.test]
 }
 `, rName, column))
+}
+
+func testAccDataCellsFilterConfig_rowFilter(rName, rowFilter string) string {
+	return acctest.ConfigCompose(
+		testAccDataCellsFilterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lakeformation_data_cells_filter" "test" {
+  table_data {
+    database_name    = aws_glue_catalog_database.test.name
+    name             = %[1]q
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.test.name
+
+    column_names = ["my_column_22"]
+
+    row_filter {
+%[2]s
+    }
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName, rowFilter))
 }

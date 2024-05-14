@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_access_point_policy")
@@ -44,7 +45,7 @@ func resourceAccessPointPolicy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"policy": {
+			names.AttrPolicy: {
 				Type:                  schema.TypeString,
 				Required:              true,
 				ValidateFunc:          validation.StringIsJSON,
@@ -72,7 +73,7 @@ func resourceAccessPointPolicyCreate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -117,14 +118,14 @@ func resourceAccessPointPolicyRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("has_public_access_policy", status.IsPublic)
 
 	if policy != "" {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
+		policyToSet, err := verify.PolicyToSet(d.Get(names.AttrPolicy).(string), policy)
 		if err != nil {
 			return diag.FromErr(err)
 		}
 
-		d.Set("policy", policyToSet)
+		d.Set(names.AttrPolicy, policyToSet)
 	} else {
-		d.Set("policy", "")
+		d.Set(names.AttrPolicy, "")
 	}
 
 	return nil
@@ -138,7 +139,7 @@ func resourceAccessPointPolicyUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get(names.AttrPolicy).(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -5,22 +5,17 @@ package events_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -69,9 +64,9 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal1, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", tfevents.DefaultEventBusName),
 				),
@@ -80,7 +75,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal2, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal2),
 				),
 			},
 			{
@@ -114,9 +109,9 @@ func TestAccEventsPermission_eventBusName(t *testing.T) {
 				Config: testAccPermissionConfig_eventBusName(principal1, busName, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 					resource.TestCheckResourceAttr(resourceName, "condition.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName, "statement_id", statementID),
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", busName),
 				),
@@ -162,7 +157,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 				Config: testAccPermissionConfig_action("events:PutEvents", principal, statementID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action", "events:PutEvents"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "events:PutEvents"),
 				),
 			},
 			{
@@ -189,7 +184,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-1234567890"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-1234567890"),
@@ -199,7 +194,7 @@ func TestAccEventsPermission_condition(t *testing.T) {
 				Config: testAccPermissionConfig_conditionOrganization(statementID, "o-0123456789"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.key", "aws:PrincipalOrgID"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.type", "StringEquals"),
 					resource.TestCheckResourceAttr(resourceName, "condition.0.value", "o-0123456789"),
@@ -233,7 +228,7 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 				Config: testAccPermissionConfig_basic(principal1, statementID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName1),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
 				),
 			},
@@ -242,9 +237,9 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName1),
 					testAccCheckPermissionExists(ctx, resourceName2),
-					resource.TestCheckResourceAttr(resourceName1, "principal", principal1),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPrincipal, principal1),
 					resource.TestCheckResourceAttr(resourceName1, "statement_id", statementID1),
-					resource.TestCheckResourceAttr(resourceName2, "principal", principal2),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPrincipal, principal2),
 					resource.TestCheckResourceAttr(resourceName2, "statement_id", statementID2),
 				),
 			},
@@ -276,90 +271,41 @@ func TestAccEventsPermission_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPermissionExists(ctx context.Context, pr string) resource.TestCheckFunc {
+func testAccCheckPermissionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
-		rs, ok := s.RootModule().Resources[pr]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", pr)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("error reading EventBridge permission (%s): %w", pr, err)
-		}
-		input := &eventbridge.DescribeEventBusInput{
-			Name: aws.String(eventBusName),
-		}
-		debo, err := conn.DescribeEventBusWithContext(ctx, input)
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
+		_, err := tfevents.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["statement_id"])
 
-		if debo.Policy == nil {
-			return fmt.Errorf("Not found: %s", pr)
-		}
-
-		var policyDoc tfevents.PermissionPolicyDoc
-		err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-		if err != nil {
-			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)
-		}
-
-		_, err = tfevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
 		return err
 	}
 }
 
 func testAccCheckPermissionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_permission" {
 				continue
 			}
 
-			eventBusName, statementID, err := tfevents.PermissionParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return fmt.Errorf("error reading EventBridge permission (%s): %w", rs.Primary.ID, err)
+			_, err := tfevents.FindPermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["statement_id"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			input := &eventbridge.DescribeEventBusInput{
-				Name: aws.String(eventBusName),
-			}
-			err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-				debo, err := conn.DescribeEventBusWithContext(ctx, input)
-				if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-				if err != nil {
-					return retry.NonRetryableError(err)
-				}
-				if debo.Policy == nil {
-					return nil
-				}
-
-				var policyDoc tfevents.PermissionPolicyDoc
-				err = json.Unmarshal([]byte(*debo.Policy), &policyDoc)
-				if err != nil {
-					return retry.NonRetryableError(fmt.Errorf("Reading EventBridge permission '%s' failed: %w", rs.Primary.ID, err))
-				}
-
-				_, err = tfevents.FindPermissionPolicyStatementByID(&policyDoc, statementID)
-				if err == nil {
-					return retry.RetryableError(fmt.Errorf("EventBridge permission exists: %s", rs.Primary.ID))
-				}
-
-				return nil
-			})
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("EventBridge Permission %s still exists", rs.Primary.ID)
 		}
 
 		return nil

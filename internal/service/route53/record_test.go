@@ -85,6 +85,7 @@ func TestNormalizeAliasName(t *testing.T) {
 		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"\\052.example.com", "*.example.com"},
 	}
 
 	for _, tc := range cases {
@@ -165,13 +166,13 @@ func TestAccRoute53Record_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", recordName.String()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
 					resource.TestCheckResourceAttr(resourceName, "records.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "127.0.0.27"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", ""),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "30"),
-					resource.TestCheckResourceAttr(resourceName, "type", "A"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "A"),
 					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
@@ -180,7 +181,7 @@ func TestAccRoute53Record_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -259,7 +260,7 @@ func TestAccRoute53Record_underscored(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -286,7 +287,7 @@ func TestAccRoute53Record_fqdn(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Ensure that changing the name to include a trailing "dot" results in
@@ -328,7 +329,7 @@ func TestAccRoute53Record_trailingPeriodAndZoneID(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -355,7 +356,7 @@ func TestAccRoute53Record_Support_txt(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight", "zone_id"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight, "zone_id"},
 			},
 		},
 	})
@@ -383,7 +384,7 @@ func TestAccRoute53Record_Support_spf(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -411,7 +412,7 @@ func TestAccRoute53Record_Support_caa(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -438,7 +439,7 @@ func TestAccRoute53Record_Support_ds(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -465,7 +466,7 @@ func TestAccRoute53Record_generatesSuffix(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -492,7 +493,7 @@ func TestAccRoute53Record_wildcard(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -528,7 +529,7 @@ func TestAccRoute53Record_failover(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -557,7 +558,7 @@ func TestAccRoute53Record_Weighted_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -584,7 +585,7 @@ func TestAccRoute53Record_WeightedToSimple_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 			{
 				Config: testAccRecordConfig_simpleRoutingPolicy,
@@ -619,7 +620,7 @@ func TestAccRoute53Record_Alias_elb(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -647,7 +648,7 @@ func TestAccRoute53Record_Alias_s3(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -679,7 +680,7 @@ func TestAccRoute53Record_Alias_vpcEndpoint(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -708,7 +709,7 @@ func TestAccRoute53Record_Alias_uppercase(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -736,7 +737,7 @@ func TestAccRoute53Record_Weighted_alias(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			{
@@ -773,9 +774,9 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 					testAccCheckRecordExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "alias.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "allow_overwrite"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "failover_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "fqdn", recordName.String()),
 					resource.TestCheckResourceAttr(resourceName, "geolocation_routing_policy.#", "0"),
@@ -783,12 +784,12 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "latency_routing_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "multivalue_answer_routing_policy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", recordName.String()),
-					resource.TestCheckResourceAttr(resourceName, "records.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, recordName.String()),
+					resource.TestCheckResourceAttr(resourceName, "records.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "records.*", "2001:0db8::0123:4567:89ab:cdef"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-1"),
 					resource.TestCheckResourceAttr(resourceName, "ttl", "60"),
-					resource.TestCheckResourceAttr(resourceName, "type", "AAAA"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AAAA"),
 					resource.TestCheckResourceAttr(resourceName, "weighted_routing_policy.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
@@ -797,15 +798,15 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 			{
 				Config: testAccRecordConfig_cidr(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", "name"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.location_name", "aws_route53_cidr_location.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-2"),
 				),
 			},
@@ -813,8 +814,8 @@ func TestAccRoute53Record_cidr(t *testing.T) {
 				Config: testAccRecordConfig_cidrDefaultLocation(rName, locationName, zoneName.String(), recordName.String(), "cidr-location-3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "cidr_routing_policy.0.collection_id", "aws_route53_cidr_collection.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "cidr_routing_policy.0.location_name", "*"),
 					resource.TestCheckResourceAttr(resourceName, "set_identifier", "cidr-location-3"),
 				),
@@ -847,7 +848,7 @@ func TestAccRoute53Record_Geolocation_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -876,7 +877,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -903,7 +904,7 @@ func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdSetIdentifier("test2"),
@@ -936,7 +937,7 @@ func TestAccRoute53Record_HealthCheckID_typeChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 			{
 				Config: testAccRecordConfig_healthCheckIdTypeA(),
@@ -971,7 +972,7 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -998,7 +999,7 @@ func TestAccRoute53Record_typeChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1033,7 +1034,7 @@ func TestAccRoute53Record_nameChange(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1069,7 +1070,7 @@ func TestAccRoute53Record_setIdentifierChangeBasicToWeighted(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1468,7 +1469,7 @@ func TestAccRoute53Record_Alias_change(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 
 			// Cause a change, which will trigger a refresh
@@ -1505,7 +1506,7 @@ func TestAccRoute53Record_Alias_changeDualstack(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 			// Cause a change, which will trigger a refresh
 			{
@@ -1540,7 +1541,7 @@ func TestAccRoute53Record_empty(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -1568,7 +1569,7 @@ func TestAccRoute53Record_longTXTrecord(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -1596,7 +1597,7 @@ func TestAccRoute53Record_MultiValueAnswer_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})
@@ -1636,7 +1637,7 @@ func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
 			},
 		},
 	})

@@ -35,8 +35,8 @@ func TestAccS3BucketWebsiteConfiguration_basic(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 					resource.TestCheckResourceAttrSet(resourceName, "website_domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "website_endpoint"),
@@ -95,10 +95,10 @@ func TestAccS3BucketWebsiteConfiguration_update(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
-					resource.TestCheckResourceAttr(resourceName, "error_document.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "error_document.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "error_document.0.key", "error.html"),
 				),
 			},
@@ -126,8 +126,8 @@ func TestAccS3BucketWebsiteConfiguration_Redirect(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_redirect(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "redirect_all_requests_to.0.host_name", "example.com"),
 				),
 			},
@@ -155,11 +155,11 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *tes
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleOptionalRedirection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"condition.#":                        "1",
+						"condition.#":                        acctest.CtOne,
 						"condition.0.key_prefix_equals":      "docs/",
-						"redirect.#":                         "1",
+						"redirect.#":                         acctest.CtOne,
 						"redirect.0.replace_key_prefix_with": "documents/",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
@@ -174,11 +174,11 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *tes
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleRedirectErrors(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"condition.#": "1",
+						"condition.#": acctest.CtOne,
 						"condition.0.http_error_code_returned_equals": "404",
-						"redirect.#":                         "1",
+						"redirect.#":                         acctest.CtOne,
 						"redirect.0.replace_key_prefix_with": "report-404",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
@@ -193,11 +193,11 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *tes
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleRedirectToPage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"condition.#":                   "1",
+						"condition.#":                   acctest.CtOne,
 						"condition.0.key_prefix_equals": "images/",
-						"redirect.#":                    "1",
+						"redirect.#":                    acctest.CtOne,
 						"redirect.0.replace_key_with":   "errorpage.html",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
@@ -229,15 +229,15 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_MultipleRules(t *testing.T)
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"condition.#":                   "1",
+						"condition.#":                   acctest.CtOne,
 						"condition.0.key_prefix_equals": "docs/",
-						"redirect.#":                    "1",
+						"redirect.#":                    acctest.CtOne,
 						"redirect.0.replace_key_with":   "errorpage.html",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"condition.#":                   "1",
+						"condition.#":                   acctest.CtOne,
 						"condition.0.key_prefix_equals": "images/",
-						"redirect.#":                    "1",
+						"redirect.#":                    acctest.CtOne,
 						"redirect.0.replace_key_with":   "errorpage.html",
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
@@ -273,9 +273,9 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_RedirectOnly(t *testing.T) 
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleRedirectOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
-						"redirect.#":                  "1",
+						"redirect.#":                  acctest.CtOne,
 						"redirect.0.protocol":         string(types.ProtocolHttps),
 						"redirect.0.replace_key_with": "errorpage.html",
 					}),
@@ -306,7 +306,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirect(t *te
 				Config: testAccBucketWebsiteConfigurationConfig_routingRulesConditionAndRedirect(rName, "documents/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -334,7 +334,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_ConditionAndRedirectWithEm
 				Config: testAccBucketWebsiteConfigurationConfig_routingRulesConditionAndRedirect(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -362,7 +362,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_updateConditionAndRedirect
 				Config: testAccBucketWebsiteConfigurationConfig_routingRulesConditionAndRedirect(rName, "documents/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -370,7 +370,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRules_updateConditionAndRedirect
 				Config: testAccBucketWebsiteConfigurationConfig_routingRulesConditionAndRedirect(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -393,7 +393,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRuleToRoutingRules(t *testing.T)
 				Config: testAccBucketWebsiteConfigurationConfig_routingRuleOptionalRedirection(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -401,7 +401,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRuleToRoutingRules(t *testing.T)
 				Config: testAccBucketWebsiteConfigurationConfig_routingRulesConditionAndRedirect(rName, "documents/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_rules"),
 				),
 			},
@@ -425,7 +425,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentNoChang
 				Config: testAccBucketConfig_website(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "website.0.index_document", "index.html"),
 				),
 			},
@@ -433,7 +433,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentNoChang
 				Config: testAccBucketWebsiteConfigurationConfig_migrateIndexDocumentNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "index.html"),
 				),
 			},
@@ -457,7 +457,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentWithCha
 				Config: testAccBucketConfig_website(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "website.0.index_document", "index.html"),
 				),
 			},
@@ -465,7 +465,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithIndexDocumentWithCha
 				Config: testAccBucketWebsiteConfigurationConfig_migrateIndexDocumentChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "index_document.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "index_document.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "index_document.0.suffix", "other.html"),
 				),
 			},
@@ -489,7 +489,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleNoChange(
 				Config: testAccBucketConfig_websiteAndRoutingRules(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(bucketResourceName, "website.0.routing_rules"),
 				),
 			},
@@ -497,7 +497,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleNoChange(
 				Config: testAccBucketWebsiteConfigurationConfig_migrateRoutingRuleNoChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
 				),
 			},
 		},
@@ -520,7 +520,7 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChang
 				Config: testAccBucketConfig_websiteAndRoutingRules(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
-					resource.TestCheckResourceAttr(bucketResourceName, "website.#", "1"),
+					resource.TestCheckResourceAttr(bucketResourceName, "website.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(bucketResourceName, "website.0.routing_rules"),
 				),
 			},
@@ -528,8 +528,8 @@ func TestAccS3BucketWebsiteConfiguration_migrate_websiteWithRoutingRuleWithChang
 				Config: testAccBucketWebsiteConfigurationConfig_migrateRoutingRuleChange(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.protocol", string(types.ProtocolHttps)),
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.0.redirect.0.replace_key_with", "errorpage.html"),
 				),

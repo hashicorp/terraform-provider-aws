@@ -34,9 +34,9 @@ func TestAccIPAMScope_basic(t *testing.T) {
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, "id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_arn", ipamName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "is_default", "false"),
 					resource.TestCheckResourceAttr(resourceName, "pool_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -51,7 +51,7 @@ func TestAccIPAMScope_basic(t *testing.T) {
 				Config: testAccIPAMScopeConfig_basic("test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
 				),
 			},
 		},
@@ -96,7 +96,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				Config: testAccIPAMScopeConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccIPAMScope_tags(t *testing.T) {
 				Config: testAccIPAMScopeConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

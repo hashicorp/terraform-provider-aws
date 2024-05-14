@@ -35,11 +35,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Job Queue")
+// @FrameworkResource("aws_batch_job_queue", name="Job Queue")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch;batch.JobQueueDetail")
 func newResourceJobQueue(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := resourceJobQueue{}
-	r.SetMigratedFromPluginSDK(true)
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)
@@ -75,14 +75,14 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 	s := schema.Schema{
 		Version: 1,
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"compute_environments": schema.ListAttribute{
 				ElementType:        fwtypes.ARNType,
 				Optional:           true,
-				DeprecationMessage: "This parameter will be replaced by `compute_environments_order`.",
+				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -92,7 +92,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 						"must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric"),
 				},
 			},
-			"priority": schema.Int64Attribute{
+			names.AttrPriority: schema.Int64Attribute{
 				Required: true,
 			},
 			"scheduling_policy_arn": schema.StringAttribute{
@@ -102,7 +102,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.OneOfCaseInsensitive(batch.JQState_Values()...),
@@ -114,7 +114,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 	}
 
 	s.Blocks = map[string]schema.Block{
-		"timeouts": timeouts.Block(ctx, timeouts.Opts{
+		names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 			Create: true,
 			Update: true,
 			Delete: true,
@@ -367,7 +367,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 }
 
 func (r *resourceJobQueue) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceJobQueue) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

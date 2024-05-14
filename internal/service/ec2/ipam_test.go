@@ -36,9 +36,9 @@ func TestAccIPAM_basic(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", "2"),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
 					resource.TestMatchResourceAttr(resourceName, "public_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
@@ -94,7 +94,7 @@ func TestAccIPAM_description(t *testing.T) {
 				Config: testAccIPAMConfig_description("test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "description", "test1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test1"),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccIPAM_description(t *testing.T) {
 				Config: testAccIPAMConfig_description("test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
 				),
 			},
 		},
@@ -140,7 +140,7 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.CtOne),
 				),
 			},
 			{
@@ -176,7 +176,41 @@ func TestAccIPAM_cascade(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cascade"},
+				ImportStateVerifyIgnore: []string{"cascade", "scope_count"},
+			},
+		},
+	})
+}
+
+func TestAccIPAM_tier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ipam ec2.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_tier("free"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "tier", "free"),
+				),
+			},
+			{
+				Config: testAccIPAMConfig_tier("advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "tier", "advanced"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -197,7 +231,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				Config: testAccIPAMConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -219,7 +253,7 @@ func TestAccIPAM_tags(t *testing.T) {
 				Config: testAccIPAMConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -377,4 +411,17 @@ resource "aws_vpc_ipam" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccIPAMConfig_tier(tier string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  tier = "%s"
+}
+`, tier)
 }

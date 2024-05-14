@@ -45,7 +45,7 @@ func TestAccWorkSpacesConnectionAlias_basic(t *testing.T) {
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
 					resource.TestCheckResourceAttr(resourceName, "connection_string", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 				Config: testAccConnectionAliasConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccWorkSpacesConnectionAlias_tags(t *testing.T) {
 				Config: testAccConnectionAliasConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionAliasExists(ctx, resourceName, &connectionalias),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

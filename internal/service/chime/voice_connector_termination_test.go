@@ -39,9 +39,9 @@ func testAccVoiceConnectorTermination_basic(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_allow_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),
 				),
 			},
@@ -104,7 +104,7 @@ func testAccVoiceConnectorTermination_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cps_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cps_limit", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "calling_regions.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_allow_list.*", "100.35.78.97/32"),
 					resource.TestCheckResourceAttr(resourceName, "disabled", "false"),

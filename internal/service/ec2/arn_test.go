@@ -9,6 +9,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestInstanceProfileARNToName(t *testing.T) {
@@ -48,12 +49,12 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:     "valid ARN",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 		{
 			TestName:     "valid ARN with multiple parts",
 			InputARN:     "arn:aws:iam:us-east-1:123456789012:instance-profile/path/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedName: "name",
+			ExpectedName: names.AttrName,
 		},
 	}
 

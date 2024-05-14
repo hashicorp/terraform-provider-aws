@@ -33,14 +33,14 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 				Config: testAccLinkConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -137,12 +137,12 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Config: testAccLinkConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "10"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", "provider1"),
-					resource.TestCheckResourceAttr(resourceName, "type", "type1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type1"),
 				),
 			},
 			{
@@ -155,12 +155,12 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Config: testAccLinkConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "75"),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "20"),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", "provider2"),
-					resource.TestCheckResourceAttr(resourceName, "type", "type2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type2"),
 				),
 			},
 		},
@@ -384,6 +384,6 @@ func testAccLinkImportStateIdFunc(resourceName string) resource.ImportStateIdFun
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["arn"], nil
+		return rs.Primary.Attributes[names.AttrARN], nil
 	}
 }

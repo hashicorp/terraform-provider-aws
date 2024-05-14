@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_ram_resource_share_accepter", name="Resource Share Accepter")
@@ -50,7 +51,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resources": {
+			names.AttrResources: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -75,7 +76,7 @@ func resourceResourceShareAccepter() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -171,7 +172,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("share_arn", resourceShare.ResourceShareArn)
 	d.Set("share_id", resourceResourceShareIDFromARN(d.Id()))
 	d.Set("share_name", resourceShare.Name)
-	d.Set("status", resourceShare.Status)
+	d.Set(names.AttrStatus, resourceShare.Status)
 
 	input := &ram.ListResourcesInput{
 		MaxResults:        aws.Int64(500),
@@ -187,7 +188,7 @@ func resourceResourceShareAccepterRead(ctx context.Context, d *schema.ResourceDa
 	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
 		return aws.StringValue(r.Arn)
 	})
-	d.Set("resources", resourceARNs)
+	d.Set(names.AttrResources, resourceARNs)
 
 	return diags
 }

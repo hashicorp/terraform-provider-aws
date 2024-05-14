@@ -476,7 +476,7 @@ Each `customResponseBody` block supports the following arguments:
 
 The `defaultAction` block supports the following arguments:
 
-~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `defaultAction`
+~> **Note** One of `allow` or `block` is required when specifying a `defaultAction`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.
@@ -796,17 +796,32 @@ The `managedRuleGroupConfigs` block support the following arguments:
 
 ### `requestInspection` Block
 
+* `addressFields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`addressFields`](#address_fields-block) for more details.
+* `emailField` (Optional) The name of the field in the request payload that contains your customer's email. See [`emailField`](#email_field-block) for more details.
+* `passwordField` (Optional) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
 * `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `usernameField` (Required) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
-* `passwordField` (Required) Details about your login page password field. See [`passwordField`](#password_field-block) for more details.
+* `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
+* `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
+
+### `addressFields` Block
+
+* `identifier` - (Required) The name of a single primary address field.
+
+### `emailField` Block
+
+* `identifier` - (Required) The name of the field in the request payload that contains your customer's email.
 
 ### `passwordField` Block
 
-* `identifier` - (Optional) The name of the password field.
+* `identifier` - (Required) The name of the password field.
+
+### `phoneNumberFields` Block
+
+* `identifier` - (Required) The name of a single primary phone number field.
 
 ### `usernameField` Block
 
-* `identifier` - (Optional) The name of the username field.
+* `identifier` - (Required) The name of the username field.
 
 ### `responseInspection` Block
 
@@ -1117,4 +1132,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5eb37a697a79f76873bafe8d3270155e9d59e0d5d5d8e25cc4fe1dfb7239b0cf -->
+<!-- cache-key: cdktf-0.20.1 input-98918acd75c91f53bec892e0742397665a585245baef770d45408170e11972c7 -->

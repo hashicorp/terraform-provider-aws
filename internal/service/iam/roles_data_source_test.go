@@ -114,8 +114,8 @@ func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 			{
 				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),
 				),
 			},
 		},

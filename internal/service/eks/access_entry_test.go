@@ -43,12 +43,12 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
-					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
 				),
 			},
 			{
@@ -146,7 +146,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 				Config: testAccAccessEntryConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -200,8 +200,8 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
-					resource.TestCheckResourceAttr(resourceName, "type", "EC2_LINUX"),
-					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EC2_LINUX"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
 				),
 			},
 			{
@@ -236,10 +236,10 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user1"),
 				),
 			},
 			{
@@ -251,10 +251,10 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
-					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, "user2"),
 				),
 			},
 		},
@@ -285,8 +285,8 @@ func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
-					resource.TestCheckResourceAttr(resourceName, "type", "EC2_LINUX"),
-					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EC2_LINUX"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrUserName),
 				),
 			},
 			{
@@ -307,7 +307,7 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
+			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -333,7 +333,7 @@ func testAccCheckAccessEntryExists(ctx context.Context, n string, v *types.Acces
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
+		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrClusterName], rs.Primary.Attributes["principal_arn"])
 
 		if err != nil {
 			return err

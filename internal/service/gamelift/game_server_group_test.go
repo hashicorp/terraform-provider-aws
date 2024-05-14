@@ -39,7 +39,7 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 				Config: testAccGameServerGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_group_arn", "autoscaling", regexache.MustCompile(`autoScalingGroup:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", gamelift.BalancingStrategySpotPreferred),
@@ -254,12 +254,12 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, "1"),
+				Config: testAccGameServerGroupConfig_instanceDefinitionWeightedCapacity(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_definition.0.weighted_capacity", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "instance_definition.1.weighted_capacity", acctest.CtOne),
 				),
 			},
 			{
@@ -300,7 +300,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 				Config: testAccGameServerGroupConfig_launchTemplateID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
 				),
@@ -334,7 +334,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 				Config: testAccGameServerGroupConfig_launchTemplateName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
 				),
@@ -368,9 +368,9 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 				Config: testAccGameServerGroupConfig_launchTemplateVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "launch_template.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", acctest.CtOne),
 				),
 			},
 			{
@@ -435,10 +435,10 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_maxSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_maxSize(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "max_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", acctest.CtOne),
 				),
 			},
 			{
@@ -478,10 +478,10 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGameServerGroupConfig_minSize(rName, "1"),
+				Config: testAccGameServerGroupConfig_minSize(rName, acctest.CtOne),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_size", acctest.CtOne),
 				),
 			},
 			{
@@ -520,8 +520,8 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf(`role/%s-test1`, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test1", "arn"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test1`, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test1", names.AttrARN),
 				),
 			},
 			{
@@ -534,8 +534,8 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf(`role/%s-test2`, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test2", "arn"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test2`, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},
 		},

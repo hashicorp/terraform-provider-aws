@@ -39,10 +39,10 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -96,7 +96,7 @@ func TestAccIoTPolicy_tags(t *testing.T) {
 				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccIoTPolicy_tags(t *testing.T) {
 				Config: testAccPolicyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -143,7 +143,7 @@ func TestAccIoTPolicy_update(t *testing.T) {
 				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.CtOne),
 				),
 			},
 			{
@@ -180,8 +180,8 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "1"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{"1"}),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.CtOne),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.CtOne}),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "2"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{"1", "2"}),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.CtOne, "2"}),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "3"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{"1", "2", "3"}),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.CtOne, "2", "3"}),
 				),
 			},
 			{
@@ -208,7 +208,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "4"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{"1", "2", "3", "4"}),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.CtOne, "2", "3", "4"}),
 				),
 			},
 			{
@@ -217,7 +217,7 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "default_version_id", "5"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{"1", "2", "3", "4", "5"}),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.CtOne, "2", "3", "4", "5"}),
 				),
 			},
 			{

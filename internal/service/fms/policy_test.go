@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +26,7 @@ func testAccPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -39,11 +38,11 @@ func testAccPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "fms", "policy/.+"),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
-					resource.TestCheckResourceAttr(resourceName, "description", "test description"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -65,7 +64,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -93,7 +92,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -105,8 +104,8 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 				Config: testAccPolicyConfig_cloudFrontDistribution(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 				),
 			},
 			{
@@ -127,7 +126,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -139,8 +138,8 @@ func testAccPolicy_includeMap(t *testing.T) {
 				Config: testAccPolicyConfig_include(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 				),
 			},
 			{
@@ -162,7 +161,7 @@ func testAccPolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -174,8 +173,8 @@ func testAccPolicy_update(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 				),
 			},
 			{
@@ -206,14 +205,14 @@ func testAccPolicy_policyOption(t *testing.T) {
 				Config: testAccPolicyConfig_policyOption(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, "arn", "fms", "policy/.+"),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(resourceName, names.AttrARN, "fms", "policy/.+"),
 					resource.TestCheckResourceAttr(resourceName, "delete_unused_fm_managed_resources", "false"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.0.firewall_deployment_model", "CENTRALIZED"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.0.firewall_deployment_model", "DISTRIBUTED"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -236,7 +235,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -248,7 +247,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 				Config: testAccPolicyConfig_resourceTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1"),
 				),
 			},
@@ -272,7 +271,7 @@ func testAccPolicy_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -283,7 +282,7 @@ func testAccPolicy_tags(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -308,7 +307,7 @@ func testAccPolicy_alb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -320,13 +319,13 @@ func testAccPolicy_alb(t *testing.T) {
 				Config: testAccPolicyConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "ResourceTypeList"),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "ResourceTypeList"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_list.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "resource_type_list.*", "AWS::ElasticLoadBalancingV2::LoadBalancer"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "WAFV2"),
-					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "type", "WAFV2"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", names.AttrType, "WAFV2"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "defaultAction.type", "ALLOW"),
 				),
 			},
@@ -342,7 +341,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -354,11 +353,11 @@ func testAccPolicy_securityGroup(t *testing.T) {
 				Config: testAccPolicyConfig_securityGroup(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::SecurityGroup"),
-					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::SecurityGroup"),
+					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.type", "SECURITY_GROUPS_CONTENT_AUDIT"),
-					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "type", "SECURITY_GROUPS_CONTENT_AUDIT"),
+					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", names.AttrType, "SECURITY_GROUPS_CONTENT_AUDIT"),
 					acctest.CheckResourceAttrJMES(resourceName, "security_service_policy_data.0.managed_service_data", "securityGroupAction.type", "ALLOW"),
 				),
 			},
@@ -368,7 +367,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_policy" {
@@ -399,11 +398,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No FMS Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
 
 		_, err := tffms.FindPolicyByID(ctx, conn, rs.Primary.ID)
 

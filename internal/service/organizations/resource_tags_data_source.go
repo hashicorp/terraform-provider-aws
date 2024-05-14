@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_organizations_resource_tags")
@@ -21,11 +22,11 @@ func DataSourceResourceTags() *schema.Resource {
 		ReadWithoutTimeout: dataSourceResourceTagsRead,
 
 		Schema: map[string]*schema.Schema{
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -34,7 +35,7 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
 
-	resource_id := d.Get("resource_id").(string)
+	resource_id := d.Get(names.AttrResourceID).(string)
 
 	params := &organizations.ListTagsForResourceInput{
 		ResourceId: aws.String(resource_id),
@@ -56,11 +57,11 @@ func dataSourceResourceTagsRead(ctx context.Context, d *schema.ResourceData, met
 	d.SetId(resource_id)
 
 	if tags != nil {
-		if err := d.Set("tags", KeyValueTags(ctx, tags).Map()); err != nil {
+		if err := d.Set(names.AttrTags, KeyValueTags(ctx, tags).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	} else {
-		d.Set("tags", nil)
+		d.Set(names.AttrTags, nil)
 	}
 
 	return diags

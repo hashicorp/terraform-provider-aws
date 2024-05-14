@@ -34,15 +34,15 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "internetmonitor", regexache.MustCompile(`monitor/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "max_city_networks_to_monitor", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", "1"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_percentage_to_monitor", acctest.CtOne),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func TestAccInternetMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_status(rName, "INACTIVE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "status", "INACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 				),
 			},
 		},
@@ -99,7 +99,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 				Config: testAccMonitorConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -121,7 +121,7 @@ func TestAccInternetMonitorMonitor_tags(t *testing.T) {
 				Config: testAccMonitorConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 				Config: testAccMonitorConfig_healthEventsConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "50"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "95"),
 				),
@@ -158,7 +158,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 				Config: testAccMonitorConfig_healthEventsConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "75"),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "85"),
 				),
@@ -182,8 +182,8 @@ func TestAccInternetMonitorMonitor_log(t *testing.T) {
 				Config: testAccMonitorConfig_log(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "internet_measurements_log_delivery.0.s3_config.0.bucket_name", rName),
 				),
 			},

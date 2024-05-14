@@ -35,9 +35,9 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 				Config: testAccImageBuilderConfig_basic(instanceType, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccAppStreamImageBuilder_withIAMRole(t *testing.T) {
 				Config: testAccImageBuilderConfig_withIAMRole(rName, imageName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 		},
@@ -117,11 +117,11 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 				Config: testAccImageBuilderConfig_complete(rName, description, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -134,11 +134,11 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 				Config: testAccImageBuilderConfig_complete(rName, descriptionUpdated, instanceTypeUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
-					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.ImageBuilderStateRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, instanceTypeUpdate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 				),
 			},
 			{
@@ -167,7 +167,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -190,7 +190,7 @@ func TestAccAppStreamImageBuilder_tags(t *testing.T) {
 				Config: testAccImageBuilderConfig_tags1(instanceType, rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

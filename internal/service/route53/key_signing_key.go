@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_route53_key_signing_key")
@@ -57,7 +58,7 @@ func ResourceKeySigningKey() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"hosted_zone_id": {
+			names.AttrHostedZoneID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -71,7 +72,7 @@ func ResourceKeySigningKey() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -80,7 +81,7 @@ func ResourceKeySigningKey() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
 				),
 			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,7 +93,7 @@ func ResourceKeySigningKey() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  KeySigningKeyStatusActive,
@@ -109,9 +110,9 @@ func resourceKeySigningKeyCreate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	hostedZoneID := d.Get("hosted_zone_id").(string)
-	name := d.Get("name").(string)
-	status := d.Get("status").(string)
+	hostedZoneID := d.Get(names.AttrHostedZoneID).(string)
+	name := d.Get(names.AttrName).(string)
+	status := d.Get(names.AttrStatus).(string)
 
 	input := &route53.CreateKeySigningKeyInput{
 		CallerReference: aws.String(id.UniqueId()),
@@ -189,14 +190,14 @@ func resourceKeySigningKeyRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("dnskey_record", keySigningKey.DNSKEYRecord)
 	d.Set("ds_record", keySigningKey.DSRecord)
 	d.Set("flag", keySigningKey.Flag)
-	d.Set("hosted_zone_id", hostedZoneID)
+	d.Set(names.AttrHostedZoneID, hostedZoneID)
 	d.Set("key_management_service_arn", keySigningKey.KmsArn)
 	d.Set("key_tag", keySigningKey.KeyTag)
-	d.Set("name", keySigningKey.Name)
-	d.Set("public_key", keySigningKey.PublicKey)
+	d.Set(names.AttrName, keySigningKey.Name)
+	d.Set(names.AttrPublicKey, keySigningKey.PublicKey)
 	d.Set("signing_algorithm_mnemonic", keySigningKey.SigningAlgorithmMnemonic)
 	d.Set("signing_algorithm_type", keySigningKey.SigningAlgorithmType)
-	d.Set("status", keySigningKey.Status)
+	d.Set(names.AttrStatus, keySigningKey.Status)
 
 	return diags
 }
@@ -205,16 +206,16 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	if d.HasChange("status") {
-		status := d.Get("status").(string)
+	if d.HasChange(names.AttrStatus) {
+		status := d.Get(names.AttrStatus).(string)
 
 		switch status {
 		default:
 			return sdkdiag.AppendErrorf(diags, "updating Route 53 Key Signing Key (%s) status: unknown status (%s)", d.Id(), status)
 		case KeySigningKeyStatusActive:
 			input := &route53.ActivateKeySigningKeyInput{
-				HostedZoneId: aws.String(d.Get("hosted_zone_id").(string)),
-				Name:         aws.String(d.Get("name").(string)),
+				HostedZoneId: aws.String(d.Get(names.AttrHostedZoneID).(string)),
+				Name:         aws.String(d.Get(names.AttrName).(string)),
 			}
 
 			output, err := conn.ActivateKeySigningKeyWithContext(ctx, input)
@@ -230,8 +231,8 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		case KeySigningKeyStatusInactive:
 			input := &route53.DeactivateKeySigningKeyInput{
-				HostedZoneId: aws.String(d.Get("hosted_zone_id").(string)),
-				Name:         aws.String(d.Get("name").(string)),
+				HostedZoneId: aws.String(d.Get(names.AttrHostedZoneID).(string)),
+				Name:         aws.String(d.Get(names.AttrName).(string)),
 			}
 
 			output, err := conn.DeactivateKeySigningKeyWithContext(ctx, input)
@@ -247,7 +248,7 @@ func resourceKeySigningKeyUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		if _, err := waitKeySigningKeyStatusUpdated(ctx, conn, d.Get("hosted_zone_id").(string), d.Get("name").(string), status); err != nil {
+		if _, err := waitKeySigningKeyStatusUpdated(ctx, conn, d.Get(names.AttrHostedZoneID).(string), d.Get(names.AttrName).(string), status); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Key Signing Key (%s) status (%s): %s", d.Id(), status, err)
 		}
 	}
@@ -259,12 +260,12 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn(ctx)
 
-	status := d.Get("status").(string)
+	status := d.Get(names.AttrStatus).(string)
 
 	if status == KeySigningKeyStatusActive || status == KeySigningKeyStatusActionNeeded {
 		input := &route53.DeactivateKeySigningKeyInput{
-			HostedZoneId: aws.String(d.Get("hosted_zone_id").(string)),
-			Name:         aws.String(d.Get("name").(string)),
+			HostedZoneId: aws.String(d.Get(names.AttrHostedZoneID).(string)),
+			Name:         aws.String(d.Get(names.AttrName).(string)),
 		}
 
 		output, err := conn.DeactivateKeySigningKeyWithContext(ctx, input)
@@ -281,8 +282,8 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	input := &route53.DeleteKeySigningKeyInput{
-		HostedZoneId: aws.String(d.Get("hosted_zone_id").(string)),
-		Name:         aws.String(d.Get("name").(string)),
+		HostedZoneId: aws.String(d.Get(names.AttrHostedZoneID).(string)),
+		Name:         aws.String(d.Get(names.AttrName).(string)),
 	}
 
 	output, err := conn.DeleteKeySigningKeyWithContext(ctx, input)
@@ -296,7 +297,7 @@ func resourceKeySigningKeyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Key Signing Key (%s), status (%s): %s", d.Id(), d.Get("status").(string), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Key Signing Key (%s), status (%s): %s", d.Id(), d.Get(names.AttrStatus).(string), err)
 	}
 
 	if output != nil && output.ChangeInfo != nil {

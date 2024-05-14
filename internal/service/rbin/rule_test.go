@@ -41,8 +41,8 @@ func TestAccRBinRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic1(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
 						"retention_period_value": "10",
 						"retention_period_unit":  "DAYS",
@@ -62,8 +62,8 @@ func TestAccRBinRule_basic(t *testing.T) {
 				Config: testAccRuleConfig_basic2(description, resourceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", resourceType),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, resourceType),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "retention_period.*", map[string]string{
 						"retention_period_value": "10",
 						"retention_period_unit":  "DAYS",
@@ -129,7 +129,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -151,7 +151,7 @@ func TestAccRBinRule_tags(t *testing.T) {
 				Config: testAccRuleConfigTags1(resourceType, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -178,8 +178,8 @@ func TestAccRBinRule_lock_config(t *testing.T) {
 				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_unit", "DAYS"),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_value", "7"),
 				),

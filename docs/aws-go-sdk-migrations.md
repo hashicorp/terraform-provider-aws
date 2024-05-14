@@ -1,10 +1,10 @@
 # AWS SDK For Go Migration Guide
 
-AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life July 31, 2025.
+AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life on July 31, 2025.
 While the AWS Terraform provider already [requires all net-new services](./aws-go-sdk-versions.md) to use AWS SDK V2 service clients, there remains a substantial number of existing services utilizing V1.
 
 Over time maintainers will be migrating impacted services to adopt AWS SDK for Go V2.
-For community members interested in contributoring to this effort, this guide documents the common patterns required to migrate a service.
+For community members interested in contributing to this effort, this guide documents the common patterns required to migrate a service.
 
 !!! tip
     The list of remaining services which require migration can be found in [this meta issue](https://github.com/hashicorp/terraform-provider-aws/issues/32976).
@@ -23,10 +23,29 @@ go generate ./internal/conns/...
 ### Add an `EndpointID` Constant
 
 When a service is first migrated, a `{ServiceName}EndpointID` constant must be added to [`names/names.go`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/names.go) manually.
-Be sure to preseve alphabetical order.
+Be sure to preserve alphabetical order.
 
 The AWS SDK for Go V1 previously exposed these as constants, but V2 does not.
 This constant is used in common acceptance testing pre-checks, such as `acctest.PreCheckPartitionHasService`.
+
+### Patch Generation
+
+The `awssdkpatch` tool can be used to automate parts of the AWS SDK migration.
+Applying the generated patch will likely leave the provider in a state which does not compile.
+As such, __this step is optional__ but can significantly reduce the amount of time spent on the steps below by applying changes without any manual intervention.
+
+To apply a patch use the `awssdkpatch-apply` target, with the service to be migrated set to the `PKG` variable:
+
+```console
+PKG=ec2 make awssdkpatch-apply
+```
+
+You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
+
+```console
+PKG=ec2 make awssdkpatch-gen
+gopatch -d -p awssdk.patch ./internal/service/ec2/...
+```
 
 ## Imports
 
@@ -43,16 +62,18 @@ github.com/aws-sdk-go-v2/service/<service>
 awstypes github.com/aws-sdk-go-v2/service/<service>/types
 ```
 
-If the `aws` package is used, this should also be upgraded.
+If the `aws` or `arn` packages are used, these should also be upgraded.
 
 ```
 // Remove
 github.com/aws-sdk-go/aws
+github.com/aws-sdk-go/aws/arn
 ```
 
 ```
 // Add
 github.com/aws-sdk-go-v2/aws
+github.com/aws-sdk-go-v2/aws/arn
 ```
 
 ## Client
@@ -179,7 +200,7 @@ As a starting point, any type reference which isn’t an Input/Output struct can
 awstypes.StatusInProgress
 ```
 
-Individual services vary in which types are moved into the dedicated subpackage, so a programatic replacement of all occurrences may require some manual adjustment afterward.
+Individual services vary in which types are moved into the dedicated subpackage, so a programmatic replacement of all occurrences may require some manual adjustment afterward.
 
 ### Enum Types
 
@@ -228,31 +249,31 @@ ValidateFunc: validation.StringInSlice(<service>.Thing_Values(), false),
 ValidateDiagFunc: enum.Validate[awstypes.Thing](),
 ```
 
-## Acceptance Testing `ErrorCheck`
+## Acceptance Testing `PreCheckPartitionHasService`
 
 With V1, this check relies on the endpoint ID constant included in the SDK.
-These are not included in the V2 SDK, but can be replaced with a generated constant from the `names` package.
+These are not included in the V2 SDK, but can be replaced with a constant from the `names` package.
 
 ```go
 // Remove
-ErrorCheck: acctest.ErrorCheck(t, <service>.EndpointsID),
+acctest.PreCheckPartitionHasService(t, <service>.EndpointsID),
 ```
 
 ```go
 // Add
-ErrorCheck: acctest.ErrorCheck(t, names.<service>ServiceID),
+acctest.PreCheckPartitionHasService(t, names.<Service>EndpointID),
 ```
 
 For example,
 
 ```
-ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+acctest.PreCheckPartitionHasService(t, ssoadmin.EndpointsID),
 ```
 
 becomes:
 
 ```go
-ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
+acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID),
 ```
 
 ## Pagination

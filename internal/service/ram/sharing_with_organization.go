@@ -87,7 +87,7 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "disabling Organization service principal (%s): %s", servicePrincipalName, err)
 	}
 
-	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMConn(ctx), sharingWithOrganizationRoleName); err != nil {
+	if err := tfiam.DeleteServiceLinkedRole(ctx, meta.(*conns.AWSClient).IAMClient(ctx), sharingWithOrganizationRoleName); err != nil {
 		return sdkdiag.AppendWarningf(diags, "deleting IAM service-linked Role (%s): %s", sharingWithOrganizationRoleName, err)
 	}
 
@@ -97,7 +97,7 @@ func resourceSharingWithOrganizationDelete(ctx context.Context, d *schema.Resour
 func findSharingWithOrganization(ctx context.Context, awsClient *conns.AWSClient) error {
 	// See https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs.
 	// Check for IAM role and Organizations trusted access.
-	_, err := tfiam.FindRoleByName(ctx, awsClient.IAMConn(ctx), sharingWithOrganizationRoleName)
+	_, err := tfiam.FindRoleByName(ctx, awsClient.IAMClient(ctx), sharingWithOrganizationRoleName)
 
 	if err != nil {
 		return fmt.Errorf("reading IAM Role (%s): %w", sharingWithOrganizationRoleName, err)

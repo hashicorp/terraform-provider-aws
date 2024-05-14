@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_vpc_ipam_pool_cidr_allocation")
@@ -46,7 +47,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -80,7 +81,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -88,7 +89,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -110,7 +111,7 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 		input.Cidr = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -162,9 +163,9 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("cidr", allocation.Cidr)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
-	d.Set("resource_id", allocation.ResourceId)
+	d.Set(names.AttrResourceID, allocation.ResourceId)
 	d.Set("resource_owner", allocation.ResourceOwner)
-	d.Set("resource_type", allocation.ResourceType)
+	d.Set(names.AttrResourceType, allocation.ResourceType)
 
 	return diags
 }

@@ -57,7 +57,7 @@ func ResourceIndex() *schema.Resource {
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -83,11 +83,11 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"created_at": {
+			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -100,7 +100,7 @@ func ResourceIndex() *schema.Resource {
 				MaxItems: 500,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 30),
@@ -112,7 +112,7 @@ func ResourceIndex() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"duration": {
+									names.AttrDuration: {
 										Type:     schema.TypeString,
 										Computed: true,
 										Optional: true,
@@ -180,7 +180,7 @@ func ResourceIndex() *schema.Resource {
 								},
 							},
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.DocumentAttributeValueType](),
@@ -235,7 +235,7 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
@@ -246,7 +246,7 @@ func ResourceIndex() *schema.Resource {
 					),
 				),
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -258,7 +258,7 @@ func ResourceIndex() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_id": {
+						names.AttrKMSKeyID: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
@@ -267,7 +267,7 @@ func ResourceIndex() *schema.Resource {
 					},
 				},
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -336,7 +336,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 100),
 									},
-									"issuer": {
+									names.AttrIssuer: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(1, 65),
@@ -351,7 +351,7 @@ func ResourceIndex() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: verify.ValidARN,
 									},
-									"url": {
+									names.AttrURL: {
 										Type:     schema.TypeString,
 										Optional: true,
 										ValidateFunc: validation.All(
@@ -384,15 +384,15 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &kendra.CreateIndexInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
-		RoleArn:     aws.String(d.Get("role_arn").(string)),
+		RoleArn:     aws.String(d.Get(names.AttrRoleARN).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -492,14 +492,14 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  fmt.Sprintf("index/%s", d.Id()),
 	}.String()
 
-	d.Set("arn", arn)
-	d.Set("created_at", aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
-	d.Set("description", resp.Description)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrCreatedAt, aws.ToTime(resp.CreatedAt).Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
 	d.Set("edition", resp.Edition)
 	d.Set("error_message", resp.ErrorMessage)
-	d.Set("name", resp.Name)
-	d.Set("role_arn", resp.RoleArn)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrRoleARN, resp.RoleArn)
+	d.Set(names.AttrStatus, resp.Status)
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
@@ -537,24 +537,24 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	id := d.Id()
 
-	if d.HasChanges("capacity_units", "description", "document_metadata_configuration_updates", "name", "role_arn", "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
+	if d.HasChanges("capacity_units", names.AttrDescription, "document_metadata_configuration_updates", names.AttrName, names.AttrRoleARN, "user_context_policy", "user_group_resolution_configuration", "user_token_configurations") {
 		input := &kendra.UpdateIndexInput{
 			Id: aws.String(id),
 		}
 		if d.HasChange("capacity_units") {
 			input.CapacityUnits = expandCapacityUnits(d.Get("capacity_units").([]interface{}))
 		}
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 		if d.HasChange("document_metadata_configuration_updates") {
 			input.DocumentMetadataConfigurationUpdates = expandDocumentMetadataConfigurationUpdates(d.Get("document_metadata_configuration_updates").(*schema.Set).List())
 		}
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
-		if d.HasChange("role_arn") {
-			input.RoleArn = aws.String(d.Get("role_arn").(string))
+		if d.HasChange(names.AttrRoleARN) {
+			input.RoleArn = aws.String(d.Get(names.AttrRoleARN).(string))
 		}
 		if d.HasChange("user_context_policy") {
 			input.UserContextPolicy = types.UserContextPolicy(d.Get("user_context_policy").(string))
@@ -746,11 +746,11 @@ func expandDocumentMetadataConfigurationUpdates(documentMetadataConfigurationUpd
 	for _, documentMetadataConfigurationUpdate := range documentMetadataConfigurationUpdates {
 		tfMap := documentMetadataConfigurationUpdate.(map[string]interface{})
 		documentMetadataConfigurationUpdateConfig := types.DocumentMetadataConfiguration{
-			Name: aws.String(tfMap["name"].(string)),
-			Type: types.DocumentAttributeValueType(tfMap["type"].(string)),
+			Name: aws.String(tfMap[names.AttrName].(string)),
+			Type: types.DocumentAttributeValueType(tfMap[names.AttrType].(string)),
 		}
 
-		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}), tfMap["type"].(string))
+		documentMetadataConfigurationUpdateConfig.Relevance = expandRelevance(tfMap["relevance"].([]interface{}), tfMap[names.AttrType].(string))
 		documentMetadataConfigurationUpdateConfig.Search = expandSearch(tfMap["search"].([]interface{}))
 
 		documentMetadataConfigurationUpdateConfigs = append(documentMetadataConfigurationUpdateConfigs, documentMetadataConfigurationUpdateConfig)
@@ -771,7 +771,7 @@ func expandRelevance(relevance []interface{}, documentAttributeValueType string)
 
 	result := &types.Relevance{}
 
-	if v, ok := tfMap["duration"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrDuration].(string); ok && v != "" {
 		result.Duration = aws.String(v)
 	}
 
@@ -838,7 +838,7 @@ func expandServerSideEncryptionConfiguration(serverSideEncryptionConfiguration [
 
 	result := &types.ServerSideEncryptionConfiguration{}
 
-	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrKMSKeyID].(string); ok && v != "" {
 		result.KmsKeyId = aws.String(v)
 	}
 
@@ -927,7 +927,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.GroupAttributeField = aws.String(v)
 	}
 
-	if v, ok := tfMap["issuer"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIssuer].(string); ok && v != "" {
 		result.Issuer = aws.String(v)
 	}
 
@@ -935,7 +935,7 @@ func expandJwtTokenTypeConfiguration(jwtTokenTypeConfiguration []interface{}) *t
 		result.SecretManagerArn = aws.String(v)
 	}
 
-	if v, ok := tfMap["url"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrURL].(string); ok && v != "" {
 		result.URL = aws.String(v)
 	}
 
@@ -964,10 +964,10 @@ func flattenDocumentMetadataConfigurations(documentMetadataConfigurations []type
 
 	for _, documentMetadataConfiguration := range documentMetadataConfigurations {
 		values := map[string]interface{}{
-			"name":      documentMetadataConfiguration.Name,
-			"relevance": flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
-			"search":    flattenSearch(documentMetadataConfiguration.Search),
-			"type":      documentMetadataConfiguration.Type,
+			names.AttrName: documentMetadataConfiguration.Name,
+			"relevance":    flattenRelevance(documentMetadataConfiguration.Relevance, string(documentMetadataConfiguration.Type)),
+			"search":       flattenSearch(documentMetadataConfiguration.Search),
+			names.AttrType: documentMetadataConfiguration.Type,
 		}
 
 		documentMetadataConfigurationsList = append(documentMetadataConfigurationsList, values)
@@ -986,7 +986,7 @@ func flattenRelevance(relevance *types.Relevance, documentAttributeValueType str
 	}
 
 	if v := relevance.Duration; v != nil {
-		values["duration"] = aws.ToString(v)
+		values[names.AttrDuration] = aws.ToString(v)
 	}
 
 	if v := relevance.Freshness; v != nil && documentAttributeValueType == string(types.DocumentAttributeValueTypeDateValue) {
@@ -1065,7 +1065,7 @@ func flattenServerSideEncryptionConfiguration(serverSideEncryptionConfiguration 
 	values := map[string]interface{}{}
 
 	if v := serverSideEncryptionConfiguration.KmsKeyId; v != nil {
-		values["kms_key_id"] = aws.ToString(v)
+		values[names.AttrKMSKeyID] = aws.ToString(v)
 	}
 
 	return []interface{}{values}
@@ -1134,7 +1134,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.Issuer; v != nil {
-		values["issuer"] = aws.ToString(v)
+		values[names.AttrIssuer] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.SecretManagerArn; v != nil {
@@ -1142,7 +1142,7 @@ func flattenJwtTokenTypeConfiguration(jwtTokenTypeConfiguration *types.JwtTokenT
 	}
 
 	if v := jwtTokenTypeConfiguration.URL; v != nil {
-		values["url"] = aws.ToString(v)
+		values[names.AttrURL] = aws.ToString(v)
 	}
 
 	if v := jwtTokenTypeConfiguration.UserNameAttributeField; v != nil {

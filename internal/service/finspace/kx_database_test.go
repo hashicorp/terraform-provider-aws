@@ -45,7 +45,7 @@ func TestAccFinSpaceKxDatabase_basic(t *testing.T) {
 				Config: testAccKxDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
 			{
@@ -111,14 +111,14 @@ func TestAccFinSpaceKxDatabase_description(t *testing.T) {
 				Config: testAccKxDatabaseConfig_description(rName, "description 1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 1"),
 				),
 			},
 			{
 				Config: testAccKxDatabaseConfig_description(rName, "description 2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					resource.TestCheckResourceAttr(resourceName, "description", "description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description 2"),
 				),
 			},
 		},
@@ -148,7 +148,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 				Config: testAccKxDatabaseConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -165,7 +165,7 @@ func TestAccFinSpaceKxDatabase_tags(t *testing.T) {
 				Config: testAccKxDatabaseConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDatabaseExists(ctx, resourceName, &kxdatabase),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -183,7 +183,7 @@ func testAccCheckKxDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &finspace.GetKxDatabaseInput{
-				DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
+				DatabaseName:  aws.String(rs.Primary.Attributes[names.AttrName]),
 				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 			}
 			_, err := conn.GetKxDatabase(ctx, input)
@@ -215,7 +215,7 @@ func testAccCheckKxDatabaseExists(ctx context.Context, name string, kxdatabase *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxDatabase(ctx, &finspace.GetKxDatabaseInput{
-			DatabaseName:  aws.String(rs.Primary.Attributes["name"]),
+			DatabaseName:  aws.String(rs.Primary.Attributes[names.AttrName]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 		})
 

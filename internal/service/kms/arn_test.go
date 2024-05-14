@@ -1,14 +1,13 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package kms_test
+package kms
 
 import (
 	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {
@@ -47,7 +46,7 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfkms.AliasARNToKeyARN(testCase.InputARN, "test-key")
+			got, err := aliasARNToKeyARN(testCase.InputARN, "test-key")
 
 			if err == nil && testCase.ExpectedError != nil {
 				t.Fatalf("expected error %s, got no error", testCase.ExpectedError.String())
@@ -139,7 +138,7 @@ func TestKeyARNOrIDEqual(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := tfkms.KeyARNOrIDEqual(testCase.first, testCase.second)
+			got := keyARNOrIDEqual(testCase.first, testCase.second)
 
 			if got != testCase.want {
 				t.Errorf("unexpected Equal: %t", got)

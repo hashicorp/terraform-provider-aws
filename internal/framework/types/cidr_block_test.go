@@ -9,7 +9,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -59,36 +59,32 @@ func TestCIDRBlockTypeValueFromTerraform(t *testing.T) {
 	}
 }
 
-func TestCIDRBlockTypeValidate(t *testing.T) {
+func TestCIDRBlockValidateAttrbute(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		val         tftypes.Value
+		val         fwtypes.CIDRBlock
 		expectError bool
 	}
 	tests := map[string]testCase{
-		"not a string": {
-			val:         tftypes.NewValue(tftypes.Bool, true),
+		"unknown": {
+			val: fwtypes.CIDRBlockUnknown(),
+		},
+		"null": {
+			val: fwtypes.CIDRBlockNull(),
+		},
+		"valid IPv4": {
+			val: fwtypes.CIDRBlockValue("10.2.2.0/24"),
+		},
+		"invalid IPv4": {
+			val:         fwtypes.CIDRBlockValue("10.2.2.2/24"),
 			expectError: true,
 		},
-		"unknown string": {
-			val: tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+		"valid IPv6": {
+			val: fwtypes.CIDRBlockValue("2000::/15"),
 		},
-		"null string": {
-			val: tftypes.NewValue(tftypes.String, nil),
-		},
-		"valid IPv4 string": {
-			val: tftypes.NewValue(tftypes.String, "10.2.2.0/24"),
-		},
-		"invalid IPv4 string": {
-			val:         tftypes.NewValue(tftypes.String, "10.2.2.2/24"),
-			expectError: true,
-		},
-		"valid IPv6 string": {
-			val: tftypes.NewValue(tftypes.String, "2000::/15"),
-		},
-		"invalid IPv6 string": {
-			val:         tftypes.NewValue(tftypes.String, "2001::/15"),
+		"invalid IPv6": {
+			val:         fwtypes.CIDRBlockValue("2001::/15"),
 			expectError: true,
 		},
 	}
@@ -100,14 +96,12 @@ func TestCIDRBlockTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.CIDRBlockType.Validate(ctx, test.val, path.Root("test"))
+			req := xattr.ValidateAttributeRequest{}
+			resp := xattr.ValidateAttributeResponse{}
 
-			if !diags.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if diags.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %#v", diags)
+			test.val.ValidateAttribute(ctx, req, &resp)
+			if resp.Diagnostics.HasError() != test.expectError {
+				t.Errorf("resp.Diagnostics.HasError() = %t, want = %t", resp.Diagnostics.HasError(), test.expectError)
 			}
 		})
 	}

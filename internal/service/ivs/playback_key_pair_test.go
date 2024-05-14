@@ -53,14 +53,14 @@ func testAccPlaybackKeyPair_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`playback-key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ivs", regexache.MustCompile(`playback-key/.+`)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 		},
 	})
@@ -92,7 +92,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint1),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 				),
 			},
 			{
@@ -101,7 +101,7 @@ func testAccPlaybackKeyPair_update(t *testing.T) {
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v2),
 					testAccCheckPlaybackKeyPairRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint2),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
 		},
@@ -130,7 +130,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -138,7 +138,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"public_key"},
+				ImportStateVerifyIgnore: []string{names.AttrPublicKey},
 			},
 			{
 				Config: testAccPlaybackKeyPairConfig_tags2(rName, publicKeyPEM, "key1", "value1updated", "key2", "value2"),
@@ -153,7 +153,7 @@ func testAccPlaybackKeyPair_tags(t *testing.T) {
 				Config: testAccPlaybackKeyPairConfig_tags1(rName, publicKeyPEM, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

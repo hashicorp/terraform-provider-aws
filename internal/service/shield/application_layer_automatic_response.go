@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -66,12 +66,12 @@ func (r *applicationLayerAutomaticResponseResource) Metadata(_ context.Context, 
 func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"action": schema.StringAttribute{
+			names.AttrAction: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[applicationLayerAutomaticResponseAction](),
 				Required:   true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -80,7 +80,7 @@ func (r *applicationLayerAutomaticResponseResource) Schema(ctx context.Context, 
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -139,8 +139,9 @@ func (r *applicationLayerAutomaticResponseResource) Read(ctx context.Context, re
 		return
 	}
 
-	response.Diagnostics.Append(data.InitFromID()...)
-	if response.Diagnostics.HasError() {
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
 
@@ -330,20 +331,17 @@ type applicationLayerAutomaticResponseResourceModel struct {
 	Timeouts    timeouts.Value                                              `tfsdk:"timeouts"`
 }
 
-func (model *applicationLayerAutomaticResponseResourceModel) InitFromID() diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	arn, d := fwtypes.ARNValue(model.ID.ValueString())
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
+func (data *applicationLayerAutomaticResponseResourceModel) InitFromID() error {
+	_, err := arn.Parse(data.ID.ValueString())
+	if err != nil {
+		return err
 	}
 
-	model.ResourceARN = arn
+	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
 
 	return nil
 }
 
-func (model *applicationLayerAutomaticResponseResourceModel) setID() {
-	model.ID = model.ResourceARN.StringValue
+func (data *applicationLayerAutomaticResponseResourceModel) setID() {
+	data.ID = data.ResourceARN.StringValue
 }

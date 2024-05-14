@@ -38,7 +38,7 @@ func ResourceAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -52,7 +52,7 @@ func ResourceAccount() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"email": {
+			names.AttrEmail: {
 				ForceNew: true,
 				Type:     schema.TypeString,
 				Required: true,
@@ -79,7 +79,7 @@ func ResourceAccount() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				ForceNew:     true,
 				Type:         schema.TypeString,
 				Required:     true,
@@ -97,7 +97,7 @@ func ResourceAccount() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -126,8 +126,8 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	s, err := createAccount(ctx, conn,
-		d.Get("name").(string),
-		d.Get("email").(string),
+		d.Get(names.AttrName).(string),
+		d.Get(names.AttrEmail).(string),
 		iamUserAccessToBilling,
 		roleName,
 		getTagsIn(ctx),
@@ -135,13 +135,13 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 	)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWS Organizations Account (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating AWS Organizations Account (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	output, err := waitAccountCreated(ctx, conn, aws.StringValue(s.Id))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) create: %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for AWS Organizations Account (%s) create: %s", d.Get(names.AttrName).(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.AccountId))
@@ -193,13 +193,13 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading AWS Organizations Account (%s) parent: %s", d.Id(), err)
 	}
 
-	d.Set("arn", account.Arn)
-	d.Set("email", account.Email)
+	d.Set(names.AttrARN, account.Arn)
+	d.Set(names.AttrEmail, account.Email)
 	d.Set("joined_method", account.JoinedMethod)
 	d.Set("joined_timestamp", aws.TimeValue(account.JoinedTimestamp).Format(time.RFC3339))
-	d.Set("name", account.Name)
+	d.Set(names.AttrName, account.Name)
 	d.Set("parent_id", parentAccountID)
-	d.Set("status", account.Status)
+	d.Set(names.AttrStatus, account.Status)
 
 	return diags
 }

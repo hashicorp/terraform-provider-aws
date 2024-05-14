@@ -39,7 +39,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("connection/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("connection/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.JDBC_CONNECTION_URL", jdbcConnectionUrl),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
@@ -77,7 +77,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, jdbcConnectionUrl, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -99,7 +99,7 @@ func TestAccGlueConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, jdbcConnectionUrl, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccGlueConnection_kafka(t *testing.T) {
 				Config: testAccConnectionConfig_kafka(rName, bootstrapServers),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.KAFKA_BOOTSTRAP_SERVERS", bootstrapServers),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "KAFKA"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
@@ -197,9 +197,9 @@ func TestAccGlueConnection_network(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "NETWORK"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
-					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.subnet_id"),
 				),
 			},
@@ -231,14 +231,14 @@ func TestAccGlueConnection_description(t *testing.T) {
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "First Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "description", "First Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "First Description"),
 				),
 			},
 			{
 				Config: testAccConnectionConfig_description(rName, jdbcConnectionUrl, "Second Description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "description", "Second Description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Second Description"),
 				),
 			},
 			{
@@ -280,7 +280,7 @@ func TestAccGlueConnection_matchCriteria(t *testing.T) {
 				Config: testAccConnectionConfig_matchCriteriaSecond(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.0", "criteria1"),
 				),
 			},
@@ -325,10 +325,10 @@ func TestAccGlueConnection_physicalConnectionRequirements(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.PASSWORD"),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_properties.USERNAME"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.availability_zone"),
-					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.0.security_group_id_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "physical_connection_requirements.0.subnet_id"),
 				),
 			},

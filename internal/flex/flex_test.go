@@ -466,3 +466,62 @@ func TestDiffStringValueMaps(t *testing.T) {
 		}
 	}
 }
+
+func TestDiffSlices(t *testing.T) {
+	t.Parallel()
+
+	type x struct {
+		A string
+		B int
+	}
+
+	cases := []struct {
+		Old, New                  []x
+		Create, Remove, Unchanged []x
+	}{
+		// Add
+		{
+			Old:       []x{{A: "foo", B: 1}},
+			New:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			Create:    []x{{A: "bar", B: 2}},
+			Remove:    []x{},
+			Unchanged: []x{{A: "foo", B: 1}},
+		},
+		// Modify
+		{
+			Old:       []x{{A: "foo", B: 1}},
+			New:       []x{{A: "foo", B: 2}},
+			Create:    []x{{A: "foo", B: 2}},
+			Remove:    []x{{A: "foo", B: 1}},
+			Unchanged: []x{},
+		},
+		// Overlap
+		{
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []x{{A: "foo", B: 3}, {A: "bar", B: 2}},
+			Create:    []x{{A: "foo", B: 3}},
+			Remove:    []x{{A: "foo", B: 1}},
+			Unchanged: []x{{A: "bar", B: 2}},
+		},
+		// Remove
+		{
+			Old:       []x{{A: "foo", B: 1}, {A: "bar", B: 2}},
+			New:       []x{{A: "foo", B: 1}},
+			Create:    []x{},
+			Remove:    []x{{A: "bar", B: 2}},
+			Unchanged: []x{{A: "foo", B: 1}},
+		},
+	}
+	for _, tc := range cases {
+		c, r, u := DiffSlices(tc.Old, tc.New, func(x1, x2 x) bool { return x1.A == x2.A && x1.B == x2.B })
+		if diff := cmp.Diff(c, tc.Create); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(r, tc.Remove); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+	}
+}

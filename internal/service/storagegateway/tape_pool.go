@@ -32,7 +32,7 @@ func ResourceTapePool() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -117,7 +117,7 @@ func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pool := output.PoolInfos[0]
 
 	poolArn := aws.StringValue(pool.PoolARN)
-	d.Set("arn", poolArn)
+	d.Set(names.AttrARN, poolArn)
 	d.Set("pool_name", pool.PoolName)
 	d.Set("retention_lock_time_in_days", pool.RetentionLockTimeInDays)
 	d.Set("retention_lock_type", pool.RetentionLockType)

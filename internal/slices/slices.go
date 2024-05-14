@@ -41,10 +41,31 @@ func ApplyToAll[S ~[]E1, E1, E2 any](s S, f func(E1) E2) []E2 {
 	return v
 }
 
+func ApplyToAllWithError[S ~[]E1, E1, E2 any](s S, f func(E1) (E2, error)) ([]E2, error) {
+	v := make([]E2, len(s))
+
+	for i, e1 := range s {
+		e2, err := f(e1)
+		if err != nil {
+			return nil, err
+		}
+		v[i] = e2
+	}
+
+	return v, nil
+}
+
 // ToPointers returns a new slice containing pointers to each element of the original slice `s`.
 func ToPointers[S ~[]E, E any](s S) []*E {
 	return ApplyToAll(s, func(e E) *E {
 		return &e
+	})
+}
+
+// Values returns a new slice containing values from the pointers in each element of the original slice `s`.
+func Values[S ~[]*E, E any](s S) []E {
+	return ApplyToAll(s, func(e *E) E {
+		return *e
 	})
 }
 

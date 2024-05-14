@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDetective_serial(t *testing.T) {
@@ -15,17 +16,17 @@ func TestAccDetective_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Graph": {
-			"basic":      testAccGraph_basic,
-			"disappears": testAccGraph_disappears,
-			"tags":       testAccGraph_tags,
+			"basic":        testAccGraph_basic,
+			"disappears":   testAccGraph_disappears,
+			names.AttrTags: testAccGraph_tags,
 		},
 		"InvitationAccepter": {
 			"basic": testAccInvitationAccepter_basic,
 		},
 		"Member": {
-			"basic":     testAccMember_basic,
-			"disappear": testAccMember_disappears,
-			"message":   testAccMember_message,
+			"basic":           testAccMember_basic,
+			"disappear":       testAccMember_disappears,
+			names.AttrMessage: testAccMember_message,
 		},
 		"OrganizationAdminAccount": {
 			"basic":       testAccOrganizationAdminAccount_basic,

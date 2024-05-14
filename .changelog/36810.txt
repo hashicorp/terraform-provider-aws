@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_redshift_snapshot_copy
+```
+```release-note:note
+resource/aws_redshift_cluster: The `snapshot_copy` argument is now deprecated. Use the `aws_redshift_snapshot_copy` resource instead.
+```

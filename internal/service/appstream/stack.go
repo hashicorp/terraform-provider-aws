@@ -56,7 +56,7 @@ func ResourceStack() *schema.Resource {
 				MaxItems: 4,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"endpoint_type": {
+						names.AttrEndpointType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.AccessEndpointType](),
@@ -76,7 +76,7 @@ func ResourceStack() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -88,20 +88,20 @@ func ResourceStack() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
+			names.AttrCreatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-			"display_name": {
+			names.AttrDisplayName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -124,7 +124,7 @@ func ResourceStack() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -190,7 +190,7 @@ func ResourceStack() *schema.Resource {
 				DiffSuppressFunc: suppressAppsStreamStackUserSettings,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.Action](),
@@ -223,13 +223,13 @@ func ResourceStack() *schema.Resource {
 				if stateApplicationSettings.IsKnown() && !stateApplicationSettings.IsNull() && stateApplicationSettings.LengthInt() > 0 {
 					setting := stateApplicationSettings.Index(cty.NumberIntVal(0))
 					if setting.IsKnown() && !setting.IsNull() {
-						enabled := setting.GetAttr("enabled")
+						enabled := setting.GetAttr(names.AttrEnabled)
 						if enabled.IsKnown() && !enabled.IsNull() && enabled.True() {
 							// Trigger a diff
 							return d.SetNew("application_settings", []map[string]any{
 								{
-									"enabled":        false,
-									"settings_group": "",
+									names.AttrEnabled: false,
+									"settings_group":  "",
 								},
 							})
 						}
@@ -259,7 +259,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &appstream.CreateStackInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -273,11 +273,11 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ApplicationSettings = expandApplicationSettings(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("display_name"); ok {
+	if v, ok := d.GetOk(names.AttrDisplayName); ok {
 		input.DisplayName = aws.String(v.(string))
 	}
 
@@ -341,15 +341,15 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
 	}
-	d.Set("arn", stack.Arn)
-	d.Set("created_time", aws.ToTime(stack.CreatedTime).Format(time.RFC3339))
-	d.Set("description", stack.Description)
-	d.Set("display_name", stack.DisplayName)
+	d.Set(names.AttrARN, stack.Arn)
+	d.Set(names.AttrCreatedTime, aws.ToTime(stack.CreatedTime).Format(time.RFC3339))
+	d.Set(names.AttrDescription, stack.Description)
+	d.Set(names.AttrDisplayName, stack.DisplayName)
 	if err = d.Set("embed_host_domains", flex.FlattenStringValueList(stack.EmbedHostDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
 	}
 	d.Set("feedback_url", stack.FeedbackURL)
-	d.Set("name", stack.Name)
+	d.Set(names.AttrName, stack.Name)
 	d.Set("redirect_url", stack.RedirectURL)
 	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
@@ -369,7 +369,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppStreamClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &appstream.UpdateStackInput{
 			Name: aws.String(d.Id()),
 		}
@@ -382,12 +382,12 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("display_name") {
-			input.DisplayName = aws.String(d.Get("display_name").(string))
+		if d.HasChange(names.AttrDisplayName) {
+			input.DisplayName = aws.String(d.Get(names.AttrDisplayName).(string))
 		}
 
 		if d.HasChange("feedback_url") {
@@ -480,7 +480,7 @@ func expandAccessEndpoint(tfMap map[string]interface{}) awstypes.AccessEndpoint 
 	}
 
 	apiObject := awstypes.AccessEndpoint{
-		EndpointType: awstypes.AccessEndpointType(tfMap["endpoint_type"].(string)),
+		EndpointType: awstypes.AccessEndpointType(tfMap[names.AttrEndpointType].(string)),
 	}
 	if v, ok := tfMap["vpce_id"]; ok {
 		apiObject.VpceId = aws.String(v.(string))
@@ -513,7 +513,7 @@ func expandAccessEndpoints(tfList []interface{}) []awstypes.AccessEndpoint {
 
 func flattenAccessEndpoint(apiObject awstypes.AccessEndpoint) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["endpoint_type"] = string(apiObject.EndpointType)
+	tfMap[names.AttrEndpointType] = string(apiObject.EndpointType)
 	tfMap["vpce_id"] = aws.ToString(apiObject.VpceId)
 
 	return tfMap
@@ -543,7 +543,7 @@ func expandApplicationSettings(tfList []interface{}) *awstypes.ApplicationSettin
 	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.ApplicationSettings{
-		Enabled: aws.Bool(tfMap["enabled"].(bool)),
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
 	}
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
@@ -558,8 +558,8 @@ func flattenApplicationSetting(apiObject *awstypes.ApplicationSettingsResponse) 
 	}
 
 	return map[string]interface{}{
-		"enabled":        aws.ToBool(apiObject.Enabled),
-		"settings_group": aws.ToString(apiObject.SettingsGroup),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"settings_group":  aws.ToString(apiObject.SettingsGroup),
 	}
 }
 
@@ -679,7 +679,7 @@ func expandUserSetting(tfMap map[string]interface{}) awstypes.UserSetting {
 	}
 
 	apiObject := awstypes.UserSetting{
-		Action:     awstypes.Action(tfMap["action"].(string)),
+		Action:     awstypes.Action(tfMap[names.AttrAction].(string)),
 		Permission: awstypes.Permission(tfMap["permission"].(string)),
 	}
 
@@ -709,7 +709,7 @@ func expandUserSettings(tfList []interface{}) []awstypes.UserSetting {
 
 func flattenUserSetting(apiObject awstypes.UserSetting) map[string]interface{} {
 	tfMap := map[string]interface{}{}
-	tfMap["action"] = string(apiObject.Action)
+	tfMap[names.AttrAction] = string(apiObject.Action)
 	tfMap["permission"] = string(apiObject.Permission)
 
 	return tfMap

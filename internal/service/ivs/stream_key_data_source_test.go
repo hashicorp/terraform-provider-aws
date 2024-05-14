@@ -28,9 +28,9 @@ func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
 				Config: testAccStreamKeyDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamKeyDataSource(dataSourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, "id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "value"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ivs", regexache.MustCompile(`stream-key/.+`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrValue),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ivs", regexache.MustCompile(`stream-key/.+`)),
 				),
 			},
 		},

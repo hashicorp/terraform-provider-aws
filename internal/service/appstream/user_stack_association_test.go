@@ -43,7 +43,7 @@ func TestAccAppStreamUserStackAssociation_basic(t *testing.T) {
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, "stack_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rEmail),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
 				),
 			},
 			{

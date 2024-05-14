@@ -125,8 +125,8 @@ func TestAccS3Object_basic(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", fmt.Sprintf("%s/test-key", rName)),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", fmt.Sprintf("%s/test-key", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -134,22 +134,22 @@ func TestAccS3Object_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "content"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrContent),
 					resource.TestCheckNoResourceAttr(resourceName, "content_base64"),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/octet-stream"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
-					resource.TestCheckNoResourceAttr(resourceName, "source"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -161,7 +161,7 @@ func TestAccS3Object_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -274,7 +274,7 @@ func TestAccS3Object_source(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -304,7 +304,7 @@ func TestAccS3Object_content(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "content_base64", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -337,7 +337,7 @@ func TestAccS3Object_etagEncryption(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -415,7 +415,7 @@ func TestAccS3Object_sourceHashTrigger(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "content_base64", "force_destroy", "source", "source_hash"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, "content_base64", names.AttrForceDestroy, names.AttrSource, "source_hash"},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -442,7 +442,7 @@ func TestAccS3Object_withContentCharacteristics(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "{anything will do }"),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "binary/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "binary/octet-stream"),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", "http://google.com"),
 				),
 			},
@@ -476,7 +476,7 @@ func TestAccS3Object_nonVersioned(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -526,7 +526,7 @@ func TestAccS3Object_updates(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -619,7 +619,7 @@ func TestAccS3Object_updatesWithVersioning(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/updateable-key", rName),
 			},
 		},
@@ -649,8 +649,8 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", accessPointResourceName, "arn"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
 			},
@@ -694,7 +694,7 @@ func TestAccS3Object_kms(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -728,7 +728,7 @@ func TestAccS3Object_sse(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "source"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, names.AttrSource},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -780,7 +780,7 @@ func TestAccS3Object_acl(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"acl", "content", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"acl", names.AttrContent, names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -828,7 +828,7 @@ func TestAccS3Object_metadata(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -891,7 +891,7 @@ func TestAccS3Object_storageClass(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -960,7 +960,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1029,7 +1029,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"content", "force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrContent, names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1177,7 +1177,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -1185,7 +1185,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1209,7 +1209,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1226,7 +1226,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1250,7 +1250,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1258,7 +1258,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Config: testAccObjectConfig_tags1(rName, key, "key1", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -1266,7 +1266,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
 			},
 		},
@@ -1293,7 +1293,7 @@ func TestAccS3Object_DefaultTags_providerOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
@@ -1301,7 +1301,7 @@ func TestAccS3Object_DefaultTags_providerOnly(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 		},
@@ -1472,7 +1472,7 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 				Config: testAccObjectConfig_tagsViaAccessPointAlias(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", regexache.MustCompile(fmt.Sprintf(`%s-\w+-s3alias/%s`, rName[:20], key))),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", regexache.MustCompile(fmt.Sprintf(`%s-\w+-s3alias/%s`, rName[:20], key))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
@@ -1925,7 +1925,7 @@ func TestAccS3Object_checksumAlgorithm(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", "content", "force_destroy"},
+				ImportStateVerifyIgnore: []string{"checksum_algorithm", "checksum_crc32", names.AttrContent, names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
 			},
 			{
@@ -1966,8 +1966,8 @@ func TestAccS3Object_keyWithSlashesMigrated(t *testing.T) {
 				Config: testAccObjectConfig_keyWithSlashes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "key", "/a/b//c///d/////e/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "/a/b//c///d/////e/"),
 				),
 			},
 			{
@@ -1997,8 +1997,8 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName, "test-key"))),
-					resource.TestMatchResourceAttr(resourceName, "bucket", regexache.MustCompile(fmt.Sprintf(`^%s--[-a-z0-9]+--x-s3$`, rName))),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", regexache.MustCompile(fmt.Sprintf(`%s--[-a-z0-9]+--x-s3/%s$`, rName, "test-key"))),
+					resource.TestMatchResourceAttr(resourceName, names.AttrBucket, regexache.MustCompile(fmt.Sprintf(`^%s--[-a-z0-9]+--x-s3$`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "checksum_algorithm"),
@@ -2006,26 +2006,26 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "checksum_crc32c", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha1", ""),
 					resource.TestCheckResourceAttr(resourceName, "checksum_sha256", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "content"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrContent),
 					resource.TestCheckNoResourceAttr(resourceName, "content_base64"),
 					resource.TestCheckResourceAttr(resourceName, "content_disposition", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_encoding", ""),
 					resource.TestCheckResourceAttr(resourceName, "content_language", ""),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/octet-stream"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/octet-stream"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, "force_destroy", "false"),
-					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
-					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "override_provider.0.default_tags.0.tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption", "AES256"),
-					resource.TestCheckNoResourceAttr(resourceName, "source"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "EXPRESS_ONEZONE"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -2037,14 +2037,14 @@ func TestAccS3Object_directoryBucket(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "override_provider"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "override_provider"},
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
 					rs, ok := s.RootModule().Resources[resourceName]
 					if !ok {
 						return "", fmt.Errorf("Not Found: %s", resourceName)
 					}
 
-					return fmt.Sprintf("s3://%s/test-key", rs.Primary.Attributes["bucket"]), nil
+					return fmt.Sprintf("s3://%s/test-key", rs.Primary.Attributes[names.AttrBucket]), nil
 				},
 			},
 		},
@@ -2119,15 +2119,15 @@ func TestAccS3Object_prefix(t *testing.T) {
 				Config: testAccObjectConfig_prefix(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/x-directory"),
-					resource.TestCheckResourceAttr(resourceName, "key", "pfx/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrContentType, "application/x-directory"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "pfx/"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 				ImportStateId:           fmt.Sprintf("s3://%s/pfx/", rName),
 			},
 		},
@@ -2210,16 +2210,16 @@ func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-			if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			var optFns []func(*s3.Options)
-			if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 			}
 
-			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"], optFns...)
+			_, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), rs.Primary.Attributes["etag"], rs.Primary.Attributes["checksum_algorithm"], optFns...)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2244,18 +2244,18 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
 		input := &s3.GetObjectInput{
-			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
-			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
+			Bucket:  aws.String(rs.Primary.Attributes[names.AttrBucket]),
+			Key:     aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey])),
 			IfMatch: aws.String(rs.Primary.Attributes["etag"]),
 		}
 
@@ -2292,18 +2292,18 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 		rs := s.RootModule().Resources[n]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
 		input := &s3.GetObjectAclInput{
-			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
-			Key:    aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"])),
+			Bucket: aws.String(rs.Primary.Attributes[names.AttrBucket]),
+			Key:    aws.String(tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey])),
 		}
 
 		output, err := conn.GetObjectAcl(ctx, input, optFns...)
@@ -2331,16 +2331,16 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resourc
 		rs := s.RootModule().Resources[n]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "", optFns...)
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), "", "", optFns...)
 
 		if err != nil {
 			return err
@@ -2366,16 +2366,16 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 		rs := s.RootModule().Resources[n]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
-		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), "", "", optFns...)
+		output, err := tfs3.FindObjectByBucketAndKey(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), "", "", optFns...)
 
 		if err != nil {
 			return err
@@ -2410,16 +2410,16 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 		rs := s.RootModule().Resources[n]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
-		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), oldTags, newTags, optFns...)
+		return tfs3.ObjectUpdateTags(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), oldTags, newTags, optFns...)
 	}
 }
 
@@ -2428,16 +2428,16 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 		rs := s.RootModule().Resources[n]
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-		if tfs3.IsDirectoryBucket(rs.Primary.Attributes["bucket"]) {
+		if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes["bucket"]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
-		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes["bucket"], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes["key"]), optFns...)
+		got, err := tfs3.ObjectListTags(ctx, conn, rs.Primary.Attributes[names.AttrBucket], tfs3.SDKv1CompatibleCleanKey(rs.Primary.Attributes[names.AttrKey]), optFns...)
 		if err != nil {
 			return err
 		}

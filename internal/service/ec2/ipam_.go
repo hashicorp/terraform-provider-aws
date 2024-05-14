@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -44,7 +45,7 @@ func ResourceIPAM() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -60,7 +61,7 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -91,6 +92,12 @@ func ResourceIPAM() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.IpamTierAdvanced,
+				ValidateFunc: validation.StringInSlice(ec2.IpamTier_Values(), false),
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -124,8 +131,12 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeIpam),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tier"); ok {
+		input.Tier = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateIpamWithContext(ctx, input)
@@ -159,16 +170,17 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading IPAM (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ipam.IpamArn)
+	d.Set(names.AttrARN, ipam.IpamArn)
 	d.Set("default_resource_discovery_association_id", ipam.DefaultResourceDiscoveryAssociationId)
 	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
-	d.Set("description", ipam.Description)
+	d.Set(names.AttrDescription, ipam.Description)
 	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
 	}
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
+	d.Set("tier", ipam.Tier)
 
 	setTagsOut(ctx, ipam.Tags)
 
@@ -179,13 +191,13 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &ec2.ModifyIpamInput{
 			IpamId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		if d.HasChange("operating_regions") {
@@ -209,6 +221,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			if len(operatingRegionUpdateRemove) != 0 {
 				input.RemoveOperatingRegions = operatingRegionUpdateRemove
 			}
+		}
+
+		if d.HasChange("tier") {
+			input.Tier = aws.String(d.Get("tier").(string))
 		}
 
 		_, err := conn.ModifyIpamWithContext(ctx, input)

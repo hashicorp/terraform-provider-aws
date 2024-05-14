@@ -45,10 +45,10 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 				Config: testAccInputConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 			{
@@ -85,20 +85,20 @@ func TestAccMediaLiveInput_update(t *testing.T) {
 				Config: testAccInputConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 			{
 				Config: testAccInputConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
-					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "UDP_PUSH"),
 				),
 			},
 		},
@@ -129,7 +129,7 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 				Config: testAccInputConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 				Config: testAccInputConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

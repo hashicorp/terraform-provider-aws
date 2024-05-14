@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_spot_datafeed_subscription")
@@ -28,12 +29,12 @@ func ResourceSpotDataFeedSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"prefix": {
+			names.AttrPrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -47,10 +48,10 @@ func resourceSpotDataFeedSubscriptionCreate(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateSpotDatafeedSubscriptionInput{
-		Bucket: aws.String(d.Get("bucket").(string)),
+		Bucket: aws.String(d.Get(names.AttrBucket).(string)),
 	}
 
-	if v, ok := d.GetOk("prefix"); ok {
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
 		input.Prefix = aws.String(v.(string))
 	}
 
@@ -81,8 +82,8 @@ func resourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Datafeed Subscription (%s): %s", d.Id(), err)
 	}
 
-	d.Set("bucket", subscription.Bucket)
-	d.Set("prefix", subscription.Prefix)
+	d.Set(names.AttrBucket, subscription.Bucket)
+	d.Set(names.AttrPrefix, subscription.Prefix)
 
 	return diags
 }

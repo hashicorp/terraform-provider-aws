@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -23,7 +23,7 @@ import (
 
 func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
@@ -37,8 +37,8 @@ func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`snapshot/snap-.+`)),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -48,7 +48,7 @@ func TestAccEC2EBSSnapshotImport_basic(t *testing.T) {
 
 func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
@@ -72,7 +72,7 @@ func TestAccEC2EBSSnapshotImport_disappears(t *testing.T) {
 
 func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parentResourceName := "aws_s3_object.test"
 	resourceName := "aws_ebs_snapshot_import.test"
@@ -97,7 +97,7 @@ func TestAccEC2EBSSnapshotImport_Disappears_s3Object(t *testing.T) {
 
 func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 
@@ -111,7 +111,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 				Config: testAccEBSSnapshotImportConfig_tags1(t, rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccEC2EBSSnapshotImport_tags(t *testing.T) {
 
 func TestAccEC2EBSSnapshotImport_storageTier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.Snapshot
+	var v awstypes.Snapshot
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ebs_snapshot_import.test"
 

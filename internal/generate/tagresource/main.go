@@ -58,13 +58,17 @@ func main() {
 	}
 
 	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
+
+	ian := *idAttribName
+	ian = names.ConstOrQuote(ian)
+
 	templateData := TemplateData{
 		AWSServiceUpper:      u,
 		ProviderResourceName: resourceName,
 		ServicePackage:       servicePackage,
 
 		GetTagFunc:     *getTagFunc,
-		IDAttribName:   *idAttribName,
+		IDAttribName:   ian,
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 

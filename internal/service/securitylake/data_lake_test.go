@@ -28,7 +28,7 @@ func testAccDataLake_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -38,13 +38,13 @@ func testAccDataLake_basic(t *testing.T) {
 				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.region", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "s3_bucket_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -68,7 +68,7 @@ func testAccDataLake_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -95,7 +95,7 @@ func testAccDataLake_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,7 +105,7 @@ func testAccDataLake_tags(t *testing.T) {
 				Config: testAccDataLakeConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -128,7 +128,7 @@ func testAccDataLake_tags(t *testing.T) {
 				Config: testAccDataLakeConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -146,7 +146,7 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -156,17 +156,17 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 				Config: testAccDataLakeConfig_lifeCycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
@@ -190,7 +190,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -200,17 +200,17 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 				Config: testAccDataLakeConfig_lifeCycle(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.days", "80"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.1.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
@@ -224,15 +224,15 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 				Config: testAccDataLakeConfig_lifeCycleUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "aws_kms_key.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
 				),
 			},
@@ -256,7 +256,7 @@ func testAccDataLake_replication(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
@@ -267,19 +267,19 @@ func testAccDataLake_replication(t *testing.T) {
 				Config: testAccDataLakeConfig_replication(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
-					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.encryption_configuration.0.kms_key_id", "S3_MANAGED_KEY"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.days", "31"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.transition.0.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.lifecycle_configuration.0.expiration.0.days", "300"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.#", acctest.CtOne),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.replication_configuration.0.role_arn", "aws_iam_role.datalake_s3_replication", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.replication_configuration.0.regions.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.replication_configuration.0.regions.*", acctest.Region()),
 				),
 			},

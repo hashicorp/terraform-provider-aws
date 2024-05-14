@@ -4,16 +4,15 @@
 package events
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -48,11 +47,6 @@ func RegisterSweepers() {
 		F:    sweepConnection,
 	})
 
-	resource.AddTestSweepers("aws_cloudwatch_event_permission", &resource.Sweeper{
-		Name: "aws_cloudwatch_event_permission",
-		F:    sweepPermissions,
-	})
-
 	resource.AddTestSweepers("aws_cloudwatch_event_rule", &resource.Sweeper{
 		Name: "aws_cloudwatch_event_rule",
 		F:    sweepRules,
@@ -73,48 +67,44 @@ func sweepAPIDestination(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
-
-	var sweeperErrs *multierror.Error
-
+	conn := client.EventsClient(ctx)
 	input := &eventbridge.ListApiDestinationsInput{
-		Limit: aws.Int64(100),
+		Limit: aws.Int32(100),
 	}
-	var apiDestinations []*eventbridge.ApiDestination
-	for {
-		output, err := conn.ListApiDestinationsWithContext(ctx, input)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EventBridge API Destination sweep for %s: %s", region, err)
-			return nil
+	err = listAPIDestinationsPages(ctx, conn, input, func(page *eventbridge.ListApiDestinationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving EventBridge API Destinations: %w", err)
+		for _, v := range page.ApiDestinations {
+			r := resourceAPIDestination()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		apiDestinations = append(apiDestinations, output.ApiDestinations...)
+		return !lastPage
+	})
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
-
-	for _, apiDestination := range apiDestinations {
-		input := &eventbridge.DeleteApiDestinationInput{
-			Name: apiDestination.Name,
-		}
-		_, err := conn.DeleteApiDestinationWithContext(ctx, input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge Api Destination (%s): %w", *apiDestination.Name, err))
-			continue
-		}
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge API Destination sweep for %s: %s", region, err)
+		return nil
 	}
 
-	log.Printf("[INFO] Deleted %d EventBridge Api Destinations", len(apiDestinations))
+	if err != nil {
+		return fmt.Errorf("error listing EventBridge API Destinations (%s): %w", region, err)
+	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge API Destinations (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepArchives(region string) error {
@@ -123,46 +113,39 @@ func sweepArchives(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
-
+	conn := client.EventsClient(ctx)
 	input := &eventbridge.ListArchivesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.ListArchivesWithContext(ctx, input)
-
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EventBridge archive sweep for %s: %s", region, err)
-			return nil
+	err = listArchivesPages(ctx, conn, input, func(page *eventbridge.ListArchivesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving EventBridge archive: %w", err)
+		for _, v := range page.Archives {
+			r := resourceArchive()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ArchiveName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if len(output.Archives) == 0 {
-			log.Print("[DEBUG] No EventBridge archives to sweep")
-			return nil
-		}
+		return !lastPage
+	})
 
-		for _, archive := range output.Archives {
-			name := aws.StringValue(archive.ArchiveName)
-			if name == "default" {
-				continue
-			}
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Archive sweep for %s: %s", region, err)
+		return nil
+	}
 
-			log.Printf("[INFO] Deleting EventBridge archive (%s)", name)
-			_, err := conn.DeleteArchiveWithContext(ctx, &eventbridge.DeleteArchiveInput{
-				ArchiveName: aws.String(name),
-			})
-			if err != nil {
-				return fmt.Errorf("Error deleting EventBridge archive (%s): %w", name, err)
-			}
-		}
+	if err != nil {
+		return fmt.Errorf("error listing EventBridge Archives (%s): %w", region, err)
+	}
 
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge Archives (%s): %w", region, err)
 	}
 
 	return nil
@@ -174,23 +157,24 @@ func sweepBuses(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
-	var sweeperErrs *multierror.Error
+	conn := client.EventsClient(ctx)
+	input := &eventbridge.ListEventBusesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	input := &eventbridge.ListEventBusesInput{}
 	err = listEventBusesPages(ctx, conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, eventBus := range page.EventBuses {
-			name := aws.StringValue(eventBus.Name)
+			name := aws.ToString(eventBus.Name)
+
 			if name == DefaultEventBusName {
+				log.Printf("[INFO] Skipping EventBridge Event Bus %s", name)
 				continue
 			}
 
-			r := ResourceBus()
+			r := resourceBus()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -200,19 +184,22 @@ func sweepBuses(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge event bus sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Event Bus sweep for %s: %s", region, err)
+		return nil
 	}
+
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses: %w", err))
+		return fmt.Errorf("error listing EventBridge Event Buses (%s): %w", region, err)
 	}
 
-	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Event Buses: %w", err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge Event Buses (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepConnection(region string) error {
@@ -221,88 +208,41 @@ func sweepConnection(region string) error {
 	if err != nil {
 		return fmt.Errorf("Error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
-
-	var sweeperErrs *multierror.Error
-
+	conn := client.EventsClient(ctx)
 	input := &eventbridge.ListConnectionsInput{
-		Limit: aws.Int64(100),
+		Limit: aws.Int32(100),
 	}
-	var connections []*eventbridge.Connection
-	for {
-		output, err := conn.ListConnectionsWithContext(ctx, input)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EventBridge Connection sweep for %s: %s", region, err)
-			return nil
+	err = listConnectionsPages(ctx, conn, input, func(page *eventbridge.ListConnectionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if err != nil {
-			return fmt.Errorf("Error retrieving EventBridge Connections: %w", err)
+		for _, v := range page.Connections {
+			r := resourceConnection()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Name))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
-	}
+		return !lastPage
+	})
 
-	for _, connection := range connections {
-		input := &eventbridge.DeleteConnectionInput{
-			Name: connection.Name,
-		}
-		_, err := conn.DeleteConnectionWithContext(ctx, input)
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("Error deleting EventBridge Connection (%s): %w", *connection.Name, err))
-			continue
-		}
-	}
-
-	log.Printf("[INFO] Deleted %d EventBridge Connections", len(connections))
-
-	return sweeperErrs.ErrorOrNil()
-}
-
-func sweepPermissions(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
-	}
-	conn := client.EventsConn(ctx)
-
-	output, err := conn.DescribeEventBusWithContext(ctx, &eventbridge.DescribeEventBusInput{})
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EventBridge Permission sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving EventBridge Permissions: %w", err)
-	}
-
-	policy := aws.StringValue(output.Policy)
-
-	if policy == "" {
-		log.Print("[DEBUG] No EventBridge Permissions to sweep")
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Connection sweep for %s: %s", region, err)
 		return nil
 	}
 
-	var policyDoc PermissionPolicyDoc
-	err = json.Unmarshal([]byte(policy), &policyDoc)
 	if err != nil {
-		return fmt.Errorf("Parsing EventBridge Permissions policy %q failed: %w", policy, err)
+		return fmt.Errorf("error listing EventBridge Connections (%s): %w", region, err)
 	}
 
-	for _, statement := range policyDoc.Statements {
-		sid := statement.Sid
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-		log.Printf("[INFO] Deleting EventBridge Permission %s", sid)
-		_, err := conn.RemovePermissionWithContext(ctx, &eventbridge.RemovePermissionInput{
-			StatementId: aws.String(sid),
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting EventBridge Permission %s: %w", sid, err)
-		}
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge Connections (%s): %w", region, err)
 	}
 
 	return nil
@@ -314,18 +254,17 @@ func sweepRules(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
+	conn := client.EventsClient(ctx)
 	input := &eventbridge.ListEventBusesInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listEventBusesPages(ctx, conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, eventBus := range page.EventBuses {
-			eventBusName := aws.StringValue(eventBus.Name)
-
+		for _, v := range page.EventBuses {
+			eventBusName := aws.ToString(v.Name)
 			input := &eventbridge.ListRulesInput{
 				EventBusName: aws.String(eventBusName),
 			}
@@ -335,47 +274,44 @@ func sweepRules(region string) error {
 					return !lastPage
 				}
 
-				for _, rule := range page.Rules {
-					ruleName := aws.StringValue(rule.Name)
+				for _, v := range page.Rules {
+					ruleName := aws.ToString(v.Name)
 
-					log.Printf("[DEBUG] Deleting EventBridge Rule: %s/%s", eventBusName, ruleName)
-					_, err := conn.DeleteRuleWithContext(ctx, &eventbridge.DeleteRuleInput{
-						EventBusName: aws.String(eventBusName),
-						Force:        aws.Bool(true),
-						Name:         aws.String(ruleName),
-					})
+					r := resourceRule()
+					d := r.Data(nil)
+					d.SetId(ruleCreateResourceID(eventBusName, ruleName))
+					d.Set(names.AttrForceDestroy, true)
 
-					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge Rule (%s/%s): %w", eventBusName, ruleName, err))
-						continue
-					}
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
 				return !lastPage
 			})
 
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Rules (%s): %w", region, err))
+				continue
 			}
 		}
 
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses (%s): %w", region, err))
+		return fmt.Errorf("error listing EventBridge Rules (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge Rules (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTargets(region string) error {
@@ -384,18 +320,17 @@ func sweepTargets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.EventsConn(ctx)
+	conn := client.EventsClient(ctx)
 	input := &eventbridge.ListEventBusesInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = listEventBusesPages(ctx, conn, input, func(page *eventbridge.ListEventBusesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, eventBus := range page.EventBuses {
-			eventBusName := aws.StringValue(eventBus.Name)
-
+		for _, v := range page.EventBuses {
+			eventBusName := aws.ToString(v.Name)
 			input := &eventbridge.ListRulesInput{
 				EventBusName: aws.String(eventBusName),
 			}
@@ -405,9 +340,8 @@ func sweepTargets(region string) error {
 					return !lastPage
 				}
 
-				for _, rule := range page.Rules {
-					ruleName := aws.StringValue(rule.Name)
-
+				for _, v := range page.Rules {
+					ruleName := aws.ToString(v.Name)
 					input := &eventbridge.ListTargetsByRuleInput{
 						EventBusName: aws.String(eventBusName),
 						Rule:         aws.String(ruleName),
@@ -418,58 +352,53 @@ func sweepTargets(region string) error {
 							return !lastPage
 						}
 
-						for _, target := range page.Targets {
-							targetID := aws.StringValue(target.Id)
+						for _, v := range page.Targets {
+							targetID := aws.ToString(v.Id)
 
-							log.Printf("[DEBUG] Deleting EventBridge Target: %s/%s/%s", eventBusName, ruleName, targetID)
-							_, err := conn.RemoveTargetsWithContext(ctx, &eventbridge.RemoveTargetsInput{
-								EventBusName: aws.String(eventBusName),
-								Force:        aws.Bool(true),
-								Ids:          aws.StringSlice([]string{targetID}),
-								Rule:         aws.String(ruleName),
-							})
+							r := resourceTarget()
+							d := r.Data(nil)
+							d.SetId(targetCreateResourceID(eventBusName, ruleName, targetID))
+							d.Set("event_bus_name", eventBusName)
+							d.Set(names.AttrForceDestroy, true)
+							d.Set(names.AttrRule, ruleName)
+							d.Set("target_id", targetID)
 
-							if err != nil {
-								sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting EventBridge Target (%s/%s/%s): %w", eventBusName, ruleName, targetID, err))
-								continue
-							}
+							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 						}
 
 						return !lastPage
 					})
 
-					if awsv1.SkipSweepError(err) {
-						continue
-					}
-
 					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Targets (%s): %w", region, err))
+						continue
 					}
 				}
 
 				return !lastPage
 			})
 
-			if awsv1.SkipSweepError(err) {
-				continue
-			}
-
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge Rules (%s): %w", region, err))
+				continue
 			}
 		}
 
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping EventBridge Rule sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EventBridge Target sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EventBridge event buses (%s): %w", region, err))
+		return fmt.Errorf("error listing EventBridge Targets (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EventBridge Targets (%s): %w", region, err)
+	}
+
+	return nil
 }

@@ -22,25 +22,25 @@ func TestAccELBV2HostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", "id", tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.main", names.AttrID, tfelbv2.HostedZoneIdPerRegionALBMap[acctest.Region()]),
 				),
 			},
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.regional", "id", "Z32O12XQLNTSW2"),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.regional", names.AttrID, "Z32O12XQLNTSW2"),
 				),
 			},
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_explicitNetwork,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", "id", tfelbv2.HostedZoneIdPerRegionNLBMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network", names.AttrID, tfelbv2.HostedZoneIdPerRegionNLBMap[acctest.Region()]),
 				),
 			},
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_explicitNetworkRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network-regional", "id", "Z2IFOLAFXWLO4F"),
+					resource.TestCheckResourceAttr("data.aws_lb_hosted_zone_id.network-regional", names.AttrID, "Z2IFOLAFXWLO4F"),
 				),
 			},
 		},
