@@ -44,9 +44,9 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "major_engine_version", "8.0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "option_group_description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				Config: testAccOptionGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				Config: testAccOptionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -176,7 +176,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				Config: testAccOptionGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -478,7 +478,7 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "option.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -508,7 +508,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup1),
 					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -522,7 +522,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup2),
 					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -532,7 +532,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOptionGroupExists(ctx, resourceName, &optionGroup3),
 					resource.TestCheckResourceAttr(resourceName, "option.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

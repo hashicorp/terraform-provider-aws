@@ -74,7 +74,7 @@ func TestAccElastiCacheUserGroup_update(t *testing.T) {
 				Config: testAccUserGroupConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "user_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "user_ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "user_group_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 				),
@@ -108,7 +108,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -116,7 +116,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -125,7 +125,7 @@ func TestAccElastiCacheUserGroup_tags(t *testing.T) {
 				Config: testAccUserGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

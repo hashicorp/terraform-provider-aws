@@ -45,7 +45,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNamespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrSet(resourceName, "service_account"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -120,7 +120,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -129,7 +129,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 				Config: testAccPodIdentityAssociationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPodIdentityAssociationExists(ctx, resourceName, &podidentityassociation),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

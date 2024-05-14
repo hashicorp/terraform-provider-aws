@@ -41,7 +41,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -134,7 +134,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -143,7 +143,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

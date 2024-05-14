@@ -41,7 +41,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeAllowlist),
@@ -49,9 +49,9 @@ func TestAccNetworkFirewallRuleGroup_Basic_rulesSourceList(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -190,8 +190,8 @@ func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 						"settings.#": acctest.CtOne,
 						"settings.0": acctest.CtOne,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -235,7 +235,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_statelessRule(t *testing.T) {
 						"rule_definition.0.match_attributes.0.source.#":      acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.actions.*", "aws:drop"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -273,8 +273,8 @@ alert http any any -> any any (http_response_line; content:"403 Forbidden"; sid:
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_string", rules),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -352,7 +352,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRuleOptions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup3),
 					testAccCheckRuleGroupNotRecreated(&ruleGroup2, &ruleGroup3),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", acctest.CtZero),
 				),
 			},
 			{
@@ -390,7 +390,7 @@ func TestAccNetworkFirewallRuleGroup_statelessRuleWithCustomAction(t *testing.T)
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*", map[string]string{
 						names.AttrPriority:                                   acctest.CtOne,
 						"rule_definition.#":                                  acctest.CtOne,
-						"rule_definition.0.actions.#":                        "2",
+						"rule_definition.0.actions.#":                        acctest.CtTwo,
 						"rule_definition.0.match_attributes.#":               acctest.CtOne,
 						"rule_definition.0.match_attributes.0.destination.#": acctest.CtOne,
 						"rule_definition.0.match_attributes.0.source.#":      acctest.CtOne,
@@ -444,7 +444,7 @@ func TestAccNetworkFirewallRuleGroup_updateRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_string", updatedRules),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.CtZero),
 				),
 			},
 			{
@@ -487,10 +487,10 @@ func TestAccNetworkFirewallRuleGroup_updateRulesSourceList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.generated_rules_type", networkfirewall.GeneratedRulesTypeDenylist),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeHttpHost),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.target_types.*", networkfirewall.TargetTypeTlsSni),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test.example.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.rules_source_list.0.targets.*", "test2.example.com"),
 				),
@@ -527,7 +527,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						names.AttrKey:           "example",
 						"ip_set.#":              acctest.CtOne,
-						"ip_set.0.definition.#": "2",
+						"ip_set.0.definition.#": acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
@@ -540,7 +540,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						names.AttrKey:           "example",
@@ -559,7 +559,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.port_sets.*", map[string]string{
 						names.AttrKey:             "example",
 						"port_set.#":              acctest.CtOne,
-						"port_set.0.definition.#": "2",
+						"port_set.0.definition.#": acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "443"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.port_sets.*.port_set.0.definition.*", "80"),
@@ -570,7 +570,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rule_variables.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.#", acctest.CtOne),
 				),
 			},
@@ -616,7 +616,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
 						"keyword":    "sid",
 						"settings.#": acctest.CtOne,
@@ -625,7 +625,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
 						"keyword":    "rev",
 						"settings.#": acctest.CtOne,
-						"settings.0": "2",
+						"settings.0": acctest.CtTwo,
 					}),
 				),
 			},
@@ -664,7 +664,7 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 				Config: testAccRuleGroupConfig_multipleStateful(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.action", networkfirewall.StatefulActionPass),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.destination", "124.1.1.24/32"),
@@ -703,7 +703,7 @@ func TestAccNetworkFirewallRuleGroup_updateMultipleStatefulRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.protocol", networkfirewall.StatefulRuleProtocolIp),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -884,7 +884,7 @@ func TestAccNetworkFirewallRuleGroup_updateStatelessRule(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.flags.*", "SYN"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "SYN"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rules_source.0.stateless_rules_and_custom_actions.0.stateless_rule.*.rule_definition.0.match_attributes.0.tcp_flag.*.masks.*", "ACK"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -912,7 +912,7 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRuleGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -925,7 +925,7 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 				Config: testAccRuleGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -933,7 +933,7 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 			{
 				Config: testAccRuleGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -970,7 +970,7 @@ func TestAccNetworkFirewallRuleGroup_encryptionConfiguration(t *testing.T) {
 				Config: testAccRuleGroupConfig_encryptionConfigurationDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.CtZero),
 				),
 			},
 			{

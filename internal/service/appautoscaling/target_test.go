@@ -41,7 +41,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 
@@ -50,8 +50,8 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "8"),
-					resource.TestCheckResourceAttr(resourceName, "min_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -104,7 +104,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				Config: testAccTargetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				Config: testAccTargetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -127,7 +127,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 				Config: testAccTargetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -224,7 +224,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(readResourceName, "service_namespace", "dynamodb"),
 					resource.TestCheckResourceAttr(readResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(readResourceName, "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
-					resource.TestCheckResourceAttr(readResourceName, "min_capacity", "2"),
+					resource.TestCheckResourceAttr(readResourceName, "min_capacity", acctest.CtTwo),
 					resource.TestCheckResourceAttr(readResourceName, "max_capacity", "15"),
 				),
 			},

@@ -42,7 +42,7 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, dbResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
-					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.#", acctest.CtOne),
@@ -50,7 +50,7 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.name", ""),
 					resource.TestCheckResourceAttr(resourceName, "schema.0.composite_partition_key.0.type", "MEASURE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -80,7 +80,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
-					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", acctest.CtZero),
 				),
 			},
 			{
@@ -283,7 +283,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 				Config: testAccTableConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -293,10 +293,10 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 				Config: testAccTableConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
@@ -305,7 +305,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 				Config: testAccTableConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),

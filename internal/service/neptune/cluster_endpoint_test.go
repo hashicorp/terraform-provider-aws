@@ -40,9 +40,9 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_neptune_cluster.test", names.AttrClusterIdentifier),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "static_members.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "excluded_members.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "static_members.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "excluded_members.#", acctest.CtZero),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -92,7 +92,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 				Config: testAccClusterEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

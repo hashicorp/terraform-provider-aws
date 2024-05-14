@@ -243,7 +243,7 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.aws_account_id.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.aws_account_id.*", map[string]string{
 						"comparison":    string(types.StringFilterComparisonEquals),
 						names.AttrValue: "1234567890",
@@ -252,7 +252,7 @@ func testAccInsight_MultipleFilters(t *testing.T) {
 						"comparison":    string(types.StringFilterComparisonEquals),
 						names.AttrValue: "09876543210",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.product_fields.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.product_fields.*", map[string]string{
 						"comparison":    string(types.MapFilterComparisonEquals),
 						names.AttrKey:   "key1",

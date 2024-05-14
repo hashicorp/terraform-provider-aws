@@ -207,7 +207,7 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "video.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "video_codec_options.%", "5"),
-					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", acctest.CtZero),
 				),
 			},
 			{

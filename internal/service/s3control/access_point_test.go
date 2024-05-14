@@ -55,7 +55,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_policy", "true"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", "true"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", "true"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", acctest.CtZero),
 				),
 			},
 			{
@@ -202,7 +202,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", "true"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", "false"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", acctest.CtZero),
 				),
 			},
 			{
@@ -256,7 +256,7 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.block_public_policy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.ignore_public_acls", "false"),
 					resource.TestCheckResourceAttr(resourceName, "public_access_block_configuration.0.restrict_public_buckets", "false"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", acctest.CtZero),
 				),
 			},
 			{

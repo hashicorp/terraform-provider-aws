@@ -37,10 +37,10 @@ func TestAccLambdaFunctionEventInvokeConfig_basic(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "0"),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "2"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "qualifier", ""),
 				),
 			},
@@ -219,7 +219,7 @@ func TestAccLambdaFunctionEventInvokeConfig_Destination_remove(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_qualifierVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.CtZero),
 				),
 			},
 		},
@@ -387,7 +387,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtZero),
 				),
 			},
 			{
@@ -406,7 +406,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumRetryAttempts(t *testing.T) {
 				Config: testAccFunctionEventInvokeConfigConfig_maximumRetryAttempts(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maximum_retry_attempts", acctest.CtZero),
 				),
 			},
 		},

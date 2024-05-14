@@ -248,7 +248,7 @@ func TestAccRDSCustomDBEngineVersion_tags(t *testing.T) {
 				Config: testAccCustomDBEngineVersionConfig_tags(rName, ami, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomDBEngineVersionExists(ctx, resourceName, &customdbengineversion),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

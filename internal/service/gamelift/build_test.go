@@ -66,7 +66,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.key", key),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.role_arn", roleArn),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -130,7 +130,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -153,7 +153,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBuildExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

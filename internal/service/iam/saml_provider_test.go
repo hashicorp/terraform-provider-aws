@@ -39,7 +39,7 @@ func TestAccIAMSAMLProvider_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_metadata_document"),
 					resource.TestCheckResourceAttrSet(resourceName, "valid_until"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -88,7 +88,7 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				Config: testAccSAMLProviderConfig_tags2(rName, idpEntityId, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -97,7 +97,7 @@ func TestAccIAMSAMLProvider_tags(t *testing.T) {
 				Config: testAccSAMLProviderConfig_tags1(rName, idpEntityId, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

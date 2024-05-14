@@ -42,7 +42,7 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", acctest.CtZero),
 				),
 			},
 			{

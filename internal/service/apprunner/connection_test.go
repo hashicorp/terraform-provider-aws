@@ -39,7 +39,7 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithub)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ConnectionStatusPendingHandshake)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -104,10 +104,10 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
@@ -116,7 +116,7 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),

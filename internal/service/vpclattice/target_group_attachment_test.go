@@ -99,7 +99,7 @@ func TestAccVPCLatticeTargetGroupAttachment_lambda(t *testing.T) {
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", lambdaResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "target.0.port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", acctest.CtZero),
 				),
 			},
 		},

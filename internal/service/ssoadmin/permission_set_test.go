@@ -61,7 +61,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -74,7 +74,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags2(rName, "key1", "updatedvalue1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "updatedvalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -88,7 +88,7 @@ func TestAccSSOAdminPermissionSet_tags(t *testing.T) {
 				Config: testAccPermissionSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSOAdminPermissionSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -56,7 +56,7 @@ func TestAccAppIntegrationsDataIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.first_execution_from", firstExecutionFrom),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.object", "Account"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_config.0.schedule_expression", "rate(1 hour)"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -193,7 +193,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_basic(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_tags(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -215,7 +215,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

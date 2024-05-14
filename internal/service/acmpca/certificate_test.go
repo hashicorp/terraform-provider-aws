@@ -623,7 +623,7 @@ func TestExpandValidityValue(t *testing.T) {
 		},
 		{
 			Type:     string(types.ValidityPeriodTypeYears),
-			Value:    "2",
+			Value:    acctest.CtTwo,
 			Expected: 2,
 		},
 	}

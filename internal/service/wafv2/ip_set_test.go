@@ -41,8 +41,8 @@ func TestAccWAFV2IPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
@@ -151,7 +151,7 @@ func TestAccWAFV2IPSet_minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtZero),
 				),
 			},
 			{
@@ -186,7 +186,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func TestAccWAFV2IPSet_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -221,7 +221,7 @@ func TestAccWAFV2IPSet_addresses(t *testing.T) {
 				Config: testAccIPSetConfig_addresses(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -245,7 +245,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 				),
 			},
@@ -260,7 +260,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
@@ -270,7 +270,7 @@ func TestAccWAFV2IPSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/ipset/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
 				),
 			},

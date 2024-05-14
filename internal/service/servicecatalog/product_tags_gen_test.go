@@ -35,7 +35,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -65,7 +65,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -96,7 +96,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccServiceCatalogProduct_tags(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -164,7 +164,7 @@ func TestAccServiceCatalogProduct_tags_null(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -227,7 +227,7 @@ func TestAccServiceCatalogProduct_tags_AddOnUpdate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -273,7 +273,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -300,7 +300,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -343,7 +343,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -358,7 +358,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
 				),
@@ -389,7 +389,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -435,7 +435,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -449,7 +449,7 @@ func TestAccServiceCatalogProduct_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
 			},
@@ -494,7 +494,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
@@ -529,8 +529,8 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
@@ -565,7 +565,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
 				),
@@ -596,8 +596,8 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -642,9 +642,9 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
 				),
@@ -683,7 +683,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
@@ -721,8 +721,8 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nonOverlapping(t *testing.T) 
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -767,7 +767,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
@@ -808,10 +808,10 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey2", "resourcevalue2"),
 				),
@@ -851,7 +851,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
@@ -901,7 +901,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToProviderOnly(t *testi
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -919,7 +919,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToProviderOnly(t *testi
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
@@ -967,7 +967,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToResourceOnly(t *testi
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
 				),
@@ -983,7 +983,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_updateToResourceOnly(t *testi
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -1035,7 +1035,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_emptyResourceTag(t *testing.T
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
@@ -1088,7 +1088,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nullOverlappingResourceTag(t 
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
 				),
@@ -1140,7 +1140,7 @@ func TestAccServiceCatalogProduct_tags_DefaultTags_nullNonOverlappingResourceTag
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
@@ -1187,7 +1187,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnCreate(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -1242,7 +1242,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1257,7 +1257,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
@@ -1315,7 +1315,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -1328,7 +1328,7 @@ func TestAccServiceCatalogProduct_tags_ComputedTag_OnUpdate_Replace(t *testing.T
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", "null_resource.test", names.AttrID),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{

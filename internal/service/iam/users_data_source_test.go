@@ -71,8 +71,8 @@ func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentNameRegex,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
 				),
 			},
 		},
@@ -91,8 +91,8 @@ func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
 			{
 				Config: testAccUsersDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
 				),
 			},
 		},

@@ -44,13 +44,13 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "fulfilled_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "fulfilled_on_demand_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfilled_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "fulfilled_on_demand_capacity", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.version"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "replace_unhealthy_instances", "false"),
@@ -58,10 +58,10 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_interruption_behavior", "terminate"),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.default_target_capacity_type", "spot"),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "maintain"),
@@ -117,7 +117,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -131,7 +131,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -140,7 +140,7 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 				Config: testAccFleetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -313,7 +313,7 @@ func TestAccEC2Fleet_LaunchTemplateLaunchTemplateSpecification_version(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, launchTemplateResourceName, &launchTemplate),
 					resource.TestCheckResourceAttr(launchTemplateResourceName, names.AttrInstanceType, "t3.small"),
-					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", "2"),
+					resource.TestCheckResourceAttr(launchTemplateResourceName, "latest_version", acctest.CtTwo),
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
@@ -551,7 +551,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_acceleratorCoun
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.max", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.accelerator_count.0.max", acctest.CtZero),
 				),
 			},
 			{
@@ -1392,7 +1392,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_instanceGenerat
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.*", "current"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.instance_generations.*", "previous"),
 				),
@@ -1545,7 +1545,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_localStorageTyp
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.*", "hdd"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.local_storage_types.*", "ssd"),
 				),
@@ -2236,7 +2236,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_priority(t *testing.T) {
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", acctest.CtTwo),
 				),
 			},
 		},
@@ -2260,9 +2260,9 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", acctest.CtTwo),
 				),
 			},
 			{
@@ -2277,8 +2277,8 @@ func TestAccEC2Fleet_LaunchTemplateOverridePriority_multiple(t *testing.T) {
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.priority", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.priority", acctest.CtOne),
 				),
 			},
@@ -2363,7 +2363,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_weightedCapacity(t *testing.T) {
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtTwo),
 				),
 			},
 		},
@@ -2387,7 +2387,7 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", acctest.CtOne),
 				),
@@ -2404,9 +2404,9 @@ func TestAccEC2Fleet_LaunchTemplateOverrideWeightedCapacity_multiple(t *testing.
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.weighted_capacity", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.1.weighted_capacity", acctest.CtTwo),
 				),
 			},
 		},
@@ -2760,7 +2760,7 @@ func TestAccEC2Fleet_SpotOptions_instancePoolsToUseCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "spot_options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spot_options.0.instance_pools_to_use_count", acctest.CtTwo),
 				),
 			},
 			{
@@ -2907,7 +2907,7 @@ func TestAccEC2Fleet_TargetCapacitySpecification_totalTargetCapacity(t *testing.
 					testAccCheckFleetExists(ctx, resourceName, &fleet2),
 					testAccCheckFleetNotRecreated(&fleet1, &fleet2),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity_specification.0.total_target_capacity", acctest.CtTwo),
 				),
 			},
 		},
@@ -3028,8 +3028,8 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	fleetType := "instant"
-	totalTargetCapacity := "2"
 	terminateInstances := true
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckFleet(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -3037,12 +3037,12 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_type_instant(rName, fleetType, terminateInstances, totalTargetCapacity),
+				Config: testAccFleetConfig_type_instant(rName, fleetType, terminateInstances, acctest.CtTwo),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, fleetType),
 					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.0.instance_ids.#", totalTargetCapacity),
+					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.0.instance_ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_ids.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.lifecycle"),

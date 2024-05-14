@@ -98,7 +98,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				Config: testAccGlobalTableConfig_multipleRegions2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 				),
 			},
 			{

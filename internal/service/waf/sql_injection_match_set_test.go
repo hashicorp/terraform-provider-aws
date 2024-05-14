@@ -176,7 +176,7 @@ func TestAccWAFSQLInjectionMatchSet_noTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &sqlSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", acctest.CtZero),
 				),
 			},
 			{

@@ -56,7 +56,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, aliasName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -74,7 +74,7 @@ func TestAccGameLiftAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_strategy.0.type", "TERMINAL"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, uAliasName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, uDescription),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -102,7 +102,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags1(aliasName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -115,7 +115,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags2(aliasName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -124,7 +124,7 @@ func TestAccGameLiftAlias_tags(t *testing.T) {
 				Config: testAccAliasConfig_basicTags1(aliasName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAliasExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

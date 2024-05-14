@@ -82,7 +82,7 @@ func TestAccVPCsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccVPCVPCsDataSourceConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_vpcs.test", "ids.#", acctest.CtZero),
 				),
 			},
 		},

@@ -390,7 +390,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -398,7 +398,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -407,7 +407,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

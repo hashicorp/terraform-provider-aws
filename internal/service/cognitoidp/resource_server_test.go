@@ -42,8 +42,8 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, identifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name1),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtZero),
 				),
 			},
 			{
@@ -52,8 +52,8 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, identifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name2),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtZero),
 				),
 			},
 			{
@@ -83,8 +83,8 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 				Config: testAccResourceServerConfig_scope(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -105,8 +105,8 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 				Config: testAccResourceServerConfig_basic(identifier, name, poolName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceServerExists(ctx, resourceName, &resourceServer),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "scope_identifiers.#", acctest.CtZero),
 				),
 			},
 		},

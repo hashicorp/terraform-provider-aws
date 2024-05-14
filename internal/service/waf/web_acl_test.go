@@ -41,8 +41,8 @@ func TestAccWAFWebACL_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`webacl/.+`)),
 				),
 			},
@@ -76,8 +76,8 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 				),
 			},
 			{
@@ -88,8 +88,8 @@ func TestAccWAFWebACL_changeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccWAFWebACL_rules(t *testing.T) {
 				Config: testAccWebACLConfig_rulesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtTwo),
 				),
 			},
 			// Test removing rule
@@ -206,7 +206,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.0.field_to_match.#", acctest.CtTwo),
 				),
 			},
 			// Test resource import
@@ -222,7 +222,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.redacted_fields.#", acctest.CtZero),
 				),
 			},
 			// Test logging configuration removal
@@ -230,7 +230,7 @@ func TestAccWAFWebACL_logging(t *testing.T) {
 				Config: testAccWebACLConfig_loggingRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &webACL),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", acctest.CtZero),
 				),
 			},
 		},
@@ -281,9 +281,9 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 				),
 			},
 			{
@@ -294,10 +294,10 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 				),
 			},
 			{
@@ -308,9 +308,9 @@ func TestAccWAFWebACL_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.CtZero),
 				),
 			},
 			{

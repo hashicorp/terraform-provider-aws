@@ -26,9 +26,9 @@ func TestAccEC2EBSVolumesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEBSVolumesDataSourceConfig_volumeIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_tags", "ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr("data.aws_ebs_volumes.by_filter", "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr("data.aws_ebs_volumes.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volumes.empty", "ids.#", acctest.CtZero),
 				),
 			},
 		},

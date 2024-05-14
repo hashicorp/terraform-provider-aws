@@ -112,7 +112,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
 						"allowed_methods.#": "3",
@@ -214,7 +214,7 @@ func TestAccS3BucketCORSConfiguration_MultipleRules(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
 						"allowed_methods.#": "3",
@@ -264,9 +264,9 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_origins.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.max_age_seconds", "3000"),
 				),
 			},
@@ -278,9 +278,9 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
-						"allowed_methods.#": "2",
+						"allowed_methods.#": acctest.CtTwo,
 						"allowed_origins.#": acctest.CtOne,
-						"expose_headers.#":  "2",
+						"expose_headers.#":  acctest.CtTwo,
 						"max_age_seconds":   "3000",
 					}),
 				),
@@ -307,9 +307,9 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_methods.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_origins.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", "2"),
+					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.expose_headers.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.max_age_seconds", "3000"),
 				),
 			},

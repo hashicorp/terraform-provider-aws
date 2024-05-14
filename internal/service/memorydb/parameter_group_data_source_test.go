@@ -32,7 +32,7 @@ func TestAccMemoryDBParameterGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFamily, resourceName, names.AttrFamily),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "parameter.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-max",
 						names.AttrValue: "70",
@@ -41,7 +41,7 @@ func TestAccMemoryDBParameterGroupDataSource_basic(t *testing.T) {
 						names.AttrName:  "active-defrag-cycle-min",
 						names.AttrValue: "10",
 					}),
-					resource.TestCheckResourceAttr(dataSourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Test", resourceName, "tags.Test"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
 				),

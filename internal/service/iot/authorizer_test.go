@@ -99,7 +99,7 @@ func TestAccIoTAuthorizer_signingDisabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.CtZero),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "signing_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "INACTIVE"),
 					resource.TestCheckResourceAttr(resourceName, "token_key_name", "Token-Header-2"),
-					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "token_signing_public_keys.%", acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key1"),
 					resource.TestCheckResourceAttrSet(resourceName, "token_signing_public_keys.Key2"),
 				),

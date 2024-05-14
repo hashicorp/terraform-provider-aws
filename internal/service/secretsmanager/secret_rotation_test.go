@@ -265,7 +265,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", acctest.CtZero),
 				),
 			},
 			{

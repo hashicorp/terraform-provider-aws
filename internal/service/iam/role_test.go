@@ -609,15 +609,15 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtZero),
 				),
 			},
 			{
@@ -625,7 +625,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtZero),
 				),
 			},
 			{
@@ -657,7 +657,7 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtZero),
 				),
 			},
 			{
@@ -726,7 +726,7 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -877,7 +877,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", acctest.CtZero),
 				),
 			},
 		},

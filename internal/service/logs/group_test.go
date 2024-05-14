@@ -44,9 +44,9 @@ func TestAccLogsGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_group_class", expectedLogGroupClass),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -167,7 +167,7 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -176,7 +176,7 @@ func TestAccLogsGroup_tags(t *testing.T) {
 				Config: testAccGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -290,7 +290,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				Config: testAccGroupConfig_retentionPolicy(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", acctest.CtZero),
 				),
 			},
 		},

@@ -65,7 +65,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags2(wafRuleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -87,7 +87,7 @@ func TestAccWAFRegionalRateBasedRule_tags(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_tags1(wafRuleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -265,7 +265,7 @@ func TestAccWAFRegionalRateBasedRule_noPredicates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.CtZero),
 				),
 			},
 			{

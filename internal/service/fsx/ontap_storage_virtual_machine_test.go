@@ -49,7 +49,7 @@ func TestAccFSxONTAPStorageVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "subtype", fsx.StorageVirtualMachineSubtypeDefault),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "uuid"),
 				),
 			},
@@ -79,7 +79,7 @@ func TestAccFSxONTAPStorageVirtualMachine_rootVolumeSecurityStyle(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`storage-virtual-machine/fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.0.iscsi.#", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoints.0.iscsi.0.dns_name"),
@@ -216,7 +216,7 @@ func TestAccFSxONTAPStorageVirtualMachine_tags(t *testing.T) {
 				Config: testAccONTAPStorageVirtualMachineConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -230,7 +230,7 @@ func TestAccFSxONTAPStorageVirtualMachine_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine2),
 					testAccCheckONTAPStorageVirtualMachineNotRecreated(&storageVirtualMachine1, &storageVirtualMachine2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -240,7 +240,7 @@ func TestAccFSxONTAPStorageVirtualMachine_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine3),
 					testAccCheckONTAPStorageVirtualMachineNotRecreated(&storageVirtualMachine2, &storageVirtualMachine3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -311,7 +311,7 @@ func TestAccFSxONTAPStorageVirtualMachine_activeDirectoryJoin(t *testing.T) {
 				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine1),
-					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "active_directory_configuration.#", acctest.CtZero),
 				),
 			},
 			{

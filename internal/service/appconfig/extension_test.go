@@ -86,7 +86,7 @@ func TestAccAppConfigExtension_ActionPoint(t *testing.T) {
 				Config: testAccExtensionConfig_actionPoint2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "action_point.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action_point.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "action_point.*", map[string]string{
 						"point": "ON_DEPLOYMENT_COMPLETE",
 					}),
@@ -156,7 +156,7 @@ func TestAccAppConfigExtension_Parameter(t *testing.T) {
 				Config: testAccExtensionConfig_parameter2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:        "parameter1",
 						names.AttrDescription: "description1",
@@ -272,7 +272,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				Config: testAccExtensionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -285,7 +285,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				Config: testAccExtensionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -294,7 +294,7 @@ func TestAccAppConfigExtension_tags(t *testing.T) {
 				Config: testAccExtensionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExtensionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

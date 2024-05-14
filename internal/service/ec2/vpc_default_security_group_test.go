@@ -54,7 +54,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 					}),
 					testAccCheckDefaultSecurityGroupARN(resourceName, &group),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -87,9 +87,9 @@ func TestAccVPCDefaultSecurityGroup_empty(t *testing.T) {
 				Config: testAccVPCDefaultSecurityGroupConfig_empty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},

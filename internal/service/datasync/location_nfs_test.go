@@ -43,7 +43,7 @@ func TestAccDataSyncLocationNFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mount_options.0.version", "AUTOMATIC"),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^nfs://.+/`)),
 				),
 			},
@@ -132,7 +132,7 @@ func TestAccDataSyncLocationNFS_AgentARNs_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "on_prem_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "on_prem_config.0.agent_arns.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -195,7 +195,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -208,7 +208,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				Config: testAccLocationNFSConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -217,7 +217,7 @@ func TestAccDataSyncLocationNFS_tags(t *testing.T) {
 				Config: testAccLocationNFSConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationNFSExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

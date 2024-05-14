@@ -143,7 +143,7 @@ func testAccMultiplex_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
 				),
 			},
@@ -175,7 +175,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 				Config: testAccMultiplexConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -183,7 +183,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 				Config: testAccMultiplexConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -192,7 +192,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 				Config: testAccMultiplexConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

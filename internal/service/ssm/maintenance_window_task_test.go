@@ -53,7 +53,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "3"),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
-					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
+					resource.TestCheckResourceAttr(resourceName, "max_errors", acctest.CtTwo),
 					testAccCheckWindowsTaskNotRecreated(t, &before, &after),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskConfig_noTarget(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.CtZero),
 				),
 			},
 			{

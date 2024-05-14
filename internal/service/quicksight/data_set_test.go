@@ -248,7 +248,7 @@ func TestAccQuickSightDataSet_logicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
-					resource.TestCheckResourceAttr(resourceName, "output_columns.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_columns.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "output_columns.0.name", "Column1"),
 					resource.TestCheckResourceAttr(resourceName, "output_columns.1.name", "Column2"),
 				),
@@ -324,7 +324,7 @@ func TestAccQuickSightDataSet_permissions(t *testing.T) {
 				Config: testAccDataSetConfigBasic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.CtZero),
 				),
 			},
 		},
@@ -465,7 +465,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				Config: testAccDataSetConfigTags1(rId, rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -478,7 +478,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				Config: testAccDataSetConfigTags2(rId, rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -487,7 +487,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				Config: testAccDataSetConfigTags1(rId, rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -516,7 +516,7 @@ func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("dataset/%s", rId)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
-					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", "joined"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "j"),

@@ -36,8 +36,8 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -114,7 +114,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -127,7 +127,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -136,7 +136,7 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_tags(t *testing.T) {
 				Config: testAccRecoveryGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -159,8 +159,8 @@ func TestAccRoute53RecoveryReadinessRecoveryGroup_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecoveryGroupExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`recovery-group/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cells.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{

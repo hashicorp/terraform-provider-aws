@@ -193,7 +193,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 						"expiration.#":                      acctest.CtOne,
 						"expiration.0.date":                 date,
 						"filter.#":                          acctest.CtOne,
-						"filter.0.object_size_greater_than": "0",
+						"filter.0.object_size_greater_than": acctest.CtZero,
 						names.AttrID:                        rName,
 						names.AttrStatus:                    tfs3.LifecycleRuleStatusEnabled,
 					}),
@@ -385,7 +385,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_multipleRules(rName, expirationDate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:            "log",
 						"expiration.#":          acctest.CtOne,
@@ -393,9 +393,9 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 						"filter.#":              acctest.CtOne,
 						"filter.0.and.#":        acctest.CtOne,
 						"filter.0.and.0.prefix": "log/",
-						"filter.0.and.0.tags.%": "2",
+						"filter.0.and.0.tags.%": acctest.CtTwo,
 						names.AttrStatus:        tfs3.LifecycleRuleStatusEnabled,
-						"transition.#":          "2",
+						"transition.#":          acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
 						"days":          "30",
@@ -440,7 +440,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *tes
 				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, tfs3.LifecycleRuleStatusEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.1.filter.#", acctest.CtOne),
@@ -502,7 +502,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"noncurrent_version_transition.#": "2",
+						"noncurrent_version_transition.#": acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
 						"noncurrent_days": "30",
@@ -805,7 +805,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
-						"days":          "0",
+						"days":          acctest.CtZero,
 						"date":          "",
 						"storage_class": string(types.StorageClassIntelligentTiering),
 					}),
@@ -946,7 +946,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", acctest.CtZero),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
 				),
@@ -960,7 +960,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_noChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "true"),
 				),
@@ -989,7 +989,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.enabled", "true"),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.days", acctest.CtZero),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(bucketResourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
 				),
@@ -1003,7 +1003,7 @@ func TestAccS3BucketLifecycleConfiguration_migrate_withChange(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.expired_object_delete_marker", "false"),
 				),
@@ -1041,7 +1041,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.prefix", "prefix2"),
 				),
 			},

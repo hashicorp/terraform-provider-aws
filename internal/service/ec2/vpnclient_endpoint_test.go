@@ -57,14 +57,14 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, "connection_log_options.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
-					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal", "disabled"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_portal_url", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "24"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
@@ -125,7 +125,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccClientVPNEndpointConfig_tags1(t, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -138,7 +138,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccClientVPNEndpointConfig_tags2(t, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -147,7 +147,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 				Config: testAccClientVPNEndpointConfig_tags1(t, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -218,7 +218,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsy
 				Config: testAccClientVPNEndpointConfig_mutualAuthAndMicrosoftAD(t, rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
 						names.AttrType: "directory-service-authentication",
 					}),
@@ -496,7 +496,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Sema
 				Config: testAccClientVPNEndpointConfig_dnsServers(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.0", "8.8.8.8"),
 					resource.TestCheckResourceAttr(resourceName, "dns_servers.1", "8.8.4.4"),
 				),
@@ -518,7 +518,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Sema
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "dns_servers.#", acctest.CtZero),
 				),
 			},
 		},
@@ -673,7 +673,7 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.S
 				Config: testAccClientVPNEndpointConfig_securityGroups(t, rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup1ResourceName, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", securityGroup2ResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),

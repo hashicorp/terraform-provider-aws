@@ -42,8 +42,8 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 				Config: testAccProtectionConfig_globalAccelerator(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -74,8 +74,8 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 				Config: testAccProtectionConfig_elasticIPAddress(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -133,8 +133,8 @@ func TestAccShieldProtection_alb(t *testing.T) {
 				Config: testAccProtectionConfig_alb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -165,8 +165,8 @@ func TestAccShieldProtection_elb(t *testing.T) {
 				Config: testAccProtectionConfig_elb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -198,8 +198,8 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFront(rName, testAccProtectionCloudFrontRetainConfig()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -231,7 +231,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1"),
 				),
@@ -245,8 +245,8 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags2(rName, testAccProtectionCloudFrontRetainConfig(), "Key1", "value1updated", "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
 				),
@@ -255,7 +255,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 				Config: testAccProtectionConfig_cloudFrontTags1(rName, testAccProtectionCloudFrontRetainConfig(), "Key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "value2"),
 				),

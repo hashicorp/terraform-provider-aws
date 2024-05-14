@@ -36,16 +36,16 @@ func TestAccECSCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_defaults.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
 						names.AttrName:  "containerInsights",
 						names.AttrValue: "disabled",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -112,7 +112,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -121,7 +121,7 @@ func TestAccECSCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

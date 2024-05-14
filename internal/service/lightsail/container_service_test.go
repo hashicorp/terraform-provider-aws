@@ -65,7 +65,7 @@ func TestAccLightsailContainerService_basic(t *testing.T) {
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scale", acctest.CtTwo),
 				),
 			},
 		},
@@ -276,7 +276,7 @@ func TestAccLightsailContainerService_scale(t *testing.T) {
 				Config: testAccContainerServiceConfig_scale(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "scale", "2"),
+					resource.TestCheckResourceAttr(resourceName, "scale", acctest.CtTwo),
 				),
 			},
 		},
@@ -302,7 +302,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -315,7 +315,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -324,7 +324,7 @@ func TestAccLightsailContainerService_tags(t *testing.T) {
 				Config: testAccContainerServiceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckContainerServiceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

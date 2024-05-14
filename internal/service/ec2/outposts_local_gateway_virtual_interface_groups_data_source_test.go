@@ -26,7 +26,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_basic(t *tes
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -46,7 +46,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_filter(t *te
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -67,7 +67,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceGroupsDataSource_tags(t *test
 				Config: testAccOutpostsLocalGatewayVirtualInterfaceGroupsDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "local_gateway_virtual_interface_ids.#", acctest.CtTwo),
 				),
 			},
 		},

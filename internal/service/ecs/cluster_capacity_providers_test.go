@@ -93,9 +93,9 @@ func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_defaults(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.CtZero),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_2(rName, "FARGATE", "FARGATE_SPOT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capacity_providers.*", "FARGATE"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "capacity_providers.*", "FARGATE_SPOT"),
 				),
@@ -187,7 +187,7 @@ func TestAccECSClusterCapacityProviders_Update_capacityProviders(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_providers.#", acctest.CtZero),
 				),
 			},
 			{
@@ -245,7 +245,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.CtOne,
 						names.AttrWeight:    "50",
@@ -267,9 +267,9 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
-						"base":              "2",
+						"base":              acctest.CtTwo,
 						names.AttrWeight:    "25",
 						"capacity_provider": "FARGATE",
 					}),
@@ -289,7 +289,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_defaultProviderStrategy4(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.CtZero),
 				),
 			},
 			{

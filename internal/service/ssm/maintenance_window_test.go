@@ -42,10 +42,10 @@ func TestAccSSMMaintenanceWindow_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "schedule_timezone", ""),
-					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "0"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_offset", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, "cron(0 16 ? * TUE *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -123,7 +123,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -132,7 +132,7 @@ func TestAccSSMMaintenanceWindow_tags(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &winId),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -231,7 +231,7 @@ func TestAccSSMMaintenanceWindow_cutoff(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_cutoff(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
-					resource.TestCheckResourceAttr(resourceName, "cutoff", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cutoff", acctest.CtTwo),
 				),
 			},
 		},
@@ -445,7 +445,7 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_scheduleOffset(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow1),
-					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "2"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_offset", acctest.CtTwo),
 				),
 			},
 			{

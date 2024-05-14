@@ -97,7 +97,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.CtZero),
 				),
 			},
 			{
@@ -186,7 +186,7 @@ func testAccMesh_tags(t *testing.T) {
 				Config: testAccMeshConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -199,7 +199,7 @@ func testAccMesh_tags(t *testing.T) {
 				Config: testAccMeshConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -208,7 +208,7 @@ func testAccMesh_tags(t *testing.T) {
 				Config: testAccMeshConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMeshExists(ctx, resourceName, &mesh),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

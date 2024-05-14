@@ -52,7 +52,7 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
 					resource.TestCheckResourceAttr(resourceName, "os_version", "Amazon Linux 2"),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVersion, regexache.MustCompile(`1.0.0/[1-9][0-9]*`)),
 				),
 			},
@@ -214,7 +214,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				Config: testAccImageConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -227,7 +227,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				Config: testAccImageConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -236,7 +236,7 @@ func TestAccImageBuilderImage_tags(t *testing.T) {
 				Config: testAccImageConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -312,7 +312,7 @@ func TestAccImageBuilderImage_outputResources_containers(t *testing.T) {
 					testAccCheckImageExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "output_resources.0.containers.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "output_resources.0.containers.0.image_uris.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "output_resources.0.containers.0.image_uris.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "output_resources.0.containers.0.region", regionDataSourceName, names.AttrName),
 				),
 			},
@@ -335,7 +335,7 @@ func TestAccImageBuilderImage_workflows(t *testing.T) {
 				Config: testAccImageConfig_workflows(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "workflow.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "workflow.0.workflow_arn", "aws_imagebuilder_workflow.test_build", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "workflow.0.parameter.0.name", "foo"),

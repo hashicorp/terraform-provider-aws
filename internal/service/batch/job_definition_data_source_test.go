@@ -38,9 +38,9 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobDefinitionDataSourceConfig_basicNameRevision(rName, "2", 2),
+				Config: testAccJobDefinitionDataSourceConfig_basicNameRevision(rName, acctest.CtTwo, 2),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "revision", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "revision", acctest.CtTwo),
 				),
 			},
 		},
@@ -71,9 +71,9 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, "2"),
+				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, acctest.CtTwo),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "revision", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "revision", acctest.CtTwo),
 				),
 			},
 		},
@@ -97,8 +97,8 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNNode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.main_node", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.main_node", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.0.container.0.image", "busybox"),
 				),
 			},

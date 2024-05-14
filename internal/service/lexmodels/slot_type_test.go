@@ -190,7 +190,7 @@ func TestAccLexModelsSlotType_enumerationValues(t *testing.T) {
 				Config: testAccSlotTypeConfig_enumerationValues(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "2"),
+					resource.TestCheckResourceAttr(rName, "enumeration_value.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(rName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "tulips",
 					}),
@@ -335,8 +335,6 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 	intentResourceName := "aws_lex_intent.test"
 	testSlotTypeID := "test_slot_type_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 
-	updatedVersion := "2"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -365,17 +363,17 @@ func TestAccLexModelsSlotType_computeVersion(t *testing.T) {
 					testAccIntentConfig_slotsWithVersion(testSlotTypeID),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, updatedVersion, &v1),
-					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, updatedVersion),
-					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", "2"),
+					testAccCheckSlotTypeExistsWithVersion(ctx, slotTypeResourceName, acctest.CtTwo, &v1),
+					resource.TestCheckResourceAttr(slotTypeResourceName, names.AttrVersion, acctest.CtTwo),
+					resource.TestCheckResourceAttr(slotTypeResourceName, "enumeration_value.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(slotTypeResourceName, "enumeration_value.*", map[string]string{
 						names.AttrValue: "tulips",
 					}),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Eduardoregelia"),
 					resource.TestCheckTypeSetElemAttr(slotTypeResourceName, "enumeration_value.*.synonyms.*", "Podonix"),
-					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, updatedVersion, &v2),
-					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, updatedVersion),
-					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", updatedVersion),
+					testAccCheckIntentExistsWithVersion(ctx, intentResourceName, acctest.CtTwo, &v2),
+					resource.TestCheckResourceAttr(intentResourceName, names.AttrVersion, acctest.CtTwo),
+					resource.TestCheckResourceAttr(intentResourceName, "slot.0.slot_type_version", acctest.CtTwo),
 				),
 			},
 		},

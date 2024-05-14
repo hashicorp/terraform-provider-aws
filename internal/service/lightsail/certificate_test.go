@@ -51,9 +51,9 @@ func TestAccLightsailCertificate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 					// When using a .test domain, Domain Validation Records are not returned
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccLightsailCertificate_subjectAlternativeNames(t *testing.T) {
 				Config: testAccCertificateConfig_subjectAlternativeNames(rName, domainName, subjectAlternativeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", subjectAlternativeName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domainName),
 				),
@@ -147,7 +147,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 				Config: testAccCertificateConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -160,7 +160,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 				Config: testAccCertificateConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -169,7 +169,7 @@ func TestAccLightsailCertificate_tags(t *testing.T) {
 				Config: testAccCertificateConfig_tags1(rName, domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -36,12 +36,12 @@ func testAccAccessGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grant_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "access_grants_location_id"),
-					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_grants_location_configuration.#", acctest.CtZero),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "grant_scope"),
 					resource.TestCheckResourceAttr(resourceName, "permission", "READ"),
 					resource.TestCheckNoResourceAttr(resourceName, "s3_prefix_type"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -104,7 +104,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -113,7 +113,7 @@ func testAccAccessGrant_tags(t *testing.T) {
 				Config: testAccAccessGrantConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessGrantsLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

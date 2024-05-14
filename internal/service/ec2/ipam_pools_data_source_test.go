@@ -71,7 +71,7 @@ func TestAccIPAMPoolsDataSource_empty(t *testing.T) {
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_empty,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", acctest.CtZero),
 				),
 			},
 		},

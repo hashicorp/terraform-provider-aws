@@ -119,7 +119,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_arns.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type", "StepScaling"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceID, appAutoscalingTargetResourceName, names.AttrResourceID),
@@ -130,7 +130,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "step_scaling_policy_configuration.0.step_adjustment.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
 						"scaling_adjustment":          acctest.CtOne,
-						"metric_interval_lower_bound": "0",
+						"metric_interval_lower_bound": acctest.CtZero,
 						"metric_interval_upper_bound": "",
 					}),
 				),
@@ -197,10 +197,10 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
 						"metric_interval_lower_bound": acctest.CtOne,
 						"metric_interval_upper_bound": "3",
-						"scaling_adjustment":          "2",
+						"scaling_adjustment":          acctest.CtTwo,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_out", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
-						"metric_interval_lower_bound": "0",
+						"metric_interval_lower_bound": acctest.CtZero,
 						"metric_interval_upper_bound": acctest.CtOne,
 						"scaling_adjustment":          acctest.CtOne,
 					}),
@@ -215,7 +215,7 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{
 						"metric_interval_lower_bound": "-1",
-						"metric_interval_upper_bound": "0",
+						"metric_interval_upper_bound": acctest.CtZero,
 						"scaling_adjustment":          "-1",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs("aws_appautoscaling_policy.foobar_in", "step_scaling_policy_configuration.0.step_adjustment.*", map[string]string{

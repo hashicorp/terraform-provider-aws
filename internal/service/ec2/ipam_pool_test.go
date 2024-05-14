@@ -38,7 +38,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_min_netmask_length"),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", "false"),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
@@ -47,7 +47,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -203,7 +203,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -216,7 +216,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -225,7 +225,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

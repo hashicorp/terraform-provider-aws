@@ -167,7 +167,7 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 			{
 				Config: testAccGroupDataSourceConfig_tags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "tag.#", "2"),
+					resource.TestCheckResourceAttr(datasourceName, "tag.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(datasourceName, "tag.#", resourceName, "tag.#"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tag.*", map[string]string{
 						names.AttrKey:         "key1",

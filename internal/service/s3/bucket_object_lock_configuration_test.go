@@ -166,7 +166,7 @@ func TestAccS3BucketObjectLockConfiguration_migrate_withChange(t *testing.T) {
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", "0"),
+					resource.TestCheckResourceAttr(bucketResourceName, "object_lock_configuration.0.rule.#", acctest.CtZero),
 				),
 			},
 			{
@@ -200,7 +200,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketObjectLockConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
 				),
 			},
 			{

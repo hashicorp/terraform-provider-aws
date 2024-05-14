@@ -143,7 +143,7 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "label"),
 					resource.TestCheckResourceAttr(resourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(resourceName, "link_id"),
-					resource.TestCheckResourceAttr(resourceName, "resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_types.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.0", "AWS::CloudWatch::Metric"),
 					resource.TestCheckResourceAttr(resourceName, "resource_types.1", "AWS::Logs::LogGroup"),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_arn"),
@@ -184,7 +184,7 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -192,7 +192,7 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -201,7 +201,7 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 				Config: testAccLinkConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName, &link),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

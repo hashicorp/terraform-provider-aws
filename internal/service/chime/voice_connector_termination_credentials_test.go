@@ -101,7 +101,7 @@ func testAccVoiceConnectorTerminationCredentials_update(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "credentials.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "credentials.#", acctest.CtTwo),
 				),
 			},
 		},

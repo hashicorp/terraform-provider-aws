@@ -31,7 +31,7 @@ func testAccTransitGatewayVPCAttachmentsDataSource_Filter(t *testing.T, semaphor
 				Config: testAccTransitGatewayVPCAttachmentsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_vpc_attachments.by_attachment_id", "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_vpc_attachments.by_gateway_id", "ids.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_ec2_transit_gateway_vpc_attachments.by_gateway_id", "ids.#", acctest.CtTwo),
 				),
 			},
 		},

@@ -60,7 +60,7 @@ func TestAccIAMAccessKeysDataSource_twoKeys(t *testing.T) {
 			{
 				Config: testAccAccessKeysDataSourceConfig_twoKeys(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "access_keys.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "access_keys.*.access_key_id", resourceName2, names.AttrID),
 				),

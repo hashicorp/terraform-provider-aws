@@ -36,7 +36,7 @@ func TestAccWAFByteMatchSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSet),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -82,7 +82,7 @@ func TestAccWAFByteMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSet),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccWAFByteMatchSet_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetNewName),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -143,7 +143,7 @@ func TestAccWAFByteMatchSet_changeTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "byte_match_tuples.*", map[string]string{
 						"field_to_match.#":      acctest.CtOne,
 						"field_to_match.0.data": "referer",
@@ -188,7 +188,7 @@ func TestAccWAFByteMatchSet_noTuples(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckByteMatchSetExists(ctx, resourceName, &byteSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, byteMatchSetName),
-					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "byte_match_tuples.#", acctest.CtZero),
 				),
 			},
 			{

@@ -42,7 +42,7 @@ func TestAccEC2Host_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c5.large"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_family", "c5"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -118,7 +118,7 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c5.xlarge"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -141,7 +141,7 @@ func TestAccEC2Host_tags(t *testing.T) {
 				Config: testAccHostConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &host),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -154,7 +154,7 @@ func TestAccEC2Host_tags(t *testing.T) {
 				Config: testAccHostConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &host),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -163,7 +163,7 @@ func TestAccEC2Host_tags(t *testing.T) {
 				Config: testAccHostConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHostExists(ctx, resourceName, &host),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

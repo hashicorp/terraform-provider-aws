@@ -44,7 +44,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},
@@ -93,7 +93,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
 					}),
@@ -116,7 +116,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
 			},

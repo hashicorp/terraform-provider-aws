@@ -45,7 +45,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_group", "aws_cognito_user_group.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "subdomain"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func testAccWorkteam_cognitoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "workteam_name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.cognito_member_definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "member_definition.0.cognito_member_definition.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
@@ -130,7 +130,7 @@ func testAccWorkteam_oidcConfig(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workteam/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "member_definition.0.oidc_member_definition.0.groups.*", "test"),
 				),
@@ -166,7 +166,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -180,7 +180,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -189,7 +189,7 @@ func testAccWorkteam_tags(t *testing.T) {
 				Config: testAccWorkteamConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkteamExists(ctx, resourceName, &workteam),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

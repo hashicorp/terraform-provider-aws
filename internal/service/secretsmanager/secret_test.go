@@ -43,7 +43,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "30"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -258,14 +258,14 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccSecretConfig_recoveryWindowInDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_window_in_days", acctest.CtZero),
 				),
 				Taint: []string{resourceName},
 			},
@@ -295,7 +295,7 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 				Config: testAccSecretConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -309,7 +309,7 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 				Config: testAccSecretConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -318,7 +318,7 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 				Config: testAccSecretConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

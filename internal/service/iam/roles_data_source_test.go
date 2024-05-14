@@ -91,8 +91,8 @@ func TestAccIAMRolesDataSource_nonExistentPathPrefix(t *testing.T) {
 			{
 				Config: testAccRolesDataSourceConfig_nonExistentPathPrefix,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtZero),
 				),
 			},
 		},
@@ -112,7 +112,7 @@ func TestAccIAMRolesDataSource_nameRegexAndPathPrefix(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, "0"),
+				Config: testAccRolesDataSourceConfig_nameRegexAndPathPrefix(rCount, rName, rPathPrefix, acctest.CtZero),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "names.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(dataSourceName, "arns.#", acctest.CtOne),

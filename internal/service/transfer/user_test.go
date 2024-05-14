@@ -37,10 +37,10 @@ func testAccUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "transfer", regexache.MustCompile(`user/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.CtZero),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "server_id", "aws_transfer_server.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -92,7 +92,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -105,7 +105,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +114,7 @@ func testAccUser_tags(t *testing.T) {
 				Config: testAccUserConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -155,7 +155,7 @@ func testAccUser_posix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -273,7 +273,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsUpdate(rName, entry1, target1, entry2, target2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.entry", entry1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.0.target", target1),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.1.entry", entry2),
@@ -290,7 +290,7 @@ func testAccUser_homeDirectoryMappings(t *testing.T) {
 				Config: testAccUserConfig_homeDirectoryMappingsRemove(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_mappings.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
 				),
 			},

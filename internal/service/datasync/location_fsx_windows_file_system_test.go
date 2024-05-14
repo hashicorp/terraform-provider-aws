@@ -46,7 +46,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "fsx_filesystem_arn", fsResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestMatchResourceAttr(resourceName, names.AttrURI, regexache.MustCompile(`^fsxw://.+/`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationTime),
 				),
@@ -147,7 +147,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -162,7 +162,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags2(rName, domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -171,7 +171,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 				Config: testAccLocationFSxWindowsFileSystemConfig_tags1(rName, domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxWindowsExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},

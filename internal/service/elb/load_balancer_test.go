@@ -257,7 +257,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", "false"),
@@ -267,7 +267,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
-					resource.TestCheckResourceAttr(resourceName, "instances.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "internal", "false"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
@@ -281,7 +281,7 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
 				),
 			},
@@ -391,7 +391,7 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -405,7 +405,7 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -415,7 +415,7 @@ func TestAccELBLoadBalancer_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					testAccCheckLoadBalancerAttributes(&conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -480,7 +480,7 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.CtZero),
 				),
 			},
 		},
@@ -519,7 +519,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 				Config: testAccLoadBalancerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.CtZero),
 				),
 			},
 		},
@@ -573,7 +573,7 @@ func TestAccELBLoadBalancer_availabilityZones(t *testing.T) {
 				Config: testAccLoadBalancerConfig_availabilityZonesUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -638,21 +638,21 @@ func TestAccELBLoadBalancer_Swap_subnets(t *testing.T) {
 				Config: testAccLoadBalancerConfig_subnets(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.CtTwo),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.CtTwo),
 				),
 			},
 			{
 				Config: testAccLoadBalancerConfig_subnetCompleteSwap(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, "aws_elb.test", &conf),
-					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", "2"),
+					resource.TestCheckResourceAttr("aws_elb.test", "subnets.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -728,7 +728,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 				Config: testAccLoadBalancerConfig_listenerMultipleListeners(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",

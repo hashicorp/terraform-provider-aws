@@ -32,7 +32,7 @@ func TestAccEKSNodeGroupsDataSource_basic(t *testing.T) {
 				Config: testAccNodeGroupsDataSourceConfig_names(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, names.AttrClusterName, rName),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceResourceName, "names.#", acctest.CtTwo),
 				),
 			},
 		},

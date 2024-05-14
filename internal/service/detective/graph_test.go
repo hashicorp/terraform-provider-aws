@@ -84,7 +84,7 @@ func testAccGraph_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -97,7 +97,7 @@ func testAccGraph_tags(t *testing.T) {
 				Config: testAccGraphConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -106,7 +106,7 @@ func testAccGraph_tags(t *testing.T) {
 				Config: testAccGraphConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphExists(ctx, resourceName, &graph),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -44,8 +44,8 @@ func TestAccDirectConnectConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "partner_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "provider_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 			// Test import.
@@ -164,7 +164,7 @@ func TestAccDirectConnectConnection_macsecRequested(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccDirectConnectConnection_providerName(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provider_name"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			// Test import.
@@ -253,7 +253,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -269,7 +269,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -279,7 +279,7 @@ func TestAccDirectConnectConnection_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -318,7 +318,7 @@ func TestAccDirectConnectConnection_vlanIDMigration501(t *testing.T) {
 				Config:                   testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 		},
@@ -347,7 +347,7 @@ func TestAccDirectConnectConnection_vlanIDMigration510(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					resource.TestCheckResourceAttr(resourceName, "vlan_id", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vlan_id", acctest.CtZero),
 				),
 			},
 			{

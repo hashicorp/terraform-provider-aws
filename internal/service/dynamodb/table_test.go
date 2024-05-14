@@ -353,25 +353,25 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
-					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "range_key"),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtZero),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_date_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_source_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "restore_to_latest_time"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStreamARN, ""),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stream_label", ""),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtOne),
@@ -521,9 +521,9 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", acctest.CtOne),
@@ -617,8 +617,8 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtZero),
 				),
 			},
 			{
@@ -656,8 +656,8 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisionedIgnoreChanges(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtZero),
 				),
 			},
 			{
@@ -713,8 +713,8 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtZero),
 				),
 			},
 		},
@@ -756,8 +756,8 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtZero),
 				),
 			},
 		},
@@ -781,8 +781,8 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "0"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtZero),
 				),
 			},
 			{
@@ -997,7 +997,7 @@ func TestAccDynamoDBTable_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckInitialTableConf(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 				),
 			},
 			{
@@ -1055,18 +1055,18 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
+						"read_capacity":  acctest.CtTwo,
+						"write_capacity": acctest.CtTwo,
 						names.AttrName:   "att1-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
+						"read_capacity":  acctest.CtTwo,
+						"write_capacity": acctest.CtTwo,
 						names.AttrName:   "att2-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"read_capacity":  "2",
-						"write_capacity": "2",
+						"read_capacity":  acctest.CtTwo,
+						"write_capacity": acctest.CtTwo,
 						names.AttrName:   "att3-index",
 					}),
 				),
@@ -1099,7 +1099,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						names.AttrName:         "att3-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1108,7 +1108,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						names.AttrName:         "att1-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1117,7 +1117,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att2",
 						names.AttrName:         "att2-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1138,7 +1138,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						names.AttrName:         "att2-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "att2",
 						"read_capacity":        acctest.CtOne,
@@ -1157,7 +1157,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						names.AttrName:         "att1-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1230,7 +1230,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						names.AttrName:         "att2-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "att2",
 						"read_capacity":        acctest.CtOne,
@@ -1249,7 +1249,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						names.AttrName:         "att1-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1269,7 +1269,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						names.AttrName:         "att2-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "att2",
 						"read_capacity":        acctest.CtOne,
@@ -1278,7 +1278,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						names.AttrName:         "att3-index",
-						"non_key_attributes.#": "2",
+						"non_key_attributes.#": acctest.CtTwo,
 						"projection_type":      "INCLUDE",
 						"range_key":            "att4",
 						"read_capacity":        acctest.CtOne,
@@ -1289,7 +1289,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						names.AttrName:         "att1-index",
-						"non_key_attributes.#": "0",
+						"non_key_attributes.#": acctest.CtZero,
 						"projection_type":      "ALL",
 						"range_key":            "",
 						"read_capacity":        acctest.CtOne,
@@ -1323,7 +1323,7 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
 						names.AttrName:         "att1-index",
-						"non_key_attributes.#": "2",
+						"non_key_attributes.#": acctest.CtTwo,
 						"projection_type":      "INCLUDE",
 						"range_key":            "att2",
 						"read_capacity":        acctest.CtOne,
@@ -1561,7 +1561,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &confEncDisabled),
 					testAccCheckTableNotRecreated(&confEncDisabled, &confBYOK),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1601,7 +1601,7 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				Config: testAccTableConfig_replica2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -1614,14 +1614,14 @@ func TestAccDynamoDBTable_Replica_multiple(t *testing.T) {
 				Config: testAccTableConfig_replica0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtZero),
 				),
 			},
 			{
 				Config: testAccTableConfig_replica2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 				),
 			},
 		},
@@ -1668,7 +1668,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Config: testAccTableConfig_replica0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1828,7 +1828,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 				Config: testAccTableConfig_replicaAmazonManagedKey(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "replica.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "replica.1.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1839,7 +1839,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 				Config: testAccTableConfig_replicaCMKUpdate(rName, "awsalternate1", "awsthird1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey1Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.1.kms_key_arn", kmsKey1Replica2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1850,7 +1850,7 @@ func TestAccDynamoDBTable_Replica_doubleAddCMK(t *testing.T) {
 				Config: testAccTableConfig_replicaCMKUpdate(rName, "awsalternate2", "awsthird2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey2Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "replica.1.kms_key_arn", kmsKey2Replica2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
@@ -1886,7 +1886,7 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
 						"region_name":            acctest.AlternateRegion(),
@@ -1907,7 +1907,7 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					testAccCheckTableNotRecreated(&replica2, &replica4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
 						"region_name":            acctest.AlternateRegion(),
@@ -1949,7 +1949,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
 						"region_name":            acctest.AlternateRegion(),
@@ -1970,7 +1970,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					testAccCheckTableNotRecreated(&replica2, &replica4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
 						"region_name":            acctest.AlternateRegion(),
@@ -1991,7 +1991,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					testAccCheckTableNotRecreated(&replica2, &replica4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
 						"region_name":            acctest.AlternateRegion(),
@@ -2012,7 +2012,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					testAccCheckTableNotRecreated(&replica2, &replica4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
 						"region_name":            acctest.AlternateRegion(),
@@ -2033,7 +2033,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
 					testAccCheckTableNotRecreated(&replica1, &replica3),
 					testAccCheckTableNotRecreated(&replica2, &replica4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
 						"region_name":            acctest.AlternateRegion(),
@@ -2075,7 +2075,7 @@ func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 3),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 0),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2115,7 +2115,7 @@ func TestAccDynamoDBTable_Replica_tagsTwoOfTwo(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 3),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 3),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2167,7 +2167,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 2),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 2),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2196,7 +2196,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 2),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 0),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2213,7 +2213,7 @@ func TestAccDynamoDBTable_Replica_tagsNext(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 2),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 0),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "false",
@@ -2277,7 +2277,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 4),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 4),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2294,7 +2294,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 6),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 6),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2311,7 +2311,7 @@ func TestAccDynamoDBTable_Replica_tagsUpdate(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.AlternateRegion(), 1),
 					testAccCheckReplicaHasTags(ctx, resourceName, acctest.ThirdRegion(), 1),
-					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"region_name":    acctest.AlternateRegion(),
 						"propagate_tags": "true",
@@ -2708,9 +2708,9 @@ func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 		resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
 		resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-		resource.TestCheckResourceAttr(resourceName, "write_capacity", "2"),
+		resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtTwo),
 		resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.CtOne),
-		resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "0"),
+		resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.CtZero),
 		resource.TestCheckResourceAttr(resourceName, "attribute.#", "4"),
 		resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtOne),
 		resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", acctest.CtOne),

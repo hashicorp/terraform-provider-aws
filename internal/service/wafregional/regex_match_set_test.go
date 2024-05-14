@@ -155,7 +155,7 @@ func testAccRegexMatchSet_noPatterns(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegexMatchSetExists(ctx, resourceName, &matchSet),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, matchSetName),
-					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regex_match_tuple.#", acctest.CtZero),
 				),
 			},
 			{

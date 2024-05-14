@@ -39,7 +39,7 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.QueueStatusActive)),
 				),
 			},
@@ -92,7 +92,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				Config: testAccQueueConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -105,7 +105,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				Config: testAccQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +114,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 				Config: testAccQueueConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

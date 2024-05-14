@@ -43,7 +43,7 @@ func testAccPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func testAccPolicy_policyOption(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.network_firewall_policy.0.firewall_deployment_model", "CENTRALIZED"),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "security_service_policy_data.0.policy_option.0.third_party_firewall_policy.0.firewall_deployment_model", "DISTRIBUTED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -254,7 +254,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_resourceTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.key2", "value2"),
 				),
@@ -282,7 +282,7 @@ func testAccPolicy_tags(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -290,7 +290,7 @@ func testAccPolicy_tags(t *testing.T) {
 				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

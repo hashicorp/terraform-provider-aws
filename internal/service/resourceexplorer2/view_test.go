@@ -41,10 +41,10 @@ func testAccView_basic(t *testing.T) {
 					testAccCheckViewExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "resource-explorer-2", regexache.MustCompile(`view/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
-					resource.TestCheckResourceAttr(resourceName, "filters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "included_property.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func testAccView_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "included_property.0.name", names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -173,7 +173,7 @@ func testAccView_filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "included_property.0.name", names.AttrTags),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},
@@ -199,7 +199,7 @@ func testAccView_tags(t *testing.T) {
 				Config: testAccViewConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckViewExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -212,7 +212,7 @@ func testAccView_tags(t *testing.T) {
 				Config: testAccViewConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -221,7 +221,7 @@ func testAccView_tags(t *testing.T) {
 				Config: testAccViewConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

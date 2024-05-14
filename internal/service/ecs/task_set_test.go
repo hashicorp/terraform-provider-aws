@@ -37,8 +37,8 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
-					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", acctest.CtZero),
 				),
 			},
 			{
@@ -70,8 +70,8 @@ func TestAccECSTaskSet_withExternalId(t *testing.T) {
 				Config: testAccTaskSetConfig_externalID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "TEST_ID"),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", ecs.ScaleUnitPercent),
-					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.value", acctest.CtZero),
 				),
 			},
 			{
@@ -250,8 +250,8 @@ func TestAccECSTaskSet_withLaunchTypeFargate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "platform_version"),
 				),
 			},
@@ -357,7 +357,7 @@ func TestAccECSTaskSet_tags(t *testing.T) {
 				Config: testAccTaskSetConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -373,7 +373,7 @@ func TestAccECSTaskSet_tags(t *testing.T) {
 				Config: testAccTaskSetConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -382,7 +382,7 @@ func TestAccECSTaskSet_tags(t *testing.T) {
 				Config: testAccTaskSetConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

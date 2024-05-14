@@ -40,7 +40,7 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -72,7 +72,7 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "75"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccDeployDeploymentConfig_fleetPercent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "50"),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -116,7 +116,7 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -126,9 +126,9 @@ func TestAccDeployDeploymentConfig_hostCount(t *testing.T) {
 					testAccCheckDeploymentConfigRecreated(&config1, &config2),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.type", "HOST_COUNT"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.0.value", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -162,8 +162,8 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -177,8 +177,8 @@ func TestAccDeployDeploymentConfig_trafficCanary(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.interval", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.0.percentage", "10"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -212,8 +212,8 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.interval", "10"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.percentage", "50"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtZero),
 				),
 			},
 			{
@@ -227,8 +227,8 @@ func TestAccDeployDeploymentConfig_trafficLinear(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.interval", "3"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_linear.0.percentage", "10"),
-					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.0.time_based_canary.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "minimum_healthy_hosts.#", acctest.CtZero),
 				),
 			},
 			{

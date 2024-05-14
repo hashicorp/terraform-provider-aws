@@ -182,7 +182,7 @@ func testPlan_updateStages(t *testing.T) {
 					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -195,11 +195,11 @@ func testPlan_updateStages(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, contactResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.#", "2"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.1.duration_in_minutes", "2"),
-					resource.TestCheckResourceAttr(planResourceName, "stage.1.target.#", "0"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(planResourceName, "stage.1.duration_in_minutes", acctest.CtTwo),
+					resource.TestCheckResourceAttr(planResourceName, "stage.1.target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -214,7 +214,7 @@ func testPlan_updateStages(t *testing.T) {
 					testAccCheckPlanExists(ctx, planResourceName),
 					resource.TestCheckResourceAttr(planResourceName, "stage.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(planResourceName, "stage.0.duration_in_minutes", acctest.CtOne),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "0"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtZero),
 				),
 			},
 			{
@@ -335,7 +335,7 @@ func testPlan_updateTargets(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactExists(ctx, escalationPlanResourceName),
 					testAccCheckPlanExists(ctx, planResourceName),
-					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", "2"),
+					resource.TestCheckResourceAttr(planResourceName, "stage.0.target.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(
 						planResourceName,
 						"stage.0.target.0.contact_target_info.0.is_essential",

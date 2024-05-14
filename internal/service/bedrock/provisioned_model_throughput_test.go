@@ -42,7 +42,7 @@ func TestAccBedrockProvisionedModelThroughput_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "model_units", acctest.CtOne),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioned_model_arn"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_model_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{

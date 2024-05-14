@@ -39,7 +39,7 @@ func TestAccSSMActivation_basic(t *testing.T) {
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccSSMActivation_tags(t *testing.T) {
 					testAccCheckActivationExists(ctx, resourceName, &ssmActivation),
 					resource.TestCheckResourceAttrSet(resourceName, "activation_code"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration_date"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},

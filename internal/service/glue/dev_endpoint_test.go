@@ -41,9 +41,9 @@ func TestAccGlueDevEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
-					resource.TestCheckResourceAttr(resourceName, "arguments.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -85,7 +85,7 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", "value1updated", "--arg2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "arguments.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", "value2"),
 				),
@@ -239,7 +239,7 @@ func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 				Config: testAccDevEndpointConfig_numberOfNodes(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.CtTwo),
 				),
 			},
 			{
@@ -279,7 +279,7 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 				Config: testAccDevEndpointConfig_numberOfWorkers(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "2"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", acctest.CtTwo),
 				),
 			},
 			{
@@ -377,7 +377,7 @@ func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 				Config: testAccDevEndpointConfig_publicKeys2(rName, publicKey1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "public_keys.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -482,7 +482,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Config: testAccDevEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -495,7 +495,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Config: testAccDevEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -504,7 +504,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Config: testAccDevEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

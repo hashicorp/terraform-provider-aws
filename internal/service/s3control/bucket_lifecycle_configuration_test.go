@@ -112,7 +112,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       acctest.CtOne,
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "2",
+						"abort_incomplete_multipart_upload.0.days_after_initiation": acctest.CtTwo,
 					}),
 				),
 			},

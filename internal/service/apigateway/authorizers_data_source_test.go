@@ -26,7 +26,7 @@ func TestAccAPIGatewayAuthorizersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAuthorizersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtTwo),
 				),
 			},
 		},

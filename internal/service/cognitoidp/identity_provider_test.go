@@ -55,7 +55,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 				Config: testAccIdentityProviderConfig_basicUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
-					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.username", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "9"),

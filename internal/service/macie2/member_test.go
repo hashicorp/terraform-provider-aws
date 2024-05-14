@@ -320,7 +320,7 @@ func testAccMember_withTags(t *testing.T) {
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_at"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),

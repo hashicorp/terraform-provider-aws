@@ -205,7 +205,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
-					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("default/%s", name)),
@@ -216,16 +216,16 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "start_date", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.arn", "aws_sqs_queue.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.input", ""),
-					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "185"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.role_arn", "aws_iam_role.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -439,7 +439,7 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "OFF"),
 				),
 			},
@@ -944,7 +944,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.dead_letter_config.#", acctest.CtZero),
 				),
 			},
 			{
@@ -980,18 +980,18 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Config: testAccScheduleConfig_targetECSParameters1(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
@@ -1005,14 +1005,14 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Config: testAccScheduleConfig_targetECSParameters2(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
-						"base":              "2",
+						"base":              acctest.CtTwo,
 						"capacity_provider": "test1",
 						names.AttrWeight:    "50",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
-						"base":              "0",
+						"base":              acctest.CtZero,
 						"capacity_provider": "test2",
 						names.AttrWeight:    "50",
 					}),
@@ -1036,7 +1036,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", "LATEST"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", "TASK_DEFINITION"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", "test-ref-id"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "3"),
@@ -1063,10 +1063,10 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", "my-task-group-2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.assign_public_ip", "false"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111112"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.security_groups.*", "sg-111111113"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111112"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.0.subnets.*", "subnet-11111113"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.placement_constraints.*", map[string]string{
@@ -1094,18 +1094,18 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Config: testAccScheduleConfig_targetECSParameters4(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.group", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.launch_type", "EC2"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.network_configuration.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_constraints.#", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.placement_strategy.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.platform_version", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.propagate_tags", ""),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.reference_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
@@ -1119,7 +1119,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1182,7 +1182,7 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 				Config: testAccScheduleConfig_basic(scheduleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.eventbridge_parameters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1308,7 +1308,7 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 				Config: testAccScheduleConfig_basic(scheduleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.kinesis_parameters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1358,7 +1358,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "61"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", acctest.CtZero),
 				),
 			},
 			{
@@ -1473,7 +1473,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
@@ -1515,7 +1515,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.#", acctest.CtZero),
 				),
 			},
 			{
@@ -1575,7 +1575,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.sqs_parameters.#", acctest.CtZero),
 				),
 			},
 			{

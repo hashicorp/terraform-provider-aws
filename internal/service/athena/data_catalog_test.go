@@ -39,7 +39,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "parameters.function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				Config: testAccDataCatalogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				Config: testAccDataCatalogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -113,7 +113,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 				Config: testAccDataCatalogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -138,7 +138,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 					testAccCheckDataCatalogExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Lambda"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LAMBDA"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function"),   //lintignore:AWSAT003,AWSAT005
 				),
@@ -244,7 +244,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 				Config: testAccDataCatalogConfig_parametersUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "parameters.metadata-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"), //lintignore:AWSAT003,AWSAT005
 					resource.TestCheckResourceAttr(resourceName, "parameters.record-function", "arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),   //lintignore:AWSAT003,AWSAT005
 				),

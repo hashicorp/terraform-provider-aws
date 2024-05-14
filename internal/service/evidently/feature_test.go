@@ -44,14 +44,14 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("project/%s/feature/%s", rName, rName2)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", "Variation1"),
-					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "evaluation_rules.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_rules.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_strategy", string(awstypes.FeatureEvaluationStrategyAllRules)),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttrPair(resourceName, "project", "aws_evidently_project.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.FeatureStatusAvailable)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
 					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
@@ -200,7 +200,7 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 				Config: testAccFeatureConfig_entityOverrides2(rName, rName2, variationName1, variationName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "entity_overrides.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test1", variationName2),
 					resource.TestCheckResourceAttr(resourceName, "entity_overrides.test2", variationName1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
@@ -309,7 +309,7 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeBoolean)),
-					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:       updatedVariationName1,
 						"value.#":            acctest.CtOne,
@@ -374,7 +374,7 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeDouble)),
-					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:         updatedVariationName1,
 						"value.#":              acctest.CtOne,
@@ -439,7 +439,7 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeLong)),
-					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:       updatedVariationName1,
 						"value.#":            acctest.CtOne,
@@ -505,7 +505,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
-					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:         updatedVariationName1,
 						"value.#":              acctest.CtOne,
@@ -524,7 +524,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
 					resource.TestCheckResourceAttr(resourceName, "default_variation", variationName2), // update default_variation since the first variation is deleted
 					resource.TestCheckResourceAttr(resourceName, "value_type", string(awstypes.VariationValueTypeString)),
-					resource.TestCheckResourceAttr(resourceName, "variations.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variations.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "variations.*", map[string]string{
 						names.AttrName:         updatedVariationName1,
 						"value.#":              acctest.CtOne,
@@ -562,7 +562,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 				Config: testAccFeatureConfig_tags1(rName, rName2, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -575,7 +575,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 				Config: testAccFeatureConfig_tags2(rName, rName2, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -584,7 +584,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 				Config: testAccFeatureConfig_tags1(rName, rName2, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFeatureExists(ctx, resourceName, &feature),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

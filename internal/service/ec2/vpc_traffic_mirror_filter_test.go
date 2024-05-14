@@ -42,7 +42,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`traffic-mirror-filter/tmf-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			// Test Disable DNS service
@@ -50,7 +50,7 @@ func TestAccVPCTrafficMirrorFilter_basic(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_noDNS(description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_services.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "network_services.#", acctest.CtZero),
 				),
 			},
 			// Test Enable DNS service
@@ -89,7 +89,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -111,7 +111,7 @@ func TestAccVPCTrafficMirrorFilter_tags(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

@@ -231,7 +231,7 @@ func TestAccWAFRegionalIPSet_noDescriptors(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &ipset),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipsetName),
-					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", acctest.CtZero),
 				),
 			},
 			{

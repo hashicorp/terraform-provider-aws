@@ -170,7 +170,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags2(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -192,7 +192,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

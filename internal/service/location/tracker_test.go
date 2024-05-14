@@ -39,7 +39,7 @@ func TestAccLocationTracker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "position_filtering", locationservice.PositionFilteringTimeBased),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tracker_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
@@ -187,7 +187,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -200,7 +200,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -209,7 +209,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

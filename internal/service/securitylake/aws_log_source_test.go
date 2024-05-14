@@ -144,7 +144,7 @@ func testAccAWSLogSource_multiRegion(t *testing.T) {
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "source.0.accounts.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.AlternateRegion()),
 				),

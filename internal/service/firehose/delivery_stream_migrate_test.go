@@ -121,12 +121,12 @@ func migrateInstanceStateV0toV1(is *terraform.InstanceState) (*terraform.Instanc
 		return is, err
 	}
 	// seed count fields for new types
-	is.Attributes["ebs_block_device.#"] = "0"
-	is.Attributes["ephemeral_block_device.#"] = "0"
+	is.Attributes["ebs_block_device.#"] = acctest.CtZero
+	is.Attributes["ephemeral_block_device.#"] = acctest.CtZero
 	// depending on if state was v0.3.7 or an earlier version, it might have
 	// root_block_device defined already
 	if _, ok := is.Attributes["root_block_device.#"]; !ok {
-		is.Attributes["root_block_device.#"] = "0"
+		is.Attributes["root_block_device.#"] = acctest.CtZero
 	}
 	for _, oldBd := range oldBds {
 		tfec2.WriteV1BlockDevice(is, oldBd)

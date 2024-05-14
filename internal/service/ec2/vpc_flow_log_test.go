@@ -46,7 +46,7 @@ func TestAccVPCFlowLog_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, cloudwatchLogGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 				),
@@ -521,7 +521,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -534,7 +534,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -543,7 +543,7 @@ func TestAccVPCFlowLog_tags(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

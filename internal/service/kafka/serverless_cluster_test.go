@@ -43,10 +43,10 @@ func TestAccKafkaServerlessCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "client_authentication.0.sasl.0.iam.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_uuid"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.CtTwo),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 				Config: testAccServerlessClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -111,7 +111,7 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 				Config: testAccServerlessClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -120,7 +120,7 @@ func TestAccKafkaServerlessCluster_tags(t *testing.T) {
 				Config: testAccServerlessClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -146,7 +146,7 @@ func TestAccKafkaServerlessCluster_securityGroup(t *testing.T) {
 					testAccCheckServerlessClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", acctest.CtTwo),
 				),
 			},
 			{

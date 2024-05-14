@@ -196,7 +196,7 @@ func TestAccWAFSizeConstraintSet_noConstraints(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSizeConstraintSetExists(ctx, resourceName, &contraints),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, setName),
-					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "size_constraints.#", acctest.CtZero),
 				),
 			},
 			{

@@ -44,8 +44,8 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aggregation", string(awstypes.ProtectionGroupAggregationMax)),
 					resource.TestCheckNoResourceAttr(resourceName, "members"),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternAll)),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
 				),
 			},
 			{
@@ -268,7 +268,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -281,7 +281,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -290,7 +290,7 @@ func TestAccShieldProtectionGroup_tags(t *testing.T) {
 				Config: testAccProtectionGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

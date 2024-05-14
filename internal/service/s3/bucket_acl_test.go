@@ -401,7 +401,7 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
 						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
@@ -474,7 +474,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
 						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
@@ -501,7 +501,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
 						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
@@ -554,7 +554,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
 						"grantee.#":      acctest.CtOne,
 						"grantee.0.type": string(types.TypeCanonicalUser),
@@ -596,7 +596,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", acctest.CtTwo),
 				),
 			},
 			{

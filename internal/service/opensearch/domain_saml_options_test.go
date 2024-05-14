@@ -171,7 +171,7 @@ func TestAccOpenSearchDomainSAMLOptions_Disabled(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_disabled(rUserName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "0"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.CtZero),
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
 				),
 			},

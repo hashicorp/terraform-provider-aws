@@ -35,7 +35,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("layer:%s:1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "layer_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
@@ -191,7 +191,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleRuntimes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", acctest.CtTwo),
 				),
 			},
 
@@ -220,7 +220,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleArchitecturesNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtZero),
 				),
 			},
 			{
@@ -242,7 +242,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 				Config: testAccLayerVersionConfig_compatibleArchitecturesX86Arm(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "compatible_architectures.#", acctest.CtTwo),
 				),
 			},
 

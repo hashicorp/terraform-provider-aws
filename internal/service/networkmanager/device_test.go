@@ -34,13 +34,13 @@ func TestAccNetworkManagerDevice_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "aws_location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "aws_location.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "location.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "location.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "model", ""),
 					resource.TestCheckResourceAttr(resourceName, "serial_number", ""),
 					resource.TestCheckResourceAttr(resourceName, "site_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, ""),
 					resource.TestCheckResourceAttr(resourceName, "vendor", ""),
 				),
@@ -93,7 +93,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				Config: testAccDeviceConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				Config: testAccDeviceConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,7 +116,7 @@ func TestAccNetworkManagerDevice_tags(t *testing.T) {
 				Config: testAccDeviceConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},

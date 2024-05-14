@@ -47,7 +47,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
 
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678912"),
 
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func testAccQuickConnect_phoneNumber(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "quick_connect_config.0.phone_config.0.phone_number", "+12345678913"),
 
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 				),
 			},
 		},
@@ -119,7 +119,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 				),
 			},
@@ -132,7 +132,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_tags(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -141,7 +141,7 @@ func testAccQuickConnect_updateTags(t *testing.T) {
 				Config: testAccQuickConnectConfig_tagsUpdated(rName, rName2, names.AttrTags, phone_number),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Quick Connect"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
