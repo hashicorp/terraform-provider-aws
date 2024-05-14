@@ -86,7 +86,7 @@ func resourceCertificate() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -208,7 +208,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrCertificate, output.Certificate)
 	d.Set("certificate_authority_arn", d.Get("certificate_authority_arn").(string))
-	d.Set("certificate_chain", output.CertificateChain)
+	d.Set(names.AttrCertificateChain, output.CertificateChain)
 
 	return diags
 }
