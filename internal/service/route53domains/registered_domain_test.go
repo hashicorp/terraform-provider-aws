@@ -26,7 +26,7 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -38,7 +38,7 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_tags2(domainName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -46,7 +46,7 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -254,12 +254,12 @@ func testAccRegisteredDomain_nameservers(t *testing.T) {
 			{
 				Config: testAccRegisteredDomainConfig_nameservers(domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name_server.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "name_server.0.name", fmt.Sprintf("ns1.%s", domainName)),
 					resource.TestCheckResourceAttr(resourceName, "name_server.0.glue_ips.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemAttr(resourceName, "name_server.0.glue_ips.*", "1.1.1.1"),
 					resource.TestCheckResourceAttr(resourceName, "name_server.1.name", "ns2.worldnic.com"),
-					resource.TestCheckResourceAttr(resourceName, "name_server.1.glue_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.1.glue_ips.#", acctest.CtZero),
 				),
 			},
 			{
@@ -267,13 +267,13 @@ func testAccRegisteredDomain_nameservers(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name_server.#", "4"),
 					resource.TestCheckResourceAttr(resourceName, "name_server.0.name", "ns-195.awsdns-24.com"),
-					resource.TestCheckResourceAttr(resourceName, "name_server.0.glue_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.0.glue_ips.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "name_server.1.name", "ns-1632.awsdns-12.co.uk"),
-					resource.TestCheckResourceAttr(resourceName, "name_server.1.glue_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.1.glue_ips.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "name_server.2.name", "ns-874.awsdns-45.net"),
-					resource.TestCheckResourceAttr(resourceName, "name_server.2.glue_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.2.glue_ips.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "name_server.3.name", "ns-1118.awsdns-11.org"),
-					resource.TestCheckResourceAttr(resourceName, "name_server.3.glue_ips.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name_server.3.glue_ips.#", acctest.CtZero),
 				),
 			},
 		},
