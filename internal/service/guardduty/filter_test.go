@@ -51,7 +51,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", acctest.CtOne),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -61,7 +61,7 @@ func testAccFilter_basic(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  "2",
+						"not_equals.#":  acctest.CtTwo,
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "another-threat",
 					}),
@@ -124,7 +124,7 @@ func testAccFilter_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
 						"equals.#":      acctest.CtOne,
@@ -132,7 +132,7 @@ func testAccFilter_update(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "service.additionalInfo.threatListName",
-						"not_equals.#":  "2",
+						"not_equals.#":  acctest.CtTwo,
 						"not_equals.0":  "some-threat",
 						"not_equals.1":  "yet-another-threat",
 					}),
@@ -163,7 +163,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_multipleTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Value"),
 				),
@@ -172,7 +172,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_updateTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", "Updated"),
 				),
 			},
@@ -180,7 +180,7 @@ func testAccFilter_tags(t *testing.T) {
 				Config: testAccFilterConfig_full(startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFilterExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 		},

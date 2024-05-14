@@ -42,7 +42,7 @@ func testAccDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.s3_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "datasources.0.kubernetes.0.audit_logs.0.enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "SIX_HOURS"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -92,7 +92,7 @@ func testAccDetector_tags(t *testing.T) {
 				Config: testAccDetectorConfig_tags1("key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -105,7 +105,7 @@ func testAccDetector_tags(t *testing.T) {
 				Config: testAccDetectorConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -114,7 +114,7 @@ func testAccDetector_tags(t *testing.T) {
 				Config: testAccDetectorConfig_tags1("key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDetectorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
