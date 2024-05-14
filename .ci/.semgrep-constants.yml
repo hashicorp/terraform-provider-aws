@@ -1260,6 +1260,16 @@ rules:
       - pattern: '"resource_id"'
     severity: ERROR
     fix: "names.AttrResourceID"
+  - id: literal-resource_tags-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrResourceTags` for the string literal "resource_tags"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"resource_tags"'
+    severity: ERROR
+    fix: "names.AttrResourceTags"
   - id: literal-resource_type-string-constant
     languages: [go]
     message: Use the constant `names.AttrResourceType` for the string literal "resource_type"
