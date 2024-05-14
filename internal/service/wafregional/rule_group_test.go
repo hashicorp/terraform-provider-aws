@@ -44,7 +44,7 @@ func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "waf-regional", regexache.MustCompile(`rulegroup/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 					computeActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
@@ -83,7 +83,7 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
@@ -107,7 +107,7 @@ func TestAccWAFRegionalRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule),
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
@@ -135,7 +135,7 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, groupName),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccWAFRegionalRuleGroup_changeNameForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, newGroupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMetricName, newGroupName),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 					testAccCheckRuleExists(ctx, "aws_wafregional_rule.test", &rule0),
 					testAccCheckRuleGroupExists(ctx, resourceName, &groupBefore),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, groupName),
-					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", acctest.CtOne),
 					computeActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
@@ -234,7 +234,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 					computeActivatedRuleWithRuleId(&rule2, "COUNT", 1, &idx2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
-						names.AttrPriority: "1",
+						names.AttrPriority: acctest.CtOne,
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 
