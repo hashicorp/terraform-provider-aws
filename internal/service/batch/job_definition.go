@@ -528,12 +528,12 @@ func needsJobDefUpdate(d *schema.ResourceDiff) bool {
 		}
 
 		var ors, nrs *batch.RetryStrategy
-		if len(o.([]interface{})) > 0 {
+		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil{
 			oProps := o.([]interface{})[0].(map[string]interface{})
 			ors = expandRetryStrategy(oProps)
 		}
 
-		if len(n.([]interface{})) > 0 {
+		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
 			nProps := n.([]interface{})[0].(map[string]interface{})
 			nrs = expandRetryStrategy(nProps)
 		}
