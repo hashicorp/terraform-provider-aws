@@ -65,10 +65,10 @@ func TestAccIAMPrincipalPolicySimulationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.allow_with_wrong_context", "results.0.decision", "implicitDeny"),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_mixed", "all_allowed", "false"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_mixed", "results.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_mixed", "results.#", acctest.CtTwo),
 
 					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_allow", "all_allowed", "true"),
-					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_allow", "results.#", "2"),
+					resource.TestCheckResourceAttr("data.aws_iam_principal_policy_simulation.multiple_allow", "results.#", acctest.CtTwo),
 
 					func(state *terraform.State) error {
 						vpcARN := state.RootModule().Outputs["vpc_arn"].Value.(string)

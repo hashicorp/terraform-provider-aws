@@ -306,7 +306,7 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		},
 		"multiple condition multiple values": {
 			cs: tfiam.IAMPolicyStatementConditionSet{
-				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: []string{acctest.CtOne, "2"}},
+				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: []string{acctest.CtOne, acctest.CtTwo}},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":["1","2"]},"StringLike":{"s3:prefix":["one/","two/"]}}`),
