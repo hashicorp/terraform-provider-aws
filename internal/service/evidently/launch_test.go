@@ -173,7 +173,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 				Config: testAccLaunchConfig_threeGroups(rName, rName2, rName3, rName4, rName5, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "groups.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "groups.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.description", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "groups.0.feature", "aws_evidently_feature.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "groups.0.name", "Variation1"),
@@ -262,7 +262,7 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 				Config: testAccLaunchConfig_threeMetricMonitors(rName, rName2, rName3, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					resource.TestCheckResourceAttr(resourceName, "metric_monitors.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metric_monitors.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "metric_monitors.0.metric_definition.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "metric_monitors.0.metric_definition.0.entity_id_key", "entity_id_key1b"),
 					resource.TestCheckResourceAttr(resourceName, "metric_monitors.0.metric_definition.0.event_pattern", "{\"Price\":[{\"numeric\":[\">\",15,\"<=\",25]}]}"),
@@ -396,7 +396,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", "60"),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation2", "65"),
@@ -498,12 +498,12 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.group_weights.Variation1", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.evaluation_order", acctest.CtOne),
 					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.segment", "aws_evidently_segment.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.%", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.0.weights.Variation2", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", "3"),
+					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.evaluation_order", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.segment", "aws_evidently_segment.test2", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "scheduled_splits_config.0.steps.0.segment_overrides.1.weights.Variation1", "60000"),
@@ -560,7 +560,7 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -569,12 +569,12 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccLaunchConfig_tags2(rName, rName2, rName3, startTime, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -582,7 +582,7 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
