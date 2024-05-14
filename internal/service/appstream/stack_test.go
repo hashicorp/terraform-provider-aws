@@ -49,7 +49,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -304,7 +304,7 @@ func TestAccAppStreamStack_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 				),
 			},
