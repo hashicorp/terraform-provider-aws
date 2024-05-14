@@ -111,7 +111,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", "2"),
+						resourceName, "replication_factor", acctest.CtTwo),
 				),
 			},
 			{
