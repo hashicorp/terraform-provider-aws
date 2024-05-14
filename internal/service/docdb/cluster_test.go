@@ -52,7 +52,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
@@ -212,7 +212,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -228,12 +228,12 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -782,7 +782,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),

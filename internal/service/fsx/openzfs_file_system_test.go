@@ -194,7 +194,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "128"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						names.AttrID:                 "10",
 						"storage_capacity_quota_gib": "128",
@@ -236,7 +236,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.nfs_exports.0.client_configurations.0.options.1", "rw"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.read_only", "true"),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.record_size_kib", "8"),
-					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_volume_configuration.0.user_and_group_quotas.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_volume_configuration.0.user_and_group_quotas.*", map[string]string{
 						names.AttrID:                 "10",
 						"storage_capacity_quota_gib": "256",
@@ -411,7 +411,7 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -424,13 +424,13 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccOpenZFSFileSystemConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccOpenZFSFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -439,7 +439,7 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -463,7 +463,7 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "true"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "true"),
 				),
@@ -482,7 +482,7 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOpenZFSFileSystemNotRecreated(&filesystem1, &filesystem2),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_volumes", "false"),
 				),

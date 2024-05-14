@@ -99,7 +99,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
-						"allowed_methods.#": "3",
+						"allowed_methods.#": acctest.CtThree,
 						"allowed_origins.#": acctest.CtOne,
 						"expose_headers.#":  acctest.CtOne,
 						names.AttrID:        rName,
@@ -115,7 +115,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
-						"allowed_methods.#": "3",
+						"allowed_methods.#": acctest.CtThree,
 						"allowed_origins.#": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -175,7 +175,7 @@ func TestAccS3BucketCORSConfiguration_SingleRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
-						"allowed_methods.#": "3",
+						"allowed_methods.#": acctest.CtThree,
 						"allowed_origins.#": acctest.CtOne,
 						"expose_headers.#":  acctest.CtOne,
 						names.AttrID:        rName,
@@ -217,7 +217,7 @@ func TestAccS3BucketCORSConfiguration_MultipleRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
 						"allowed_headers.#": acctest.CtOne,
-						"allowed_methods.#": "3",
+						"allowed_methods.#": acctest.CtThree,
 						"allowed_origins.#": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_rule.*.allowed_headers.*", "*"),

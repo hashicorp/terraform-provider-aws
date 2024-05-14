@@ -108,7 +108,7 @@ func TestAccVPC_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -117,13 +117,13 @@ func TestAccVPC_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCConfig_tags2(acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc2),
 					testAccCheckVPCIDsEqual(&vpc2, &vpc1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccVPC_tags(t *testing.T) {
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc3),
 					testAccCheckVPCIDsEqual(&vpc3, &vpc2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -203,7 +203,7 @@ func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 				),
 			},
@@ -215,7 +215,7 @@ func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", ""),
 				),
@@ -228,7 +228,7 @@ func TestAccVPC_DefaultTags_zeroValue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", ""),
 				),
@@ -256,7 +256,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
@@ -273,7 +273,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
 				),
@@ -286,7 +286,7 @@ func TestAccVPC_DefaultTags_providerOnlyTestAccVPC_DefaultTags_providerOnly(t *t
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", acctest.CtValue1),
 				),
 			},
@@ -310,8 +310,8 @@ func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -323,7 +323,7 @@ func TestAccVPC_DefaultTags_updateToProviderOnly(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -355,7 +355,7 @@ func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -364,8 +364,8 @@ func TestAccVPC_DefaultTags_updateToResourceOnly(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", acctest.CtValue1),
 				),
 			},
@@ -397,7 +397,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey1", "resourcevalue1"),
@@ -416,7 +416,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
@@ -432,7 +432,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_nonOverlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey3", "resourcevalue3"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.resourcekey3", "resourcevalue3"),
@@ -461,7 +461,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 				),
 			},
@@ -478,7 +478,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue1"),
@@ -493,7 +493,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_overlappingTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.overlapkey1", "resourcevalue2"),
 				),
@@ -521,7 +521,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 				),
 			},
 		},
@@ -546,7 +546,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -557,7 +557,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 				),
 			},
 			{
@@ -567,7 +567,7 @@ func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 				),
 			},
 		},
@@ -590,7 +590,7 @@ func TestAccVPC_Tags_EmptyTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -618,7 +618,7 @@ func TestAccVPC_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -626,8 +626,8 @@ func TestAccVPC_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 			{
@@ -655,7 +655,7 @@ func TestAccVPC_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -663,7 +663,7 @@ func TestAccVPC_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -695,11 +695,11 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -713,11 +713,11 @@ func TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges(t *testing.T) 
 				Config: testAccVPCConfig_ignoreChangesDynamicTagsMergedLocals("localkey", "localvalue"),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.localkey", "localvalue"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
@@ -753,7 +753,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),
@@ -769,7 +769,7 @@ func TestAccVPC_DynamicResourceTags_ignoreChanges(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags.updated_at"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "tags_all.updated_at"),
 				),

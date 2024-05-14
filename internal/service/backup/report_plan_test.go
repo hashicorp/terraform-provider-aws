@@ -154,7 +154,7 @@ func TestAccBackupReportPlan_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "report_delivery_channel.0.s3_bucket_name", "aws_s3_bucket.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "report_setting.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "report_setting.0.report_template", "RESTORE_JOB_REPORT"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Report Plan"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

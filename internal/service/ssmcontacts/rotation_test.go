@@ -234,7 +234,7 @@ func testRotation_contactIds(t *testing.T) {
 				Config: testAccRotationConfig_threeContacts(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", acctest.CtThree),
 				),
 			},
 		},
@@ -330,7 +330,7 @@ func testRotation_recurrence(t *testing.T) {
 				Config: testAccRotationConfig_recurrenceMultipleShiftCoverages(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.map_block_key", "MON"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.hour_of_day", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.minute_of_hour", acctest.CtZero),

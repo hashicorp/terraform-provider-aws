@@ -215,7 +215,7 @@ func TestAccAppIntegrationsDataIntegration_updateTags(t *testing.T) {
 				Config: testAccDataIntegrationConfig_tagsUpdated(rName, description, sourceUri, firstExecutionFrom),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataIntegrationExists(ctx, resourceName, &dataIntegration),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

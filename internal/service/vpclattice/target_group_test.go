@@ -122,7 +122,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -131,12 +131,12 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccTargetGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccTargetGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func TestAccVPCLatticeTargetGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -291,7 +291,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.protocol_version", "HTTP2"),
-					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.unhealthy_threshold_count", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", "IPV6"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.protocol", "HTTPS"),

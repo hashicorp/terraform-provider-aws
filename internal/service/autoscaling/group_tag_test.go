@@ -91,11 +91,11 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccGroupTagConfig_basic(acctest.CtKey1, "value1updated"),
+				Config: testAccGroupTagConfig_basic(acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tag.0.key", acctest.CtKey1),
-					resource.TestCheckResourceAttr(resourceName, "tag.0.value", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tag.0.value", acctest.CtValue1Updated),
 				),
 			},
 		},

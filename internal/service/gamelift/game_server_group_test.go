@@ -231,7 +231,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 				Config: testAccGameServerGroupConfig_instanceDefinition(rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "instance_definition.#", acctest.CtThree),
 				),
 			},
 		},

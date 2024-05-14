@@ -109,7 +109,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_string_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "query_strings_config.0.query_strings.0.items.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "query_strings_config.0.query_strings.0.items.*", "test3"),

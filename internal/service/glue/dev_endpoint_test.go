@@ -82,11 +82,11 @@ func TestAccGlueDevEndpoint_arguments(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", "value1updated", "--arg2", acctest.CtValue2),
+				Config: testAccDevEndpointConfig_arguments2(rName, "--arg1", acctest.CtValue1Updated, "--arg2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "arguments.--arg1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "arguments.--arg2", acctest.CtValue2),
 				),
 			},
@@ -384,14 +384,14 @@ func TestAccGlueDevEndpoint_publicKeys(t *testing.T) {
 				Config: testAccDevEndpointConfig_publicKeys3(rName, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "public_keys.#", acctest.CtThree),
 				),
 			},
 			{
 				Config: testAccDevEndpointConfig_publicKeys4(rName, publicKey1, publicKey1, publicKey3, publicKey4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "public_keys.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "public_keys.#", acctest.CtThree),
 				),
 			},
 			{
@@ -483,7 +483,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -492,12 +492,12 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDevEndpointConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDevEndpointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -505,7 +505,7 @@ func TestAccGlueDevEndpoint_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

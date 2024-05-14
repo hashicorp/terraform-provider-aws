@@ -1107,7 +1107,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "acm", regexache.MustCompile("certificate/.+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domain),
-					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
 						names.AttrDomainName:   domain,
 						"resource_record_type": "CNAME",
@@ -1121,7 +1121,7 @@ func TestAccACMCertificate_San_multiple(t *testing.T) {
 						"resource_record_type": "CNAME",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.CertificateStatusPendingValidation)),
-					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "subject_alternative_names.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", domain),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "subject_alternative_names.*", sanDomain2),
@@ -1648,7 +1648,7 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCertificateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1658,25 +1658,25 @@ func TestAccACMCertificate_PrivateKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPrivateKey, "certificate_body"},
 			},
 			{
-				Config: testAccCertificateConfig_tags2(certificate1, key1, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccCertificateConfig_tags2(certificate1, key1, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccCertificateConfig_tags1(certificate1, key1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccCertificateConfig_tags1(certificate2, key2, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 		},

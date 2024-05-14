@@ -2,7 +2,7 @@
 rules:
   - id: literal-FalseCaps-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtFalseCaps` for the string literal "FALSE"
+    message: Use the constant `acctest.CtFalseCaps` for the string literal "FALSE" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -12,7 +12,7 @@ rules:
     fix: "acctest.CtFalseCaps"
   - id: literal-Key1-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtKey1` for the string literal "key1"
+    message: Use the constant `acctest.CtKey1` for the string literal "key1" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -22,7 +22,7 @@ rules:
     fix: "acctest.CtKey1"
   - id: literal-Key2-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtKey2` for the string literal "key2"
+    message: Use the constant `acctest.CtKey2` for the string literal "key2" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -32,7 +32,7 @@ rules:
     fix: "acctest.CtKey2"
   - id: literal-One-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtOne` for the string literal "1"
+    message: Use the constant `acctest.CtOne` for the string literal "1" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -40,9 +40,49 @@ rules:
       - pattern: '"1"'
     severity: ERROR
     fix: "acctest.CtOne"
+  - id: literal-RName-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtRName` for the string literal "rName" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"rName"'
+    severity: ERROR
+    fix: "acctest.CtRName"
+  - id: literal-TagsAllPercent-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsAllPercent` for the string literal "tags_all.%" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags_all.%"'
+    severity: ERROR
+    fix: "acctest.CtTagsAllPercent"
+  - id: literal-TagsKey1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsKey1` for the string literal "tags.key1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags.key1"'
+    severity: ERROR
+    fix: "acctest.CtTagsKey1"
+  - id: literal-TagsKey2-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtTagsKey2` for the string literal "tags.key2" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"tags.key2"'
+    severity: ERROR
+    fix: "acctest.CtTagsKey2"
   - id: literal-TagsPercent-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtTagsPercent` for the string literal "tags.%"
+    message: Use the constant `acctest.CtTagsPercent` for the string literal "tags.%" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -50,9 +90,19 @@ rules:
       - pattern: '"tags.%"'
     severity: ERROR
     fix: "acctest.CtTagsPercent"
+  - id: literal-Three-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtThree` for the string literal "3" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"3"'
+    severity: ERROR
+    fix: "acctest.CtThree"
   - id: literal-TrueCaps-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE"
+    message: Use the constant `acctest.CtTrueCaps` for the string literal "TRUE" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -62,7 +112,7 @@ rules:
     fix: "acctest.CtTrueCaps"
   - id: literal-Two-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtTwo` for the string literal "2"
+    message: Use the constant `acctest.CtTwo` for the string literal "2" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -72,7 +122,7 @@ rules:
     fix: "acctest.CtTwo"
   - id: literal-Value1-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtValue1` for the string literal "value1"
+    message: Use the constant `acctest.CtValue1` for the string literal "value1" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -80,9 +130,19 @@ rules:
       - pattern: '"value1"'
     severity: ERROR
     fix: "acctest.CtValue1"
+  - id: literal-Value1Updated-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtValue1Updated` for the string literal "value1updated" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    patterns:
+      - pattern: '"value1updated"'
+    severity: ERROR
+    fix: "acctest.CtValue1Updated"
   - id: literal-Value2-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtValue2` for the string literal "value2"
+    message: Use the constant `acctest.CtValue2` for the string literal "value2" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"
@@ -92,7 +152,7 @@ rules:
     fix: "acctest.CtValue2"
   - id: literal-Zero-string-test-constant
     languages: [go]
-    message: Use the constant `acctest.CtZero` for the string literal "0"
+    message: Use the constant `acctest.CtZero` for the string literal "0" in test files
     paths:
       include:
         - "internal/service/**/*_test.go"

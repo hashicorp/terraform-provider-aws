@@ -175,7 +175,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{
@@ -190,7 +190,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtTwo),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 				),
@@ -206,7 +206,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 				),
 			},
@@ -220,7 +220,7 @@ func TestAccMemoryDBSnapshot_update_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 			{

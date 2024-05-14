@@ -102,7 +102,7 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
@@ -112,12 +112,12 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccApplicationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
@@ -126,7 +126,7 @@ func TestAccKinesisAnalyticsApplication_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtOne),
 				),
 			},
@@ -700,7 +700,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_add(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // Add input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree), // Add input processing configuration + update input.
 				),
 			},
 			{
@@ -815,7 +815,7 @@ func TestAccKinesisAnalyticsApplication_InputProcessing_delete(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"), // Delete input processing configuration + update input.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree), // Delete input processing configuration + update input.
 				),
 			},
 			{
@@ -1386,7 +1386,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_delete(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree),
 				),
 			},
 			{
@@ -1489,7 +1489,7 @@ func TestAccKinesisAnalyticsApplication_ReferenceDataSource_update(t *testing.T)
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.CtThree),
 				),
 			},
 			{

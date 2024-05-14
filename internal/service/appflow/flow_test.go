@@ -202,7 +202,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 				Config: testAccFlowConfig_multipleTasks(rSourceName, rDestinationName, rFlowName, "aThirdTestField"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					resource.TestCheckResourceAttr(resourceName, "task.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "task.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "task.*", map[string]string{
 						"destination_field": "",
 						"source_fields.#":   acctest.CtTwo,
@@ -234,7 +234,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 				Config: testAccFlowConfig_multipleTasks(rSourceName, rDestinationName, rFlowName, "anotherTestField"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					resource.TestCheckResourceAttr(resourceName, "task.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "task.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "task.*", map[string]string{
 						"destination_field": "",
 						"source_fields.#":   acctest.CtTwo,
@@ -314,7 +314,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -323,12 +323,12 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFlowConfig_tags2(rSourceName, rDestinationName, rFlowName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccFlowConfig_tags2(rSourceName, rDestinationName, rFlowName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -336,7 +336,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

@@ -101,7 +101,7 @@ func TestAccEMRContainersJobTemplate_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobTemplateExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{

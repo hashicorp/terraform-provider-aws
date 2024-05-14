@@ -115,7 +115,7 @@ func TestAccRoute53CIDRLocation_update(t *testing.T) {
 				Config: testAccCIDRLocation_updated(rName, locationName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCIDRLocationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.5.2.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.3.0/24"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cidr_blocks.*", "200.6.5.0/24"),

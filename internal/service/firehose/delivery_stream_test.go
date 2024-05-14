@@ -64,7 +64,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "extended_s3_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
 						"parameter_name": "LambdaArn",
 					}),
@@ -159,16 +159,16 @@ func TestAccFirehoseDeliveryStream_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccDeliveryStreamConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDeliveryStreamConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -176,7 +176,7 @@ func TestAccFirehoseDeliveryStream_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1177,7 +1177,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
 						"parameter_name": "LambdaArn",
 					}),
@@ -2033,7 +2033,7 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
 						"parameter_name": "LambdaArn",
 					}),

@@ -348,7 +348,7 @@ func TestAccQuickSightDataSet_permissionsMultiple(t *testing.T) {
 				Config: testAccDataSetConfigPermissionsMultiple(rId, rName, 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.CtThree),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -466,7 +466,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -475,12 +475,12 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataSetConfigTags2(rId, rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDataSetConfigTags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -488,7 +488,7 @@ func TestAccQuickSightDataSet_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -517,7 +517,7 @@ func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
 					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", "joined"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "j"),
 					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.join_instruction.0.right_operand", "right"),

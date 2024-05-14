@@ -1039,7 +1039,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.%", acctest.CtTwo),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.tags.Key2", "Value2"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.task_count", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.ecs_parameters.0.task_definition_arn", "aws_ecs_task_definition.test", names.AttrARN),
 				),
 			},
@@ -1054,7 +1054,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.#", acctest.CtOne),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
-						"base":              "3",
+						"base":              acctest.CtThree,
 						"capacity_provider": "test3",
 						names.AttrWeight:    "100",
 					}),
@@ -1470,7 +1470,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccScheduleConfig_targetSageMakerPipelineParameters2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
 					resource.TestCheckResourceAttr(resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.#", acctest.CtTwo),
@@ -1478,7 +1478,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",
 						map[string]string{
 							names.AttrName:  acctest.CtKey1,
-							names.AttrValue: "value1updated",
+							names.AttrValue: acctest.CtValue1Updated,
 						}),
 					resource.TestCheckTypeSetElemNestedAttrs(
 						resourceName, "target.0.sagemaker_pipeline_parameters.0.pipeline_parameter.*",

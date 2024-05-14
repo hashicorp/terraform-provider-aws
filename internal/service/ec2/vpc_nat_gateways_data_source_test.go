@@ -27,7 +27,7 @@ func TestAccVPCNATGatewaysDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_vpc_id", "ids.#", acctest.CtTwo),
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_tags", "ids.#", acctest.CtOne),
-					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_filter", "ids.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_nat_gateways.by_filter", "ids.#", acctest.CtThree),
 					resource.TestCheckResourceAttr("data.aws_nat_gateways.empty", "ids.#", acctest.CtZero),
 				),
 			},

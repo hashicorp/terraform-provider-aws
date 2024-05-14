@@ -61,7 +61,7 @@ func ResourceRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_tags": {
+			names.AttrResourceTags: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
@@ -171,7 +171,7 @@ func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
-	if v, ok := d.GetOk("resource_tags"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk(names.AttrResourceTags); ok && v.(*schema.Set).Len() > 0 {
 		in.ResourceTags = expandResourceTags(v.(*schema.Set).List())
 	}
 
@@ -221,7 +221,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set(names.AttrResourceType, string(out.ResourceType))
 	d.Set(names.AttrStatus, string(out.Status))
 
-	if err := d.Set("resource_tags", flattenResourceTags(out.ResourceTags)); err != nil {
+	if err := d.Set(names.AttrResourceTags, flattenResourceTags(out.ResourceTags)); err != nil {
 		return create.DiagError(names.RBin, create.ErrActionSetting, ResNameRule, d.Id(), err)
 	}
 
@@ -246,8 +246,8 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		update = true
 	}
 
-	if d.HasChanges("resource_tags") {
-		in.ResourceTags = expandResourceTags(d.Get("resource_tags").(*schema.Set).List())
+	if d.HasChanges(names.AttrResourceTags) {
+		in.ResourceTags = expandResourceTags(d.Get(names.AttrResourceTags).(*schema.Set).List())
 		update = true
 	}
 

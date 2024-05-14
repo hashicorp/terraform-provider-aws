@@ -377,7 +377,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 				Config: testAccRoutingProfileConfig_tagsUpdated(rName, rName2, rName3, names.AttrTags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Test Routing Profile"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -417,8 +417,8 @@ func testAccRoutingProfile_createQueueConfigsBatchedAssociateDisassociate(t *tes
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.1", "queue_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
-						"delay":            "3",
-						names.AttrPriority: "3",
+						"delay":            acctest.CtThree,
+						names.AttrPriority: acctest.CtThree,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.2", "queue_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
@@ -564,8 +564,8 @@ func testAccRoutingProfile_updateQueueConfigsBatchedAssociateDisassociate(t *tes
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.1", "queue_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{
-						"delay":            "3",
-						names.AttrPriority: "3",
+						"delay":            acctest.CtThree,
+						names.AttrPriority: acctest.CtThree,
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "queue_configs.*.queue_id", "aws_connect_queue.test.2", "queue_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "queue_configs.*", map[string]string{

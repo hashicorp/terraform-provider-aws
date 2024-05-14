@@ -280,7 +280,7 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "third"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.call_center_manager", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.admin", "security_profile_id"),
@@ -375,7 +375,7 @@ func testAccUser_updateTags(t *testing.T) {
 				Config: testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),

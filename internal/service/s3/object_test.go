@@ -809,11 +809,11 @@ func TestAccS3Object_metadata(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_metadata(rName, acctest.CtKey1, "value1updated", "key3", "value3"),
+				Config: testAccObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1Updated, "key3", "value3"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "metadata.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key3", "value3"),
 				),
 			},
@@ -916,7 +916,7 @@ func TestAccS3Object_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -950,7 +950,7 @@ func TestAccS3Object_tags(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -985,7 +985,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1019,7 +1019,7 @@ func TestAccS3Object_tagsLeadingSingleSlash(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1054,7 +1054,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1088,7 +1088,7 @@ func TestAccS3Object_tagsLeadingMultipleSlashes(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1116,7 +1116,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1150,7 +1150,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 					testAccCheckObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1178,7 +1178,7 @@ func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -1210,7 +1210,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1218,8 +1218,8 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 			{
@@ -1251,7 +1251,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1259,7 +1259,7 @@ func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -1293,7 +1293,7 @@ func TestAccS3Object_DefaultTags_providerOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
@@ -1328,11 +1328,11 @@ func TestAccS3Object_DefaultTags_providerAndResource(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "BBB"),
@@ -1351,7 +1351,7 @@ func TestAccS3Object_DefaultTags_providerAndResource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "X X"),
@@ -1383,11 +1383,11 @@ func TestAccS3Object_DefaultTags_providerAndResourceWithOverride(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "CCC"),
@@ -1405,7 +1405,7 @@ func TestAccS3Object_DefaultTags_providerAndResourceWithOverride(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key4", "DDD"),
@@ -1433,7 +1433,7 @@ func TestAccS3Object_tagsViaAccessPointARN(t *testing.T) {
 				Config: testAccObjectConfig_tagsViaAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1473,7 +1473,7 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", regexache.MustCompile(fmt.Sprintf(`%s-\w+-s3alias/%s`, rName[:20], key))),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1513,7 +1513,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1555,7 +1555,7 @@ func TestAccS3Object_tagsViaObjectLambdaAccessPointARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1881,7 +1881,7 @@ func TestAccS3Object_ignoreTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -2095,7 +2095,7 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 				),
 			},
 		},

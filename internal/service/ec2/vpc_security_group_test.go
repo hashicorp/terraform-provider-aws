@@ -1111,7 +1111,7 @@ func TestAccVPCSecurityGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1121,12 +1121,12 @@ func TestAccVPCSecurityGroup_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"revoke_rules_on_delete"},
 			},
 			{
-				Config: testAccVPCSecurityGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccVPCSecurityGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -1134,7 +1134,7 @@ func TestAccVPCSecurityGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -1356,7 +1356,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":       acctest.CtZero,
 						names.AttrDescription: "egress for all ipv6",
@@ -2108,7 +2108,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 				Config: testAccVPCSecurityGroupConfig_driftComplex(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "egress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"cidr_blocks.#":       acctest.CtOne,
 						"cidr_blocks.0":       "10.0.0.0/8",
@@ -2133,7 +2133,7 @@ func TestAccVPCSecurityGroup_driftComplex(t *testing.T) {
 						"self":                "false",
 						"to_port":             "8000",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ingress.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						"cidr_blocks.#":       acctest.CtOne,
 						"cidr_blocks.0":       "10.0.0.0/8",

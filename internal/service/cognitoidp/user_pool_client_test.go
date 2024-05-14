@@ -44,7 +44,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", "false"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_scopes.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "analytics_configuration.#", acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "callback_urls.#", acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
@@ -563,7 +563,7 @@ func TestAccCognitoIDPUserPoolClient_allFields(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
@@ -626,7 +626,7 @@ func TestAccCognitoIDPUserPoolClient_allFieldsUpdatingOneField(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "explicit_auth_flows.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "CUSTOM_AUTH_FLOW_ONLY"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "USER_PASSWORD_AUTH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "explicit_auth_flows.*", "ADMIN_NO_SRP_AUTH"),
@@ -809,7 +809,7 @@ func TestAccCognitoIDPUserPoolClient_authSessionValidity(t *testing.T) {
 				Config: testAccUserPoolClientConfig_authSessionValidity(rName, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.CtThree),
 				),
 			},
 			{

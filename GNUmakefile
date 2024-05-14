@@ -167,6 +167,12 @@ docscheck: ## Check provider documentation
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md .changelog
 
+fixconstants: semconstants fiximports fmt
+
+fiximports:
+	@echo "make: fixing source code imports with goimports..."
+	@goimports -w internal/**/*.go
+
 fmt: ## Fix Go source formatting
 	@echo "make: fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
@@ -376,7 +382,14 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
+semconstants: semgrep-validate
+	@echo "make: applying constants fixes locally with Semgrep --autofix"
+	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+		--config .ci/.semgrep-constants.yml \
+		--config .ci/.semgrep-test-constants.yml	
+
 semgrep-validate: ## Validate semgrep configuration files
+	@echo "make: validating Semgrep configuration files..."
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-constants.yml \
@@ -512,6 +525,8 @@ yamllint: ## Lint YAML files (via yamllint)
 	docs-lint \
 	docs-lint-fix \
 	docscheck \
+	fixconstants \
+	fiximports \
 	fmt \
 	fmtcheck \
 	fumpt \
@@ -530,6 +545,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	sane \
 	sanity \
 	semall \
+	semconstants \
 	semfix \
 	semgrep \
 	semgrep-validate \

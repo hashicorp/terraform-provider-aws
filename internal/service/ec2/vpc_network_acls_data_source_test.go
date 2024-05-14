@@ -91,7 +91,7 @@ func TestAccVPCNetworkACLsDataSource_vpcID(t *testing.T) {
 				Config: testAccVPCNetworkACLsDataSourceConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					// The VPC will have a default network ACL
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.CtThree),
 				),
 			},
 		},

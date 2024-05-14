@@ -288,7 +288,7 @@ func TestAccWAFV2WebACLLoggingConfiguration_updateMultipleRedactedFields(t *test
 					testAccCheckWebACLLoggingConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, webACLResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
 						"uri_path.#": acctest.CtOne,
 					}),

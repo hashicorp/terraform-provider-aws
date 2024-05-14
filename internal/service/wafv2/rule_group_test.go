@@ -422,7 +422,7 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 						"statement.0.byte_match_statement.0.text_transformation.#": acctest.CtOne,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.byte_match_statement.0.text_transformation.*", map[string]string{
-						names.AttrPriority: "3",
+						names.AttrPriority: acctest.CtThree,
 						names.AttrType:     "CMD_LINE",
 					}),
 				),
@@ -896,7 +896,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "capacity", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", acctest.CtZero),
@@ -1066,7 +1066,7 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"statement.#":                                             acctest.CtOne,
 						"statement.0.geo_match_statement.#":                       acctest.CtOne,
-						"statement.0.geo_match_statement.0.country_codes.#":       "3",
+						"statement.0.geo_match_statement.0.country_codes.#":       acctest.CtThree,
 						"statement.0.geo_match_statement.0.country_codes.0":       "ZM",
 						"statement.0.geo_match_statement.0.country_codes.1":       "EE",
 						"statement.0.geo_match_statement.0.country_codes.2":       "MM",
@@ -1898,7 +1898,7 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 						"statement.0.sqli_match_statement.#":                         acctest.CtOne,
 						"statement.0.sqli_match_statement.0.field_to_match.#":        acctest.CtOne,
 						"statement.0.sqli_match_statement.0.field_to_match.0.body.#": acctest.CtOne,
-						"statement.0.sqli_match_statement.0.text_transformation.#":   "3",
+						"statement.0.sqli_match_statement.0.text_transformation.#":   acctest.CtThree,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
 						names.AttrPriority: "5",
@@ -1909,7 +1909,7 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 						names.AttrType:     "HTML_ENTITY_DECODE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.statement.0.sqli_match_statement.0.text_transformation.*", map[string]string{
-						names.AttrPriority: "3",
+						names.AttrPriority: acctest.CtThree,
 						names.AttrType:     "COMPRESS_WHITE_SPACE",
 					}),
 				),
@@ -1941,7 +1941,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -1951,12 +1951,12 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccRuleGroupConfig_tags2(ruleGroupName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRuleGroupConfig_tags2(ruleGroupName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -1964,7 +1964,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -2401,7 +2401,7 @@ func TestAccWAFV2RuleGroup_RateBased_maxNested(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        acctest.CtOne,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            acctest.CtOne,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             acctest.CtOne,
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": acctest.CtThree,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": acctest.CtOne,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 acctest.CtOne,
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            acctest.CtOne,
@@ -2444,7 +2444,7 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 						"statement.0.and_statement.0.statement.0.not_statement.#":                                        acctest.CtOne,
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            acctest.CtOne,
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             acctest.CtOne,
-						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": acctest.CtThree,
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": acctest.CtOne,
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 acctest.CtOne,
 						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            acctest.CtOne,

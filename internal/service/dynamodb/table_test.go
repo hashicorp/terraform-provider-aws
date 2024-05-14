@@ -371,7 +371,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtZero),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtZero),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtZero),
 					resource.TestCheckResourceAttr(resourceName, "ttl.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "ttl.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.CtOne),
@@ -997,7 +997,7 @@ func TestAccDynamoDBTable_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					testAccCheckInitialTableConf(resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 				),
 			},
 			{
@@ -1026,7 +1026,7 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  acctest.CtOne,
 						"write_capacity": acctest.CtOne,
@@ -1053,7 +1053,7 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdatedCapacity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  acctest.CtTwo,
 						"write_capacity": acctest.CtTwo,
@@ -1095,7 +1095,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
 						names.AttrName:         "att3-index",
@@ -1134,7 +1134,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						names.AttrName:         "att2-index",
@@ -1226,7 +1226,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				Config: testAccTableConfig_gsiUpdatedOtherAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
 						names.AttrName:         "att2-index",

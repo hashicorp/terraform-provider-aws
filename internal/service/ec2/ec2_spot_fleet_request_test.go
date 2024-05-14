@@ -187,7 +187,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -197,12 +197,12 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
-				Config: testAccSpotFleetRequestConfig_tags2(rName, publicKey, validUntil, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccSpotFleetRequestConfig_tags2(rName, publicKey, validUntil, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -824,7 +824,7 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 				Config: testAccSpotFleetRequestConfig_targetCapacity(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
-					resource.TestCheckResourceAttr(resourceName, "target_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", acctest.CtThree),
 				),
 			},
 			{
@@ -1174,7 +1174,7 @@ func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "diversified"),
 				),
 			},
@@ -1211,7 +1211,7 @@ func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "instance_pools_to_use_count", acctest.CtTwo),
 				),
@@ -1266,7 +1266,7 @@ func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"weighted_capacity":    "3",
+						"weighted_capacity":    acctest.CtThree,
 						names.AttrInstanceType: "r3.large",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
@@ -1490,7 +1490,7 @@ func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						acctest.CtTagsPercent: "3",
+						acctest.CtTagsPercent: acctest.CtThree,
 						"tags.First":          "TfAccTest",
 						"tags.Second":         "Terraform",
 						"tags.Name":           rName,

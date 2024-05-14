@@ -291,7 +291,7 @@ func testAccResolver_multipleResolvers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName+acctest.CtOne, &resolver),
 					testAccCheckResolverExists(ctx, resourceName+acctest.CtTwo, &resolver),
-					testAccCheckResolverExists(ctx, resourceName+"3", &resolver),
+					testAccCheckResolverExists(ctx, resourceName+acctest.CtThree, &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"4", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"5", &resolver),
 					testAccCheckResolverExists(ctx, resourceName+"6", &resolver),

@@ -151,7 +151,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 						"enum.0.value": "INFO",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.security_control_id", "IAM.7"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
 						names.AttrName: "RequireLowercaseCharacters",
 						"value_type":   "CUSTOM",

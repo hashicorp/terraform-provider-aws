@@ -220,7 +220,7 @@ func TestAccCognitoIDPUser_attributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.one", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "attributes.two", acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "attributes.three", "3"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.three", acctest.CtThree),
 				),
 			},
 			{

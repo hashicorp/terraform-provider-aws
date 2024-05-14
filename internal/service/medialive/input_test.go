@@ -130,7 +130,7 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -138,8 +138,8 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccMediaLiveInput_updateTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, resourceName, &input),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

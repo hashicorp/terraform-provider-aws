@@ -85,7 +85,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_referenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", acctest.CtOne),
@@ -122,7 +122,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", acctest.CtOne),
@@ -143,7 +143,7 @@ func TestAccNetworkFirewallRuleGroup_Basic_updateReferenceSets(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, networkfirewall.RuleGroupTypeStateful),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.#", acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.0.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.1.ip_set_reference.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.reference_sets.0.ip_set_references.2.ip_set_reference.#", acctest.CtOne),
@@ -545,7 +545,7 @@ func TestAccNetworkFirewallRuleGroup_rulesSourceAndRuleVariables(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rule_variables.0.ip_sets.*", map[string]string{
 						names.AttrKey:           "example",
 						"ip_set.#":              acctest.CtOne,
-						"ip_set.0.definition.#": "3",
+						"ip_set.0.definition.#": acctest.CtThree,
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.0.0/16"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "rule_group.0.rule_variables.0.ip_sets.*.ip_set.0.definition.*", "10.0.1.0/24"),
@@ -913,7 +913,7 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -922,19 +922,19 @@ func TestAccNetworkFirewallRuleGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleGroupConfig_tags2(rName, acctest.CtKey1, "value1updated", acctest.CtKey2, acctest.CtValue2),
+				Config: testAccRuleGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
 				Config: testAccRuleGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

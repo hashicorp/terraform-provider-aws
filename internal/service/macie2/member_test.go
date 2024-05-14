@@ -322,7 +322,7 @@ func testAccMember_withTags(t *testing.T) {
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", acctest.CtOne),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
 					acctest.CheckResourceAttrAccountID(resourceName, "administrator_account_id"),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),

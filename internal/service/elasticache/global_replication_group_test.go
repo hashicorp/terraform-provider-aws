@@ -624,7 +624,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.CtThree),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
@@ -634,7 +634,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.CtTwo),
 				),
 			},
@@ -679,7 +679,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Decrease(
 						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtOne),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.CtThree),
 				),
 			},
 			{
@@ -734,7 +734,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.CtThree),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
@@ -744,7 +744,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.CtThree),
 					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.CtTwo),
 				),
 			},

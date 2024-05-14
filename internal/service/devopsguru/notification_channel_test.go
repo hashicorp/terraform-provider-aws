@@ -111,7 +111,7 @@ func testAccNotificationChannel_filters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "filters.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.message_types.0", messageType),
-					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "filters.0.severities.#", acctest.CtThree),
 				),
 			},
 			{

@@ -102,7 +102,7 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.CtTwo),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName+"-2"),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"),
@@ -132,7 +132,7 @@ func TestAccAutoScalingNotification_paginated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotificationExists(ctx, resourceName, groups),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", "20"),
-					resource.TestCheckResourceAttr(resourceName, "notifications.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.CtThree),
 				),
 			},
 		},

@@ -52,7 +52,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.pool_depth", resourceName, "pool_depth"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.publicly_advertisable", resourceName, "publicly_advertisable"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
-					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.0.tags.tagtest", "3"),
+					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.0.tags.tagtest", acctest.CtThree),
 				),
 			},
 		},

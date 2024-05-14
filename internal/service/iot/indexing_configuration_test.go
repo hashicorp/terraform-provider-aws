@@ -75,7 +75,7 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "thing_group_indexing_configuration.0.managed_field.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "thing_group_indexing_configuration.0.thing_group_indexing_mode", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.custom_field.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "thing_indexing_configuration.0.custom_field.*", map[string]string{
 						names.AttrName: "attributes.version",
 						names.AttrType: "Number",

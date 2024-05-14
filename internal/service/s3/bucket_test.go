@@ -528,7 +528,7 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 				Config: testAccBucketConfig_tags(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -563,7 +563,7 @@ func TestAccS3Bucket_Tags_withNoSystemTags(t *testing.T) {
 				Config: testAccBucketConfig_tags(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -589,7 +589,7 @@ func TestAccS3Bucket_Tags_EmptyTag_OnCreate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -618,7 +618,7 @@ func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -626,8 +626,8 @@ func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtTwo),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
 				),
 			},
 			{
@@ -656,7 +656,7 @@ func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -664,7 +664,7 @@ func TestAccS3Bucket_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
 				),
 			},
 			{
@@ -732,7 +732,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				Config: testAccBucketConfig_tags(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -793,7 +793,7 @@ func TestAccS3Bucket_Tags_ignoreTags(t *testing.T) {
 					testAccBucketConfig_tags(bucketName)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.CtThree),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1054,7 +1054,7 @@ func TestAccS3Bucket_Manage_objectLock(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", acctest.CtOne),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.0.default_retention.0.mode", "COMPLIANCE"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", "3"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.0.default_retention.0.days", acctest.CtThree),
 				),
 			},
 		},
@@ -1395,7 +1395,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					testAccCheckBucketExistsWithProvider(ctx, "aws_s3_bucket.destination2", acctest.RegionProviderFunc(alternateRegion, &providers)),
 					testAccCheckBucketExistsWithProvider(ctx, "aws_s3_bucket.destination3", acctest.RegionProviderFunc(alternateRegion, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
 						names.AttrPriority:            acctest.CtOne,
@@ -1416,7 +1416,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						names.AttrPriority:            "3",
+						names.AttrPriority:            acctest.CtThree,
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    acctest.CtOne,
 						"filter.0.prefix":             "",
@@ -1466,7 +1466,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					testAccCheckBucketExistsWithProvider(ctx, "aws_s3_bucket.destination2", acctest.RegionProviderFunc(alternateRegion, &providers)),
 					testAccCheckBucketExistsWithProvider(ctx, "aws_s3_bucket.destination3", acctest.RegionProviderFunc(alternateRegion, &providers)),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", acctest.CtOne),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule1",
 						names.AttrPriority:            acctest.CtOne,
@@ -1488,7 +1488,7 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replication_configuration.0.rules.*", map[string]string{
 						names.AttrID:                  "rule3",
-						names.AttrPriority:            "3",
+						names.AttrPriority:            acctest.CtThree,
 						names.AttrStatus:              "Disabled",
 						"filter.#":                    acctest.CtOne,
 						"filter.0.prefix":             "prefix3",

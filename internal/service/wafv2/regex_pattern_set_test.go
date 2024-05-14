@@ -58,7 +58,7 @@ func TestAccWAFV2RegexPatternSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", acctest.CtThree),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "regular_expression.*", map[string]string{
 						"regex_string": "one",
 					}),

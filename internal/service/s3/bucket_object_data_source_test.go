@@ -90,7 +90,7 @@ func TestAccS3BucketObjectDataSource_readableBody(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_readableBody(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -300,19 +300,19 @@ func TestAccS3BucketObjectDataSource_leadingSlash(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
-					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName3, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName3, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -347,11 +347,11 @@ func TestAccS3BucketObjectDataSource_multipleSlashes(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName1, names.AttrContentType, resourceName1, names.AttrContentType),
 					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
 
-					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", acctest.CtThree),
 					resource.TestCheckResourceAttrPair(dataSourceName2, names.AttrContentType, resourceName1, names.AttrContentType),
 					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
 
