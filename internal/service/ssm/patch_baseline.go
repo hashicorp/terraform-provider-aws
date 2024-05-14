@@ -419,7 +419,7 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DeletePatchBaseline(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceInUseException](err) {
 		// Reset the default patch baseline before retrying.
 		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), awstypes.OperatingSystem(d.Get("operating_system").(string)))...)
 		if diags.HasError() {
